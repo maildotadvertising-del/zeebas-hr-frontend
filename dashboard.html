@@ -1630,22 +1630,52 @@ var API = 'https://zeebas-hr-backend.onrender.com';
   } catch(e){ showOverlay(); }
 })();
 
+/* ── ADMIN LOGIN TAB SWITCH ── */
+var _alTab = 'phone';
+function alSwitchTab(tab){
+  _alTab = tab;
+  var phoneIn = document.getElementById('al-phone');
+  var emailIn = document.getElementById('al-email');
+  var tabPhone = document.getElementById('al-tab-phone');
+  var tabEmail = document.getElementById('al-tab-email');
+  var activeStyle  = 'flex:1;padding:7px;border-radius:8px;border:0.5px solid rgba(10,132,255,0.5);background:rgba(10,132,255,0.15);color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;';
+  var inactiveStyle= 'flex:1;padding:7px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(245,245,247,0.4);font-size:11px;cursor:pointer;font-family:inherit;';
+  if(tab==='phone'){
+    if(phoneIn) phoneIn.style.display='';
+    if(emailIn) emailIn.style.display='none';
+    if(tabPhone) tabPhone.style.cssText=activeStyle+'flex:1;';
+    if(tabEmail) tabEmail.style.cssText=inactiveStyle+'flex:1;';
+    if(phoneIn) phoneIn.focus();
+  } else {
+    if(phoneIn) phoneIn.style.display='none';
+    if(emailIn) emailIn.style.display='';
+    if(tabPhone) tabPhone.style.cssText=inactiveStyle+'flex:1;';
+    if(tabEmail) tabEmail.style.cssText=activeStyle+'flex:1;';
+    if(emailIn) emailIn.focus();
+  }
+}
+
 /* ── ADMIN LOGIN FUNCTION ── */
 async function adminLogin(){
-  var phone = (document.getElementById('al-phone')||{}).value||'';
+  var identifier = _alTab==='phone'
+    ? ((document.getElementById('al-phone')||{}).value||'').trim()
+    : ((document.getElementById('al-email')||{}).value||'').trim();
   var pass  = (document.getElementById('al-pass')||{}).value||'';
   var errEl = document.getElementById('al-err');
   var btn   = document.getElementById('al-btn');
-  if(!phone||!pass){
-    if(errEl){ errEl.style.display='block'; errEl.textContent='Phone number and password required'; }
+  if(!identifier||!pass){
+    if(errEl){ errEl.style.display='block'; errEl.textContent=(_alTab==='phone'?'Phone number':'Email')+' and password required'; }
     return;
   }
   if(btn){ btn.textContent='Signing in…'; btn.disabled=true; }
   if(errEl) errEl.style.display='none';
   try{
+    var loginBody = _alTab==='phone'
+      ? {phone: identifier, password: pass}
+      : {email: identifier, password: pass};
     var res = await fetch(API+'/api/auth/login',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:phone.trim(), password:pass})
+      body:JSON.stringify(loginBody)
     });
     var d = await res.json();
     if(d.success){
@@ -2277,8 +2307,8 @@ function dashLogout(){
   <div style="width:100%;max-width:400px;padding:0 24px;">
 
     <!-- Logo / Header -->
-    <div style="text-align:center;margin-bottom:36px;">
-      <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,60,180,0.5));border:1.5px solid rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;font-weight:700;color:#5AABF0;">D</div>
+    <div style="text-align:center;margin-bottom:32px;">
+      <img src="/icon-192.png" alt="DOT Advertising" style="width:80px;height:80px;border-radius:20px;object-fit:cover;margin:0 auto 16px;display:block;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
       <div style="font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px;">Admin Dashboard</div>
       <div style="font-size:12px;color:rgba(245,245,247,0.4);margin-top:6px;">Zeebas Cluster LLP — Admin Access Only</div>
     </div>
@@ -2287,8 +2317,14 @@ function dashLogout(){
     <div style="background:rgba(15,15,28,0.98);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px 24px;">
 
       <div style="margin-bottom:14px;">
-        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;">Mobile Number</div>
-        <input class="inp" type="tel" id="al-phone" placeholder="Enter admin mobile number" onkeydown="if(event.key==='Enter')document.getElementById('al-pass').focus()">
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;">Mobile Number or Email</div>
+        <!-- Toggle tabs -->
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <button id="al-tab-phone" onclick="alSwitchTab('phone')" style="flex:1;padding:7px;border-radius:8px;border:0.5px solid rgba(10,132,255,0.5);background:rgba(10,132,255,0.15);color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;">📱 Phone</button>
+          <button id="al-tab-email" onclick="alSwitchTab('email')" style="flex:1;padding:7px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(245,245,247,0.4);font-size:11px;cursor:pointer;font-family:inherit;">✉️ Email</button>
+        </div>
+        <input class="inp" type="tel"   id="al-phone" placeholder="Enter mobile number"  onkeydown="if(event.key==='Enter')document.getElementById('al-pass').focus()">
+        <input class="inp" type="email" id="al-email" placeholder="Enter email address"   onkeydown="if(event.key==='Enter')document.getElementById('al-pass').focus()" style="display:none;margin-top:0;">
       </div>
 
       <div style="margin-bottom:20px;">
