@@ -1128,12 +1128,13 @@ function zToken(){ return localStorage.getItem('zhr_token'); }
 function zStaff(){ try{ return JSON.parse(localStorage.getItem('zhr_staff')||'null'); }catch(e){ return null; } }
 function zHead(){ return { 'Authorization':'Bearer '+zToken(), 'Content-Type':'application/json' }; }
 
-/* ── LOGIN ERROR ── */
+/* ── LOGIN ERROR MESSAGE ── */
 function loginErr(msg){
   var e=document.getElementById('login-err');
   if(!e){
-    e=document.createElement('div'); e.id='login-err';
-    e.style.cssText='color:#FF453A;font-size:12px;text-align:center;margin-top:10px;padding:10px 12px;background:rgba(255,69,58,0.12);border-radius:10px;border:0.5px solid rgba(255,69,58,0.25);font-weight:400;';
+    e=document.createElement('div');
+    e.id='login-err';
+    e.style.cssText='color:#FF453A;font-size:12px;text-align:center;margin-top:10px;padding:10px 12px;background:rgba(255,69,58,0.12);border-radius:10px;border:0.5px solid rgba(255,69,58,0.25);';
     var form=document.querySelector('#s1-login');
     var btn=form?form.querySelector('.btn-p'):null;
     if(btn) btn.parentNode.insertBefore(e, btn);
@@ -1142,16 +1143,13 @@ function loginErr(msg){
   setTimeout(function(){ if(e) e.textContent=''; },5000);
 }
 
-/* ── STAFF LOGIN ── */
+/* ── LOGIN ── */
 async function staffLogin(){
   var phone=((document.getElementById('u1')||{}).value||'').trim();
   var pw   =((document.getElementById('pw1')||{}).value||'').trim();
   if(!phone||!pw){ loginErr('Phone number and password required!'); return; }
-  
-  // Show loading
   var btn=document.querySelector('#s1-login .btn-p');
   if(btn){ btn.textContent='Signing in…'; btn.disabled=true; btn.style.opacity='0.7'; }
-  
   try{
     var res=await fetch(API_URL+'/api/auth/login',{
       method:'POST',
@@ -1164,7 +1162,6 @@ async function staffLogin(){
       localStorage.setItem('zhr_staff',JSON.stringify(d.staff));
       if(d.staff.role==='admin'){
         populateAdmin(d.staff);
-        // Admin → show s2-home and scroll phone2 into view
         go2('s2-home');
         var p2=document.getElementById('app2');
         if(p2) p2.scrollIntoView({behavior:'smooth',block:'center'});
@@ -1175,10 +1172,10 @@ async function staffLogin(){
         fetchMyTasks(d.staff.id);
       }
     } else {
-      loginErr(d.message||'Wrong phone or password. Try again!');
+      loginErr(d.message||'Wrong phone or password!');
     }
   } catch(err){
-    loginErr('Server is starting up. Please wait 30 seconds and try again.');
+    loginErr('Server is starting. Wait 30 seconds and try again.');
     console.error('Login error:',err);
   } finally {
     if(btn){ btn.textContent='Sign In'; btn.disabled=false; btn.style.opacity='1'; }
@@ -1191,7 +1188,7 @@ function populateStaff(s){
   set('s1-name', s.name||'Staff');
   set('s1-desig', s.designation||'Staff');
   set('s1-brand', (s.brand&&s.brand.name)||'Zeebas Cluster');
-  set('s1-salary', s.base_salary?'₹'+Number(s.base_salary).toLocaleString('en-IN'):'—');
+  set('s1-salary', s.base_salary?'\u20b9'+Number(s.base_salary).toLocaleString('en-IN'):'\u2014');
   var av=document.getElementById('s1-avatar');
   if(av) av.textContent=(s.name||'S').charAt(0).toUpperCase();
 }
@@ -1204,7 +1201,7 @@ function populateAdmin(s){
   if(av) av.textContent=(s.name||'A').charAt(0).toUpperCase();
 }
 
-/* ── ADMIN ATTENDANCE STATS ── */
+/* ── ADMIN STATS ── */
 async function fetchAdminStats(){
   try{
     var today=new Date().toISOString().slice(0,10);
@@ -1221,11 +1218,12 @@ async function fetchAdminStats(){
       else if(st==='onsite')o++;
     });
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-    set('s2-present',p); set('s2-absent',a); set('s2-late',l); set('s2-leave',lv); set('s2-onsite',o);
+    set('s2-present',p); set('s2-absent',a);
+    set('s2-late',l);    set('s2-leave',lv); set('s2-onsite',o);
   } catch(e){ console.log('Stats error',e); }
 }
 
-/* ── MY TASKS ── */
+/* ── MY TASKS COUNT ── */
 async function fetchMyTasks(staffId){
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
@@ -1244,130 +1242,7 @@ function zLogout(){
   location.reload();
 }
 
-/* ── AUTO-LOGIN: restore session on reload ── */
-window.addEventListener('load',function(){
-  var s=zStaff();
-  if(zToken()&&s){
-    if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); }
-  }
-});
-   Backend: https://zeebas-hr-backend.onrender.com
-   ═══════════════════════════════════════════ */
-var API_URL = 'https://zeebas-hr-backend.onrender.com';
-
-function zToken(){ return localStorage.getItem('zhr_token'); }
-function zStaff(){ try{ return JSON.parse(localStorage.getItem('zhr_staff')||'null'); }catch(e){ return null; } }
-function zHead(){ return { 'Authorization':'Bearer '+zToken(), 'Content-Type':'application/json' }; }
-
-/* ── LOGIN ERROR ── */
-function loginErr(msg){
-  var e=document.getElementById('login-err');
-  if(!e){
-    e=document.createElement('div'); e.id='login-err';
-    e.style.cssText='color:#FF453A;font-size:12px;text-align:center;margin-top:8px;padding:8px;background:rgba(255,69,58,0.1);border-radius:8px;border:0.5px solid rgba(255,69,58,0.2);';
-    var btns=document.querySelectorAll('#s1-login .btn-p');
-    if(btns.length) btns[0].parentNode.insertBefore(e, btns[0]);
-  }
-  e.textContent=msg;
-  setTimeout(function(){ if(e) e.textContent=''; },4000);
-}
-
-/* ── STAFF LOGIN ── */
-async function staffLogin(){
-  var phone=((document.getElementById('u1')||{}).value||'').trim();
-  var pw   =((document.getElementById('pw1')||{}).value||'').trim();
-  if(!phone||!pw){ loginErr('Phone number and password required!'); return; }
-  var btn=document.querySelector('#s1-login .btn-p');
-  if(btn){ btn.textContent='Signing in…'; btn.disabled=true; }
-  try{
-    var res=await fetch(API_URL+'/api/auth/login',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:phone,password:pw})
-    });
-    var d=await res.json();
-    if(d.success){
-      localStorage.setItem('zhr_token',d.token);
-      localStorage.setItem('zhr_staff',JSON.stringify(d.staff));
-      if(d.staff.role==='admin'){
-        populateAdmin(d.staff);
-        go2('s2-home');
-        fetchAdminStats();
-      } else {
-        populateStaff(d.staff);
-        go1('s1-home');
-        fetchMyTasks(d.staff.id);
-      }
-    } else {
-      loginErr(d.message||'Login failed. Check your details.');
-    }
-  } catch(err){
-    loginErr('Cannot reach server. Check your connection.');
-    console.error('Login error:',err);
-  } finally {
-    if(btn){ btn.textContent='Sign In'; btn.disabled=false; }
-  }
-}
-
-/* ── POPULATE STAFF UI ── */
-function populateStaff(s){
-  var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-  set('s1-name', s.name||'Staff');
-  set('s1-desig', s.designation||'Staff');
-  set('s1-brand', (s.brand&&s.brand.name)||'Zeebas Cluster');
-  set('s1-salary', s.base_salary?'₹'+Number(s.base_salary).toLocaleString('en-IN'):'—');
-  var av=document.getElementById('s1-avatar');
-  if(av){ av.textContent=(s.name||'S').charAt(0).toUpperCase(); }
-}
-
-/* ── POPULATE ADMIN UI ── */
-function populateAdmin(s){
-  var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-  set('s2-name', s.name||'Admin');
-  var av=document.getElementById('s2-avatar');
-  if(av){ av.textContent=(s.name||'A').charAt(0).toUpperCase(); }
-}
-
-/* ── ADMIN ATTENDANCE STATS ── */
-async function fetchAdminStats(){
-  try{
-    var today=new Date().toISOString().slice(0,10);
-    var res=await fetch(API_URL+'/api/attendance?date='+today, {headers:zHead()});
-    var d=await res.json();
-    var rows=Array.isArray(d)?d:(d.data||d.records||[]);
-    var p=0,a=0,l=0,lv=0,o=0;
-    rows.forEach(function(r){
-      var st=(r.status||'').toLowerCase();
-      if(st==='present')p++;
-      else if(st==='absent')a++;
-      else if(st==='late')l++;
-      else if(st==='leave')lv++;
-      else if(st==='onsite')o++;
-    });
-    var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-    set('s2-present',p); set('s2-absent',a); set('s2-late',l); set('s2-leave',lv); set('s2-onsite',o);
-  } catch(e){ console.log('Stats error',e); }
-}
-
-/* ── MY TASKS ── */
-async function fetchMyTasks(staffId){
-  try{
-    var res=await fetch(API_URL+'/api/tasks', {headers:zHead()});
-    var d=await res.json();
-    var rows=Array.isArray(d)?d:(d.data||d.tasks||[]);
-    var mine=rows.filter(function(t){ return String(t.assigned_to)===String(staffId)&&t.status!=='done'; });
-    var el=document.getElementById('s1-tasks-count'); if(el) el.textContent=mine.length;
-  } catch(e){ console.log('Tasks error',e); }
-}
-
-/* ── LOGOUT ── */
-function zLogout(){
-  localStorage.removeItem('zhr_token');
-  localStorage.removeItem('zhr_staff');
-  location.reload();
-}
-
-/* ── AUTO-LOGIN: restore session on reload ── */
+/* ── AUTO SESSION RESTORE ── */
 window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
