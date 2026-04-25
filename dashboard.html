@@ -425,11 +425,11 @@ textarea.inp{resize:none;}
   <!-- ── STAFF (with Edit) ── -->
   <div id="page-staff" class="page">
     <div class="topbar">
-      <div><div class="ptitle">Staff</div><div class="psub">12 members · click a card to edit</div></div>
+      <div><div class="ptitle">Staff</div><div class="psub" id="staff-count">Loading…</div></div>
       <div style="display:flex;gap:10px;"><button class="btn-g">Export</button><button class="btn" onclick="openAdd()">+ Add Staff</button></div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-      <!-- Staff cards with Edit button -->
+    <div id="staff-list-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <!-- Staff cards loaded dynamically -->
       <div class="sec g" style="padding:0;overflow:hidden;" onclick="openEdit('arjun')">
         <div style="padding:16px 16px 12px;">
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
@@ -948,29 +948,29 @@ textarea.inp{resize:none;}
     <div style="padding:0 26px 26px;display:flex;flex-direction:column;gap:12px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Full Name *</div><input class="inp" placeholder="e.g. Arjun Kumar" id="add-name" oninput="updateInitials('add-name','add-initials')"></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Designation *</div><input class="inp" placeholder="e.g. Senior Designer"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Designation *</div><input class="inp" placeholder="e.g. Senior Designer" id="add-desig"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Brand / Department *</div>
-          <select class="inp"><option>DOT Advertising</option><option>Zeebas Studios</option><option>Rappo Chat</option><option>LIVE Hero</option><option>Bobble Events</option><option>Cross Media</option><option>Visual Hero</option><option>Social Idea</option></select>
+          <select class="inp" id="add-brand"><option value="1">DOT Advertising</option><option value="2">Zeebas Studios</option><option value="4">Rappo Chat</option><option value="5">LIVE Hero</option><option value="3">Bobble Events</option><option value="6">Cross Media</option><option value="7">Visual Hero</option><option>Social Idea</option></select>
         </div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Employment Type</div>
-          <select class="inp"><option>Full Time</option><option>Part Time</option><option>Daily Wage</option></select>
+          <select class="inp" id="add-type"><option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="daily_wage">Daily Wage</option></select>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Mobile Number *</div><input class="inp" type="tel" placeholder="+91 XXXXX XXXXX"></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Email Address</div><input class="inp" type="email" placeholder="name@company.com"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Mobile Number *</div><input class="inp" type="tel" placeholder="+91 XXXXX XXXXX" id="add-phone"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Email Address</div><input class="inp" type="email" placeholder="name@company.com" id="add-email"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Date of Birth</div><input class="inp" type="date"></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Joining Date</div><input class="inp" type="date"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Date of Birth</div><input class="inp" type="date" id="add-dob"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Joining Date</div><input class="inp" type="date" id="add-join"></div>
       </div>
-      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Address</div><textarea class="inp" rows="2" placeholder="Full address..."></textarea></div>
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Address</div><textarea class="inp" rows="2" placeholder="Full address..." id="add-addr"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Salary / Rate</div><input class="inp" type="number" placeholder="e.g. 25000"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Salary / Rate</div><input class="inp" type="number" placeholder="e.g. 25000" id="add-salary"></div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Salary Type</div>
-          <select class="inp"><option>Monthly</option><option>Daily</option></select>
+          <select class="inp" id="add-saltype"><option value="monthly">Monthly</option><option value="daily">Daily</option></select>
         </div>
       </div>
       <button class="btn" style="width:100%;padding:12px;font-size:14px;" onclick="saveNewStaff()">Create Staff Profile</button>
@@ -1084,7 +1084,74 @@ function saveEdit(){closeEditBtn();showToast();}
 
 function openAdd(){document.getElementById('add-overlay').classList.add('open');}
 function closeAdd(e){if(e.target===document.getElementById('add-overlay'))document.getElementById('add-overlay').classList.remove('open');}
-function saveNewStaff(){document.getElementById('add-overlay').classList.remove('open');showToast('✓ New staff profile created!');}
+async function saveNewStaff(){
+  var name    = (document.getElementById('add-name')||{}).value||'';
+  var desig   = (document.getElementById('add-desig')||{}).value||'';
+  var brand   = (document.getElementById('add-brand')||{}).value||'';
+  var type    = (document.getElementById('add-type')||{}).value||'full_time';
+  var phone   = (document.getElementById('add-phone')||{}).value||'';
+  var email   = (document.getElementById('add-email')||{}).value||'';
+  var dob     = (document.getElementById('add-dob')||{}).value||'';
+  var join    = (document.getElementById('add-join')||{}).value||'';
+  var addr    = (document.getElementById('add-addr')||{}).value||'';
+  var salary  = (document.getElementById('add-salary')||{}).value||'0';
+  var saltype = (document.getElementById('add-saltype')||{}).value||'monthly';
+  var photo   = document.getElementById('add-photo');
+
+  if(!name.trim()){ showToast('⚠️ Name is required!'); return; }
+  if(!phone.trim()){ showToast('⚠️ Mobile number is required!'); return; }
+  if(!brand){ showToast('⚠️ Please select a brand!'); return; }
+
+  // Clean phone — digits only
+  var cleanPhone = phone.replace(/\D/g,'');
+
+  var btn = document.querySelector('#add-overlay .btn');
+  if(btn){ btn.textContent='Creating…'; btn.disabled=true; }
+
+  try{
+    var fd = new FormData();
+    fd.append('name', name.trim());
+    fd.append('designation', desig.trim());
+    fd.append('brand_id', brand);
+    fd.append('employment_type', type);
+    fd.append('phone', cleanPhone);
+    fd.append('email', email.trim());
+    fd.append('password', 'DOT@321');
+    fd.append('role', 'staff');
+    fd.append('base_salary', salary||'0');
+    fd.append('salary_type', saltype);
+    if(dob)  fd.append('dob', dob);
+    if(join) fd.append('joining_date', join);
+    if(addr) fd.append('address', addr.trim());
+    if(photo && photo.files[0]) fd.append('photo', photo.files[0]);
+
+    var token = localStorage.getItem('zhr_token')||'';
+    var res = await fetch('https://zeebas-hr-backend.onrender.com/api/staff',{
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+token },
+      body: fd
+    });
+    var d = await res.json();
+
+    if(d.success){
+      document.getElementById('add-overlay').classList.remove('open');
+      showToast('✅ '+name+' added! Login: '+cleanPhone+' / DOT@321');
+      // Reset form
+      ['add-name','add-desig','add-phone','add-email','add-dob','add-join','add-addr','add-salary'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.value='';
+      });
+      // Reload staff list
+      setTimeout(loadStaffList, 800);
+    } else {
+      showToast('❌ '+( d.message||'Failed to add staff'));
+    }
+  } catch(err){
+    showToast('❌ Server error. Try again.');
+    console.error(err);
+  } finally {
+    if(btn){ btn.textContent='Create Staff Profile'; btn.disabled=false; }
+  }
+}
 function previewPhoto(inputId, previewId){var inp=document.getElementById(inputId);if(inp&&inp.files&&inp.files[0]){var r=new FileReader();r.onload=function(e){var img=document.getElementById(previewId);if(img){img.src=e.target.result;img.style.display='block';}};r.readAsDataURL(inp.files[0]);}}
 function updateInitials(nameId, initId){}
 function triggerPhoto(id){document.getElementById(id).click();}
@@ -1312,6 +1379,100 @@ setTimeout(checkCelebrations,3500);
     }
   } catch(e){}
 })();
+
+/* ── API HELPERS ── */
+var API = 'https://zeebas-hr-backend.onrender.com';
+function zTok(){ return localStorage.getItem('zhr_token')||''; }
+function zHdr(){ return { 'Authorization':'Bearer '+zTok() }; }
+
+/* ── LOAD STAFF LIST ── */
+async function loadStaffList(){
+  var grid = document.getElementById('staff-list-grid');
+  var cnt  = document.getElementById('staff-count');
+  if(!grid) return;
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">Loading staff…</div>';
+  try{
+    var res = await fetch(API+'/api/staff', { headers: zHdr() });
+    var d   = await res.json();
+    var staff = d.data || [];
+    if(cnt) cnt.textContent = staff.length+' members · click a card to edit';
+    if(!staff.length){
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No staff added yet. Click + Add Staff</div>';
+      return;
+    }
+    grid.innerHTML = staff.map(function(s){
+      var init = (s.name||'?').charAt(0).toUpperCase();
+      var status = s.today_status || 'absent';
+      var statusColor = status==='present'?'#30D158':status==='late'?'#FF9F0A':status==='leave'?'#0A84FF':'#FF453A';
+      var statusLabel = status.charAt(0).toUpperCase()+status.slice(1);
+      var brandColor  = s.brand_color || '#0A84FF';
+      var checkin = s.today_checkin ? s.today_checkin.substring(0,5) : '--:--';
+      var type = s.employment_type==='full_time'?'Full Time':s.employment_type==='part_time'?'Part Time':'Daily Wage';
+      return '<div class="sec g" style="padding:0;overflow:hidden;cursor:pointer;" onclick="viewStaff('+s.id+')">'
+        +'<div style="padding:16px 16px 12px;">'
+        +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">'
+        +'<div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,'+brandColor+'22,'+brandColor+'44);border:1.5px solid '+brandColor+'44;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;color:'+brandColor+';flex-shrink:0;">'+init
+        +'<div style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;background:'+statusColor+';border-radius:50%;border:2px solid #0D0D0F;"></div>'
+        +'</div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+s.name+'</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+( s.designation||'Staff')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">'
+        +'<div style="width:6px;height:6px;border-radius:50%;background:'+brandColor+';"></div>'
+        +'<span style="font-size:11px;color:var(--muted);">'+(s.brand_name||'—')+'</span>'
+        +'</div></div></div>'
+        +'<div style="height:0.5px;background:rgba(255,255,255,0.06);margin:0 16px;"></div>'
+        +'<div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<span style="font-size:11px;color:var(--muted);">'+type+'</span>'
+        +'<span style="font-size:11px;padding:3px 9px;border-radius:999px;background:'+statusColor+'22;color:'+statusColor+';border:0.5px solid '+statusColor+'44;">'+statusLabel+'</span>'
+        +'</div></div>';
+    }).join('');
+  } catch(e){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#FF453A;">Failed to load staff.</div>';
+    console.error(e);
+  }
+}
+
+/* ── VIEW/EDIT STAFF ── */
+function viewStaff(id){
+  showToast('Edit feature coming soon!');
+}
+
+/* ── LOAD DASHBOARD STATS ── */
+async function loadDashStats(){
+  try{
+    var today = new Date().toISOString().slice(0,10);
+    var res = await fetch(API+'/api/attendance?date='+today, { headers: zHdr() });
+    var d = await res.json();
+    var rows = Array.isArray(d)?d:(d.data||d.records||[]);
+    var p=0,a=0,l=0,lv=0,o=0;
+    rows.forEach(function(r){
+      var st=(r.status||'').toLowerCase();
+      if(st==='present')p++;
+      else if(st==='absent')a++;
+      else if(st==='late')l++;
+      else if(st==='leave')lv++;
+      else if(st==='onsite')o++;
+    });
+    // Update dashboard stat cards if IDs exist
+    var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+    set('dash-present',p); set('dash-absent',a);
+    set('dash-late',l);    set('dash-leave',lv);
+  } catch(e){ console.log('dash stats error',e); }
+}
+
+/* ── HOOK: load data when page shown ── */
+var _origShowPage = window.showPage;
+window.showPage = function(page, el){
+  if(_origShowPage) _origShowPage(page, el);
+  if(page==='staff')       setTimeout(loadStaffList, 100);
+  if(page==='dashboard')   setTimeout(loadDashStats, 100);
+};
+
+/* ── AUTO-LOAD on first open ── */
+window.addEventListener('load', function(){
+  loadDashStats();
+});
 
 function toggleProfileMenu(){
   var m=document.getElementById('profile-menu');
