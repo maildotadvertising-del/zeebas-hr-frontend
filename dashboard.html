@@ -1103,7 +1103,7 @@ async function saveNewStaff(){
   if(!brand){ showToast('⚠️ Please select a brand!'); return; }
 
   // Clean phone — digits only
-  var cleanPhone = phone.replace(/\D/g,'');
+  var cleanPhone = phone.replace(/\D/g,''); if(cleanPhone.startsWith('91') && cleanPhone.length===12) cleanPhone=cleanPhone.slice(2);
 
   var btn = document.querySelector('#add-overlay .btn');
   if(btn){ btn.textContent='Creating…'; btn.disabled=true; }
