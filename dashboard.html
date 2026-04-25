@@ -1251,6 +1251,8 @@ async function deleteStaff(staffId){
     }
   } catch(e){ showToast('❌ Server error'); }
 }
+function closeEditBtn(){ document.getElementById('edit-overlay').classList.remove('open'); }
+function closeEdit(e){ if(e.target.id==='edit-overlay') closeEditBtn(); }
 function openAdd(){document.getElementById('add-overlay').classList.add('open');}
 function closeAdd(e){if(e.target===document.getElementById('add-overlay'))document.getElementById('add-overlay').classList.remove('open');}
 async function saveNewStaff(){
