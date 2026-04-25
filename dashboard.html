@@ -51,6 +51,20 @@ body{min-height:100vh;background:#050508;background-image:radial-gradient(ellips
 select.inp option{background:#1A1A2E;color:#fff;}
 textarea.inp{resize:none;}
 
+/* TASK TABS */
+.task-tab{background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.task-tab:hover{background:rgba(255,255,255,0.09);}
+.task-tab.active{background:rgba(10,132,255,0.18);border-color:rgba(10,132,255,0.35);color:#0A84FF;font-weight:500;}
+/* TASK CARDS */
+.task-card{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px;transition:border-color 0.2s;}
+.task-card:hover{border-color:rgba(255,255,255,0.15);}
+.task-card.priority-high{border-left:3px solid #FF453A;}
+.task-card.priority-medium{border-left:3px solid #FF9F0A;}
+.task-card.priority-low{border-left:3px solid #30D158;}
+.task-card.status-done{opacity:0.55;}
+/* CAT BADGE */
+.cat-badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:500;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);color:rgba(245,245,247,0.6);}
+
 /* PILLS */
 .pg{background:rgba(48,209,88,0.14);color:#30D158;border:0.5px solid rgba(48,209,88,0.2);display:inline-flex;padding:3px 9px;border-radius:16px;font-size:11px;font-weight:400;}
 .pr{background:rgba(255,69,58,0.14);color:#FF453A;border:0.5px solid rgba(255,69,58,0.2);display:inline-flex;padding:3px 9px;border-radius:16px;font-size:11px;font-weight:400;}
@@ -145,6 +159,7 @@ textarea.inp{resize:none;}
     <div class="ni active" onclick="showPage('dashboard',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>Dashboard</div>
     <div class="ni" onclick="showPage('attendance',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Attendance</div>
     <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Staff</div>
+    <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span style="background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">3</span></div>
     <div class="ni" onclick="showPage('payroll',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.3"/></svg>Payroll</div>
     <div class="ni" onclick="showPage('team-chat',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>Team Chat<div style="width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,69,58,0.6);"></div></div>
@@ -449,6 +464,177 @@ textarea.inp{resize:none;}
   </div>
 
   <!-- ── PAYROLL SETTINGS ── -->
+  <!-- ── TASKS ── -->
+  <div id="page-tasks" class="page">
+    <div class="topbar">
+      <div><div class="ptitle">Tasks</div><div class="psub" id="tasks-sub">Assign and track work across all brands</div></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-g" onclick="exportTasks()">Export</button>
+        <button class="btn" onclick="openAddTask()">+ Assign Task</button>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <!-- Status tabs -->
+      <div style="display:flex;gap:6px;">
+        <button class="task-tab active" data-status="" onclick="setTaskFilter('status','',this)">All</button>
+        <button class="task-tab" data-status="pending" onclick="setTaskFilter('status','pending',this)">Pending</button>
+        <button class="task-tab" data-status="in_progress" onclick="setTaskFilter('status','in_progress',this)">In Progress</button>
+        <button class="task-tab" data-status="done" onclick="setTaskFilter('status','done',this)">Done</button>
+      </div>
+      <div style="flex:1;"></div>
+      <!-- Dropdowns -->
+      <select id="filter-brand" class="inp" style="width:auto;padding:7px 12px;font-size:12px;" onchange="setTaskFilter('brand',this.value,null)">
+        <option value="">All Brands</option>
+        <option value="1">DOT Advertising</option>
+        <option value="2">Zeebas Studios</option>
+        <option value="3">Bobble Events</option>
+        <option value="4">Rappo Chat</option>
+        <option value="5">LIVE Hero</option>
+        <option value="6">Cross Media</option>
+        <option value="7">Visual Hero</option>
+        <option value="8">Social Idea</option>
+      </select>
+      <select id="filter-category" class="inp" style="width:auto;padding:7px 12px;font-size:12px;" onchange="setTaskFilter('category',this.value,null)">
+        <option value="">All Types</option>
+        <option value="design">🎨 Design</option>
+        <option value="video">🎬 Video / Edit</option>
+        <option value="photography">📸 Photography</option>
+        <option value="planning">📋 Planning</option>
+        <option value="client_work">📞 Client Work</option>
+        <option value="event">🎪 Event</option>
+        <option value="social_media">📱 Social Media</option>
+        <option value="other">📦 Other</option>
+      </select>
+      <select id="filter-priority" class="inp" style="width:auto;padding:7px 12px;font-size:12px;" onchange="setTaskFilter('priority',this.value,null)">
+        <option value="">All Priority</option>
+        <option value="high">🔴 High</option>
+        <option value="medium">🟡 Medium</option>
+        <option value="low">🟢 Low</option>
+      </select>
+    </div>
+
+    <!-- Task list -->
+    <div id="tasks-grid" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="text-align:center;padding:60px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📌</div>
+        <div>Loading tasks…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADD / EDIT TASK PANEL ── -->
+  <div id="task-overlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);" onclick="closeTaskPanel(event)"></div>
+  <div id="task-panel" style="display:none;position:fixed;top:0;right:0;width:460px;height:100vh;background:rgba(8,8,18,0.98);backdrop-filter:blur(32px);border-left:0.5px solid rgba(255,255,255,0.1);z-index:501;overflow-y:auto;padding:28px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div id="task-panel-title" style="font-size:18px;font-weight:500;color:#fff;">Assign New Task</div>
+      <button onclick="closeTaskPanel()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:32px;height:32px;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
+    </div>
+
+    <form id="task-form" onsubmit="return false;">
+      <input type="hidden" id="task-edit-id">
+
+      <!-- Title -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Task Title *</div>
+        <input class="inp" type="text" id="task-title" placeholder="e.g. Design Instagram Banner" required>
+      </div>
+
+      <!-- Description -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Description / Notes</div>
+        <textarea class="inp" id="task-desc" rows="3" placeholder="Task details, links, references…" style="resize:vertical;min-height:80px;"></textarea>
+      </div>
+
+      <!-- Brand + Category -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Brand</div>
+          <select class="inp" id="task-brand">
+            <option value="">Select Brand</option>
+            <option value="1">DOT Advertising</option>
+            <option value="2">Zeebas Studios</option>
+            <option value="3">Bobble Events</option>
+            <option value="4">Rappo Chat</option>
+            <option value="5">LIVE Hero</option>
+            <option value="6">Cross Media</option>
+            <option value="7">Visual Hero</option>
+            <option value="8">Social Idea</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Task Type *</div>
+          <select class="inp" id="task-category" required>
+            <option value="">Select Type</option>
+            <option value="design">🎨 Design</option>
+            <option value="video">🎬 Video / Edit</option>
+            <option value="photography">📸 Photography</option>
+            <option value="planning">📋 Planning</option>
+            <option value="client_work">📞 Client Work</option>
+            <option value="event">🎪 Event</option>
+            <option value="social_media">📱 Social Media</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Assign To -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Assign To *</div>
+        <select class="inp" id="task-assigned" required>
+          <option value="">Select Staff Member</option>
+        </select>
+      </div>
+
+      <!-- Due Date + Priority -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Due Date</div>
+          <input class="inp" type="date" id="task-due">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Priority</div>
+          <select class="inp" id="task-priority">
+            <option value="high">🔴 High</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Status (edit mode only) -->
+      <div style="margin-bottom:14px;" id="task-status-row">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Status</div>
+        <select class="inp" id="task-status">
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+
+      <!-- File Attach -->
+      <div style="margin-bottom:22px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Attach File</div>
+        <label style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:0.5px dashed rgba(255,255,255,0.18);border-radius:12px;padding:12px 16px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(10,132,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.18)'">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2v11M10 2L7 5M10 2l3 3" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <div>
+            <div id="task-file-name" style="font-size:13px;color:var(--muted);">Click to choose file</div>
+            <div style="font-size:10px;color:rgba(245,245,247,0.28);margin-top:2px;">Image, PDF, Doc, Video — max 10MB</div>
+          </div>
+          <input type="file" id="task-file" style="display:none;" onchange="onTaskFileChange(this)" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.mp4,.mov,.zip">
+        </label>
+        <div id="task-existing-file" style="display:none;margin-top:8px;background:rgba(10,132,255,0.08);border:0.5px solid rgba(10,132,255,0.2);border-radius:9px;padding:8px 12px;font-size:12px;color:#0A84FF;"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:flex;gap:10px;">
+        <button type="button" onclick="closeTaskPanel()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button type="button" onclick="saveTask()" id="task-save-btn" style="flex:2;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:12px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Assign Task</button>
+      </div>
+    </form>
+  </div>
+
   <div id="page-payroll-settings" class="page">
     <div class="topbar"><div><div class="ptitle">Payroll Settings</div><div class="psub">Late deductions, OT, absent rules</div></div><div style="display:flex;gap:10px;"><button class="btn-g">Reset</button><button class="btn" onclick="showToast()">Save Settings</button></div></div>
     <div class="sec g"><div style="color:var(--muted);font-size:13px;">Payroll settings page — grace period, deduction rules, OT rate all configurable here.</div></div>
@@ -1490,7 +1676,298 @@ window.showPage = function(page, el){
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')       setTimeout(loadStaffList, 100);
   if(page==='dashboard')   setTimeout(loadDashStats, 100);
+  if(page==='tasks')       setTimeout(loadTasks, 100);
 };
+
+/* ════════════════════════════════════════
+   TASKS MANAGEMENT
+   ════════════════════════════════════════ */
+
+var _taskFilters = { status:'', brand:'', category:'', priority:'' };
+var _staffCache  = [];
+
+var CATEGORY_LABELS = {
+  design:'🎨 Design', video:'🎬 Video / Edit', photography:'📸 Photography',
+  planning:'📋 Planning', client_work:'📞 Client Work', event:'🎪 Event',
+  social_media:'📱 Social Media', other:'📦 Other', general:'📦 General'
+};
+var PRIORITY_COLOR = { high:'#FF453A', medium:'#FF9F0A', low:'#30D158' };
+var STATUS_LABEL   = { pending:'Pending', in_progress:'In Progress', done:'Done ✓' };
+var STATUS_COLOR   = { pending:'#FF9F0A', in_progress:'#0A84FF', done:'#30D158' };
+
+/* ── Load Tasks ── */
+async function loadTasks(){
+  var grid = document.getElementById('tasks-grid');
+  var sub  = document.getElementById('tasks-sub');
+  if(!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">Loading tasks…</div>';
+
+  try{
+    var qs = [];
+    if(_taskFilters.status)   qs.push('status='+_taskFilters.status);
+    if(_taskFilters.brand)    qs.push('brand_id='+_taskFilters.brand);
+    if(_taskFilters.category) qs.push('category='+_taskFilters.category);
+    if(_taskFilters.priority) qs.push('priority='+_taskFilters.priority);
+    var url = API+'/api/tasks'+(qs.length?'?'+qs.join('&'):'');
+
+    var res  = await fetch(url, { headers: zHdr() });
+    var data = await res.json();
+    var tasks = data.data || [];
+
+    // Update badge
+    var pending = tasks.filter(function(t){ return t.status!=='done'; }).length;
+    var badge = document.getElementById('tasks-badge');
+    if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
+    if(sub) sub.textContent = tasks.length+' task'+(tasks.length!==1?'s':'')+' · '+pending+' pending';
+
+    // Update dashboard stat
+    var dt = document.getElementById('dash-tasks');
+    if(dt) dt.textContent = pending;
+
+    if(!tasks.length){
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">'
+        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📌</div>'
+        +'<div style="font-size:14px;margin-bottom:6px;">No tasks found</div>'
+        +'<div style="font-size:12px;opacity:0.6;">Click "+ Assign Task" to create one</div></div>';
+      return;
+    }
+
+    grid.innerHTML = tasks.map(function(t){ return buildTaskCard(t); }).join('');
+  } catch(e){
+    console.error('loadTasks error',e);
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#FF453A;">Failed to load tasks</div>';
+  }
+}
+
+/* ── Build task card HTML ── */
+function buildTaskCard(t){
+  var pColor  = PRIORITY_COLOR[t.priority] || '#FF9F0A';
+  var sColor  = STATUS_COLOR[t.status]     || '#FF9F0A';
+  var sLabel  = STATUS_LABEL[t.status]     || 'Pending';
+  var catLbl  = CATEGORY_LABELS[t.category]|| '📦 Other';
+  var init    = (t.assigned_to_name||'?').charAt(0).toUpperCase();
+  var bColor  = t.brand_color || '#0A84FF';
+
+  // Due date
+  var dueStr = '';
+  var overdue = false;
+  if(t.due_date){
+    var due = new Date(t.due_date);
+    var now = new Date(); now.setHours(0,0,0,0);
+    overdue = due < now && t.status !== 'done';
+    dueStr = due.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+  }
+
+  var doneCls = t.status==='done' ? ' status-done' : '';
+  return '<div class="task-card priority-'+t.priority+doneCls+'">'
+    +'<div style="display:flex;align-items:flex-start;gap:12px;">'
+    // Left: status dot
+    +'<div style="margin-top:3px;width:10px;height:10px;border-radius:50%;background:'+sColor+';flex-shrink:0;box-shadow:0 0 6px '+sColor+'66;"></div>'
+    // Middle: content
+    +'<div style="flex:1;min-width:0;">'
+      // Title
+      +'<div style="font-size:14px;font-weight:500;color:#fff;margin-bottom:7px;'+(t.status==='done'?'text-decoration:line-through;opacity:0.6;':'')+'">'+escHtml(t.title)+'</div>'
+      // Tags row
+      +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px;">'
+        +(t.brand_name ? '<span style="display:inline-flex;align-items:center;gap:4px;background:'+bColor+'18;border:0.5px solid '+bColor+'40;color:'+bColor+';border-radius:999px;padding:2px 9px;font-size:10px;font-weight:500;"><span style="width:5px;height:5px;border-radius:50%;background:'+bColor+';display:inline-block;"></span>'+escHtml(t.brand_name)+'</span>' : '')
+        +'<span class="cat-badge">'+catLbl+'</span>'
+        +'<span style="background:'+pColor+'18;border:0.5px solid '+pColor+'40;color:'+pColor+';border-radius:999px;padding:2px 9px;font-size:10px;font-weight:500;">'+t.priority.charAt(0).toUpperCase()+t.priority.slice(1)+'</span>'
+        +'<span style="background:'+sColor+'14;border:0.5px solid '+sColor+'30;color:'+sColor+';border-radius:999px;padding:2px 9px;font-size:10px;">'+sLabel+'</span>'
+      +'</div>'
+      // Bottom row
+      +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
+        // Assigned to
+        +'<div style="display:flex;align-items:center;gap:6px;">'
+          +'<div style="width:22px;height:22px;border-radius:50%;background:'+bColor+'22;border:0.5px solid '+bColor+'44;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:'+bColor+';">'+init+'</div>'
+          +'<span style="font-size:11px;color:var(--muted);">'+escHtml(t.assigned_to_name||'—')+'</span>'
+        +'</div>'
+        // Due date
+        +(dueStr ? '<div style="display:flex;align-items:center;gap:4px;">'
+          +'<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="2" y="2.5" width="10" height="9" rx="1.5" stroke="'+(overdue?'#FF453A':'rgba(245,245,247,0.35')+'" stroke-width="1.2"/><path d="M4.5 1.5v2M9.5 1.5v2M2 6h10" stroke="'+(overdue?'#FF453A':'rgba(245,245,247,0.35')+'" stroke-width="1.2" stroke-linecap="round"/></svg>'
+          +'<span style="font-size:11px;color:'+(overdue?'#FF453A':'var(--muted)')+';">'+dueStr+(overdue?' · Overdue':'')+'</span>'
+          +'</div>' : '')
+        // Attachment indicator
+        +(t.attachment_url ? '<span style="font-size:10px;color:#0A84FF;">📎 '+escHtml(t.attachment_name||'file')+'</span>' : '')
+      +'</div>'
+      // Description preview
+      +(t.description ? '<div style="margin-top:8px;font-size:11px;color:rgba(245,245,247,0.35);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(t.description)+'</div>' : '')
+    +'</div>'
+    // Right: actions
+    +'<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'
+      +'<button onclick="openEditTask('+t.id+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.22);border-radius:8px;padding:5px 10px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">✏️ Edit</button>'
+      +'<button onclick="deleteTask('+t.id+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;padding:5px 10px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">🗑 Delete</button>'
+    +'</div>'
+  +'</div>'
++'</div>';
+}
+
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Filter ── */
+function setTaskFilter(key, val, btn){
+  if(key==='status'){
+    _taskFilters.status = val;
+    document.querySelectorAll('.task-tab').forEach(function(b){ b.classList.remove('active'); });
+    if(btn) btn.classList.add('active');
+  } else if(key==='brand')    { _taskFilters.brand    = val; }
+  else if(key==='category') { _taskFilters.category = val; }
+  else if(key==='priority')  { _taskFilters.priority  = val; }
+  loadTasks();
+}
+
+/* ── Open Add Task Panel ── */
+async function openAddTask(){
+  document.getElementById('task-edit-id').value   = '';
+  document.getElementById('task-panel-title').textContent = 'Assign New Task';
+  document.getElementById('task-save-btn').textContent    = 'Assign Task';
+  document.getElementById('task-title').value    = '';
+  document.getElementById('task-desc').value     = '';
+  document.getElementById('task-brand').value    = '';
+  document.getElementById('task-category').value = '';
+  document.getElementById('task-due').value      = '';
+  document.getElementById('task-priority').value = 'medium';
+  document.getElementById('task-status').value   = 'pending';
+  document.getElementById('task-file-name').textContent = 'Click to choose file';
+  document.getElementById('task-existing-file').style.display = 'none';
+  document.getElementById('task-file').value     = '';
+  document.getElementById('task-status-row').style.display = 'none'; // hide on add
+
+  await loadStaffDropdown();
+  document.getElementById('task-overlay').style.display = 'block';
+  document.getElementById('task-panel').style.display   = 'block';
+}
+
+/* ── Open Edit Task Panel ── */
+async function openEditTask(id){
+  try{
+    var res  = await fetch(API+'/api/tasks/'+id, { headers: zHdr() });
+    var data = await res.json();
+    if(!data.success) return showToast('Failed to load task');
+    var t = data.data;
+
+    document.getElementById('task-edit-id').value   = t.id;
+    document.getElementById('task-panel-title').textContent = 'Edit Task';
+    document.getElementById('task-save-btn').textContent    = 'Save Changes';
+    document.getElementById('task-title').value    = t.title || '';
+    document.getElementById('task-desc').value     = t.description || '';
+    document.getElementById('task-brand').value    = t.brand_id || '';
+    document.getElementById('task-category').value = t.category || '';
+    document.getElementById('task-due').value      = t.due_date ? t.due_date.slice(0,10) : '';
+    document.getElementById('task-priority').value = t.priority || 'medium';
+    document.getElementById('task-status').value   = t.status || 'pending';
+    document.getElementById('task-status-row').style.display = ''; // show on edit
+    document.getElementById('task-file-name').textContent = 'Click to replace file';
+
+    // Show existing attachment
+    var ef = document.getElementById('task-existing-file');
+    if(t.attachment_name){ ef.style.display='block'; ef.innerHTML='📎 Current: <a href="'+API+t.attachment_url+'" target="_blank" style="color:#0A84FF;">'+escHtml(t.attachment_name)+'</a>'; }
+    else { ef.style.display='none'; }
+
+    await loadStaffDropdown(t.assigned_to);
+    document.getElementById('task-overlay').style.display = 'block';
+    document.getElementById('task-panel').style.display   = 'block';
+  } catch(e){ showToast('Error loading task'); }
+}
+
+/* ── Load staff into dropdown ── */
+async function loadStaffDropdown(selectedId){
+  var sel = document.getElementById('task-assigned');
+  if(_staffCache.length){
+    renderStaffDropdown(sel, _staffCache, selectedId);
+    return;
+  }
+  try{
+    var res  = await fetch(API+'/api/staff', { headers: zHdr() });
+    var data = await res.json();
+    _staffCache = data.data || [];
+    renderStaffDropdown(sel, _staffCache, selectedId);
+  } catch(e){ sel.innerHTML='<option>Failed to load staff</option>'; }
+}
+function renderStaffDropdown(sel, staff, selectedId){
+  sel.innerHTML = '<option value="">Select Staff Member</option>'
+    + staff.map(function(s){
+        return '<option value="'+s.id+'"'+(String(s.id)===String(selectedId)?' selected':'')+'>'+escHtml(s.name)+(s.brand_name?' · '+s.brand_name:'')+'</option>';
+      }).join('');
+}
+
+/* ── Save Task (Add or Edit) ── */
+async function saveTask(){
+  var id       = document.getElementById('task-edit-id').value;
+  var title    = document.getElementById('task-title').value.trim();
+  var assigned = document.getElementById('task-assigned').value;
+  var category = document.getElementById('task-category').value;
+
+  if(!title)    { showToast('Task title is required'); return; }
+  if(!assigned) { showToast('Please select a staff member'); return; }
+  if(!category) { showToast('Please select a task type'); return; }
+
+  var btn = document.getElementById('task-save-btn');
+  btn.textContent = id ? 'Saving…' : 'Assigning…';
+  btn.disabled    = true;
+
+  var fd = new FormData();
+  fd.append('title',       title);
+  fd.append('description', document.getElementById('task-desc').value.trim());
+  fd.append('brand_id',    document.getElementById('task-brand').value);
+  fd.append('category',    category);
+  fd.append('assigned_to', assigned);
+  fd.append('due_date',    document.getElementById('task-due').value);
+  fd.append('priority',    document.getElementById('task-priority').value);
+  if(id) fd.append('status', document.getElementById('task-status').value);
+  var file = document.getElementById('task-file').files[0];
+  if(file) fd.append('attachment', file);
+
+  try{
+    var method = id ? 'PUT' : 'POST';
+    var url    = API+'/api/tasks'+(id?'/'+id:'');
+    var res    = await fetch(url, { method:method, headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
+    var data   = await res.json();
+    if(data.success){
+      showToast(id ? '✓ Task updated' : '✓ Task assigned successfully');
+      closeTaskPanel();
+      loadTasks();
+    } else {
+      showToast(data.message || 'Failed to save task');
+    }
+  } catch(e){
+    showToast('Server error. Try again.');
+  } finally {
+    btn.textContent = id ? 'Save Changes' : 'Assign Task';
+    btn.disabled    = false;
+  }
+}
+
+/* ── Delete Task ── */
+async function deleteTask(id){
+  if(!confirm('Delete this task? This cannot be undone.')) return;
+  try{
+    var res  = await fetch(API+'/api/tasks/'+id, { method:'DELETE', headers:zHdr() });
+    var data = await res.json();
+    if(data.success){ showToast('✓ Task deleted'); loadTasks(); }
+    else showToast(data.message||'Failed to delete');
+  } catch(e){ showToast('Server error'); }
+}
+
+/* ── Close Panel ── */
+function closeTaskPanel(e){
+  if(e && e.target !== document.getElementById('task-overlay')) return;
+  document.getElementById('task-overlay').style.display = 'none';
+  document.getElementById('task-panel').style.display   = 'none';
+}
+
+/* ── File input label ── */
+function onTaskFileChange(input){
+  var fn = document.getElementById('task-file-name');
+  if(input.files[0]) fn.textContent = '✓ '+input.files[0].name;
+  else fn.textContent = 'Click to choose file';
+}
+
+/* ── Export ── */
+function exportTasks(){
+  showToast('Export feature coming soon');
+}
 
 /* ── AUTO-LOAD on first open ── */
 window.addEventListener('load', function(){
