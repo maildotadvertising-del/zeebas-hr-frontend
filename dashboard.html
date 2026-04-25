@@ -1165,8 +1165,9 @@ async function openEdit(staffId){
       +'<div style="padding:0 26px 24px;display:flex;flex-direction:column;gap:11px;">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Full Name *</div><input class="inp" id="ef-name" value="'+(p.name||'')+'"></div>'
-      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Designation</div><input class="inp" id="ef-desig" value="'+(p.designation||'')+'"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Employee ID</div><input class="inp" id="ef-empid" placeholder="e.g. ZC-DOT-001" value="'+(p.emp_id||'')+'"></div>'
       +'</div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Designation</div><input class="inp" id="ef-desig" value="'+(p.designation||'')+'"></div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Brand</div><select class="inp" id="ef-brand">'+brandOpts+'</select></div>'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Employment Type</div><select class="inp" id="ef-type">'+typeOpts+'</select></div>'
@@ -1200,6 +1201,7 @@ async function openEdit(staffId){
 async function saveEdit(){
   if(!_editStaffId){ showToast('❌ No staff selected'); return; }
   var name    = (document.getElementById('ef-name')||{}).value||'';
+  var empid   = (document.getElementById('ef-empid')||{}).value||'';
   var desig   = (document.getElementById('ef-desig')||{}).value||'';
   var brand   = (document.getElementById('ef-brand')||{}).value||'';
   var type    = (document.getElementById('ef-type')||{}).value||'full_time';
@@ -1211,11 +1213,13 @@ async function saveEdit(){
   var saltype = (document.getElementById('ef-saltype')||{}).value||'monthly';
   var addr    = (document.getElementById('ef-addr')||{}).value||'';
   if(!name.trim()){ showToast('⚠️ Name is required!'); return; }
+  if(!empid.trim()){ showToast('⚠️ Employee ID is required!'); return; }
   var btn = document.getElementById('ef-save-btn');
   if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
   try{
     var fd = new FormData();
     fd.append('name', name.trim());
+    fd.append('emp_id', empid.trim().toUpperCase());
     fd.append('designation', desig.trim());
     fd.append('brand_id', brand);
     fd.append('employment_type', type);
