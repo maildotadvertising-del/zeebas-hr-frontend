@@ -1161,11 +1161,8 @@ async function staffLogin(){
       localStorage.setItem('zhr_token',d.token);
       localStorage.setItem('zhr_staff',JSON.stringify(d.staff));
       if(d.staff.role==='admin'){
-        populateAdmin(d.staff);
-        go2('s2-home');
-        var p2=document.getElementById('app2');
-        if(p2) p2.scrollIntoView({behavior:'smooth',block:'center'});
-        fetchAdminStats();
+        // Admin → go to full dashboard page
+        window.location.href='/dashboard.html';
       } else {
         populateStaff(d.staff);
         go1('s1-home');

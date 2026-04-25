@@ -1292,17 +1292,35 @@ setTimeout(checkCelebrations,3500);
 
 
 <script>
+/* ── ZEEBAS DASHBOARD — AUTH + SESSION ── */
+(function(){
+  var token = localStorage.getItem('zhr_token');
+  var staffRaw = localStorage.getItem('zhr_staff');
+  if(!token || !staffRaw){
+    window.location.href = '/';
+    return;
+  }
+  try {
+    var staff = JSON.parse(staffRaw);
+    // Update sidebar bottom name & avatar
+    var sbBot = document.querySelector('.sb-bot');
+    if(sbBot){
+      var nameDiv = sbBot.querySelector('div[style*="font-size:12px"]');
+      if(nameDiv) nameDiv.textContent = staff.name || 'Admin';
+      var avatar = sbBot.querySelector('div[style*="border-radius:50%"]');
+      if(avatar) avatar.textContent = (staff.name||'A').charAt(0).toUpperCase();
+    }
+  } catch(e){}
+})();
+
 function toggleProfileMenu(){
   var m=document.getElementById('profile-menu');
-  if(m) m.style.display = m.style.display==='none' ? 'block' : 'none';
+  if(m) m.style.display = m.style.display==='none'?'block':'none';
 }
-// Close menu on outside click
-document.addEventListener('click', function(e){
+document.addEventListener('click',function(e){
   var menu=document.getElementById('profile-menu');
   var bot=document.querySelector('.sb-bot');
-  if(menu && bot && !bot.contains(e.target)){
-    menu.style.display='none';
-  }
+  if(menu && bot && !bot.contains(e.target)) menu.style.display='none';
 });
 function dashLogout(){
   if(confirm('Logout from Zeebas HR?')){
