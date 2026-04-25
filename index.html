@@ -857,7 +857,7 @@ function go2(id){
 /* staffLogin() — handled by API script */
 
 // Clock
-function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+' '+a;['c1','c2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});}tick();setInterval(tick,30000);
+function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;['c1','c2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});}tick();setInterval(tick,1000);
 
 // GPS Attendance
 function selAtt(idx){

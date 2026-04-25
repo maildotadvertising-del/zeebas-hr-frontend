@@ -646,7 +646,7 @@ textarea.inp{resize:none;}
   </div>
 
   <div id="page-payroll-settings" class="page">
-    <div class="topbar"><div><div class="ptitle">Payroll Settings</div><div class="psub">Late deductions, OT, absent rules</div></div><div style="display:flex;gap:10px;"><button class="btn-g">Reset</button><button class="btn" onclick="showToast()">Save Settings</button></div></div>
+    <div class="topbar"><div><div class="ptitle">Payroll Settings</div><div class="psub">Late deductions, OT, absent rules</div></div><div style="display:flex;gap:10px;"><button class="btn-g">Reset</button><button class="btn" onclick="showToast('✅ Payroll settings saved')">Save Settings</button></div></div>
     <div class="sec g"><div style="color:var(--muted);font-size:13px;">Payroll settings page — grace period, deduction rules, OT rate all configurable here.</div></div>
   </div>
 
@@ -1118,12 +1118,30 @@ textarea.inp{resize:none;}
 function showPage(name, el){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   var pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
-  if(el){document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});el.classList.add('active');}
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+  // Highlight correct nav item
+  if(el){ el.classList.add('active'); }
+  else {
+    document.querySelectorAll('.ni').forEach(function(n){
+      if(n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'"+name+"'")!==-1) n.classList.add('active');
+    });
+  }
+  // Save current page in hash so refresh restores it
+  location.hash = name;
 }
-document.querySelectorAll('.ni').forEach(function(el){el.addEventListener('click',function(){document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});el.classList.add('active');});});
+
 
 // Clock
-function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),a=h>=12?'PM':'AM';h=h%12||12;var el=document.getElementById('dclock');if(el)el.textContent='Monday, 20 April 2026  ·  '+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;}tick();setInterval(tick,1000);
+function tick(){
+  var d=new Date();
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var day=days[d.getDay()], date=d.getDate(), month=months[d.getMonth()], year=d.getFullYear();
+  var h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),a=h>=12?'PM':'AM';h=h%12||12;
+  var el=document.getElementById('dclock');
+  if(el)el.textContent=day+', '+date+' '+month+' '+year+'  ·  '+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;
+}
+tick();setInterval(tick,1000);
 
 // GPS
 function updateRadius(){var v=parseInt(document.getElementById('radius-inp').value)||300;document.getElementById('radius-slider').value=Math.min(v,1000);syncDisplay(v);}
@@ -1136,7 +1154,7 @@ function syncDisplay(v){
   var circle=document.getElementById('radius-circle');if(circle){var sz=Math.min(Math.max(v/300*120,60),200);circle.style.width=sz+'px';circle.style.height=sz+'px';}
   var dashLbl=document.getElementById('radius-label');if(dashLbl)dashLbl.textContent=v+'m';
 }
-function saveGPS(){showToast();}
+function saveGPS(){showToast('✅ GPS settings saved');}
 function resetGPS(){setRadius(300);}
 
 // Approvals
@@ -1946,6 +1964,15 @@ window.showPage = function(page, el){
   if(page==='dashboard')   setTimeout(loadDashStats, 100);
   if(page==='tasks')       setTimeout(loadTasks, 100);
 };
+
+/* ── On load: restore page from hash AND load its data ── */
+document.addEventListener('DOMContentLoaded', function(){
+  var hash = (location.hash||'').replace('#','').trim();
+  var validPages = ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'];
+  var page = (hash && validPages.indexOf(hash)!==-1) ? hash : 'dashboard';
+  // slight delay so auth check runs first
+  setTimeout(function(){ showPage(page, null); }, 50);
+});
 
 /* ════════════════════════════════════════
    TASKS MANAGEMENT
