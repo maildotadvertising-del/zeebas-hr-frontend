@@ -1213,9 +1213,9 @@ async function saveEdit(){
     fd.append('email', email.trim());
     fd.append('base_salary', salary||'0');
     fd.append('salary_type', saltype);
-    if(dob)  fd.append('dob', dob);
-    if(join) fd.append('joining_date', join);
-    if(addr) fd.append('address', addr.trim());
+    fd.append('dob', dob||'');
+    fd.append('joining_date', join||'');
+    fd.append('address', addr.trim());
     var res = await fetch(API+'/api/staff/'+_editStaffId, {
       method:'PUT', headers: zHdr(), body: fd
     });
@@ -1228,7 +1228,7 @@ async function saveEdit(){
       showToast('❌ '+(d.message||'Update failed'));
     }
   } catch(e){
-    showToast('❌ Server error. Try again.');
+    showToast('❌ '+(e.message||'Server error. Try again.'));
     console.error(e);
   } finally {
     if(btn){ btn.textContent='Save Changes'; btn.disabled=false; }
@@ -1289,9 +1289,9 @@ async function saveNewStaff(){
     fd.append('role', 'staff');
     fd.append('base_salary', salary||'0');
     fd.append('salary_type', saltype);
-    if(dob)  fd.append('dob', dob);
-    if(join) fd.append('joining_date', join);
-    if(addr) fd.append('address', addr.trim());
+    fd.append('dob', dob||'');
+    fd.append('joining_date', join||'');
+    fd.append('address', addr.trim());
     if(photo && photo.files[0]) fd.append('photo', photo.files[0]);
 
     var token = localStorage.getItem('zhr_token')||'';
