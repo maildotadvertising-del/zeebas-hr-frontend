@@ -1623,14 +1623,18 @@ setTimeout(checkCelebrations,3500);
 var API = 'https://zeebas-hr-backend.onrender.com';
 
 /* ── ZEEBAS DASHBOARD — AUTH + SESSION ── */
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   var token    = localStorage.getItem('zhr_token');
   var staffRaw = localStorage.getItem('zhr_staff');
   var overlay  = document.getElementById('admin-login-overlay');
 
   function showOverlay(){
-    if(overlay) overlay.style.display='flex';
+    if(overlay){ overlay.style.display='flex'; }
     document.body.style.overflow='hidden';
+  }
+  function hideOverlay(){
+    if(overlay){ overlay.style.display='none'; }
+    document.body.style.overflow='';
   }
 
   // Not logged in → show admin login screen
@@ -1646,8 +1650,7 @@ var API = 'https://zeebas-hr-backend.onrender.com';
       return;
     }
     // Authenticated admin — hide overlay, update sidebar
-    if(overlay) overlay.style.display='none';
-    document.body.style.overflow='';
+    hideOverlay();
     var sbBot = document.querySelector('.sb-bot');
     if(sbBot){
       var nameDiv = sbBot.querySelector('div[style*="font-size:12px"]');
@@ -1656,7 +1659,7 @@ var API = 'https://zeebas-hr-backend.onrender.com';
       if(avatar) avatar.textContent = (staff.name||'A').charAt(0).toUpperCase();
     }
   } catch(e){ showOverlay(); }
-})();
+});
 
 /* ── ADMIN LOGIN TAB SWITCH ── */
 var _alTab = 'phone';
@@ -2331,7 +2334,7 @@ function dashLogout(){
 <!-- ════════════════════════════════════
      ADMIN LOGIN OVERLAY
 ════════════════════════════════════ -->
-<div id="admin-login-overlay" style="display:flex;position:fixed;inset:0;z-index:9999;background:#040408;align-items:center;justify-content:center;flex-direction:column;">
+<div id="admin-login-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#040408;align-items:center;justify-content:center;flex-direction:column;">
   <div style="width:100%;max-width:400px;padding:0 24px;">
 
     <!-- Logo / Header -->
