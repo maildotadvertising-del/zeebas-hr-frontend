@@ -1223,7 +1223,8 @@ async function saveEdit(){
     if(d.success){
       closeEditBtn();
       showToast('✅ '+name+' updated successfully!');
-      setTimeout(loadStaffList, 600);
+      loadStaffList();          // refresh immediately
+      setTimeout(loadStaffList, 1500); // and again after 1.5s to catch any lag
     } else {
       showToast('❌ '+(d.message||'Update failed'));
     }
@@ -1591,29 +1592,44 @@ async function loadStaffList(){
       return;
     }
     grid.innerHTML = staff.map(function(s){
-      var init = (s.name||'?').charAt(0).toUpperCase();
-      var status = s.today_status || 'absent';
-      var statusColor = status==='present'?'#30D158':status==='late'?'#FF9F0A':status==='leave'?'#0A84FF':'#FF453A';
-      var statusLabel = status.charAt(0).toUpperCase()+status.slice(1);
+      // Initials — up to 2 letters (e.g. "Arjun Kumar" → "AK", "Zeebas" → "ZB")
+      var words = (s.name||'?').trim().split(/\s+/);
+      var init = words.length >= 2
+        ? (words[0][0]||'').toUpperCase()+(words[1][0]||'').toUpperCase()
+        : (s.name||'?').substring(0,2).toUpperCase();
+
+      // Attendance — null = no record yet (neutral), not "Absent"
+      var hasRecord = !!s.today_status;
+      var status = s.today_status || '';
+      var statusColor = status==='present'?'#30D158':status==='late'?'#FF9F0A':status==='leave'?'#0A84FF':status==='onsite'?'#BF5FFF':hasRecord?'#FF453A':'#636366';
+      var dotColor   = hasRecord ? statusColor : '#3A3A3C';
+      var statusLabel = status==='present'?'Present':status==='late'?'Late':status==='leave'?'On Leave':status==='onsite'?'Onsite':status==='absent'?'Absent':'—';
+      var checkin = s.today_checkin ? (typeof s.today_checkin==='string'?s.today_checkin.substring(0,5):new Date(s.today_checkin).toTimeString().substring(0,5)) : '';
+
       var brandColor  = s.brand_color || '#0A84FF';
-      var checkin = s.today_checkin ? s.today_checkin.substring(0,5) : '--:--';
       var type = s.employment_type==='full_time'?'Full Time':s.employment_type==='part_time'?'Part Time':'Daily Wage';
+
+      // Avatar: show photo if available, else initials
+      var avatarInner = s.photo_url
+        ? '<img src="'+API+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'
+        : init;
+
       return '<div class="sec g" style="padding:0;overflow:hidden;cursor:pointer;" onclick="viewStaff('+s.id+')">'
         +'<div style="padding:16px 16px 12px;">'
         +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">'
-        +'<div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,'+brandColor+'22,'+brandColor+'44);border:1.5px solid '+brandColor+'44;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;color:'+brandColor+';flex-shrink:0;">'+init
-        +'<div style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;background:'+statusColor+';border-radius:50%;border:2px solid #0D0D0F;"></div>'
+        +'<div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,'+brandColor+'22,'+brandColor+'44);border:1.5px solid '+brandColor+'44;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:'+brandColor+';flex-shrink:0;overflow:hidden;">'+avatarInner
+        +'<div style="position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;background:'+dotColor+';border-radius:50%;border:2px solid #0D0D0F;"></div>'
         +'</div>'
         +'<div style="flex:1;min-width:0;">'
-        +'<div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+s.name+'</div>'
-        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+( s.designation||'Staff')+'</div>'
+        +'<div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(s.name)+'</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(s.designation||'Staff')+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">'
         +'<div style="width:6px;height:6px;border-radius:50%;background:'+brandColor+';"></div>'
         +'<span style="font-size:11px;color:var(--muted);">'+(s.brand_name||'—')+'</span>'
         +'</div></div></div>'
         +'<div style="height:0.5px;background:rgba(255,255,255,0.06);margin:0 16px;"></div>'
         +'<div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">'
-        +'<span style="font-size:11px;color:var(--muted);">'+type+'</span>'
+        +'<span style="font-size:11px;color:var(--muted);">'+type+(checkin?' · ✓'+checkin:'')+'</span>'
         +'<span style="font-size:11px;padding:3px 9px;border-radius:999px;background:'+statusColor+'22;color:'+statusColor+';border:0.5px solid '+statusColor+'44;">'+statusLabel+'</span>'
         +'</div></div>';
     }).join('');
