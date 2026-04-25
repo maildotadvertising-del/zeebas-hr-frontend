@@ -172,12 +172,12 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <!-- Profile banner -->
         <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));">
           <div style="display:flex;align-items:center;gap:11px;">
-            <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;">AK</div>
+            <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;">—</div>
             <div style="flex:1;">
-              <div id="s1-name" style="color:#fff;font-size:15px;font-weight:500;">Arjun Kumar</div>
+              <div id="s1-name" style="color:#fff;font-size:15px;font-weight:500;">Welcome</div>
               <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
-                <span id="s1-desig" style="background:rgba(255,159,10,0.2);border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:2px 7px;font-size:10px;color:#FF9F0A;font-weight:500;">Senior Designer</span>
-                <span id="s1-brand" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px 7px;font-size:10px;color:rgba(245,245,247,0.45);">DOT Advertising</span>
+                <span id="s1-desig" style="background:rgba(255,159,10,0.2);border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:2px 7px;font-size:10px;color:#FF9F0A;font-weight:500;"></span>
+                <span id="s1-brand" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px 7px;font-size:10px;color:rgba(245,245,247,0.45);"></span>
               </div>
             </div>
           </div>
@@ -274,34 +274,18 @@ select.inp option{background:#1A1A2E;color:#fff;}
       <!-- Pinned message (admin pinned) -->
       <div id="pinned-msg" style="background:rgba(10,132,255,0.1);border-bottom:0.5px solid rgba(10,132,255,0.15);padding:8px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;">
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v8M7 9.5L4 6.5M7 9.5L10 6.5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12.5h8" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-        <div style="flex:1;"><div style="color:#0A84FF;font-size:9px;font-weight:500;margin-bottom:1px;">Pinned Message</div><div style="color:rgba(245,245,247,0.55);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Banner deadline today — Arjun please check ✓</div></div>
+        <div style="flex:1;"><div style="color:#0A84FF;font-size:9px;font-weight:500;margin-bottom:1px;">Pinned Message</div><div id="pinned-text" style="color:rgba(245,245,247,0.55);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div></div>
       </div>
 
       <!-- Messages -->
       <div class="scroll" style="padding:10px 12px 6px;" id="msgs1">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div style="flex:1;height:0.5px;background:rgba(255,255,255,0.05);"></div><span style="color:rgba(235,235,245,0.22);font-size:10px;font-weight:300;">Today</span><div style="flex:1;height:0.5px;background:rgba(255,255,255,0.05);"></div></div>
-
-        <!-- Msg from other -->
-        <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:10px;">
-          <div style="width:26px;height:26px;border-radius:50%;background:rgba(30,58,82,0.8);border:0.5px solid rgba(90,171,240,0.25);display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:9px;font-weight:500;flex-shrink:0;">PS</div>
-          <div>
-            <div style="font-size:9px;color:#BF9FFF;margin-bottom:2px;">Priya S</div>
-            <div style="background:rgba(255,255,255,0.07);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:14px;border-bottom-left-radius:4px;padding:8px 11px;font-size:12px;font-weight:300;color:#fff;max-width:190px;">Good morning everyone! Studio ready 📸</div>
-            <div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;">9:16 AM</div>
-          </div>
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;">
+          <div style="font-size:28px;opacity:0.3;">💬</div>
+          <div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">Chat messages will appear here</div>
         </div>
 
-        <!-- My msg -->
-        <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;">
-          <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.65),rgba(10,60,180,0.75));border:0.5px solid rgba(10,132,255,0.25);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:500;flex-shrink:0;">AK</div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;">
-            <div style="background:linear-gradient(135deg,rgba(10,132,255,0.65),rgba(10,80,200,0.7));backdrop-filter:blur(14px);border:0.5px solid rgba(10,132,255,0.22);border-radius:14px;border-bottom-right-radius:4px;padding:8px 11px;font-size:12px;font-weight:300;color:#fff;max-width:190px;">Banner 65% done. Ready by noon sir 🙏</div>
-            <div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;">9:21 AM ✓✓</div>
-          </div>
-        </div>
-
-        <!-- Msg from MA -->
-<div class="msg-wrap" onmouseenter="showEmojiBar('m3','them')" onmouseleave="hideAllBars()" ontouchstart="showEmojiBar('m3','them')"><div class="emoji-bar left" id="ebar-m3"><span onclick="addReaction('m3','👍')">👍</span><span onclick="addReaction('m3','❤️')">❤️</span><span onclick="addReaction('m3','😂')">😂</span><span onclick="addReaction('m3','😮')">😮</span><span onclick="addReaction('m3','😢')">😢</span><span onclick="addReaction('m3','🙏')">🙏</span></div>        <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:4px;">
+        <!-- Msg from MA (placeholder start) -->
+<div class="msg-wrap" onmouseenter="showEmojiBar('m3','them')" onmouseleave="hideAllBars()" ontouchstart="showEmojiBar('m3','them')"><div class="emoji-bar left" id="ebar-m3"><span onclick="addReaction('m3','👍')">👍</span><span onclick="addReaction('m3','❤️')">❤️</span><span onclick="addReaction('m3','😂')">😂</span><span onclick="addReaction('m3','😮')">😮</span><span onclick="addReaction('m3','😢')">😢</span><span onclick="addReaction('m3','🙏')">🙏</span></div>        <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:4px;display:none;">
           <div style="width:26px;height:26px;border-radius:50%;background:rgba(30,59,46,0.8);border:0.5px solid rgba(93,214,138,0.25);display:flex;align-items:center;justify-content:center;color:#5DD68A;font-size:9px;font-weight:500;flex-shrink:0;">MA</div>
           <div>
             <div style="font-size:9px;color:#5DD68A;margin-bottom:2px;">Mohamed A</div>
@@ -659,20 +643,7 @@ select.inp option{background:#1A1A2E;color:#fff;}
             <div style="color:#fff;font-size:12px;font-weight:500;">Pending Approvals</div>
             <span style="color:#0A84FF;font-size:11px;cursor:pointer;" onclick="go2('s2-approvals')">See all</span>
           </div>
-          <div class="gs" style="padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
-            <div><div style="color:#fff;font-size:12px;">Divya R · Leave</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">21–22 Apr · Casual</div></div>
-            <div style="display:flex;gap:5px;">
-              <button style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.25);border-radius:7px;padding:4px 9px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">✓ Ok</button>
-              <button style="background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.25);border-radius:7px;padding:4px 9px;color:#FF453A;font-size:10px;cursor:pointer;font-family:inherit;">✕</button>
-            </div>
-          </div>
-          <div class="gs" style="padding:9px 11px;display:flex;align-items:center;justify-content:space-between;">
-            <div><div style="color:#fff;font-size:12px;">Rahul M · Onsite</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Ahmed Const. · 11.03°N 79.82°E</div></div>
-            <div style="display:flex;gap:5px;">
-              <button style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.25);border-radius:7px;padding:4px 9px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">✓ Ok</button>
-              <button style="background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.25);border-radius:7px;padding:4px 9px;color:#FF453A;font-size:10px;cursor:pointer;font-family:inherit;">✕</button>
-            </div>
-          </div>
+          <div id="approvals-preview" style="text-align:center;padding:14px 0;color:rgba(245,245,247,0.28);font-size:11px;">No pending approvals</div>
         </div>
       </div>
       <div id="n2-home" class="bnav"></div>
@@ -694,44 +665,10 @@ select.inp option{background:#1A1A2E;color:#fff;}
           <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 11px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;">Done</div>
         </div>
 
-        <!-- Leave approval 1 -->
-        <div class="g" style="padding:13px;margin-bottom:9px;">
-          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div style="width:34px;height:34px;background:rgba(26,46,26,0.8);border:0.5px solid rgba(48,209,88,0.25);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#30D158;font-size:12px;font-weight:500;flex-shrink:0;">DR</div>
-            <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Divya Rajan</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">Event Coordinator · Bobble Events</div></div>
-            <span class="po">Leave</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
-            <div class="gs" style="padding:8px 10px;border-radius:10px;"><div style="color:rgba(245,245,247,0.35);font-size:9px;">Type</div><div style="color:#fff;font-size:11px;margin-top:1px;">Casual Leave</div></div>
-            <div class="gs" style="padding:8px 10px;border-radius:10px;"><div style="color:rgba(245,245,247,0.35);font-size:9px;">Days</div><div style="color:#fff;font-size:11px;margin-top:1px;">2 days (21–22 Apr)</div></div>
-            <div class="gs" style="padding:8px 10px;border-radius:10px;grid-column:span 2;"><div style="color:rgba(245,245,247,0.35);font-size:9px;">Reason</div><div style="color:#fff;font-size:11px;margin-top:1px;">Family function at native</div></div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button style="flex:1;background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.25);border-radius:10px;padding:9px;color:#30D158;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;" onclick="approveLeave(this)">✓ Approve</button>
-            <button style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">✕ Reject</button>
-          </div>
-        </div>
-
-        <!-- Onsite approval -->
-        <div class="g" style="padding:13px;margin-bottom:9px;border-color:rgba(191,95,255,0.18);">
-          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div style="width:34px;height:34px;background:rgba(48,34,16,0.8);border:0.5px solid rgba(255,159,10,0.25);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-size:12px;font-weight:500;flex-shrink:0;">RM</div>
-            <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Rahul M</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">Live Stream Operator · LIVE Hero</div></div>
-            <span class="pp">Onsite</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
-            <div class="gs" style="padding:8px 10px;border-radius:10px;"><div style="color:rgba(245,245,247,0.35);font-size:9px;">Site Name</div><div style="color:#fff;font-size:11px;margin-top:1px;">Ahmed Constructions</div></div>
-            <div class="gs" style="padding:8px 10px;border-radius:10px;"><div style="color:rgba(245,245,247,0.35);font-size:9px;">Check-in Time</div><div style="color:#fff;font-size:11px;margin-top:1px;">9:15 AM</div></div>
-            <div class="gs" style="padding:8px 10px;border-radius:10px;grid-column:span 2;border-color:rgba(191,95,255,0.15);">
-              <div style="color:rgba(245,245,247,0.35);font-size:9px;">GPS Coordinates</div>
-              <div style="color:#BF5FFF;font-size:11px;margin-top:1px;font-family:monospace;">11.0357° N, 79.8187° E</div>
-              <div style="color:rgba(245,245,247,0.3);font-size:9px;margin-top:2px;">Chennai, Tamil Nadu</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button style="flex:1;background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.25);border-radius:10px;padding:9px;color:#30D158;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;" onclick="approveOnsite(this)">✓ Approve</button>
-            <button style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">✕ Reject</button>
-          </div>
+        <!-- Approvals list — loaded from API -->
+        <div id="approvals-list" style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:12px;">
+          <div style="font-size:28px;margin-bottom:8px;opacity:0.35;">📋</div>
+          No pending approvals
         </div>
       </div>
       <div id="n2-approvals" class="bnav"></div>
@@ -746,17 +683,13 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <div style="color:#fff;font-size:17px;font-weight:500;">Staff Today</div>
       </div>
       <div class="scroll" style="padding:10px 13px 8px;">
-        <div style="display:flex;gap:7px;margin-bottom:10px;">
-          <span class="pg">Present 9</span>
-          <span class="pr">Absent 2</span>
-          <span class="po">Late 1</span>
+        <div id="staff-today-stats" style="display:flex;gap:7px;margin-bottom:10px;">
+          <span id="s2-present-pill" class="pg">Present <span id="s2-present">0</span></span>
+          <span id="s2-absent-pill" class="pr">Absent <span id="s2-absent">0</span></span>
+          <span id="s2-late-pill" class="po">Late <span id="s2-late">0</span></span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:7px;">
-          <div class="gs" style="padding:10px 12px;display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:rgba(30,58,82,0.8);border:0.5px solid rgba(90,171,240,0.25);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:11px;font-weight:500;flex-shrink:0;">AK</div><div style="flex:1;"><div style="color:#fff;font-size:12px;">Arjun Kumar</div><div style="color:rgba(245,245,247,0.32);font-size:10px;">DOT · 9:02 AM</div></div><span class="pg">Present</span></div>
-          <div class="gs" style="padding:10px 12px;display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:rgba(46,33,72,0.8);border:0.5px solid rgba(191,159,255,0.25);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#BF9FFF;font-size:11px;font-weight:500;flex-shrink:0;">PS</div><div style="flex:1;"><div style="color:#fff;font-size:12px;">Priya S</div><div style="color:rgba(245,245,247,0.32);font-size:10px;">Studios · 9:15 AM</div></div><span class="pg">Present</span></div>
-          <div class="gs" style="padding:10px 12px;display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:rgba(48,34,16,0.8);border:0.5px solid rgba(255,159,10,0.25);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-size:11px;font-weight:500;flex-shrink:0;">RM</div><div style="flex:1;"><div style="color:#fff;font-size:12px;">Rahul M</div><div style="color:rgba(245,245,247,0.32);font-size:10px;">Onsite · Ahmed Const.</div></div><span class="pp">Onsite</span></div>
-          <div class="gs" style="padding:10px 12px;display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:rgba(26,46,26,0.8);border:0.5px solid rgba(48,209,88,0.25);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#30D158;font-size:11px;font-weight:500;flex-shrink:0;">DR</div><div style="flex:1;"><div style="color:#fff;font-size:12px;">Divya R</div><div style="color:rgba(245,245,247,0.32);font-size:10px;">Leave applied</div></div><span class="pb">Leave</span></div>
-          <div class="gs" style="padding:10px 12px;display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:rgba(30,59,46,0.8);border:0.5px solid rgba(93,214,138,0.25);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#5DD68A;font-size:11px;font-weight:500;flex-shrink:0;">MA</div><div style="flex:1;"><div style="color:#fff;font-size:12px;">Mohamed A</div><div style="color:rgba(245,245,247,0.32);font-size:10px;">Rappo · 9:00 AM</div></div><span class="pg">Present</span></div>
+        <div id="staff-today-list" style="display:flex;flex-direction:column;gap:7px;">
+          <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading attendance…</div>
         </div>
       </div>
       <div id="n2-staff" class="bnav"></div>
@@ -774,18 +707,9 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <button style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.22);border-radius:9px;padding:7px 12px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">+ New Task</button>
       </div>
       <div class="scroll" style="padding:10px 13px 8px;">
-        <div class="g" style="padding:12px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div style="color:#fff;font-size:12px;font-weight:400;flex:1;padding-right:8px;">Banner Design – March Campaign</div><span class="po">65%</span></div>
-          <div style="color:rgba(245,245,247,0.3);font-size:10px;margin-bottom:8px;">DOT · Arjun Kumar · Due 20 Apr</div>
-          <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:3px;overflow:hidden;"><div style="background:linear-gradient(90deg,#FF9F0A,#FFCC02);width:65%;height:100%;border-radius:4px;"></div></div>
-        </div>
-        <div class="g" style="padding:12px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div style="color:#fff;font-size:12px;font-weight:400;flex:1;padding-right:8px;">WhatsApp API Client Onboarding</div><span class="pb">Pending</span></div>
-          <div style="color:rgba(245,245,247,0.3);font-size:10px;">Rappo · Mohamed A · Due 25 Apr</div>
-        </div>
-        <div class="g" style="padding:12px;background:rgba(48,209,88,0.05);border-color:rgba(48,209,88,0.12);">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div style="color:rgba(245,245,247,0.45);font-size:12px;text-decoration:line-through;">Wedding Highlight Reel</div><span class="pg">Done</span></div>
-          <div style="color:rgba(245,245,247,0.22);font-size:10px;">Priya S · Completed</div>
+        <div id="admin-tasks-list" style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">
+          <div style="font-size:26px;margin-bottom:8px;opacity:0.35;">📌</div>
+          No tasks assigned yet
         </div>
       </div>
       <div id="n2-tasks" class="bnav"></div>
@@ -803,28 +727,26 @@ select.inp option{background:#1A1A2E;color:#fff;}
       <!-- Pinned -->
       <div style="background:rgba(10,132,255,0.1);border-bottom:0.5px solid rgba(10,132,255,0.14);padding:7px 13px;display:flex;align-items:center;gap:7px;flex-shrink:0;">
         <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v8M7 9.5L4 6.5M7 9.5L10 6.5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M3 12.5h8" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-        <div style="flex:1;color:rgba(245,245,247,0.5);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📌 Banner deadline today — Arjun please check ✓</div>
+        <div id="admin-pinned-text" style="flex:1;color:rgba(245,245,247,0.5);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div>
         <button onclick="unpinMsg()" style="background:none;border:none;cursor:pointer;color:rgba(245,245,247,0.3);font-size:12px;">✕</button>
       </div>
 
       <div class="scroll" style="padding:10px 12px 6px;" id="msgs2">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><div style="flex:1;height:0.5px;background:rgba(255,255,255,0.05);"></div><span style="color:rgba(235,235,245,0.2);font-size:9px;">Today</span><div style="flex:1;height:0.5px;background:rgba(255,255,255,0.05);"></div></div>
-
-        <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:10px;">
-          <div style="width:24px;height:24px;border-radius:50%;background:rgba(30,58,82,0.8);display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:9px;font-weight:500;flex-shrink:0;">AK</div>
-          <div><div style="font-size:9px;color:#5AABF0;margin-bottom:2px;">Arjun Kumar</div><div style="background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.08);border-radius:13px;border-bottom-left-radius:3px;padding:7px 10px;font-size:11px;color:#fff;max-width:180px;">Banner 65% done. Ready by noon 🙏</div><div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;">9:21 AM</div></div>
+        <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.22);font-size:11px;">
+          <div style="font-size:24px;margin-bottom:8px;opacity:0.3;">💬</div>
+          No messages yet
         </div>
 
-        <!-- Admin message with pin option -->
-        <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;">
+        <!-- Admin message with pin option (hidden placeholder) -->
+        <div style="display:none;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;">
           <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.7),rgba(10,60,180,0.8));display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:500;flex-shrink:0;">S</div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;">
             <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
               <span style="font-size:9px;color:rgba(245,245,247,0.35);">You (Admin)</span>
               <button onclick="showPinOption(this)" style="background:rgba(191,95,255,0.15);border:0.5px solid rgba(191,95,255,0.22);border-radius:6px;padding:1px 6px;font-size:9px;color:#BF5FFF;cursor:pointer;font-family:inherit;">📌 Pin</button>
             </div>
-            <div style="background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));backdrop-filter:blur(12px);border:0.5px solid rgba(10,132,255,0.2);border-radius:13px;border-bottom-right-radius:3px;padding:7px 10px;font-size:11px;color:#fff;max-width:180px;">Banner deadline today — Arjun please check ✓</div>
-            <div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;">9:20 AM ✓✓</div>
+            <div style="background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));backdrop-filter:blur(12px);border:0.5px solid rgba(10,132,255,0.2);border-radius:13px;border-bottom-right-radius:3px;padding:7px 10px;font-size:11px;color:#fff;max-width:180px;"></div>
+            <div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;"></div>
           </div>
         </div>
 
@@ -1131,20 +1053,40 @@ function showCelebration(type,name,initials,bg,col,extra){
 }
 function closeCelebration(){var ov=document.getElementById('cele-overlay');if(ov)ov.classList.remove('show');_cRun=false;}
 function checkCelebrations(){
+  var token=localStorage.getItem('zhr_token');
+  if(!token) return;
   var now=new Date(),m=now.getMonth()+1,d=now.getDate(),y=now.getFullYear();
-  var staff=[
-    {n:'Arjun Kumar',i:'AK',dobM:3,dobD:15,joinM:3,joinY:2022,bg:'linear-gradient(145deg,#1A3A5C,#0D2440)',c:'#5AABF0'},
-    {n:'Priya Suresh',i:'PS',dobM:7,dobD:8,joinM:6,joinY:2021,bg:'linear-gradient(145deg,#2E1A4A,#1A0D30)',c:'#BF9FFF'},
-    {n:'Rahul M',i:'RM',dobM:11,dobD:22,joinM:1,joinY:2023,bg:'linear-gradient(145deg,#3A2210,#1E0E00)',c:'#FF9F0A'},
-    {n:'Divya Rajan',i:'DR',dobM:2,dobD:4,joinM:8,joinY:2022,bg:'linear-gradient(145deg,#1A2E1A,#0A1A0A)',c:'#30D158'},
-    {n:'Mohamed Ashiq',i:'MA',dobM:6,dobD:11,joinM:4,joinY:2021,bg:'linear-gradient(145deg,#1E3B2E,#0A1E14)',c:'#5DD68A'},
-    {n:'Arjun Kumar',i:'AK',dobM:m,dobD:d,joinM:999,joinY:2020,bg:'linear-gradient(145deg,#1A3A5C,#0D2440)',c:'#5AABF0'}
-  ];
-  for(var i=0;i<staff.length;i++){
-    var s=staff[i];
-    if(s.dobM===m&&s.dobD===d){(function(st){setTimeout(function(){showCelebration('birthday',st.n,st.i,st.bg,st.c,0);},1800);})(s);return;}
-    if(s.joinM===m&&s.joinY!==y){var yrs=y-s.joinY;if(yrs>0){(function(st,yr){setTimeout(function(){showCelebration('anniversary',st.n,st.i,st.bg,st.c,yr);},1800);})(s,yrs);return;}}
-  }
+  fetch(API_URL+'/api/staff',{headers:{'Authorization':'Bearer '+token}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res.success||!res.data||!res.data.length) return;
+      var found=false;
+      res.data.forEach(function(s){
+        if(found) return;
+        var nm=s.name||'';
+        var init=nm.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'?';
+        var bg='linear-gradient(145deg,rgba(10,40,80,0.95),rgba(5,10,30,0.95))';
+        var col='#5AABF0';
+        if(s.dob){
+          var dob=new Date(s.dob);
+          if(dob.getMonth()+1===m&&dob.getDate()===d){
+            found=true;
+            (function(name,ini){setTimeout(function(){showCelebration('birthday',name,ini,bg,col,0);},1800);})(nm,init);
+            return;
+          }
+        }
+        if(s.joining_date){
+          var jd=new Date(s.joining_date);
+          if(jd.getMonth()+1===m&&jd.getDate()===d&&jd.getFullYear()!==y){
+            var yrs=y-jd.getFullYear();
+            if(yrs>0){
+              found=true;
+              (function(name,ini,yr){setTimeout(function(){showCelebration('anniversary',name,ini,bg,'#BF5FFF',yr);},1800);})(nm,init,yrs);
+            }
+          }
+        }
+      });
+    }).catch(function(){});
 }
 setTimeout(checkCelebrations,3500);
 

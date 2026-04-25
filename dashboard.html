@@ -182,19 +182,16 @@ textarea.inp{resize:none;}
       <div style="display:flex;gap:10px;"><button class="btn-g">Export</button><button class="btn">+ Add Staff</button></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
-      <div class="stat sg"><div class="sl">Present</div><div class="sv" style="color:#30D158;">9</div><div class="ss">of 12</div></div>
-      <div class="stat sr"><div class="sl">Absent / Late</div><div class="sv" style="color:#FF453A;">3</div><div class="ss">2 absent · 1 late</div></div>
-      <div class="stat so"><div class="sl">Open Tasks</div><div class="sv" style="color:#FF9F0A;">7</div><div class="ss">pending</div></div>
-      <div class="stat sb"><div class="sl">Payroll Apr</div><div class="sv" style="font-size:20px;">₹1,85,000</div><div class="ss">₹62,000 pending</div></div>
+      <div class="stat sg"><div class="sl">Present</div><div class="sv" style="color:#30D158;" id="dash-present">—</div><div class="ss" id="dash-total-sub">of —</div></div>
+      <div class="stat sr"><div class="sl">Absent / Late</div><div class="sv" style="color:#FF453A;" id="dash-absent">—</div><div class="ss" id="dash-late-sub">— absent · — late</div></div>
+      <div class="stat so"><div class="sl">Open Tasks</div><div class="sv" style="color:#FF9F0A;" id="dash-tasks">—</div><div class="ss">pending</div></div>
+      <div class="stat sb"><div class="sl">Payroll</div><div class="sv" style="font-size:20px;" id="dash-payroll">—</div><div class="ss">Current month</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="sec g">
         <div class="sh"><span class="st">Today's Attendance</span><span style="color:#0A84FF;font-size:12px;cursor:pointer;" onclick="showPage('attendance',null)">See all →</span></div>
-        <table class="tbl"><thead><tr><th>Staff</th><th>Check-in</th><th>Type</th><th>Status</th></tr></thead><tbody>
-          <tr><td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:rgba(30,58,82,0.7);color:#5AABF0;font-size:10px;">AK</div>Arjun K.</div></td><td class="mono">09:02</td><td style="color:var(--muted);">Office</td><td><span class="pg">Present</span></td></tr>
-          <tr><td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:rgba(48,34,16,0.7);color:#FF9F0A;font-size:10px;">RM</div>Rahul M.</div></td><td class="mono" style="color:#BF5FFF;">09:15</td><td style="color:#BF5FFF;">Onsite ⏳</td><td><span class="pp">Approval</span></td></tr>
-          <tr><td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:rgba(26,46,26,0.7);color:#30D158;font-size:10px;">DR</div>Divya R.</div></td><td class="mono" style="color:var(--muted);">—</td><td style="color:var(--muted);">Leave ⏳</td><td><span class="pb">Approval</span></td></tr>
-          <tr><td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:rgba(30,59,46,0.7);color:#5DD68A;font-size:10px;">MA</div>Mohamed.</div></td><td class="mono">09:00</td><td style="color:var(--muted);">Office</td><td><span class="pg">Present</span></td></tr>
+        <table class="tbl"><thead><tr><th>Staff</th><th>Check-in</th><th>Type</th><th>Status</th></tr></thead><tbody id="att-table-body">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">Loading attendance…</td></tr>
         </tbody></table>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -214,22 +211,13 @@ textarea.inp{resize:none;}
             <div style="position:absolute;width:110px;height:110px;border:1.5px solid rgba(10,132,255,0.45);border-radius:50%;background:rgba(10,132,255,0.07);top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;"><span id="radius-label" style="font-size:11px;color:rgba(10,132,255,0.8);">300m</span></div>
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);"><div style="width:20px;height:20px;background:linear-gradient(145deg,#0A84FF,#0A60CC);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.3);box-shadow:0 4px 10px rgba(10,132,255,0.5);"></div></div>
             <div style="position:absolute;bottom:8px;left:10px;font-size:10px;color:rgba(245,245,247,0.5);">📍 Mayiladuthurai Office · 11.1085°N 79.6478°E</div>
-            <div style="position:absolute;bottom:8px;right:10px;background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.22);border-radius:8px;padding:2px 8px;font-size:10px;color:#30D158;" id="present-count">9 present in zone</div>
+            <div style="position:absolute;bottom:8px;right:10px;background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.22);border-radius:8px;padding:2px 8px;font-size:10px;color:#30D158;" id="present-count">— present in zone</div>
           </div>
         </div>
         <!-- Quick approvals -->
         <div class="sec g" style="padding:16px;">
           <div class="sh"><span class="st">Pending Approvals</span><span style="color:#0A84FF;font-size:12px;cursor:pointer;" onclick="showPage('approvals',null)">See all →</span></div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div class="gs" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
-              <div><div style="color:#fff;font-size:12px;">Divya R · Leave · 21–22 Apr</div><div style="color:var(--muted);font-size:10px;margin-top:1px;">Casual Leave · Family function</div></div>
-              <div style="display:flex;gap:6px;"><button style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.22);border-radius:7px;padding:4px 9px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;" onclick="qApprove(this)">✓</button><button style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.2);border-radius:7px;padding:4px 9px;color:#FF453A;font-size:10px;cursor:pointer;font-family:inherit;" onclick="qReject(this)">✕</button></div>
-            </div>
-            <div class="gs" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
-              <div><div style="color:#fff;font-size:12px;">Rahul M · Onsite · Ahmed Const.</div><div style="color:#BF5FFF;font-size:10px;margin-top:1px;font-family:'DM Mono',monospace;">11.0357°N 79.8187°E</div></div>
-              <div style="display:flex;gap:6px;"><button style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.22);border-radius:7px;padding:4px 9px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;" onclick="qApprove(this)">✓</button><button style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.2);border-radius:7px;padding:4px 9px;color:#FF453A;font-size:10px;cursor:pointer;font-family:inherit;" onclick="qReject(this)">✕</button></div>
-            </div>
-          </div>
+          <div id="dash-approvals-quick" style="text-align:center;padding:14px 0;color:var(--muted);font-size:12px;">No pending approvals</div>
         </div>
       </div>
     </div>
@@ -367,58 +355,10 @@ textarea.inp{resize:none;}
       <div><div class="ptitle">Approvals</div><div class="psub">Leave & Onsite attendance requests</div></div>
       <div style="display:flex;gap:8px;"><button class="btn-g">Export</button></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <!-- Leave approvals -->
-      <div>
-        <div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Leave Requests</div>
-        <div class="sec g" style="margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <div class="av" style="width:38px;height:38px;background:rgba(26,46,26,0.7);border:0.5px solid rgba(48,209,88,0.25);color:#30D158;font-size:13px;">DR</div>
-            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Divya Rajan</div><div style="font-size:11px;color:var(--muted);margin-top:1px;">Event Coordinator · Bobble Events</div></div>
-            <span class="po">Pending</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-            <div class="gs" style="padding:9px 11px;border-radius:11px;"><div style="font-size:10px;color:var(--muted);">Leave Type</div><div style="font-size:12px;margin-top:2px;">Casual Leave</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;"><div style="font-size:10px;color:var(--muted);">Duration</div><div style="font-size:12px;margin-top:2px;">2 days · 21–22 Apr</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;grid-column:span 2;"><div style="font-size:10px;color:var(--muted);">Reason</div><div style="font-size:12px;margin-top:2px;">Family function at native village</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;grid-column:span 2;"><div style="font-size:10px;color:var(--muted);">Handover</div><div style="font-size:12px;margin-top:2px;">Arjun Kumar will handle pending tasks</div></div>
-          </div>
-          <div style="display:flex;gap:9px;">
-            <button style="flex:1;background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:10px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;" onclick="approveFull(this,'leave')">✓ Approve Leave</button>
-            <button style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:10px;color:#FF453A;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✕ Reject</button>
-          </div>
-        </div>
-        <div class="sec g" style="opacity:0.6;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div class="av" style="width:38px;height:38px;background:rgba(30,58,82,0.7);border:0.5px solid rgba(90,171,240,0.25);color:#5AABF0;font-size:13px;">AK</div>
-            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Arjun Kumar</div><div style="font-size:11px;color:var(--muted);">Senior Designer · DOT</div></div>
-            <span class="pg">Approved</span>
-          </div>
-          <div style="font-size:12px;color:var(--muted);">Sick Leave · 10 Apr · 1 day · Approved ✓</div>
-        </div>
-      </div>
-      <!-- Onsite approvals -->
-      <div>
-        <div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Onsite Attendance</div>
-        <div class="sec g" style="border-color:rgba(191,95,255,0.15);margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <div class="av" style="width:38px;height:38px;background:rgba(48,34,16,0.7);border:0.5px solid rgba(255,159,10,0.25);color:#FF9F0A;font-size:13px;">RM</div>
-            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Rahul M</div><div style="font-size:11px;color:var(--muted);margin-top:1px;">Live Stream Operator · LIVE Hero</div></div>
-            <span class="pp">Onsite</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-            <div class="gs" style="padding:9px 11px;border-radius:11px;"><div style="font-size:10px;color:var(--muted);">Staff</div><div style="font-size:12px;margin-top:2px;">Rahul M</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;"><div style="font-size:10px;color:var(--muted);">Check-in Time</div><div style="font-size:12px;margin-top:2px;">9:15 AM · 20 Apr</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;"><div style="font-size:10px;color:var(--muted);">Client / Site</div><div style="font-size:12px;margin-top:2px;">Ahmed Constructions</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;border-color:rgba(191,95,255,0.15);"><div style="font-size:10px;color:#BF5FFF;">GPS Coordinates</div><div style="font-size:11px;color:#BF5FFF;margin-top:2px;font-family:'DM Mono',monospace;">11.0357°N 79.8187°E</div></div>
-            <div class="gs" style="padding:9px 11px;border-radius:11px;grid-column:span 2;"><div style="font-size:10px;color:var(--muted);">Location Name</div><div style="font-size:12px;margin-top:2px;">Chennai, Tamil Nadu · ~78km from office</div></div>
-          </div>
-          <div style="display:flex;gap:9px;">
-            <button style="flex:1;background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:10px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;" onclick="approveFull(this,'onsite')">✓ Approve Onsite</button>
-            <button style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:10px;color:#FF453A;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✕ Reject</button>
-          </div>
-        </div>
-      </div>
+    <div id="approvals-page-content" style="text-align:center;padding:60px 0;color:var(--muted);">
+      <div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📋</div>
+      <div style="font-size:14px;margin-bottom:6px;">No Pending Approvals</div>
+      <div style="font-size:12px;opacity:0.6;">Leave and onsite requests will appear here</div>
     </div>
   </div>
 
@@ -429,8 +369,8 @@ textarea.inp{resize:none;}
       <div style="display:flex;gap:10px;"><button class="btn-g">Export</button><button class="btn" onclick="openAdd()">+ Add Staff</button></div>
     </div>
     <div id="staff-list-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-      <!-- Staff cards loaded dynamically -->
-      <div class="sec g" style="padding:0;overflow:hidden;" onclick="openEdit('arjun')">
+      <!-- Staff cards loaded dynamically via loadStaffList() -->
+      <div class="sec g" style="display:none;padding:0;overflow:hidden;" onclick="openEdit('arjun')">
         <div style="padding:16px 16px 12px;">
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
             <div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.3);display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:18px;font-weight:500;flex-shrink:0;cursor:pointer;" onclick="event.stopPropagation();openEdit('arjun')">
@@ -458,7 +398,7 @@ textarea.inp{resize:none;}
         </div>
       </div>
 
-      <div class="sec g" style="padding:0;overflow:hidden;" onclick="openEdit('priya')">
+      <div class="sec g" style="display:none;padding:0;overflow:hidden;" onclick="openEdit('priya')">
         <div style="padding:16px 16px 12px;">
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
             <div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,#2E1A4A,#1A0D30);border:1.5px solid rgba(191,159,255,0.3);display:flex;align-items:center;justify-content:center;color:#BF9FFF;font-size:18px;font-weight:500;flex-shrink:0;cursor:pointer;">
@@ -480,7 +420,7 @@ textarea.inp{resize:none;}
         </div>
       </div>
 
-      <div class="sec g" style="padding:0;overflow:hidden;">
+      <div class="sec g" style="display:none;padding:0;overflow:hidden;">
         <div style="padding:16px 16px 12px;">
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
             <div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,#3A2210,#1E0E00);border:1.5px solid rgba(255,159,10,0.3);display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-size:18px;font-weight:500;flex-shrink:0;">
@@ -531,36 +471,16 @@ textarea.inp{resize:none;}
         <!-- Pinned message -->
         <div style="background:rgba(10,132,255,0.1);border-bottom:0.5px solid rgba(10,132,255,0.15);padding:10px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v8M7 9.5L4 6.5M7 9.5L10 6.5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M3 12.5h8" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-          <div style="flex:1;"><span style="color:#0A84FF;font-size:10px;font-weight:500;margin-right:6px;">📌 Pinned</span><span style="color:rgba(245,245,247,0.5);font-size:12px;">Banner deadline today — Arjun please check ✓</span></div>
+          <div style="flex:1;"><span style="color:#0A84FF;font-size:10px;font-weight:500;margin-right:6px;">📌 Pinned</span><span id="dash-pinned-text" style="color:rgba(245,245,247,0.5);font-size:12px;">No pinned message</span></div>
           <button style="background:none;border:none;cursor:pointer;color:rgba(245,245,247,0.3);font-size:13px;">✕</button>
         </div>
         <!-- Messages -->
         <div style="flex:1;overflow-y:auto;padding:18px 18px 10px;display:flex;flex-direction:column;gap:14px;" id="dash-msgs">
-          <!-- Message from staff -->
-<div class="msg-wrap-d" style="position:relative;" onmouseenter="dShowEmoji('d1','them')" onmouseleave="dHideAll()"><div class="emoji-bar-d left" id="debar-d1"><span onclick="dReact('d1','👍')">👍</span><span onclick="dReact('d1','❤️')">❤️</span><span onclick="dReact('d1','😂')">😂</span><span onclick="dReact('d1','😮')">😮</span><span onclick="dReact('d1','😢')">😢</span><span onclick="dReact('d1','🙏')">🙏</span></div>          <div style="display:flex;align-items:flex-end;gap:10px;">
-            <div class="av" style="width:30px;height:30px;background:rgba(30,58,82,0.7);border:0.5px solid rgba(90,171,240,0.25);color:#5AABF0;font-size:10px;font-weight:500;">AK</div>
-            <div><div style="font-size:10px;color:#5AABF0;margin-bottom:3px;">Arjun Kumar · 9:21 AM</div><div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:16px;border-bottom-left-radius:4px;padding:10px 14px;font-size:13px;font-weight:300;max-width:460px;">Banner 65% done. Ready by noon sir 🙏</div></div>
-          </div><div class="reaction-row-d" id="drrow-d1" style="display:none;justify-content:flex-start;padding:0 42px;"></div></div>
-          <div style="display:flex;align-items:flex-end;gap:10px;">
-            <div class="av" style="width:30px;height:30px;background:rgba(30,59,46,0.7);border:0.5px solid rgba(93,214,138,0.25);color:#5DD68A;font-size:10px;font-weight:500;">MA</div>
-            <div><div style="font-size:10px;color:#5DD68A;margin-bottom:3px;">Mohamed A · 10:05 AM</div><div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:16px;border-bottom-left-radius:4px;padding:10px 14px;font-size:13px;font-weight:300;max-width:460px;">Rappo client call at 3 PM — anyone free to assist? 📞</div></div>
+          <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;opacity:0.4;">
+            <div style="font-size:36px;">💬</div>
+            <div style="font-size:13px;color:var(--muted);">No messages yet</div>
+            <div style="font-size:11px;color:var(--muted);">Chat with your team here</div>
           </div>
-          <!-- Admin message -->
-          <div style="display:flex;align-items:flex-end;gap:10px;flex-direction:row-reverse;">
-            <div class="av" style="width:30px;height:30px;background:linear-gradient(145deg,rgba(10,132,255,0.7),rgba(10,60,180,0.8));border:0.5px solid rgba(10,132,255,0.3);color:#fff;font-size:10px;font-weight:500;">S</div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                <div style="background:rgba(191,95,255,0.14);border:0.5px solid rgba(191,95,255,0.22);border-radius:6px;padding:1px 7px;font-size:9px;color:#BF5FFF;font-weight:500;">ADMIN</div>
-                <span style="font-size:10px;color:rgba(245,245,247,0.4);">You · 10:08 AM</span>
-              </div>
-              <div style="background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));backdrop-filter:blur(14px);border:0.5px solid rgba(10,132,255,0.22);border-radius:16px;border-bottom-right-radius:4px;padding:10px 14px;font-size:13px;font-weight:300;max-width:460px;color:#fff;">I'll join the Rappo call at 3 PM 👍</div>
-              <div style="font-size:10px;color:rgba(245,245,247,0.25);margin-top:3px;">✓✓ Seen by 8</div>
-            </div>
-          </div>
-<div class="msg-wrap-d" style="position:relative;" onmouseenter="dShowEmoji('d3','them')" onmouseleave="dHideAll()"><div class="emoji-bar-d left" id="debar-d3"><span onclick="dReact('d3','👍')">👍</span><span onclick="dReact('d3','❤️')">❤️</span><span onclick="dReact('d3','😂')">😂</span><span onclick="dReact('d3','😮')">😮</span><span onclick="dReact('d3','😢')">😢</span><span onclick="dReact('d3','🙏')">🙏</span></div>          <div style="display:flex;align-items:flex-end;gap:10px;">
-            <div class="av" style="width:30px;height:30px;background:rgba(46,33,72,0.7);border:0.5px solid rgba(191,159,255,0.25);color:#BF9FFF;font-size:10px;font-weight:500;">PS</div>
-            <div><div style="font-size:10px;color:#BF9FFF;margin-bottom:3px;">Priya S · 11:30 AM</div><div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:16px;border-bottom-left-radius:4px;padding:10px 14px;font-size:13px;font-weight:300;max-width:460px;">Studio shoot complete! Sending highlights by evening 🎬</div></div>
-          </div><div class="reaction-row-d" id="drrow-d3" style="display:none;justify-content:flex-start;padding:0 42px;"></div></div>
         </div>
         <!-- Input -->
         <div style="border-top:0.5px solid rgba(255,255,255,0.07);padding:12px 16px;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.2);backdrop-filter:blur(20px);flex-shrink:0;position:relative;">
@@ -629,16 +549,9 @@ textarea.inp{resize:none;}
       </div>
       <!-- Members sidebar -->
       <div class="g" style="padding:16px;overflow-y:auto;">
-        <div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Online (9)</div>
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;">
-          <div style="display:flex;align-items:center;gap:9px;"><div style="position:relative;"><div class="av" style="width:32px;height:32px;background:rgba(30,58,82,0.7);border:0.5px solid rgba(90,171,240,0.25);color:#5AABF0;font-size:10px;">AK</div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#30D158;border-radius:50%;border:1.5px solid rgba(5,5,14,0.8);"></div></div><div style="flex:1;"><div style="font-size:12px;font-weight:400;">Arjun Kumar</div><div style="font-size:10px;color:var(--muted);">DOT · Online</div></div></div>
-          <div style="display:flex;align-items:center;gap:9px;"><div style="position:relative;"><div class="av" style="width:32px;height:32px;background:rgba(46,33,72,0.7);border:0.5px solid rgba(191,159,255,0.25);color:#BF9FFF;font-size:10px;">PS</div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#30D158;border-radius:50%;border:1.5px solid rgba(5,5,14,0.8);"></div></div><div style="flex:1;"><div style="font-size:12px;font-weight:400;">Priya S</div><div style="font-size:10px;color:var(--muted);">Studios · Online</div></div></div>
-          <div style="display:flex;align-items:center;gap:9px;"><div style="position:relative;"><div class="av" style="width:32px;height:32px;background:rgba(30,59,46,0.7);border:0.5px solid rgba(93,214,138,0.25);color:#5DD68A;font-size:10px;">MA</div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#30D158;border-radius:50%;border:1.5px solid rgba(5,5,14,0.8);"></div></div><div style="flex:1;"><div style="font-size:12px;font-weight:400;">Mohamed A</div><div style="font-size:10px;color:var(--muted);">Rappo · Online</div></div></div>
-        </div>
-        <div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Offline (3)</div>
-        <div style="display:flex;flex-direction:column;gap:7px;">
-          <div style="display:flex;align-items:center;gap:9px;opacity:0.55;"><div style="position:relative;"><div class="av" style="width:32px;height:32px;background:rgba(26,46,26,0.7);border:0.5px solid rgba(48,209,88,0.2);color:#30D158;font-size:10px;">DR</div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#555;border-radius:50%;border:1.5px solid rgba(5,5,14,0.8);"></div></div><div style="flex:1;"><div style="font-size:12px;">Divya R</div><div style="font-size:10px;color:var(--muted);">Events · On Leave</div></div></div>
-          <div style="display:flex;align-items:center;gap:9px;opacity:0.55;"><div style="position:relative;"><div class="av" style="width:32px;height:32px;background:rgba(48,34,16,0.7);border:0.5px solid rgba(255,159,10,0.2);color:#FF9F0A;font-size:10px;">RM</div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#30D158;border-radius:50%;border:1.5px solid rgba(5,5,14,0.8);"></div></div><div style="flex:1;"><div style="font-size:12px;">Rahul M</div><div style="font-size:10px;color:var(--muted);">Onsite · Active</div></div></div>
+        <div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Members</div>
+        <div id="chat-members-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;">
+          <div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;opacity:0.6;">Members will appear when chat is connected</div>
         </div>
         <!-- Admin pin info -->
         <div style="margin-top:16px;background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.16);border-radius:12px;padding:11px 13px;">
@@ -1012,7 +925,7 @@ function qReject(btn){var row=btn.closest('.gs');row.style.opacity='0.4';row.sty
 function approveFull(btn, type){
   var card=btn.closest('.sec');card.style.opacity='0.5';card.style.pointerEvents='none';
   btn.textContent=type==='leave'?'✓ Leave Approved':'✓ Onsite Approved';
-  showToast(type==='leave'?'✓ Leave approved for Divya R':'✓ Onsite attendance approved for Rahul M');
+  showToast(type==='leave'?'✓ Leave approved':'✓ Onsite attendance approved');
 }
 
 // ── STAFF EDIT — Real API ──
@@ -1392,20 +1305,39 @@ function showCelebration(type,name,initials,bg,col,extra){
 }
 function closeCelebration(){var ov=document.getElementById('cele-overlay');if(ov)ov.classList.remove('show');_cRun=false;}
 function checkCelebrations(){
+  var token=zTok();
+  if(!token) return;
   var now=new Date(),m=now.getMonth()+1,d=now.getDate(),y=now.getFullYear();
-  var staff=[
-    {n:'Arjun Kumar',i:'AK',dobM:3,dobD:15,joinM:3,joinY:2022,bg:'linear-gradient(145deg,#1A3A5C,#0D2440)',c:'#5AABF0'},
-    {n:'Priya Suresh',i:'PS',dobM:7,dobD:8,joinM:6,joinY:2021,bg:'linear-gradient(145deg,#2E1A4A,#1A0D30)',c:'#BF9FFF'},
-    {n:'Rahul M',i:'RM',dobM:11,dobD:22,joinM:1,joinY:2023,bg:'linear-gradient(145deg,#3A2210,#1E0E00)',c:'#FF9F0A'},
-    {n:'Divya Rajan',i:'DR',dobM:2,dobD:4,joinM:8,joinY:2022,bg:'linear-gradient(145deg,#1A2E1A,#0A1A0A)',c:'#30D158'},
-    {n:'Mohamed Ashiq',i:'MA',dobM:6,dobD:11,joinM:4,joinY:2021,bg:'linear-gradient(145deg,#1E3B2E,#0A1E14)',c:'#5DD68A'},
-    {n:'Arjun Kumar',i:'AK',dobM:m,dobD:d,joinM:999,joinY:2020,bg:'linear-gradient(145deg,#1A3A5C,#0D2440)',c:'#5AABF0'}
-  ];
-  for(var i=0;i<staff.length;i++){
-    var s=staff[i];
-    if(s.dobM===m&&s.dobD===d){(function(st){setTimeout(function(){showCelebration('birthday',st.n,st.i,st.bg,st.c,0);},1800);})(s);return;}
-    if(s.joinM===m&&s.joinY!==y){var yrs=y-s.joinY;if(yrs>0){(function(st,yr){setTimeout(function(){showCelebration('anniversary',st.n,st.i,st.bg,st.c,yr);},1800);})(s,yrs);return;}}
-  }
+  fetch(API+'/api/staff',{headers:zHdr()})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res.success||!res.data||!res.data.length) return;
+      var found=false;
+      res.data.forEach(function(s){
+        if(found) return;
+        var nm=s.name||'';
+        var init=nm.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'?';
+        var bg='linear-gradient(145deg,rgba(10,40,80,0.95),rgba(5,10,30,0.95))';
+        if(s.dob){
+          var dob=new Date(s.dob);
+          if(dob.getMonth()+1===m&&dob.getDate()===d){
+            found=true;
+            (function(name,ini){setTimeout(function(){showCelebration('birthday',name,ini,bg,'#5AABF0',0);},1800);})(nm,init);
+            return;
+          }
+        }
+        if(s.joining_date){
+          var jd=new Date(s.joining_date);
+          if(jd.getMonth()+1===m&&jd.getDate()===d&&jd.getFullYear()!==y){
+            var yrs=y-jd.getFullYear();
+            if(yrs>0){
+              found=true;
+              (function(name,ini,yr){setTimeout(function(){showCelebration('anniversary',name,ini,bg,'#BF5FFF',yr);},1800);})(nm,init,yrs);
+            }
+          }
+        }
+      });
+    }).catch(function(){});
 }
 setTimeout(checkCelebrations,3500);
 
@@ -1518,10 +1450,33 @@ async function loadDashStats(){
       else if(st==='leave')lv++;
       else if(st==='onsite')o++;
     });
-    // Update dashboard stat cards if IDs exist
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-    set('dash-present',p); set('dash-absent',a);
-    set('dash-late',l);    set('dash-leave',lv);
+    set('dash-present',p);
+    set('dash-absent',a+l);
+    set('dash-late-sub',(a)+' absent · '+(l)+' late');
+    var pc=document.getElementById('present-count');
+    if(pc) pc.textContent=(p+o)+' present in zone';
+    // Populate attendance table
+    var tbody=document.getElementById('att-table-body');
+    if(tbody){
+      if(!rows.length){
+        tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">No attendance records today</td></tr>';
+      } else {
+        tbody.innerHTML=rows.map(function(r){
+          var st=(r.status||'absent').toLowerCase();
+          var stCol=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='leave'?'#0A84FF':st==='onsite'?'#BF5FFF':'#FF453A';
+          var stLabel=st.charAt(0).toUpperCase()+st.slice(1);
+          var init=(r.staff_name||r.name||'?').charAt(0).toUpperCase();
+          var nm=(r.staff_name||r.name||'—');
+          var ci=r.check_in?(r.check_in+'').substring(0,5):'—';
+          var type=r.location_type||'Office';
+          return '<tr><td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:rgba(10,30,60,0.7);font-size:10px;">'+init+'</div>'+nm+'</div></td>'
+            +'<td class="mono">'+ci+'</td>'
+            +'<td style="color:var(--muted);">'+type+'</td>'
+            +'<td><span style="background:'+stCol+'22;color:'+stCol+';border:0.5px solid '+stCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;">'+stLabel+'</span></td></tr>';
+        }).join('');
+      }
+    }
   } catch(e){ console.log('dash stats error',e); }
 }
 
