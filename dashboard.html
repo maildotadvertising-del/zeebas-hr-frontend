@@ -1137,10 +1137,17 @@ async function openEdit(staffId){
     '<div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>';
   document.getElementById('edit-overlay').classList.add('open');
   try{
-    var res = await fetch(API+'/api/staff/'+staffId, {headers: zHdr()});
-    var d   = await res.json();
+    // Load this staff + all staff (for Reports To dropdown)
+    var [res, allRes] = await Promise.all([
+      fetch(API+'/api/staff/'+staffId, {headers: zHdr()}),
+      fetch(API+'/api/staff', {headers: zHdr()})
+    ]);
+    var d      = await res.json();
+    var allD   = await allRes.json();
     if(!d.success){ showToast('❌ Failed to load staff'); closeEditBtn(); return; }
-    var p = d.data;
+    var p         = d.data;
+    var allStaff  = (allD.data||[]);
+    var req_staff_id = (JSON.parse(localStorage.getItem('zhr_staff')||'{}').id)||0;
     var init = (p.name||'?').charAt(0).toUpperCase();
     var brandOpts = [
       {id:1,n:'DOT Advertising'},{id:2,n:'Zeebas Studios'},
@@ -1186,6 +1193,22 @@ async function openEdit(staffId){
       +'<select class="inp" id="ef-saltype"><option value="monthly"'+(p.salary_type==='monthly'?' selected':'')+'>Monthly</option><option value="daily"'+(p.salary_type==='daily'?' selected':'')+'>Daily</option></select></div>'
       +'</div>'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Address</div><textarea class="inp" id="ef-addr" rows="2">'+(p.address||'')+'</textarea></div>'
+      // Role + Team Leader
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Role</div>'
+      +'<select class="inp" id="ef-role"'+(p.id===req_staff_id?' disabled title="Cannot change own role"':'')+'>'+
+        ['admin','editor','team_leader','staff'].map(function(r){
+          var lbl={admin:'👑 Admin',editor:'✏️ Editor',team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
+          return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
+        }).join('')
+      +'</select></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Reports To (Team Leader)</div>'
+      +'<select class="inp" id="ef-reports"><option value="">— None —</option>'
+      +allStaff.filter(function(x){return x.id!==p.id;}).map(function(x){
+          return '<option value="'+x.id+'"'+(p.reports_to===x.id?' selected':'')+'>'+x.name+'</option>';
+        }).join('')
+      +'</select></div>'
+      +'</div>'
       +'<div style="display:flex;gap:9px;margin-top:4px;">'
       +'<button class="btn" style="flex:1;padding:12px;" id="ef-save-btn" onclick="saveEdit()">Save Changes</button>'
       +'<button style="padding:12px 16px;border-radius:10px;background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;cursor:pointer;font-family:inherit;font-size:13px;" onclick="deleteStaff('+staffId+')">🗑 Remove</button>'
@@ -1230,6 +1253,10 @@ async function saveEdit(){
     fd.append('dob', dob||'');
     fd.append('joining_date', join||'');
     fd.append('address', addr.trim());
+    var roleEl    = document.getElementById('ef-role');
+    var reportsEl = document.getElementById('ef-reports');
+    if(roleEl && !roleEl.disabled) fd.append('role', roleEl.value);
+    if(reportsEl) fd.append('reports_to', reportsEl.value||'');
     var res = await fetch(API+'/api/staff/'+_editStaffId, {
       method:'PUT', headers: zHdr(), body: fd
     });
@@ -1564,17 +1591,35 @@ setTimeout(checkCelebrations,3500);
 
 
 <script>
+/* ── API BASE ── */
+var API = 'https://zeebas-hr-backend.onrender.com';
+
 /* ── ZEEBAS DASHBOARD — AUTH + SESSION ── */
 (function(){
-  var token = localStorage.getItem('zhr_token');
+  var token    = localStorage.getItem('zhr_token');
   var staffRaw = localStorage.getItem('zhr_staff');
-  if(!token || !staffRaw){
-    window.location.href = '/';
-    return;
+  var overlay  = document.getElementById('admin-login-overlay');
+
+  function showOverlay(){
+    if(overlay) overlay.style.display='flex';
+    document.body.style.overflow='hidden';
   }
+
+  // Not logged in → show admin login screen
+  if(!token || !staffRaw){ showOverlay(); return; }
+
   try {
     var staff = JSON.parse(staffRaw);
-    // Update sidebar bottom name & avatar
+    // Must be admin or editor to access dashboard
+    if(staff.role !== 'admin' && staff.role !== 'editor'){
+      localStorage.removeItem('zhr_token');
+      localStorage.removeItem('zhr_staff');
+      showOverlay();
+      return;
+    }
+    // Authenticated admin — hide overlay, update sidebar
+    if(overlay) overlay.style.display='none';
+    document.body.style.overflow='';
     var sbBot = document.querySelector('.sb-bot');
     if(sbBot){
       var nameDiv = sbBot.querySelector('div[style*="font-size:12px"]');
@@ -1582,11 +1627,46 @@ setTimeout(checkCelebrations,3500);
       var avatar = sbBot.querySelector('div[style*="border-radius:50%"]');
       if(avatar) avatar.textContent = (staff.name||'A').charAt(0).toUpperCase();
     }
-  } catch(e){}
+  } catch(e){ showOverlay(); }
 })();
 
+/* ── ADMIN LOGIN FUNCTION ── */
+async function adminLogin(){
+  var phone = (document.getElementById('al-phone')||{}).value||'';
+  var pass  = (document.getElementById('al-pass')||{}).value||'';
+  var errEl = document.getElementById('al-err');
+  var btn   = document.getElementById('al-btn');
+  if(!phone||!pass){
+    if(errEl){ errEl.style.display='block'; errEl.textContent='Phone number and password required'; }
+    return;
+  }
+  if(btn){ btn.textContent='Signing in…'; btn.disabled=true; }
+  if(errEl) errEl.style.display='none';
+  try{
+    var res = await fetch(API+'/api/auth/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:phone.trim(), password:pass})
+    });
+    var d = await res.json();
+    if(d.success){
+      if(d.staff.role !== 'admin' && d.staff.role !== 'editor'){
+        if(errEl){ errEl.style.display='block'; errEl.textContent='❌ Admin or Editor access required. Use the Staff App instead.'; }
+        return;
+      }
+      localStorage.setItem('zhr_token', d.token);
+      localStorage.setItem('zhr_staff', JSON.stringify(d.staff));
+      window.location.reload();
+    } else {
+      if(errEl){ errEl.style.display='block'; errEl.textContent='❌ '+(d.message||'Invalid credentials'); }
+    }
+  } catch(e){
+    if(errEl){ errEl.style.display='block'; errEl.textContent='⏳ Server starting… wait 30 seconds and try again.'; }
+  } finally {
+    if(btn){ btn.textContent='Login to Dashboard'; btn.disabled=false; }
+  }
+}
+
 /* ── API HELPERS ── */
-var API = 'https://zeebas-hr-backend.onrender.com';
 function zTok(){ return localStorage.getItem('zhr_token')||''; }
 function zHdr(){ return { 'Authorization':'Bearer '+zTok() }; }
 
@@ -1605,47 +1685,61 @@ async function loadStaffList(){
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No staff added yet. Click + Add Staff</div>';
       return;
     }
+    // Role display config
+    var ROLE_COLOR = {admin:'#FF453A',editor:'#FF9F0A',team_leader:'#0A84FF',staff:'#636366'};
+    var ROLE_LABEL = {admin:'Admin',editor:'Editor',team_leader:'Team Leader',staff:'Staff'};
+
     grid.innerHTML = staff.map(function(s){
-      // Initials — up to 2 letters (e.g. "Arjun Kumar" → "AK", "Zeebas" → "ZB")
       var words = (s.name||'?').trim().split(/\s+/);
-      var init = words.length >= 2
+      var init  = words.length >= 2
         ? (words[0][0]||'').toUpperCase()+(words[1][0]||'').toUpperCase()
         : (s.name||'?').substring(0,2).toUpperCase();
 
-      // Attendance — null = no record yet (neutral), not "Absent"
-      var hasRecord = !!s.today_status;
-      var status = s.today_status || '';
+      var hasRecord   = !!s.today_status;
+      var status      = s.today_status || '';
       var statusColor = status==='present'?'#30D158':status==='late'?'#FF9F0A':status==='leave'?'#0A84FF':status==='onsite'?'#BF5FFF':hasRecord?'#FF453A':'#636366';
-      var dotColor   = hasRecord ? statusColor : '#3A3A3C';
+      var dotColor    = hasRecord ? statusColor : '#3A3A3C';
       var statusLabel = status==='present'?'Present':status==='late'?'Late':status==='leave'?'On Leave':status==='onsite'?'Onsite':status==='absent'?'Absent':'—';
-      var checkin = s.today_checkin ? (typeof s.today_checkin==='string'?s.today_checkin.substring(0,5):new Date(s.today_checkin).toTimeString().substring(0,5)) : '';
-
+      var checkin     = s.today_checkin ? (typeof s.today_checkin==='string'?s.today_checkin.substring(0,5):new Date(s.today_checkin).toTimeString().substring(0,5)) : '';
       var brandColor  = s.brand_color || '#0A84FF';
-      var type = s.employment_type==='full_time'?'Full Time':s.employment_type==='part_time'?'Part Time':'Daily Wage';
-
-      // Avatar: show photo if available, else initials
+      var type        = s.employment_type==='full_time'?'Full Time':s.employment_type==='part_time'?'Part Time':'Daily Wage';
+      var roleKey     = s.role || 'staff';
+      var roleColor   = ROLE_COLOR[roleKey] || '#636366';
+      var roleLabel   = ROLE_LABEL[roleKey] || 'Staff';
       var avatarInner = s.photo_url
         ? '<img src="'+API+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'
         : init;
 
-      return '<div class="sec g" style="padding:0;overflow:hidden;cursor:pointer;" onclick="viewStaff('+s.id+')">'
-        +'<div style="padding:16px 16px 12px;">'
-        +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">'
+      return '<div class="sec g" style="padding:0;overflow:hidden;">'
+        +'<div style="padding:16px 16px 12px;cursor:pointer;" onclick="viewStaff('+s.id+')">'
+        +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">'
+        // Avatar
         +'<div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,'+brandColor+'22,'+brandColor+'44);border:1.5px solid '+brandColor+'44;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:'+brandColor+';flex-shrink:0;overflow:hidden;">'+avatarInner
         +'<div style="position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;background:'+dotColor+';border-radius:50%;border:2px solid #0D0D0F;"></div>'
         +'</div>'
+        // Info
         +'<div style="flex:1;min-width:0;">'
+        +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">'
         +'<div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(s.name)+'</div>'
+        +'<span style="font-size:9px;padding:2px 7px;border-radius:999px;background:'+roleColor+'18;color:'+roleColor+';border:0.5px solid '+roleColor+'44;white-space:nowrap;">'+roleLabel+'</span>'
+        +'</div>'
         +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(s.designation||'Staff')+'</div>'
-        +'<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">'
+        +'<div style="display:flex;align-items:center;gap:5px;margin-top:4px;">'
         +'<div style="width:6px;height:6px;border-radius:50%;background:'+brandColor+';"></div>'
         +'<span style="font-size:11px;color:var(--muted);">'+(s.brand_name||'—')+'</span>'
-        +'</div></div></div>'
+        +(s.team_leader_name?'<span style="font-size:10px;color:rgba(245,245,247,0.25);">· TL: '+escHtml(s.team_leader_name)+'</span>':'')
+        +'</div>'
+        +'</div>'
+        // Quick remove button
+        +'<button onclick="event.stopPropagation();quickRemoveStaff('+s.id+',\''+escHtml(s.name)+'\')" title="Remove staff" style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;width:28px;height:28px;color:rgba(255,69,58,0.6);cursor:pointer;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">×</button>'
+        +'</div>'
+        +'</div>'
         +'<div style="height:0.5px;background:rgba(255,255,255,0.06);margin:0 16px;"></div>'
         +'<div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">'
         +'<span style="font-size:11px;color:var(--muted);">'+type+(checkin?' · ✓'+checkin:'')+'</span>'
         +'<span style="font-size:11px;padding:3px 9px;border-radius:999px;background:'+statusColor+'22;color:'+statusColor+';border:0.5px solid '+statusColor+'44;">'+statusLabel+'</span>'
-        +'</div></div>';
+        +'</div>'
+        +'</div>';
     }).join('');
   } catch(e){
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#FF453A;">Failed to load staff.</div>';
@@ -1655,6 +1749,17 @@ async function loadStaffList(){
 
 /* ── VIEW/EDIT STAFF ── */
 function viewStaff(id){ openEdit(id); }
+
+/* ── QUICK REMOVE FROM CARD ── */
+async function quickRemoveStaff(id, name){
+  if(!confirm('Remove '+name+' from the team?\n\nThis will deactivate their account.')) return;
+  try{
+    var res = await fetch(API+'/api/staff/'+id, { method:'DELETE', headers: zHdr() });
+    var d   = await res.json();
+    if(d.success){ showToast('✅ '+name+' removed'); loadStaffList(); }
+    else showToast('❌ '+(d.message||'Remove failed'));
+  } catch(e){ showToast('❌ Server error'); }
+}
 
 /* ── LOAD DASHBOARD STATS ── */
 async function loadDashStats(){
@@ -2164,4 +2269,40 @@ function dashLogout(){
   }
 }
 </script>
+
+<!-- ════════════════════════════════════
+     ADMIN LOGIN OVERLAY
+════════════════════════════════════ -->
+<div id="admin-login-overlay" style="display:flex;position:fixed;inset:0;z-index:9999;background:#040408;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="width:100%;max-width:400px;padding:0 24px;">
+
+    <!-- Logo / Header -->
+    <div style="text-align:center;margin-bottom:36px;">
+      <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,60,180,0.5));border:1.5px solid rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;font-weight:700;color:#5AABF0;">D</div>
+      <div style="font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px;">Admin Dashboard</div>
+      <div style="font-size:12px;color:rgba(245,245,247,0.4);margin-top:6px;">Zeebas Cluster LLP — Admin Access Only</div>
+    </div>
+
+    <!-- Form card -->
+    <div style="background:rgba(15,15,28,0.98);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px 24px;">
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;">Mobile Number</div>
+        <input class="inp" type="tel" id="al-phone" placeholder="Enter admin mobile number" onkeydown="if(event.key==='Enter')document.getElementById('al-pass').focus()">
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;">Password</div>
+        <input class="inp" type="password" id="al-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')adminLogin()">
+      </div>
+
+      <div id="al-err" style="display:none;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);border-radius:10px;padding:10px 14px;font-size:12px;color:#FF453A;margin-bottom:16px;line-height:1.5;"></div>
+
+      <button id="al-btn" onclick="adminLogin()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:0.2px;">Login to Dashboard</button>
+
+      <div style="margin-top:16px;text-align:center;font-size:11px;color:rgba(245,245,247,0.25);">Staff members → use the <a href="/" style="color:rgba(10,132,255,0.7);text-decoration:none;">Staff App</a></div>
+    </div>
+  </div>
+</div>
+
 </body></html>
