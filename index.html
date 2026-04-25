@@ -76,6 +76,46 @@ select.inp option{background:#1A1A2E;color:#fff;}
 .cele-btn{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px;color:rgba(245,245,247,0.7);font-size:13px;cursor:pointer;width:100%;font-family:inherit;}
 .cele-btn:hover{background:rgba(255,255,255,0.13);}
 #confetti-canvas{position:fixed;inset:0;z-index:998;pointer-events:none;display:none;}
+
+/* ══════════════════════════════════
+   MOBILE FULL-SCREEN (real app mode)
+   ══════════════════════════════════ */
+@media (max-width: 768px) {
+  body {
+    display: block;
+    padding: 0;
+    background: #040408;
+    overflow: hidden;
+    height: 100dvh;
+  }
+  /* Hide desktop labels & second phone */
+  body > div > h3 { display: none; }
+  #app2, #app2 ~ * { display: none !important; }
+  body > div:has(#app2) { display: none !important; }
+
+  /* Make phone frame full-screen */
+  .phone {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: #040408;
+  }
+  /* Full-height screen wrapper */
+  .pwrap {
+    height: calc(100dvh - 0px);
+  }
+  /* Hide fake status bar (phone shows real one) */
+  .pstatus { display: none; }
+
+  /* Screens take full height */
+  .scr { height: 100dvh; }
+  .scroll { -webkit-overflow-scrolling: touch; }
+
+  /* Bottom nav safe area */
+  .bnav { padding-bottom: env(safe-area-inset-bottom, 8px); }
+}
 </style>
 </head><body>
 
@@ -1118,6 +1158,17 @@ setTimeout(checkCelebrations,3500);
 
 
 <script>
+
+/* ── MOBILE: hide mockup wrapper, show full-screen ── */
+(function(){
+  if(window.innerWidth > 768) return; // desktop — keep mockup
+  // Hide the wrapper div containing app2
+  var phones = document.querySelectorAll('body > div');
+  phones.forEach(function(div){
+    if(div.querySelector('#app2')) div.style.display = 'none';
+  });
+})();
+
 /* ═══════════════════════════════════════════
    ZEEBAS HR APP — API INTEGRATION v1.0
    Backend: https://zeebas-hr-backend.onrender.com
