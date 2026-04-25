@@ -1209,6 +1209,15 @@ async function openEdit(staffId){
         }).join('')
       +'</select></div>'
       +'</div>'
+      // Reset Password section
+      +'<div style="background:rgba(255,159,10,0.06);border:0.5px solid rgba(255,159,10,0.2);border-radius:12px;padding:12px 14px;">'
+      +'<div style="font-size:10px;color:#FF9F0A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🔑 Reset Password</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +'<input class="inp" type="password" id="ef-newpass" placeholder="Enter new password" style="flex:1;margin-bottom:0;">'
+      +'<button onclick="resetStaffPassword('+staffId+')" style="padding:9px 14px;background:rgba(255,159,10,0.15);border:0.5px solid rgba(255,159,10,0.3);border-radius:10px;color:#FF9F0A;cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap;">Reset</button>'
+      +'</div>'
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.25);margin-top:6px;">Leave blank to keep current password. Default: Dot*321</div>'
+      +'</div>'
       +'<div style="display:flex;gap:9px;margin-top:4px;">'
       +'<button class="btn" style="flex:1;padding:12px;" id="ef-save-btn" onclick="saveEdit()">Save Changes</button>'
       +'<button style="padding:12px 16px;border-radius:10px;background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;cursor:pointer;font-family:inherit;font-size:13px;" onclick="deleteStaff('+staffId+')">🗑 Remove</button>'
@@ -1295,6 +1304,25 @@ async function deleteStaff(staffId){
 }
 function closeEditBtn(){ document.getElementById('edit-overlay').classList.remove('open'); }
 function closeEdit(e){ if(e.target.id==='edit-overlay') closeEditBtn(); }
+async function resetStaffPassword(staffId){
+  var pw = (document.getElementById('ef-newpass')||{}).value||'';
+  if(!pw.trim()){ showToast('⚠️ Enter a new password first'); return; }
+  if(pw.length < 4){ showToast('⚠️ Password must be at least 4 characters'); return; }
+  try{
+    var res = await fetch(API+'/api/staff/'+staffId+'/reset-password', {
+      method:'PATCH', headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body:JSON.stringify({new_password: pw.trim()})
+    });
+    var d = await res.json();
+    if(d.success){
+      showToast('✅ Password reset successfully');
+      var inp = document.getElementById('ef-newpass');
+      if(inp) inp.value='';
+    } else {
+      showToast('❌ '+(d.message||'Reset failed'));
+    }
+  } catch(e){ showToast('❌ Server error'); }
+}
 function openAdd(){document.getElementById('add-overlay').classList.add('open');}
 function closeAdd(e){if(e.target===document.getElementById('add-overlay'))document.getElementById('add-overlay').classList.remove('open');}
 async function saveNewStaff(){
@@ -1329,7 +1357,7 @@ async function saveNewStaff(){
     fd.append('employment_type', type);
     fd.append('phone', cleanPhone);
     fd.append('email', email.trim());
-    fd.append('password', 'DOT@321');
+    fd.append('password', 'Dot*321');
     fd.append('role', 'staff');
     fd.append('base_salary', salary||'0');
     fd.append('salary_type', saltype);
@@ -1348,7 +1376,7 @@ async function saveNewStaff(){
 
     if(d.success){
       document.getElementById('add-overlay').classList.remove('open');
-      showToast('✅ '+name+' added! Login: '+cleanPhone+' / DOT@321');
+      showToast('✅ '+name+' added! Login: '+cleanPhone+' / Dot*321');
       // Reset form
       ['add-name','add-desig','add-phone','add-email','add-dob','add-join','add-addr','add-salary'].forEach(function(id){
         var el=document.getElementById(id); if(el) el.value='';
