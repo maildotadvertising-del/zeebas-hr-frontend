@@ -1835,7 +1835,14 @@ document.addEventListener('DOMContentLoaded', function(){
     // Update sidebar profile
     var nm=document.getElementById('sb-name'), av=document.getElementById('sb-avatar'), rl=document.getElementById('sb-role');
     if(nm) nm.textContent = staff.name||'Admin';
-    if(av) av.textContent = (staff.name||'A').charAt(0).toUpperCase();
+    if(av){
+      if(staff.photo_url){
+        av.innerHTML='<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+        av.style.overflow='hidden';
+      } else {
+        av.textContent = (staff.name||'A').charAt(0).toUpperCase();
+      }
+    }
     if(rl) rl.textContent = staff.role==='admin'?'Admin':'Editor';
 
     // Restore page from sessionStorage → hash → default dashboard
@@ -1914,7 +1921,14 @@ async function adminLogin(){
       // Update sidebar profile
       var nm=document.getElementById('sb-name'), av=document.getElementById('sb-avatar'), rl=document.getElementById('sb-role');
       if(nm) nm.textContent = d.staff.name||'Admin';
-      if(av) av.textContent = (d.staff.name||'A').charAt(0).toUpperCase();
+      if(av){
+        if(d.staff.photo_url){
+          av.innerHTML='<img src="'+API+d.staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+          av.style.overflow='hidden';
+        } else {
+          av.textContent = (d.staff.name||'A').charAt(0).toUpperCase();
+        }
+      }
       if(rl) rl.textContent = d.staff.role==='admin'?'Admin':'Editor';
       // Navigate to dashboard
       showPage('dashboard', null);
