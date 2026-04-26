@@ -784,9 +784,18 @@ textarea.inp{resize:none;}
   <!-- ── ADMIN OVERVIEW ── -->
   <div id="page-admin-overview" class="page">
     <div class="topbar">
-      <div><div class="ptitle">Admin Overview</div><div class="psub">Company details & today's attendance at a glance</div></div>
+      <div><div class="ptitle">Admin Overview</div><div class="psub" id="ao-admin-sub">Admins & company details</div></div>
       <div style="display:flex;gap:10px;"><button class="btn-g">Export Report</button></div>
     </div>
+
+    <!-- ── ADMIN PROFILES SECTION ── -->
+    <div class="g sec" style="margin-bottom:18px;">
+      <div class="sh"><span class="st">Admin &amp; Editor Profiles</span><span id="ao-admin-count" style="font-size:11px;color:var(--muted);"></span></div>
+      <div id="ao-admin-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
 
       <!-- Company Details -->
@@ -1970,7 +1979,8 @@ async function loadStaffList(retryCount){
     return;
   }
 
-  var staff = d.data || [];
+  // Show only non-admin roles in Staff page (admins → Admin Overview page)
+  var staff = (d.data || []).filter(function(s){ return s.role !== 'admin' && s.role !== 'editor'; });
     if(cnt) cnt.textContent = staff.length+' members · click a card to edit';
     if(!staff.length){
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No staff added yet. Click + Add Staff</div>';
@@ -2815,16 +2825,58 @@ async function approveLeave(id, action){
 /* ── LOAD ADMIN OVERVIEW (real data) ── */
 async function loadAdminOverview(){
   try{
-    // Staff count
+    // Load all staff — split into admins and regular staff
     var sRes=await fetch(API+'/api/staff',{headers:zHdr()});
     var sData=await sRes.json();
-    var staff=(sData.data||[]);
-    var ft=staff.filter(function(s){return s.employment_type==='full_time';}).length;
-    var pt=staff.filter(function(s){return s.employment_type==='part_time';}).length;
-    var dw=staff.filter(function(s){return s.employment_type==='daily_wage';}).length;
+    var allStaff=(sData.data||[]);
+
+    // ── Admin/Editor profiles section ──
+    var admins = allStaff.filter(function(s){ return s.role==='admin'||s.role==='editor'; });
+    var regularStaff = allStaff.filter(function(s){ return s.role!=='admin'&&s.role!=='editor'; });
+    var aoList = document.getElementById('ao-admin-list');
+    var aoCount = document.getElementById('ao-admin-count');
+    if(aoCount) aoCount.textContent = admins.length+' admin'+(admins.length!==1?'s':'');
+    if(aoList){
+      if(!admins.length){
+        aoList.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);">No admin accounts found</div>';
+      } else {
+        aoList.innerHTML = admins.map(function(a){
+          var init = (a.name||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
+          var roleColor = a.role==='admin'?'#FF453A':'#FF9F0A';
+          var roleLabel = a.role==='admin'?'👑 Admin':'✏️ Editor';
+          var avatarHtml = a.photo_url
+            ? '<img src="'+API+a.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+            : init;
+          return '<div class="gs" style="padding:14px;display:flex;flex-direction:column;gap:10px;">'
+            // Top row — avatar + name + role
+            +'<div style="display:flex;align-items:center;gap:11px;">'
+            +'<div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,rgba(255,69,58,0.3),rgba(180,20,20,0.4));border:1.5px solid '+roleColor+'44;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:'+roleColor+';flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
+            +'<div style="flex:1;min-width:0;">'
+            +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(a.name||'—')+'</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+(a.designation||'Administrator')+'</div>'
+            +'<span style="font-size:9px;padding:2px 8px;border-radius:999px;background:'+roleColor+'18;color:'+roleColor+';border:0.5px solid '+roleColor+'44;">'+roleLabel+'</span>'
+            +'</div>'
+            +'</div>'
+            // Details
+            +'<div style="display:flex;flex-direction:column;gap:5px;border-top:0.5px solid rgba(255,255,255,0.06);padding-top:9px;">'
+            +'<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 2h2.5l1 3-1.5 1a8 8 0 003 3l1-1.5 3 1V11a1.5 1.5 0 01-1.5 1.5C5.5 12.5 1.5 8.5 1.5 3.5A1.5 1.5 0 013 2Z" stroke="#30D158" stroke-width="1.2"/></svg>'+escHtml(a.phone||'—')+'</div>'
+            +(a.email?'<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 3h10v8H2z" stroke="#0A84FF" stroke-width="1.2" rx="1"/><path d="M2 5l5 3.5L12 5" stroke="#0A84FF" stroke-width="1.2"/></svg>'+escHtml(a.email)+'</div>':'')
+            +'<div style="font-size:10px;color:rgba(245,245,247,0.25);">ID: '+(a.emp_id||'—')+(a.brand_name?' · '+escHtml(a.brand_name):'')+'</div>'
+            +'</div>'
+            // Edit button
+            +'<button onclick="openEdit('+a.id+')" style="width:100%;padding:8px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(245,245,247,0.7);font-size:12px;cursor:pointer;font-family:inherit;">✏️ Edit Profile</button>'
+            +'</div>';
+        }).join('');
+      }
+    }
+
+    // Staff count (regular staff only)
+    var ft=regularStaff.filter(function(s){return s.employment_type==='full_time';}).length;
+    var pt=regularStaff.filter(function(s){return s.employment_type==='part_time';}).length;
+    var dw=regularStaff.filter(function(s){return s.employment_type==='daily_wage';}).length;
     var sc=document.getElementById('ao-staff-count');
-    if(sc) sc.textContent=staff.length+' members · '+ft+' Full Time'+(pt?' · '+pt+' Part Time':'')+(dw?' · '+dw+' Daily Wage':'');
-  }catch(e){}
+    if(sc) sc.textContent=regularStaff.length+' staff · '+ft+' Full Time'+(pt?' · '+pt+' Part Time':'')+(dw?' · '+dw+' Daily Wage':'');
+  }catch(e){ console.error('loadAdminOverview staff error',e); }
   try{
     // Active brands
     var bRes=await fetch(API+'/api/staff/brands/list',{headers:zHdr()});
