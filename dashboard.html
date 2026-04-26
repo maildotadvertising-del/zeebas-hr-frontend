@@ -793,25 +793,25 @@ textarea.inp{resize:none;}
 
       <!-- Company Details -->
       <div class="g sec">
-        <div class="sh"><span class="st">Company Details</span><button class="btn-g" style="font-size:12px;padding:6px 12px;">Edit</button></div>
+        <div class="sh"><span class="st">Company Details</span><button class="btn-g" style="font-size:12px;padding:6px 12px;" onclick="openCompanyEdit()">Edit</button></div>
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="10" rx="2" stroke="#0A84FF" stroke-width="1.3"/><path d="M5 4V3a3 3 0 016 0v1" stroke="#0A84FF" stroke-width="1.3"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Company Name</div><div style="font-size:13px;margin-top:2px;">Zeebas Cluster LLP</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Company Name</div><div id="co-name" style="font-size:13px;margin-top:2px;">Zeebas Cluster LLP</div></div>
           </div>
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(255,159,10,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z" stroke="#FF9F0A" stroke-width="1.3"/><circle cx="8" cy="6" r="1.5" stroke="#FF9F0A" stroke-width="1.3"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Office Location</div><div style="font-size:13px;margin-top:2px;">Mayiladuthurai, Tamil Nadu</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Office Location</div><div id="co-location" style="font-size:13px;margin-top:2px;">Mayiladuthurai, Tamil Nadu</div></div>
           </div>
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#30D158" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Office Hours</div><div style="font-size:13px;margin-top:2px;">9:00 AM — 6:00 PM · Mon–Sat</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Office Hours</div><div id="co-hours" style="font-size:13px;margin-top:2px;">9:00 AM — 6:00 PM · Mon–Sat</div></div>
           </div>
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(191,95,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -1120,8 +1120,9 @@ function showPage(name, el){
       if(n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'"+name+"'")!==-1) n.classList.add('active');
     });
   }
-  // Save current page in hash so refresh restores it
+  // Save current page — both hash and sessionStorage for reliable restore
   location.hash = name;
+  try{ sessionStorage.setItem('zhr_page', name); } catch(e){}
 }
 
 
@@ -2014,13 +2015,18 @@ window.showPage = function(page, el){
 
 /* ── On load: ping server to wake Render, then restore page ── */
 document.addEventListener('DOMContentLoaded', function(){
-  var hash = (location.hash||'').replace('#','').trim();
   var validPages = ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'];
-  var page = (hash && validPages.indexOf(hash)!==-1) ? hash : 'dashboard';
+  // Try sessionStorage first (most reliable across refresh), fall back to hash
+  var saved = '';
+  try{ saved = sessionStorage.getItem('zhr_page')||''; }catch(e){}
+  var hash  = (location.hash||'').replace('#','').trim();
+  var page  = (saved && validPages.indexOf(saved)!==-1) ? saved
+            : (hash  && validPages.indexOf(hash) !==-1) ? hash
+            : 'dashboard';
   // Ping health to pre-warm Render (fire and forget)
   fetch(API+'/api/health').catch(function(){});
-  // slight delay so auth check runs first
-  setTimeout(function(){ showPage(page, null); }, 50);
+  // 120ms delay — ensures auth check fully completes first
+  setTimeout(function(){ showPage(page, null); }, 120);
 });
 
 /* ════════════════════════════════════════
@@ -2517,5 +2523,70 @@ function dashLogout(){
     </div>
   </div>
 </div>
+
+<!-- ── COMPANY EDIT OVERLAY ── -->
+<div id="company-edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(6px);" onclick="if(event.target===this)closeCompanyEdit()">
+  <div style="background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;padding:24px;width:90%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,0.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:600;">Edit Company Details</div>
+      <button onclick="closeCompanyEdit()" style="background:rgba(255,255,255,0.08);border:none;width:28px;height:28px;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Company Name</div>
+        <input id="co-edit-name" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;" placeholder="Zeebas Cluster LLP">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Office Location</div>
+        <input id="co-edit-location" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;" placeholder="Mayiladuthurai, Tamil Nadu">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Office Hours</div>
+        <input id="co-edit-hours" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;" placeholder="9:00 AM — 6:00 PM · Mon–Sat">
+      </div>
+      <button onclick="saveCompanyDetails()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Company Details (saved in localStorage) ──
+function loadCompanyDetails(){
+  var defaults = { name:'Zeebas Cluster LLP', location:'Mayiladuthurai, Tamil Nadu', hours:'9:00 AM — 6:00 PM · Mon–Sat' };
+  var saved = {};
+  try{ saved = JSON.parse(localStorage.getItem('zhr_company')||'{}'); }catch(e){}
+  var d = Object.assign({}, defaults, saved);
+  var n=document.getElementById('co-name'), l=document.getElementById('co-location'), h=document.getElementById('co-hours');
+  if(n) n.textContent = d.name;
+  if(l) l.textContent = d.location;
+  if(h) h.textContent = d.hours;
+}
+function openCompanyEdit(){
+  var saved = {};
+  try{ saved = JSON.parse(localStorage.getItem('zhr_company')||'{}'); }catch(e){}
+  var n=document.getElementById('co-edit-name'), l=document.getElementById('co-edit-location'), h=document.getElementById('co-edit-hours');
+  if(n) n.value = saved.name||'Zeebas Cluster LLP';
+  if(l) l.value = saved.location||'Mayiladuthurai, Tamil Nadu';
+  if(h) h.value = saved.hours||'9:00 AM — 6:00 PM · Mon–Sat';
+  var ov=document.getElementById('company-edit-overlay');
+  if(ov){ ov.style.display='flex'; }
+}
+function closeCompanyEdit(){
+  var ov=document.getElementById('company-edit-overlay');
+  if(ov) ov.style.display='none';
+}
+function saveCompanyDetails(){
+  var n=(document.getElementById('co-edit-name')||{}).value||'';
+  var l=(document.getElementById('co-edit-location')||{}).value||'';
+  var h=(document.getElementById('co-edit-hours')||{}).value||'';
+  var data = { name:n.trim()||'Zeebas Cluster LLP', location:l.trim()||'Mayiladuthurai, Tamil Nadu', hours:h.trim()||'9:00 AM — 6:00 PM · Mon–Sat' };
+  try{ localStorage.setItem('zhr_company', JSON.stringify(data)); }catch(e){}
+  loadCompanyDetails();
+  closeCompanyEdit();
+  showToast('✅ Company details updated');
+}
+// Load on page ready
+document.addEventListener('DOMContentLoaded', function(){ loadCompanyDetails(); });
+</script>
 
 </body></html>
