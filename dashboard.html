@@ -1742,8 +1742,8 @@ document.addEventListener('DOMContentLoaded', function(){
     // Pre-warm Render server
     fetch(API+'/api/health').catch(function(){});
 
-    // Show restored page — small delay to let DOM settle
-    setTimeout(function(){ showPage(page, null); }, 80);
+    // Show restored page immediately (no delay — avoids dashboard flash on refresh)
+    showPage(page, null);
 
   } catch(e){ showOverlay(); }
 });
@@ -1803,7 +1803,18 @@ async function adminLogin(){
       }
       localStorage.setItem('zhr_token', d.token);
       localStorage.setItem('zhr_staff', JSON.stringify(d.staff));
-      window.location.reload();
+      // Hide overlay and show dashboard without full reload
+      var ov = document.getElementById('admin-login-overlay');
+      if(ov){ ov.style.display='none'; document.body.style.overflow=''; }
+      // Update sidebar profile
+      var nm=document.getElementById('sb-name'), av=document.getElementById('sb-avatar'), rl=document.getElementById('sb-role');
+      if(nm) nm.textContent = d.staff.name||'Admin';
+      if(av) av.textContent = (d.staff.name||'A').charAt(0).toUpperCase();
+      if(rl) rl.textContent = d.staff.role==='admin'?'Admin':'Editor';
+      // Navigate to dashboard
+      showPage('dashboard', null);
+      // Pre-warm server
+      fetch(API+'/api/health').catch(function(){});
     } else {
       if(errEl){ errEl.style.display='block'; errEl.textContent='❌ '+(d.message||'Invalid credentials'); }
     }
@@ -1825,16 +1836,17 @@ async function loadStaffList(retryCount){
   var cnt  = document.getElementById('staff-count');
   if(!grid) return;
 
-  // Show loading spinner
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">'
-    +(retryCount > 0 ? '⏳ Connecting to server…' : 'Loading staff…')
-    +'</div>';
+  // Show loading message
+  var loadMsg = retryCount === 0
+    ? '⏳ Loading staff…'
+    : '⏳ Server starting up… please wait ('+(retryCount)+'/5)';
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">'+loadMsg+'<br><span style="font-size:11px;opacity:0.5;">Free server may take ~30 seconds to wake up</span></div>';
 
   var d;
   try{
-    // 12s timeout — if Render cold-start hangs, abort and retry
+    // 30s timeout — Render free tier can take up to 30s to cold-start
     var ctrl = new AbortController();
-    var tId  = setTimeout(function(){ ctrl.abort(); }, 12000);
+    var tId  = setTimeout(function(){ ctrl.abort(); }, 30000);
     var res  = await fetch(API+'/api/staff', { headers: zHdr(), signal: ctrl.signal });
     clearTimeout(tId);
     d = await res.json();
@@ -1848,9 +1860,8 @@ async function loadStaffList(retryCount){
       return;
     }
 
-    // API returned success:false (non-auth error) → retry up to 3 times (Render cold start)
-    if(!d.success && retryCount < 3){
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">⏳ Server waking up… ('+(retryCount+1)+'/3)</div>';
+    // API returned success:false (non-auth error) → retry up to 5 times
+    if(!d.success && retryCount < 5){
       setTimeout(function(){ loadStaffList(retryCount+1); }, 5000);
       return;
     }
@@ -1866,9 +1877,8 @@ async function loadStaffList(retryCount){
     }
 
   } catch(netErr){
-    // Network error (server offline / no internet) → retry
-    if(retryCount < 3){
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">⏳ Server waking up… ('+(retryCount+1)+'/3)</div>';
+    // Network error (server offline / no internet) → retry up to 5 times
+    if(retryCount < 5){
       setTimeout(function(){ loadStaffList(retryCount+1); }, 6000);
       return;
     }
@@ -1942,10 +1952,6 @@ async function loadStaffList(retryCount){
         +'</div>'
         +'</div>';
     }).join('');
-  } catch(e){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#FF453A;">Failed to load staff.</div>';
-    console.error(e);
-  }
 }
 
 /* ── VIEW/EDIT STAFF ── */
@@ -2461,8 +2467,15 @@ function dashLogout(){
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   try{ sessionStorage.removeItem('zhr_page'); }catch(e){}
-  // Reload dashboard.html — auth check will show login overlay since token is cleared
-  window.location.reload();
+  // Clear URL hash
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  // Show login overlay directly — no reload needed
+  var overlay = document.getElementById('admin-login-overlay');
+  if(overlay){ overlay.style.display='flex'; document.body.style.overflow='hidden'; }
+  // Clear login form
+  var errEl = document.getElementById('al-err'); if(errEl) errEl.style.display='none';
+  var passEl = document.getElementById('al-pass'); if(passEl) passEl.value='';
+  var phoneEl = document.getElementById('al-phone'); if(phoneEl) phoneEl.value='';
 }
 
 /* ── LOAD APPROVALS ── */
