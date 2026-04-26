@@ -15,7 +15,7 @@ body{min-height:100vh;background:#050508;background-image:radial-gradient(ellips
 .orb1{width:500px;height:500px;background:radial-gradient(circle,rgba(10,80,200,0.16),transparent 70%);top:-150px;left:-100px;}
 .orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(100,20,180,0.12),transparent 70%);bottom:-100px;right:-50px;}
 
-.sidebar{width:210px;position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:100;background:rgba(5,5,14,0.75);backdrop-filter:blur(32px);border-right:0.5px solid rgba(255,255,255,0.07);}
+.sidebar{width:210px;position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:100;background:rgba(5,5,14,0.75);backdrop-filter:blur(32px);border-right:0.5px solid rgba(255,255,255,0.07);overflow:visible;}
 .logo-wrap{padding:22px 18px 18px;border-bottom:0.5px solid rgba(255,255,255,0.06);}
 .logo-icon{width:40px;height:40px;background:linear-gradient(145deg,rgba(10,132,255,0.85),rgba(10,60,180,0.9));border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 8px 24px rgba(10,132,255,0.35),inset 0 1px 0 rgba(255,255,255,0.2);}
 .nav{flex:1;padding:10px;}
@@ -1827,7 +1827,11 @@ async function loadStaffList(retryCount){
 
   var d;
   try{
-    var res = await fetch(API+'/api/staff', { headers: zHdr() });
+    // 12s timeout — if Render cold-start hangs, abort and retry
+    var ctrl = new AbortController();
+    var tId  = setTimeout(function(){ ctrl.abort(); }, 12000);
+    var res  = await fetch(API+'/api/staff', { headers: zHdr(), signal: ctrl.signal });
+    clearTimeout(tId);
     d = await res.json();
 
     // Auth error → token expired or invalid → force re-login
