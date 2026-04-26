@@ -1055,7 +1055,12 @@ textarea.inp{resize:none;}
       </div>
       <!-- Avatar + Info -->
       <div style="display:flex;align-items:center;gap:13px;">
-        <div id="pp-avatar" style="width:52px;height:52px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;flex-shrink:0;"></div>
+        <div style="position:relative;cursor:pointer;" onclick="document.getElementById('pp-photo-input').click()">
+          <div id="pp-avatar" style="width:56px;height:56px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden;"></div>
+          <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;background:#0A84FF;border-radius:50%;border:2px solid #1C1C1E;display:flex;align-items:center;justify-content:center;">
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 10.5V12h1.5l5-5L7 5.5l-5 5zM11.7 3.8a.5.5 0 000-.7L10.9 2.3a.5.5 0 00-.7 0l-.8.8L11 4.6l.7-.8z" fill="white"/></svg>
+          </div>
+        </div>
         <div>
           <div id="pp-name" style="font-size:15px;font-weight:500;color:#fff;"></div>
           <div id="pp-role" style="font-size:11px;color:rgba(245,245,247,0.45);margin-top:2px;"></div>
@@ -1070,6 +1075,16 @@ textarea.inp{resize:none;}
     </div>
     <!-- Edit Profile Tab -->
     <div id="pp-tab-info-content" style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:11px;">
+      <!-- Photo upload -->
+      <input type="file" id="pp-photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="ppPhotoPreview(this)">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border:0.5px dashed rgba(255,255,255,0.15);border-radius:12px;cursor:pointer;" onclick="document.getElementById('pp-photo-input').click()">
+        <div id="pp-photo-preview" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(10,60,180,0.7));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;overflow:hidden;flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#fff;">Profile Photo</div>
+          <div id="pp-photo-label" style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:2px;">Tap to upload · JPG or PNG</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="margin-left:auto;opacity:0.4;"><path d="M8 2v10M3 7l5-5 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
       <div>
         <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Name</div>
         <input id="pp-edit-name" class="inp" type="text" placeholder="Your name">
@@ -2535,12 +2550,30 @@ function openProfilePanel(){
   var staff = {};
   try{ staff = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
   var init = (staff.name||'A').charAt(0).toUpperCase();
-  // Fill header
+  // Fill header avatar (photo or initials)
   var av = document.getElementById('pp-avatar');
+  var pr = document.getElementById('pp-photo-preview');
   var nm = document.getElementById('pp-name');
   var rl = document.getElementById('pp-role');
   var ei = document.getElementById('pp-empid');
-  if(av) av.textContent = init;
+  if(av){
+    if(staff.photo_url){
+      av.innerHTML = '<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      av.innerHTML = ''; av.textContent = init;
+    }
+  }
+  if(pr){
+    if(staff.photo_url){
+      pr.innerHTML = '<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      pr.innerHTML = ''; pr.textContent = init;
+    }
+  }
+  // Reset photo input
+  var pi = document.getElementById('pp-photo-input'); if(pi) pi.value='';
+  var pl = document.getElementById('pp-photo-label'); if(pl) pl.textContent = 'Tap to upload · JPG or PNG';
+  if(av) av.textContent = staff.photo_url ? '' : init;
   if(nm) nm.textContent = staff.name||'Admin';
   if(rl) rl.textContent = (staff.role==='admin'?'👑 Admin':staff.role==='editor'?'✏️ Editor':staff.role||'Admin')
                         + (staff.designation ? ' · '+staff.designation : '');
@@ -2590,6 +2623,26 @@ function ppSwitchTab(tab){
   }
 }
 
+function ppPhotoPreview(input){
+  if(!input.files||!input.files[0]) return;
+  var file = input.files[0];
+  if(file.size > 5*1024*1024){ showToast('⚠️ Photo must be under 5MB'); input.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var pr = document.getElementById('pp-photo-preview');
+    var av = document.getElementById('pp-avatar');
+    var imgHtml = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">';
+    if(pr){ pr.innerHTML = imgHtml; }
+    if(av){ av.innerHTML = imgHtml; }
+    // Update sidebar avatar preview
+    var sbA = document.getElementById('sb-avatar');
+    if(sbA){ sbA.innerHTML = imgHtml; sbA.style.overflow='hidden'; }
+    var lbl = document.getElementById('pp-photo-label');
+    if(lbl) lbl.textContent = '✓ '+file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
 async function saveProfileInfo(){
   var staff = {};
   try{ staff = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
@@ -2597,7 +2650,8 @@ async function saveProfileInfo(){
   var desig = (document.getElementById('pp-edit-desig')||{}).value||'';
   var email = (document.getElementById('pp-edit-email')||{}).value||'';
   if(!name.trim()){ showToast('⚠️ Name is required'); return; }
-  var btn = document.querySelector('#pp-tab-info-content button');
+  var btn = document.querySelector('#pp-tab-info-content .btn-save-profile');
+  if(!btn) btn = document.querySelector('#pp-tab-info-content button[onclick="saveProfileInfo()"]');
   if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
   try{
     var fd = new FormData();
@@ -2606,24 +2660,42 @@ async function saveProfileInfo(){
     fd.append('email', email.trim());
     fd.append('phone', staff.phone||'');
     fd.append('brand_id', staff.brand_id||1);
+    // Attach photo if selected
+    var photoInput = document.getElementById('pp-photo-input');
+    if(photoInput && photoInput.files && photoInput.files[0]){
+      fd.append('photo', photoInput.files[0]);
+    }
     var res = await fetch(API+'/api/staff/'+staff.id, { method:'PUT', headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
     var d = await res.json();
     if(d.success){
-      // Update localStorage
+      // Fetch updated staff to get new photo_url
+      try{
+        var fresh = await fetch(API+'/api/staff/'+staff.id, {headers:zHdr()});
+        var freshD = await fresh.json();
+        if(freshD.success) staff = Object.assign(staff, freshD.data);
+      }catch(e){}
       staff.name = name.trim();
       staff.designation = desig.trim();
       staff.email = email.trim();
       localStorage.setItem('zhr_staff', JSON.stringify(staff));
-      // Update sidebar
+      // Update sidebar name
       var sbN = document.getElementById('sb-name');
-      var sbA = document.getElementById('sb-avatar');
       if(sbN) sbN.textContent = name.trim();
-      if(sbA) sbA.textContent = name.trim().charAt(0).toUpperCase();
+      // Update sidebar avatar
+      var sbA = document.getElementById('sb-avatar');
+      if(sbA){
+        if(staff.photo_url){
+          sbA.innerHTML='<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+          sbA.style.overflow='hidden';
+        } else {
+          sbA.textContent = name.trim().charAt(0).toUpperCase();
+        }
+      }
       // Update panel header
       var ppN = document.getElementById('pp-name');
       var ppA = document.getElementById('pp-avatar');
       if(ppN) ppN.textContent = name.trim();
-      if(ppA) ppA.textContent = name.trim().charAt(0).toUpperCase();
+      if(ppA && !staff.photo_url) ppA.textContent = name.trim().charAt(0).toUpperCase();
       showToast('✅ Profile updated successfully!');
       closeProfilePanel();
     } else {
