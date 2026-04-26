@@ -171,13 +171,14 @@ textarea.inp{resize:none;}
     <div class="ni" onclick="showPage('admin-overview',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="12" cy="5" r="1.5" stroke="currentColor" stroke-width="1.3"/></svg>Admin Overview</div>
   </nav>
   <div class="sb-bot">
-    <!-- Profile row -->
-    <div style="display:flex;align-items:center;gap:9px;padding:4px 6px 8px;">
+    <!-- Profile row — clickable -->
+    <div onclick="openProfilePanel()" style="display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:10px;cursor:pointer;margin:0 2px 6px;border:0.5px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
       <div id="sb-avatar" style="width:34px;height:34px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">S</div>
       <div style="flex:1;min-width:0;">
         <div id="sb-name" style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Admin</div>
         <div id="sb-role" style="font-size:10px;color:var(--muted);font-weight:300;">Admin</div>
       </div>
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="opacity:0.3;flex-shrink:0;"><circle cx="8" cy="4" r="1.2" fill="currentColor"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="8" cy="12" r="1.2" fill="currentColor"/></svg>
     </div>
     <!-- Logout row — always visible, full width -->
     <div onclick="dashLogout()"
@@ -1043,6 +1044,70 @@ textarea.inp{resize:none;}
 <!-- ════════════════════════════ -->
 <!-- STAFF EDIT MODAL             -->
 <!-- ════════════════════════════ -->
+<!-- ── PROFILE SETTINGS PANEL ── -->
+<div id="profile-overlay" onclick="if(event.target===this)closeProfilePanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.1);border-radius:22px;padding:0;width:92%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.7);overflow:hidden;">
+    <!-- Header -->
+    <div style="padding:20px 20px 16px;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="font-size:15px;font-weight:600;">Profile Settings</div>
+        <button onclick="closeProfilePanel()" style="background:rgba(255,255,255,0.08);border:none;width:28px;height:28px;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">✕</button>
+      </div>
+      <!-- Avatar + Info -->
+      <div style="display:flex;align-items:center;gap:13px;">
+        <div id="pp-avatar" style="width:52px;height:52px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;flex-shrink:0;"></div>
+        <div>
+          <div id="pp-name" style="font-size:15px;font-weight:500;color:#fff;"></div>
+          <div id="pp-role" style="font-size:11px;color:rgba(245,245,247,0.45);margin-top:2px;"></div>
+          <div id="pp-empid" style="font-size:10px;color:rgba(245,245,247,0.3);margin-top:1px;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+      <button id="pp-tab-info" onclick="ppSwitchTab('info')" style="flex:1;padding:11px;background:rgba(10,132,255,0.12);border:none;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border-bottom:2px solid #0A84FF;">✏️ Edit Profile</button>
+      <button id="pp-tab-pass" onclick="ppSwitchTab('pass')" style="flex:1;padding:11px;background:transparent;border:none;color:rgba(245,245,247,0.4);font-size:12px;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;">🔑 Change Password</button>
+    </div>
+    <!-- Edit Profile Tab -->
+    <div id="pp-tab-info-content" style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:11px;">
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Name</div>
+        <input id="pp-edit-name" class="inp" type="text" placeholder="Your name">
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Designation</div>
+        <input id="pp-edit-desig" class="inp" type="text" placeholder="Designation">
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Email</div>
+        <input id="pp-edit-email" class="inp" type="email" placeholder="email@example.com">
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Phone</div>
+        <input id="pp-edit-phone" class="inp" type="tel" placeholder="Mobile number" readonly style="opacity:0.5;cursor:not-allowed;">
+      </div>
+      <button onclick="saveProfileInfo()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;">Save Changes</button>
+    </div>
+    <!-- Change Password Tab -->
+    <div id="pp-tab-pass-content" style="padding:16px 20px 20px;display:none;flex-direction:column;gap:11px;">
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Current Password</div>
+        <input id="pp-old-pass" class="inp" type="password" placeholder="Enter current password">
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">New Password</div>
+        <input id="pp-new-pass" class="inp" type="password" placeholder="Enter new password">
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Confirm New Password</div>
+        <input id="pp-confirm-pass" class="inp" type="password" placeholder="Re-enter new password">
+      </div>
+      <div id="pp-pass-err" style="display:none;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);border-radius:10px;padding:9px 12px;font-size:12px;color:#FF453A;"></div>
+      <button onclick="saveProfilePassword()" style="width:100%;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;">Update Password</button>
+    </div>
+  </div>
+</div>
+
 <div class="ov" id="edit-overlay" onclick="closeEdit(event)">
   <div class="modal">
     <button class="mc" onclick="closeEditBtn()">✕</button>
@@ -2462,6 +2527,152 @@ function exportTasks(){
 window.addEventListener('load', function(){
   loadDashStats();
 });
+
+/* ══════════════════════════════════════
+   PROFILE SETTINGS PANEL
+   ══════════════════════════════════════ */
+function openProfilePanel(){
+  var staff = {};
+  try{ staff = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
+  var init = (staff.name||'A').charAt(0).toUpperCase();
+  // Fill header
+  var av = document.getElementById('pp-avatar');
+  var nm = document.getElementById('pp-name');
+  var rl = document.getElementById('pp-role');
+  var ei = document.getElementById('pp-empid');
+  if(av) av.textContent = init;
+  if(nm) nm.textContent = staff.name||'Admin';
+  if(rl) rl.textContent = (staff.role==='admin'?'👑 Admin':staff.role==='editor'?'✏️ Editor':staff.role||'Admin')
+                        + (staff.designation ? ' · '+staff.designation : '');
+  if(ei) ei.textContent = staff.emp_id||'';
+  // Fill edit fields
+  var eN = document.getElementById('pp-edit-name');
+  var eD = document.getElementById('pp-edit-desig');
+  var eE = document.getElementById('pp-edit-email');
+  var eP = document.getElementById('pp-edit-phone');
+  if(eN) eN.value = staff.name||'';
+  if(eD) eD.value = staff.designation||'';
+  if(eE) eE.value = staff.email||'';
+  if(eP) eP.value = staff.phone||'';
+  // Reset pass tab
+  ['pp-old-pass','pp-new-pass','pp-confirm-pass'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  var errEl = document.getElementById('pp-pass-err'); if(errEl) errEl.style.display='none';
+  // Show panel
+  ppSwitchTab('info');
+  var ov = document.getElementById('profile-overlay');
+  if(ov){ ov.style.display='flex'; }
+}
+
+function closeProfilePanel(){
+  var ov = document.getElementById('profile-overlay');
+  if(ov) ov.style.display='none';
+}
+
+function ppSwitchTab(tab){
+  var infoBtn = document.getElementById('pp-tab-info');
+  var passBtn = document.getElementById('pp-tab-pass');
+  var infoC   = document.getElementById('pp-tab-info-content');
+  var passC   = document.getElementById('pp-tab-pass-content');
+  var activeStyle   = 'flex:1;padding:11px;background:rgba(10,132,255,0.12);border:none;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border-bottom:2px solid #0A84FF;';
+  var inactiveStyle = 'flex:1;padding:11px;background:transparent;border:none;color:rgba(245,245,247,0.4);font-size:12px;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;';
+  if(tab==='info'){
+    if(infoBtn) infoBtn.style.cssText=activeStyle;
+    if(passBtn) passBtn.style.cssText=inactiveStyle;
+    if(infoC) infoC.style.display='flex';
+    if(passC) passC.style.display='none';
+  } else {
+    if(infoBtn) infoBtn.style.cssText=inactiveStyle;
+    if(passBtn) passBtn.style.cssText=activeStyle.replace('#0A84FF','#30D158').replace('rgba(10,132,255,0.12)','rgba(48,209,88,0.12)').replace('2px solid #0A84FF','2px solid #30D158');
+    if(infoC) infoC.style.display='none';
+    if(passC) passC.style.display='flex';
+  }
+}
+
+async function saveProfileInfo(){
+  var staff = {};
+  try{ staff = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
+  var name  = (document.getElementById('pp-edit-name')||{}).value||'';
+  var desig = (document.getElementById('pp-edit-desig')||{}).value||'';
+  var email = (document.getElementById('pp-edit-email')||{}).value||'';
+  if(!name.trim()){ showToast('⚠️ Name is required'); return; }
+  var btn = document.querySelector('#pp-tab-info-content button');
+  if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
+  try{
+    var fd = new FormData();
+    fd.append('name', name.trim());
+    fd.append('designation', desig.trim());
+    fd.append('email', email.trim());
+    fd.append('phone', staff.phone||'');
+    fd.append('brand_id', staff.brand_id||1);
+    var res = await fetch(API+'/api/staff/'+staff.id, { method:'PUT', headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
+    var d = await res.json();
+    if(d.success){
+      // Update localStorage
+      staff.name = name.trim();
+      staff.designation = desig.trim();
+      staff.email = email.trim();
+      localStorage.setItem('zhr_staff', JSON.stringify(staff));
+      // Update sidebar
+      var sbN = document.getElementById('sb-name');
+      var sbA = document.getElementById('sb-avatar');
+      if(sbN) sbN.textContent = name.trim();
+      if(sbA) sbA.textContent = name.trim().charAt(0).toUpperCase();
+      // Update panel header
+      var ppN = document.getElementById('pp-name');
+      var ppA = document.getElementById('pp-avatar');
+      if(ppN) ppN.textContent = name.trim();
+      if(ppA) ppA.textContent = name.trim().charAt(0).toUpperCase();
+      showToast('✅ Profile updated successfully!');
+      closeProfilePanel();
+    } else {
+      showToast('❌ '+(d.message||'Update failed'));
+    }
+  } catch(e){ showToast('❌ Server error'); }
+  finally{ if(btn){ btn.textContent='Save Changes'; btn.disabled=false; } }
+}
+
+async function saveProfilePassword(){
+  var staff = {};
+  try{ staff = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
+  var oldPw  = (document.getElementById('pp-old-pass')||{}).value||'';
+  var newPw  = (document.getElementById('pp-new-pass')||{}).value||'';
+  var confPw = (document.getElementById('pp-confirm-pass')||{}).value||'';
+  var errEl  = document.getElementById('pp-pass-err');
+  function showErr(msg){ if(errEl){ errEl.textContent=msg; errEl.style.display='block'; } }
+  if(errEl) errEl.style.display='none';
+  if(!oldPw||!newPw||!confPw){ showErr('All fields are required'); return; }
+  if(newPw.length < 4){ showErr('New password must be at least 4 characters'); return; }
+  if(newPw !== confPw){ showErr('New passwords do not match'); return; }
+  var btn = document.querySelector('#pp-tab-pass-content button');
+  if(btn){ btn.textContent='Updating…'; btn.disabled=true; }
+  try{
+    // Verify old password via login
+    var verRes = await fetch(API+'/api/auth/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ phone: staff.phone, password: oldPw })
+    });
+    var verD = await verRes.json();
+    if(!verD.success){ showErr('❌ Current password is incorrect'); return; }
+    // Reset password using admin endpoint
+    var res = await fetch(API+'/api/staff/'+staff.id+'/reset-password',{
+      method:'PATCH', headers:{'Content-Type':'application/json','Authorization':'Bearer '+zTok()},
+      body: JSON.stringify({ new_password: newPw })
+    });
+    var d = await res.json();
+    if(d.success){
+      showToast('✅ Password updated successfully!');
+      ['pp-old-pass','pp-new-pass','pp-confirm-pass'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.value='';
+      });
+      closeProfilePanel();
+    } else {
+      showErr(d.message||'Password update failed');
+    }
+  } catch(e){ showErr('Server error — try again'); }
+  finally{ if(btn){ btn.textContent='Update Password'; btn.disabled=false; } }
+}
 
 function dashLogout(){
   localStorage.removeItem('zhr_token');
