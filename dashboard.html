@@ -2665,11 +2665,20 @@ async function saveProfileInfo(){
   if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
   try{
     var fd = new FormData();
-    fd.append('name', name.trim());
-    fd.append('designation', desig.trim());
-    fd.append('email', email.trim());
-    fd.append('phone', staff.phone||'');
-    fd.append('brand_id', staff.brand_id||1);
+    fd.append('name',            name.trim());
+    fd.append('emp_id',          staff.emp_id||'');
+    fd.append('designation',     desig.trim());
+    fd.append('email',           email.trim());
+    fd.append('phone',           staff.phone||'');
+    fd.append('brand_id',        staff.brand_id||1);
+    fd.append('employment_type', staff.employment_type||'full_time');
+    fd.append('role',            staff.role||'staff');
+    fd.append('base_salary',     staff.base_salary||0);
+    fd.append('salary_type',     staff.salary_type||'monthly');
+    fd.append('daily_rate',      staff.daily_rate||0);
+    fd.append('dob',             staff.dob||'');
+    fd.append('joining_date',    staff.joining_date||'');
+    fd.append('address',         staff.address||'');
     // Attach photo if selected
     var photoInput = document.getElementById('pp-photo-input');
     if(photoInput && photoInput.files && photoInput.files[0]){
