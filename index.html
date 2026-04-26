@@ -147,21 +147,18 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <!-- SPLASH -->
     <div id="s1-splash" class="scr on" style="background:#000;align-items:center;justify-content:center;flex-direction:column;">
 
-      <!-- DOT Logo — animated parts -->
+      <!-- DOT Logo — actual logo image animated -->
       <div style="display:flex;flex-direction:column;align-items:center;">
 
-        <!-- D · O · T row -->
-        <div style="display:flex;align-items:center;line-height:1;">
-          <div id="sp-d" style="font-size:78px;font-weight:800;color:#fff;font-family:'DM Sans',sans-serif;opacity:0;transform:translateX(-40px);transition:opacity 0.45s ease,transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94);">D</div>
-          <div id="sp-dot" style="width:38px;height:38px;background:radial-gradient(circle at 38% 32%,#ff8080 0%,#dd0000 45%,#880000 100%);border-radius:50%;margin:0 3px;margin-bottom:4px;opacity:0;transform:scale(0);transition:opacity 0.4s ease,transform 0.5s cubic-bezier(0.34,1.6,0.64,1);box-shadow:0 0 40px rgba(200,0,0,0.55),0 0 80px rgba(180,0,0,0.2);"></div>
-          <div id="sp-t" style="font-size:78px;font-weight:800;color:#fff;font-family:'DM Sans',sans-serif;opacity:0;transform:translateX(40px);transition:opacity 0.45s ease,transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94);">T</div>
-        </div>
-
-        <!-- ADVERTISING -->
-        <div id="sp-adv" style="color:rgba(255,255,255,0.85);font-size:11.5px;font-weight:400;letter-spacing:3.5px;font-family:'DM Sans',sans-serif;opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s ease;margin-top:-4px;">ADVERTISING</div>
+        <!-- Actual DOT Advertising logo -->
+        <img id="sp-logo"
+          src="dot-logo.png"
+          alt="DOT Advertising"
+          style="width:230px;height:auto;opacity:0;transform:scale(0.78);transition:opacity 0.55s ease,transform 0.6s cubic-bezier(0.34,1.3,0.64,1);"
+        />
 
         <!-- Divider -->
-        <div id="sp-line" style="width:0px;height:0.5px;background:rgba(255,255,255,0.15);margin:20px 0 14px;transition:width 0.6s ease;"></div>
+        <div id="sp-line" style="width:0px;height:0.5px;background:rgba(255,255,255,0.15);margin:22px 0 14px;transition:width 0.6s ease;"></div>
 
         <!-- ZEEBAS CLUSTER LLP -->
         <div id="splash-sub" style="color:rgba(235,235,245,0.3);font-size:9px;font-weight:300;letter-spacing:2px;font-family:'DM Sans',sans-serif;opacity:0;transform:translateY(6px);transition:opacity 0.5s ease,transform 0.5s ease;">ZEEBAS CLUSTER LLP</div>
@@ -1105,40 +1102,27 @@ function addReaction(msgId, emoji){
 }
 document.addEventListener('click',function(e){if(activeBar&&!e.target.closest('.emoji-bar')&&!e.target.closest('.bubble'))hideAllBars();});
 
-// Splash screen — staggered logo animation
+// Splash screen — logo image animation
 setTimeout(function(){
-  // 1. Red dot bounces in first
-  var dot=document.getElementById('sp-dot');
-  if(dot){dot.style.opacity='1';dot.style.transform='scale(1)';}
+  // 1. Logo scales in with slight overshoot bounce
+  var logo=document.getElementById('sp-logo');
+  if(logo){logo.style.opacity='1';logo.style.transform='scale(1)';}
 
-  // 2. D slides from left, T from right
-  setTimeout(function(){
-    var d=document.getElementById('sp-d'),t=document.getElementById('sp-t');
-    if(d){d.style.opacity='1';d.style.transform='translateX(0)';}
-    if(t){t.style.opacity='1';t.style.transform='translateX(0)';}
-  },280);
-
-  // 3. ADVERTISING fades up
-  setTimeout(function(){
-    var adv=document.getElementById('sp-adv');
-    if(adv){adv.style.opacity='1';adv.style.transform='translateY(0)';}
-  },580);
-
-  // 4. Divider line expands
+  // 2. Divider line expands
   setTimeout(function(){
     var line=document.getElementById('sp-line');
     if(line){line.style.width='60px';}
-  },800);
+  },500);
 
-  // 5. ZEEBAS CLUSTER LLP
+  // 3. ZEEBAS CLUSTER LLP fades up
   setTimeout(function(){
     var sub=document.getElementById('splash-sub');
     if(sub){sub.style.opacity='1';sub.style.transform='translateY(0)';}
-  },950);
+  },680);
 
   // Progress bar fill
   var b=document.getElementById('sb');
-  if(b){setTimeout(function(){b.style.width='100%';},300);}
+  if(b){setTimeout(function(){b.style.width='100%';},200);}
 
   // Fade out → login
   setTimeout(function(){
