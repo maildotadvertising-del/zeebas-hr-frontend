@@ -160,7 +160,7 @@ textarea.inp{resize:none;}
     <div class="ni" onclick="showPage('attendance',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Attendance</div>
     <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Staff</div>
     <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
-    <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span style="background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">3</span></div>
+    <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span id="approvals-badge" style="display:none;background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('payroll',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.3"/></svg>Payroll</div>
     <div class="ni" onclick="showPage('team-chat',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>Team Chat<div style="width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,69,58,0.6);"></div></div>
     <div class="nl">Settings</div>
@@ -820,19 +820,19 @@ textarea.inp{resize:none;}
             <div style="width:36px;height:36px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#0A84FF" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Total Staff</div><div style="font-size:13px;margin-top:2px;">12 members · 7 Full Time · 5 Part Time</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Total Staff</div><div id="ao-staff-count" style="font-size:13px;margin-top:2px;">Loading…</div></div>
           </div>
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(255,159,10,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5.5" height="5.5" rx="1.5" stroke="#FF9F0A" stroke-width="1.3"/><rect x="8.5" y="2" width="5.5" height="5.5" rx="1.5" stroke="#FF9F0A" stroke-width="1.3"/><rect x="2" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="#FF9F0A" stroke-width="1.3"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="#FF9F0A" stroke-width="1.3"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Active Brands</div><div style="font-size:13px;margin-top:2px;">8 brands under Zeebas Cluster</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Active Brands</div><div id="ao-brands" style="font-size:13px;margin-top:2px;">Loading…</div></div>
           </div>
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#30D158" stroke-width="1.3"/><path d="M2 7h12" stroke="#30D158" stroke-width="1.3"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Monthly Payroll</div><div style="font-size:13px;margin-top:2px;">₹1,85,000 · April 2026</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Monthly Payroll</div><div id="ao-payroll" style="font-size:13px;margin-top:2px;">Loading…</div></div>
           </div>
         </div>
       </div>
@@ -843,29 +843,29 @@ textarea.inp{resize:none;}
           <div class="sh"><span class="st">Today's Summary</span><span style="color:var(--muted);font-size:12px;" id="ao-date"></span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
             <div style="background:linear-gradient(135deg,rgba(48,209,88,0.12),rgba(48,209,88,0.04));border:0.5px solid rgba(48,209,88,0.2);border-radius:14px;padding:14px;text-align:center;">
-              <div style="color:#30D158;font-size:30px;font-weight:500;line-height:1;">9</div>
+              <div id="ao-present" style="color:#30D158;font-size:30px;font-weight:500;line-height:1;">—</div>
               <div style="color:rgba(48,209,88,0.7);font-size:11px;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Present</div>
             </div>
             <div style="background:linear-gradient(135deg,rgba(255,69,58,0.12),rgba(255,69,58,0.04));border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px;text-align:center;">
-              <div style="color:#FF453A;font-size:30px;font-weight:500;line-height:1;">2</div>
+              <div id="ao-absent" style="color:#FF453A;font-size:30px;font-weight:500;line-height:1;">—</div>
               <div style="color:rgba(255,69,58,0.7);font-size:11px;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Absent</div>
             </div>
             <div style="background:linear-gradient(135deg,rgba(255,159,10,0.12),rgba(255,159,10,0.04));border:0.5px solid rgba(255,159,10,0.2);border-radius:14px;padding:14px;text-align:center;">
-              <div style="color:#FF9F0A;font-size:30px;font-weight:500;line-height:1;">1</div>
+              <div id="ao-late" style="color:#FF9F0A;font-size:30px;font-weight:500;line-height:1;">—</div>
               <div style="color:rgba(255,159,10,0.7);font-size:11px;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Late</div>
             </div>
             <div style="background:linear-gradient(135deg,rgba(191,95,255,0.12),rgba(191,95,255,0.04));border:0.5px solid rgba(191,95,255,0.2);border-radius:14px;padding:14px;text-align:center;">
-              <div style="color:#BF5FFF;font-size:30px;font-weight:500;line-height:1;">1</div>
+              <div id="ao-leave" style="color:#BF5FFF;font-size:30px;font-weight:500;line-height:1;">—</div>
               <div style="color:rgba(191,95,255,0.7);font-size:11px;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">On Leave</div>
             </div>
           </div>
           <!-- Attendance % bar -->
           <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:12px;color:var(--muted);">Attendance Rate</span>
-            <span style="font-size:13px;font-weight:500;color:#30D158;">75%</span>
+            <span id="ao-att-pct" style="font-size:13px;font-weight:500;color:#30D158;">—</span>
           </div>
           <div style="background:rgba(255,255,255,0.07);border-radius:6px;height:6px;overflow:hidden;">
-            <div style="background:linear-gradient(90deg,#30D158,#5DDDAA);width:75%;height:100%;border-radius:6px;"></div>
+            <div id="ao-att-bar" style="background:linear-gradient(90deg,#30D158,#5DDDAA);width:0%;height:100%;border-radius:6px;transition:width 0.6s ease;"></div>
           </div>
         </div>
 
@@ -1702,7 +1702,7 @@ setTimeout(checkCelebrations,3500);
 /* ── API BASE ── */
 var API = 'https://zeebas-hr-backend.onrender.com';
 
-/* ── ZEEBAS DASHBOARD — AUTH + SESSION ── */
+/* ── ZEEBAS DASHBOARD — AUTH + PAGE RESTORE (single combined handler) ── */
 document.addEventListener('DOMContentLoaded', function(){
   var token    = localStorage.getItem('zhr_token');
   var staffRaw = localStorage.getItem('zhr_staff');
@@ -1712,31 +1712,39 @@ document.addEventListener('DOMContentLoaded', function(){
     if(overlay){ overlay.style.display='flex'; }
     document.body.style.overflow='hidden';
   }
-  function hideOverlay(){
-    if(overlay){ overlay.style.display='none'; }
-    document.body.style.overflow='';
-  }
 
-  // Not logged in → show admin login screen
+  // Not logged in → show login overlay, stop here
   if(!token || !staffRaw){ showOverlay(); return; }
 
   try {
     var staff = JSON.parse(staffRaw);
-    // Must be admin or editor to access dashboard
     if(staff.role !== 'admin' && staff.role !== 'editor'){
-      localStorage.removeItem('zhr_token');
-      localStorage.removeItem('zhr_staff');
-      showOverlay();
-      return;
+      localStorage.removeItem('zhr_token'); localStorage.removeItem('zhr_staff');
+      showOverlay(); return;
     }
-    // Authenticated admin — hide overlay, update sidebar
-    hideOverlay();
-    var nm = document.getElementById('sb-name');
-    var av = document.getElementById('sb-avatar');
-    var rl = document.getElementById('sb-role');
-    if(nm) nm.textContent = staff.name || 'Admin';
+
+    // ✅ Authenticated — hide overlay
+    if(overlay){ overlay.style.display='none'; }
+    document.body.style.overflow='';
+
+    // Update sidebar profile
+    var nm=document.getElementById('sb-name'), av=document.getElementById('sb-avatar'), rl=document.getElementById('sb-role');
+    if(nm) nm.textContent = staff.name||'Admin';
     if(av) av.textContent = (staff.name||'A').charAt(0).toUpperCase();
-    if(rl) rl.textContent = staff.role === 'admin' ? 'Admin' : 'Editor';
+    if(rl) rl.textContent = staff.role==='admin'?'Admin':'Editor';
+
+    // Restore page from sessionStorage → hash → default dashboard
+    var validPages=['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'];
+    var saved=''; try{ saved=sessionStorage.getItem('zhr_page')||''; }catch(e){}
+    var hash=(location.hash||'').replace('#','').trim();
+    var page=(saved&&validPages.indexOf(saved)!==-1)?saved:(hash&&validPages.indexOf(hash)!==-1)?hash:'dashboard';
+
+    // Pre-warm Render server
+    fetch(API+'/api/health').catch(function(){});
+
+    // Show restored page — small delay to let DOM settle
+    setTimeout(function(){ showPage(page, null); }, 80);
+
   } catch(e){ showOverlay(); }
 });
 
@@ -2004,26 +2012,14 @@ async function loadDashStats(){
 var _origShowPage = window.showPage;
 window.showPage = function(page, el){
   if(_origShowPage) _origShowPage(page, el);
-  if(page==='staff')       setTimeout(loadStaffList, 100);
-  if(page==='dashboard')   setTimeout(loadDashStats, 100);
-  if(page==='tasks')       setTimeout(loadTasks, 100);
+  if(page==='staff')          setTimeout(loadStaffList, 100);
+  if(page==='dashboard')      setTimeout(loadDashStats, 100);
+  if(page==='tasks')          setTimeout(loadTasks, 100);
+  if(page==='approvals')      setTimeout(loadApprovals, 100);
+  if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
 };
 
-/* ── On load: ping server to wake Render, then restore page ── */
-document.addEventListener('DOMContentLoaded', function(){
-  var validPages = ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'];
-  // Try sessionStorage first (most reliable across refresh), fall back to hash
-  var saved = '';
-  try{ saved = sessionStorage.getItem('zhr_page')||''; }catch(e){}
-  var hash  = (location.hash||'').replace('#','').trim();
-  var page  = (saved && validPages.indexOf(saved)!==-1) ? saved
-            : (hash  && validPages.indexOf(hash) !==-1) ? hash
-            : 'dashboard';
-  // Ping health to pre-warm Render (fire and forget)
-  fetch(API+'/api/health').catch(function(){});
-  // 120ms delay — ensures auth check fully completes first
-  setTimeout(function(){ showPage(page, null); }, 120);
-});
+/* ── Hook: load data when page shown ── (second DOMContentLoaded removed, merged above) ──*/
 
 /* ════════════════════════════════════════
    TASKS MANAGEMENT
@@ -2465,7 +2461,112 @@ function dashLogout(){
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   try{ sessionStorage.removeItem('zhr_page'); }catch(e){}
-  window.location.href = window.location.origin + '/';
+  // Reload dashboard.html — auth check will show login overlay since token is cleared
+  window.location.reload();
+}
+
+/* ── LOAD APPROVALS ── */
+async function loadApprovals(){
+  var el = document.getElementById('approvals-page-content');
+  var badge = document.getElementById('approvals-badge');
+  if(el) el.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--muted);">Loading…</div>';
+  try{
+    var ctrl=new AbortController(); var t=setTimeout(function(){ctrl.abort();},10000);
+    var res = await fetch(API+'/api/leave/pending', { headers:zHdr(), signal:ctrl.signal });
+    clearTimeout(t);
+    var d = await res.json();
+    if(res.status===401){ window.location.reload(); return; }
+    var rows = (d.success && d.data) ? d.data : [];
+    // Update badge
+    if(badge){ if(rows.length){ badge.textContent=rows.length; badge.style.display=''; } else { badge.style.display='none'; } }
+    if(!el) return;
+    if(!rows.length){
+      el.innerHTML='<div style="text-align:center;padding:60px 0;color:var(--muted);"><div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📋</div><div style="font-size:14px;margin-bottom:6px;">No Pending Approvals</div><div style="font-size:12px;opacity:0.6;">Leave and onsite requests will appear here</div></div>';
+      return;
+    }
+    el.innerHTML = rows.map(function(r){
+      var fDate=r.from_date?r.from_date.substring(0,10):'—';
+      var tDate=r.to_date?r.to_date.substring(0,10):'—';
+      var days=r.days_count||'?';
+      var type=(r.leave_type||'leave').replace('_',' ');
+      type=type.charAt(0).toUpperCase()+type.slice(1);
+      return '<div class="sec g" style="padding:16px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">'
+        +'<div><div style="font-size:14px;font-weight:500;">'+(r.staff_name||'—')+'</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(r.brand_name||'')+'</div>'
+        +'<div style="font-size:12px;margin-top:6px;"><span style="background:rgba(10,132,255,0.15);color:#0A84FF;border-radius:6px;padding:2px 8px;">'+type+'</span>'
+        +' <span style="color:var(--muted);font-size:11px;">'+fDate+' → '+tDate+' ('+days+' day'+( days==1?'':'s')+')</span></div>'
+        +(r.reason?'<div style="font-size:12px;color:var(--muted);margin-top:6px;">'+r.reason+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:6px;flex-shrink:0;">'
+        +'<button onclick="approveLeave('+r.id+',\'approve\')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
+        +'<button onclick="approveLeave('+r.id+',\'reject\')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div></div></div>';
+    }).join('');
+  } catch(e){
+    if(el) el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Could not load approvals. <button onclick="loadApprovals()" style="color:#0A84FF;background:none;border:none;cursor:pointer;font-size:13px;">Retry</button></div>';
+  }
+}
+async function approveLeave(id, action){
+  try{
+    var res=await fetch(API+'/api/leave/'+id+'/approve',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:action})});
+    var d=await res.json();
+    if(d.success){ showToast(action==='approve'?'✅ Leave approved':'✅ Leave rejected'); loadApprovals(); }
+    else showToast('❌ '+(d.message||'Failed'));
+  }catch(e){ showToast('❌ Server error'); }
+}
+
+/* ── LOAD ADMIN OVERVIEW (real data) ── */
+async function loadAdminOverview(){
+  try{
+    // Staff count
+    var sRes=await fetch(API+'/api/staff',{headers:zHdr()});
+    var sData=await sRes.json();
+    var staff=(sData.data||[]);
+    var ft=staff.filter(function(s){return s.employment_type==='full_time';}).length;
+    var pt=staff.filter(function(s){return s.employment_type==='part_time';}).length;
+    var dw=staff.filter(function(s){return s.employment_type==='daily_wage';}).length;
+    var sc=document.getElementById('ao-staff-count');
+    if(sc) sc.textContent=staff.length+' members · '+ft+' Full Time'+(pt?' · '+pt+' Part Time':'')+(dw?' · '+dw+' Daily Wage':'');
+  }catch(e){}
+  try{
+    // Active brands
+    var bRes=await fetch(API+'/api/staff/brands/list',{headers:zHdr()});
+    var bData=await bRes.json();
+    var brands=(bData.data||[]);
+    var bc=document.getElementById('ao-brands');
+    if(bc) bc.textContent=brands.length+' brand'+(brands.length!==1?'s':'')+' under Zeebas Cluster';
+  }catch(e){}
+  try{
+    // Payroll settings for office hours
+    var pRes=await fetch(API+'/api/settings/payroll',{headers:zHdr()});
+    var pData=await pRes.json();
+    var ps=pData.data||{};
+    var ap=document.getElementById('ao-payroll');
+    if(ap){
+      var now=new Date(); var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+      ap.textContent='Payroll settings loaded · '+months[now.getMonth()]+' '+now.getFullYear();
+    }
+    // Office hours if available
+    if(ps.office_start&&ps.office_end){
+      var ohEl=document.getElementById('co-hours');
+      // Only update if not customised
+    }
+  }catch(e){}
+  try{
+    // Today's attendance for Admin Overview summary
+    var today=new Date().toISOString().slice(0,10);
+    var aRes=await fetch(API+'/api/attendance?date='+today,{headers:zHdr()});
+    var aData=await aRes.json();
+    var rows=Array.isArray(aData)?aData:(aData.data||aData.records||[]);
+    var p=0,ab=0,l=0,lv=0;
+    rows.forEach(function(r){ var st=(r.status||'').toLowerCase(); if(st==='present'||st==='onsite')p++; else if(st==='absent')ab++; else if(st==='late')l++; else if(st==='leave'||st==='on_leave')lv++; });
+    var total=p+ab+l+lv; var pct=total?Math.round(p/total*100):0;
+    var s=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    s('ao-present',p); s('ao-absent',ab); s('ao-late',l); s('ao-leave',lv);
+    var pctEl=document.getElementById('ao-att-pct'); if(pctEl){ pctEl.textContent=pct+'%'; pctEl.style.color=pct>=80?'#30D158':pct>=60?'#FF9F0A':'#FF453A'; }
+    var bar=document.getElementById('ao-att-bar'); if(bar) bar.style.width=pct+'%';
+  }catch(e){}
 }
 </script>
 
