@@ -1282,12 +1282,24 @@ async function openEdit(staffId){
     ].map(function(t){
       return '<option value="'+t.v+'"'+(p.employment_type===t.v?' selected':'')+'>'+t.n+'</option>';
     }).join('');
+    var efAvatarHtml = p.photo_url
+      ? '<img src="'+API+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'
+      : '<span style="font-size:20px;font-weight:500;color:#5AABF0;">'+init+'</span>';
     document.getElementById('edit-content').innerHTML =
       '<div style="padding:22px 26px 0;">'
       +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">'
-      +'<div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,60,180,0.4));border:1.5px solid rgba(10,132,255,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:#5AABF0;flex-shrink:0;">'+init+'</div>'
+      // Clickable avatar with camera badge
+      +'<div style="position:relative;cursor:pointer;flex-shrink:0;" onclick="document.getElementById(\'ef-photo-input\').click()">'
+      +'<div id="ef-avatar" style="width:56px;height:56px;border-radius:14px;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,60,180,0.4));border:1.5px solid rgba(10,132,255,0.3);display:flex;align-items:center;justify-content:center;overflow:hidden;">'+efAvatarHtml+'</div>'
+      +'<div style="position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;background:#0A84FF;border-radius:50%;border:2px solid #0A0A16;display:flex;align-items:center;justify-content:center;">'
+      +'<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="white" stroke-width="1.4"/><path d="M2 6.5C2 5.67 2.67 5 3.5 5H4.3L5.2 3.5H10.8L11.7 5H12.5C13.33 5 14 5.67 14 6.5V11.5C14 12.33 13.33 13 12.5 13H3.5C2.67 13 2 12.33 2 11.5V6.5Z" stroke="white" stroke-width="1.4"/></svg>'
+      +'</div>'
+      +'</div>'
+      +'<input type="file" id="ef-photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="efPhotoPreview(this)">'
       +'<div><div style="font-size:17px;font-weight:500;">Edit — '+p.name+'</div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+( p.emp_id||'')+'</div></div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+( p.emp_id||'')+'</div>'
+      +'<div id="ef-photo-label" style="font-size:10px;color:rgba(10,132,255,0.7);margin-top:3px;display:none;">📷 Photo selected — save to upload</div>'
+      +'</div>'
       +'</div></div>'
       +'<div style="padding:0 26px 24px;display:flex;flex-direction:column;gap:11px;">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
@@ -1386,6 +1398,9 @@ async function saveEdit(){
     var reportsEl = document.getElementById('ef-reports');
     if(roleEl && !roleEl.disabled) fd.append('role', roleEl.value);
     if(reportsEl) fd.append('reports_to', reportsEl.value||'');
+    // Attach photo if selected
+    var efPhoto = document.getElementById('ef-photo-input');
+    if(efPhoto && efPhoto.files && efPhoto.files[0]) fd.append('photo', efPhoto.files[0]);
     var res = await fetch(API+'/api/staff/'+_editStaffId, {
       method:'PUT', headers: zHdr(), body: fd
     });
@@ -2652,6 +2667,20 @@ function ppPhotoPreview(input){
     if(sbA){ sbA.innerHTML = imgHtml; sbA.style.overflow='hidden'; }
     var lbl = document.getElementById('pp-photo-label');
     if(lbl) lbl.textContent = '✓ '+file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function efPhotoPreview(input){
+  if(!input.files||!input.files[0]) return;
+  var file = input.files[0];
+  if(file.size > 5*1024*1024){ showToast('⚠️ Photo must be under 5MB'); input.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var av = document.getElementById('ef-avatar');
+    if(av){ av.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'; }
+    var lbl = document.getElementById('ef-photo-label');
+    if(lbl){ lbl.textContent = '📷 '+file.name+' — save to upload'; lbl.style.display='block'; }
   };
   reader.readAsDataURL(file);
 }
