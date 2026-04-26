@@ -171,19 +171,20 @@ textarea.inp{resize:none;}
     <div class="ni" onclick="showPage('admin-overview',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="12" cy="5" r="1.5" stroke="currentColor" stroke-width="1.3"/></svg>Admin Overview</div>
   </nav>
   <div class="sb-bot">
-    <!-- Profile row with always-visible logout -->
-    <div style="display:flex;align-items:center;gap:9px;padding:4px 6px;">
-      <div style="width:34px;height:34px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;" id="sb-avatar">S</div>
+    <!-- Profile row -->
+    <div style="display:flex;align-items:center;gap:9px;padding:4px 6px 8px;">
+      <div id="sb-avatar" style="width:34px;height:34px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">S</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="sb-name">Admin</div>
-        <div style="font-size:10px;color:var(--muted);font-weight:300;" id="sb-role">Admin</div>
+        <div id="sb-name" style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Admin</div>
+        <div id="sb-role" style="font-size:10px;color:var(--muted);font-weight:300;">Admin</div>
       </div>
-      <!-- Logout button — always visible -->
-      <button onclick="dashLogout()" title="Logout"
-        style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.2s;"
-        onmouseover="this.style.background='rgba(255,69,58,0.25)'" onmouseout="this.style.background='rgba(255,69,58,0.12)'">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="#FF453A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+    </div>
+    <!-- Logout row — always visible, full width -->
+    <div onclick="dashLogout()"
+      style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;cursor:pointer;color:#FF453A;font-size:12px;font-weight:400;border:0.5px solid rgba(255,69,58,0.2);background:rgba(255,69,58,0.06);margin:0 2px;"
+      onmouseover="this.style.background='rgba(255,69,58,0.14)'" onmouseout="this.style.background='rgba(255,69,58,0.06)'">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="#FF453A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Logout
     </div>
   </div>
 </aside>
@@ -2461,12 +2462,10 @@ window.addEventListener('load', function(){
 });
 
 function dashLogout(){
-  if(confirm('Logout from Zeebas HR?')){
-    localStorage.removeItem('zhr_token');
-    localStorage.removeItem('zhr_staff');
-    try{ sessionStorage.removeItem('zhr_page'); }catch(e){}
-    window.location.href='/';
-  }
+  localStorage.removeItem('zhr_token');
+  localStorage.removeItem('zhr_staff');
+  try{ sessionStorage.removeItem('zhr_page'); }catch(e){}
+  window.location.href = window.location.origin + '/';
 }
 </script>
 
