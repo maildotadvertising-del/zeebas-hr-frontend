@@ -3027,7 +3027,8 @@ async function loadDashStats(){
   try{
     var res = await fetch(API+'/api/attendance/today', { headers: zHdr() });
     var d = await res.json();
-    var rows = d.data || [];
+    // Exclude admin/editor accounts from attendance stats — staff only
+    var rows = (d.data || []).filter(function(r){ return r.role!=='admin'&&r.role!=='editor'; });
     var p=0,a=0,l=0,lp=0,op=0,lv=0;
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
@@ -3088,7 +3089,8 @@ async function loadAttendancePage(){
     var url = isToday ? API+'/api/attendance/today' : API+'/api/attendance/date?date='+dateEl.value;
     var res=await fetch(url,{headers:zHdr()});
     var d=await res.json();
-    var rows=d.data||[];
+    // Filter out admin/editor accounts — attendance tracked for staff only
+    var rows=(d.data||[]).filter(function(r){ return r.role!=='admin'&&r.role!=='editor'; });
 
     // Summary counts
     var cnt={present:0,absent:0,late:0,pending:0,leave:0};
