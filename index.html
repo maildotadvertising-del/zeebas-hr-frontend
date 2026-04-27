@@ -224,12 +224,22 @@ select.inp option{background:#1A1A2E;color:#fff;}
             <div style="color:#fff;font-size:12px;font-weight:500;">Attendance</div>
             <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">GPS check-in</div>
           </div>
-          <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-leave')">
-            <div style="width:32px;height:32px;background:rgba(10,132,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.5" width="12" height="11" rx="2" stroke="#0A84FF" stroke-width="1.4"/><path d="M5 1.5v2M11 1.5v2M2 6.5h12" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-dailylog')">
+            <div style="width:32px;height:32px;background:rgba(255,159,10,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#FF9F0A" stroke-width="1.4"/><path d="M5 6h6M5 9h4" stroke="#FF9F0A" stroke-width="1.4" stroke-linecap="round"/></svg>
             </div>
-            <div style="color:#fff;font-size:12px;font-weight:500;">Apply Leave</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Request time off</div>
+            <div style="color:#fff;font-size:12px;font-weight:500;">Daily Log</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;display:flex;align-items:center;gap:4px;">Log tasks &amp; <span style="color:#30D158;">Check Out</span></div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-leave')">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:32px;height:32px;background:rgba(10,132,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.5" width="12" height="11" rx="2" stroke="#0A84FF" stroke-width="1.4"/><path d="M5 1.5v2M11 1.5v2M2 6.5h12" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </div>
+              <div><div style="color:#fff;font-size:12px;font-weight:500;">Apply Leave</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Request time off</div></div>
+            </div>
           </div>
         </div>
 
@@ -494,6 +504,46 @@ select.inp option{background:#1A1A2E;color:#fff;}
         </div>
       </div>
       <div id="n1-salary" class="bnav"></div>
+    </div>
+
+    <!-- DAILY LOG -->
+    <div id="s1-dailylog" class="scr">
+      <div style="padding:12px 13px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <button onclick="go1('s1-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <div style="flex:1;">
+          <div style="color:#fff;font-size:16px;font-weight:500;">Daily Work Log</div>
+          <div id="dl-date-label" style="color:rgba(245,245,247,0.35);font-size:10px;">Today</div>
+        </div>
+        <div id="dl-count-badge" style="background:rgba(48,209,88,0.15);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:500;">0 tasks</div>
+      </div>
+
+      <!-- Task input -->
+      <div style="padding:11px 13px;border-bottom:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;">
+        <div style="color:rgba(245,245,247,0.4);font-size:10px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">What did you work on today?</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="dl-input" placeholder="e.g. Edited reels for Rappo campaign…" maxlength="300"
+            style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;padding:10px 13px;font-size:13px;font-weight:300;outline:none;font-family:inherit;"
+            onkeydown="if(event.key==='Enter')addDailyLog()">
+          <button onclick="addDailyLog()" style="background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:10px 14px;color:#fff;cursor:pointer;font-size:13px;white-space:nowrap;font-family:inherit;">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Task list -->
+      <div class="scroll" style="padding:10px 13px 8px;" id="dl-list">
+        <div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.25);font-size:12px;">
+          <div style="font-size:28px;margin-bottom:8px;">📋</div>No tasks logged yet today
+        </div>
+      </div>
+
+      <!-- Checkout button -->
+      <div style="padding:10px 13px 14px;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
+        <div id="dl-checkout-hint" style="color:rgba(255,159,10,0.8);font-size:11px;text-align:center;margin-bottom:8px;display:none;">⚠️ Add at least one task to enable checkout</div>
+        <button id="dl-checkout-btn" onclick="doCheckout()" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(48,209,88,0.8),rgba(20,160,60,0.85));border:0.5px solid rgba(48,209,88,0.4);border-radius:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;opacity:0.4;pointer-events:none;">
+          ✅ Check Out for Today
+        </button>
+      </div>
     </div>
 
     <!-- ATT SUCCESS -->
@@ -836,7 +886,7 @@ function initNavs2(active){
 initNavs1(0);initNavs2(0);
 
 function go1(id){
-  var all=['s1-splash','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess'];
+  var all=['s1-splash','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
@@ -848,6 +898,7 @@ function go1(id){
     selAtt(0);
     setTimeout(initGPSScreen, 200);
   }
+  if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
 }
 
 function go2(id){
@@ -1030,6 +1081,137 @@ async function markAttendance(){
 function submitLeave(){
   alert('✓ Leave request submitted! Admin will review shortly.');
   go1('s1-home');
+}
+
+// ── Daily Log ──
+async function loadDailyLogs(){
+  var st = {};
+  try{ st = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
+  var token = localStorage.getItem('zhr_token')||'';
+  var list = document.getElementById('dl-list');
+  var badge = document.getElementById('dl-count-badge');
+  var btn = document.getElementById('dl-checkout-btn');
+  var dateEl = document.getElementById('dl-date-label');
+  if(dateEl){
+    var now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+  try {
+    var r = await fetch(API_URL+'/api/daily-logs/today',{headers:{Authorization:'Bearer '+token}});
+    var d = await r.json();
+    var tasks = d.data || [];
+    // Render list
+    if(list){
+      if(!tasks.length){
+        list.innerHTML='<div style="text-align:center;color:rgba(245,245,247,0.35);font-size:13px;padding:20px 0;">No tasks logged yet. Add what you\'re working on today ☝️</div>';
+      } else {
+        list.innerHTML = tasks.map(function(t){
+          return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">'
+            +'<div style="width:20px;height:20px;background:rgba(48,209,88,0.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">'
+            +'<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#30D158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            +'</div>'
+            +'<div style="flex:1;color:rgba(245,245,247,0.9);font-size:13px;line-height:1.4;">'+escHtml(t.task)+'</div>'
+            +'<button onclick="deleteDailyLog('+t.id+')" style="background:none;border:none;color:rgba(255,69,58,0.6);cursor:pointer;padding:2px 4px;font-size:16px;flex-shrink:0;" title="Remove">×</button>'
+            +'</div>';
+        }).join('');
+      }
+    }
+    // Update badge
+    if(badge){
+      badge.textContent = tasks.length + (tasks.length===1?' task':' tasks');
+      badge.style.background = tasks.length ? 'rgba(48,209,88,0.15)' : 'rgba(255,255,255,0.07)';
+      badge.style.color = tasks.length ? '#30D158' : 'rgba(245,245,247,0.4)';
+    }
+    // Enable/disable checkout button
+    if(btn){
+      if(tasks.length){
+        btn.style.opacity='1'; btn.style.pointerEvents='auto';
+        btn.textContent = '✅ Log Complete — Check Out Now';
+      } else {
+        btn.style.opacity='0.35'; btn.style.pointerEvents='none';
+        btn.textContent = 'Add at least 1 task to check out';
+      }
+    }
+  } catch(e){
+    if(list) list.innerHTML='<div style="color:rgba(255,69,58,0.7);text-align:center;padding:16px;font-size:13px;">Could not load tasks. Check connection.</div>';
+  }
+}
+
+async function addDailyLog(){
+  var inp = document.getElementById('dl-input');
+  var task = (inp&&inp.value||'').trim();
+  if(!task){ if(inp) inp.focus(); return; }
+  var token = localStorage.getItem('zhr_token')||'';
+  var addBtn = document.querySelector('#s1-dailylog button[onclick="addDailyLog()"]');
+  if(addBtn){ addBtn.disabled=true; addBtn.textContent='Adding…'; }
+  try {
+    var r = await fetch(API_URL+'/api/daily-logs',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({task:task})
+    });
+    var d = await r.json();
+    if(d.success){
+      if(inp) inp.value='';
+      await loadDailyLogs();
+    } else {
+      alert(d.message||'Could not add task');
+    }
+  } catch(e){
+    alert('Network error. Try again.');
+  } finally {
+    if(addBtn){ addBtn.disabled=false; addBtn.textContent='+ Add'; }
+    if(inp) inp.focus();
+  }
+}
+
+async function deleteDailyLog(id){
+  var token = localStorage.getItem('zhr_token')||'';
+  try {
+    await fetch(API_URL+'/api/daily-logs/'+id,{
+      method:'DELETE',
+      headers:{Authorization:'Bearer '+token}
+    });
+    await loadDailyLogs();
+  } catch(e){ alert('Could not remove task.'); }
+}
+
+async function doCheckout(){
+  var btn = document.getElementById('dl-checkout-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Checking out…'; }
+  var token = localStorage.getItem('zhr_token')||'';
+  try {
+    var r = await fetch(API_URL+'/api/attendance/checkout',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}
+    });
+    var d = await r.json();
+    if(d.success){
+      // Show success overlay
+      var overlay = document.createElement('div');
+      overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px;';
+      overlay.innerHTML='<div style="font-size:56px;">👋</div>'
+        +'<div style="color:#30D158;font-size:22px;font-weight:600;">Checked Out!</div>'
+        +'<div style="color:rgba(245,245,247,0.6);font-size:13px;">Have a great evening!</div>'
+        +(d.ot_hours>0?'<div style="color:#FF9F0A;font-size:12px;margin-top:4px;">⏱ OT: '+parseFloat(d.ot_hours).toFixed(1)+'h</div>':'')
+        +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:16px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:14px;padding:12px 32px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">Back to Home</button>';
+      document.body.appendChild(overlay);
+      setTimeout(function(){ overlay.querySelector('button').click(); }, 3000);
+    } else if(d.code==='NO_DAILY_TASKS'){
+      alert('Please log your daily tasks before checking out.');
+      await loadDailyLogs();
+    } else {
+      alert(d.message||'Check-out failed. Try again.');
+    }
+  } catch(e){
+    alert('Network error. Check connection and try again.');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='✅ Log Complete — Check Out Now'; }
+  }
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // Chat 1
