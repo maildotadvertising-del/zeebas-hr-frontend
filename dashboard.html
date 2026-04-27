@@ -3682,8 +3682,13 @@ function openProfilePanel(){
   var pi = document.getElementById('pp-photo-input'); if(pi) pi.value='';
   var pl = document.getElementById('pp-photo-label'); if(pl) pl.style.display='none';
   if(nm) nm.textContent = staff.name||'Admin';
-  if(rl) rl.textContent = (staff.role==='admin'?'👑 Admin':staff.role==='editor'?'✏️ Editor':staff.role||'Admin')
-                        + (staff.designation ? ' · '+staff.designation : '');
+  if(rl){
+    var roleLabel = staff.is_owner
+      ? '👑 ' + (staff.designation || 'CEO / Founder')
+      : (staff.role==='admin' ? '🔑 Admin' : staff.role==='team_leader' ? '⭐ Team Leader' : '✏️ Editor')
+        + (staff.designation ? ' · '+staff.designation : '');
+    rl.textContent = roleLabel;
+  }
   if(ei) ei.textContent = staff.emp_id||'';
   // Fill edit fields
   var eID= document.getElementById('pp-edit-empid');
