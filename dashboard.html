@@ -2130,13 +2130,21 @@ async function openEdit(staffId){
       // Role + Team Leader
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Role</div>'
-      +'<select class="inp" id="ef-role">'+
-        ['admin','editor','team_leader','staff'].map(function(r){
-          var lbl={admin:'👑 Admin',editor:'✏️ Editor',team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
-          return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
-        }).join('')
-      +'</select>'
-      +(p.id===req_staff_id?'<div style="font-size:9px;color:rgba(255,159,10,0.6);margin-top:3px;">⚠️ Changing your own role will take effect on next login</div>':'')
+      // If this person is owner/admin — show locked badge, not editable dropdown
+      +(p.role==='admin'||p.role==='editor'
+        ?'<div style="background:rgba(191,95,255,0.1);border:0.5px solid rgba(191,95,255,0.3);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:7px;">'
+          +'<span style="font-size:13px;">'+(p.role==='admin'?'👑':'✏️')+'</span>'
+          +'<span style="font-size:12px;color:#BF5FFF;">'+(p.role==='admin'?'Owner / Admin':'Editor')+'</span>'
+          +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 Fixed</span>'
+          +'</div>'
+          +'<input type="hidden" id="ef-role" value="'+p.role+'">'
+        // Regular staff — only team_leader or staff choices
+        :'<select class="inp" id="ef-role">'+
+          ['team_leader','staff'].map(function(r){
+            var lbl={team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
+            return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
+          }).join('')
+          +'</select>')
       +'</div>'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Reports To (Team Leader)</div>'
       +'<select class="inp" id="ef-reports"><option value="">— None —</option>'
