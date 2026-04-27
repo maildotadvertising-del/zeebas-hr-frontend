@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DOT Team — Admin Dashboard</title>
 <meta name="theme-color" content="#040408">
@@ -2333,20 +2334,142 @@ function previewPhoto(inputId, previewId){var inp=document.getElementById(inputI
 function updateInitials(nameId, initId){}
 function triggerPhoto(id){document.getElementById(id).click();}
 
-function dashSend(){
-  var inp=document.getElementById('dash-ci');var txt=(inp.value||'').trim();if(!txt)return;
-  var msgs=document.getElementById('dash-msgs');
-  var d=new Date(),h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+' '+a;
-  var div=document.createElement('div');div.style.cssText='display:flex;align-items:flex-end;gap:10px;flex-direction:row-reverse;';
-  div.innerHTML='<div class="av" style="width:30px;height:30px;background:linear-gradient(145deg,rgba(10,132,255,0.7),rgba(10,60,180,0.8));border:0.5px solid rgba(10,132,255,0.3);color:#fff;font-size:10px;font-weight:500;flex-shrink:0;">S</div><div style="display:flex;flex-direction:column;align-items:flex-end;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><div style="background:rgba(191,95,255,0.14);border:0.5px solid rgba(191,95,255,0.22);border-radius:6px;padding:1px 7px;font-size:9px;color:#BF5FFF;font-weight:500;">ADMIN</div><span style="font-size:10px;color:rgba(245,245,247,0.4);">You · '+t+'</span></div><div style="background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));backdrop-filter:blur(14px);border:0.5px solid rgba(10,132,255,0.22);border-radius:16px;border-bottom-right-radius:4px;padding:10px 14px;font-size:13px;font-weight:300;max-width:460px;color:#fff;">'+txt+'</div><div style="font-size:10px;color:rgba(245,245,247,0.25);margin-top:3px;">✓✓ Sent</div></div>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;inp.value='';
+// ── TEAM CHAT — Real-time with Socket.IO + REST fallback ──
+var dashSocket = null;
+
+function initDashChat(){
+  loadDashMessages();
+  loadChatMembers();
+  loadDashPinned();
+  connectDashSocket();
 }
-function dashPin(){
-  var inp=document.getElementById('dash-ci');var txt=(inp.value||'').trim();
-  var msg=txt||'Team meeting at 4 PM today — all staff attend!';
-  var pin=document.querySelector('#page-team-chat .g span:last-child');
-  showToast('📌 Message pinned for all staff');
+
+function connectDashSocket(){
+  if(dashSocket && dashSocket.connected) return;
+  var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  dashSocket = io(API, {transports:['websocket','polling'], reconnection:true, reconnectionDelay:2000});
+  dashSocket.on('connect', function(){
+    dashSocket.emit('join', staff.id);
+    var sub = document.querySelector('#page-team-chat .psub');
+    if(sub) sub.textContent = 'Zeebas Cluster — All Staff · Live';
+  });
+  dashSocket.on('new-message', function(msg){ appendDashMsg(msg); });
+  dashSocket.on('online-count', function(n){
+    var sub=document.querySelector('#page-team-chat .psub');
+    if(sub) sub.textContent='Zeebas Cluster — All Staff · '+n+' online';
+  });
+  dashSocket.on('message-pinned', function(){ loadDashPinned(); });
+  dashSocket.on('disconnect', function(){
+    var sub=document.querySelector('#page-team-chat .psub');
+    if(sub) sub.textContent='Zeebas Cluster — Reconnecting…';
+  });
+}
+
+async function loadDashMessages(){
+  try{
+    var res=await fetch(API+'/api/chat/messages',{headers:zHdr()});
+    var d=await res.json(); if(!d.success) return;
+    var msgs=document.getElementById('dash-msgs'); if(!msgs) return;
+    if(!d.data.length){
+      msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;opacity:0.4;"><div style="font-size:36px;">💬</div><div style="font-size:13px;color:var(--muted);">No messages yet</div><div style="font-size:11px;color:var(--muted);">Be the first to say something!</div></div>';
+      return;
+    }
+    msgs.innerHTML='';
+    d.data.forEach(function(m){ appendDashMsg(m, false); });
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){ console.error('loadDashMessages:',e); }
+}
+
+async function loadDashPinned(){
+  try{
+    var res=await fetch(API+'/api/chat/pinned',{headers:zHdr()});
+    var d=await res.json();
+    var el=document.getElementById('dash-pinned-text'); if(!el) return;
+    if(d.data) el.textContent=d.data.staff_name+': '+d.data.message;
+    else el.textContent='No pinned message';
+  }catch(e){}
+}
+
+async function loadChatMembers(){
+  try{
+    var res=await fetch(API+'/api/chat/members',{headers:zHdr()});
+    var d=await res.json();
+    var list=document.getElementById('chat-members-list'); if(!list||!d.success) return;
+    list.innerHTML=d.data.map(function(m){
+      var init=(m.name||'?').charAt(0).toUpperCase();
+      var av=m.photo_url
+        ?'<img src="'+API+m.photo_url+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">'+init+'</div>';
+      var roleBadge=m.role==='admin'?'<span style="background:rgba(191,95,255,0.15);color:#BF5FFF;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">ADMIN</span>':m.role==='editor'?'<span style="background:rgba(255,159,10,0.15);color:#FF9F0A;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">EDITOR</span>':'';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);">'
+        +av+'<div><div style="font-size:12px;font-weight:400;">'+m.name+roleBadge+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);">'+(m.brand_name||m.designation||'')+'</div></div></div>';
+    }).join('');
+  }catch(e){ console.error('loadChatMembers:',e); }
+}
+
+function appendDashMsg(msg, doScroll){
+  var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  var msgs=document.getElementById('dash-msgs'); if(!msgs) return;
+  // Clear empty state
+  if(msgs.querySelector('[style*="opacity:0.4"]')) msgs.innerHTML='';
+  var isMe=msg.staff_id===staff.id;
+  var init=(msg.staff_name||'?').charAt(0).toUpperCase();
+  var av=msg.photo_url
+    ?'<img src="'+API+msg.photo_url+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
+    :'<div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+  var t=msg.created_at?fmtTime(msg.created_at):(function(){var n=new Date(),h=n.getHours(),m=n.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
+  var bubbleStyle=isMe
+    ?'background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));border:0.5px solid rgba(10,132,255,0.22);border-radius:16px;border-bottom-right-radius:4px;'
+    :'background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:16px;border-bottom-left-radius:4px;';
+  var div=document.createElement('div');
+  div.style.cssText='display:flex;align-items:flex-end;gap:8px;'+(isMe?'flex-direction:row-reverse;':'');
+  div.innerHTML=av
+    +'<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';max-width:65%;">'
+    +(isMe?''
+      :'<div style="font-size:9px;color:var(--muted);margin-bottom:3px;padding-left:2px;">'+msg.staff_name+(msg.brand_name?' · '+msg.brand_name:'')+'</div>')
+    +'<div style="'+bubbleStyle+'backdrop-filter:blur(14px);padding:9px 13px;font-size:13px;font-weight:300;color:#fff;word-break:break-word;">'
+    +((msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</div>'
+    +'<div style="font-size:9px;color:rgba(245,245,247,0.22);margin-top:3px;padding:'+(isMe?'0 2px 0 0':'0 0 0 2px')+';">'+t+(isMe?' ✓✓':'')+'</div>'
+    +'</div>';
+  msgs.appendChild(div);
+  if(doScroll!==false) msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function dashSend(){
+  var inp=document.getElementById('dash-ci');
+  var txt=(inp.value||'').trim(); if(!txt) return;
   inp.value='';
+  var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+
+  if(dashSocket && dashSocket.connected){
+    dashSocket.emit('send-message',{staff_id:staff.id, message:txt, type:'text'});
+    // Optimistic: append right away so sender sees it instantly
+    appendDashMsg({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, brand_name:staff.brand&&staff.brand.name, message:txt, created_at:new Date()});
+  } else {
+    try{
+      var res=await fetch(API+'/api/chat/messages',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({message:txt})});
+      var d=await res.json();
+      if(d.success) appendDashMsg(d.data);
+      else showToast('❌ '+(d.message||'Send failed'));
+    }catch(e){ showToast('❌ Network error'); }
+  }
+}
+
+async function dashPin(){
+  var inp=document.getElementById('dash-ci');
+  var txt=(inp.value||'').trim();
+  if(!txt){ showToast('⚠️ Type a message first, then click pin'); return; }
+  inp.value='';
+  try{
+    var res=await fetch(API+'/api/chat/messages',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({message:txt})});
+    var d=await res.json();
+    if(!d.success){ showToast('❌ '+(d.message||'Error')); return; }
+    await fetch(API+'/api/chat/pin/'+d.data.id,{method:'POST',headers:zHdr()});
+    appendDashMsg(d.data);
+    loadDashPinned();
+    showToast('📌 Message pinned for all staff!');
+  }catch(e){ showToast('❌ Pin failed'); }
 }
 var dashAttachOpen=false;
 function toggleDashAttach(){dashAttachOpen=!dashAttachOpen;var s=document.getElementById('dash-attach-sheet');if(s)s.style.display=dashAttachOpen?'block':'none';}
@@ -3029,6 +3152,7 @@ window.showPage = function(page, el){
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
   if(page==='payroll-settings')  setTimeout(function(){ loadPayrollSettings(); psCalRender(); psLoadHolidays(); }, 100);
+  if(page==='team-chat')         setTimeout(initDashChat, 100);
 };
 
 /* ── Hook: load data when page shown ── (second DOMContentLoaded removed, merged above) ──*/
