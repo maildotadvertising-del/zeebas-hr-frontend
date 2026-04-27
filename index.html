@@ -292,77 +292,75 @@ select.inp option{background:#1A1A2E;color:#fff;}
     </div>
 
     <!-- CHAT (WhatsApp style) — TAB 3 -->
-    <div id="s1-chat" class="scr">
-      <!-- Header -->
-      <div style="padding:10px 13px 9px;border-bottom:0.5px solid rgba(255,255,255,0.07);flex-shrink:0;display:flex;align-items:center;gap:10px;z-index:2;position:relative;">
-        <div style="position:relative;"><div style="width:36px;height:36px;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(80,10,140,0.55));border:0.5px solid rgba(255,255,255,0.14);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M2 5h14M2 9h14M2 13h8" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg></div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#30D158;border-radius:50%;border:2px solid #040408;"></div></div>
-        <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Zeebas Cluster</div><div id="chat1-sub" style="color:rgba(235,235,245,0.35);font-size:10px;">Connecting…</div></div>
-        <div style="display:flex;gap:8px;">
-          <button style="background:none;border:none;cursor:pointer;" onclick="toggleSearch()">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="rgba(245,245,247,0.45)" stroke-width="1.3"/><path d="M11 11l3 3" stroke="rgba(245,245,247,0.45)" stroke-width="1.3" stroke-linecap="round"/></svg>
+    <div id="s1-chat" class="scr" style="background:#0B141A;">
+      <!-- Header — WhatsApp style -->
+      <div style="padding:10px 14px 10px;background:#1F2C34;flex-shrink:0;display:flex;align-items:center;gap:11px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+        <div style="position:relative;flex-shrink:0;">
+          <div style="width:42px;height:42px;background:linear-gradient(145deg,#075E54,#128C7E);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:#30D158;border-radius:50%;border:2px solid #1F2C34;"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="color:#E8E8E8;font-size:15px;font-weight:500;">Zeebas Cluster</div>
+          <div id="chat1-sub" style="color:rgba(232,232,232,0.5);font-size:11px;">Connecting…</div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <button style="background:none;border:none;cursor:pointer;padding:4px;" onclick="toggleSearch()">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="5.5" stroke="rgba(232,232,232,0.6)" stroke-width="1.5"/><path d="M13 13l3 3" stroke="rgba(232,232,232,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
-          <button style="background:none;border:none;cursor:pointer;">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="4" r="1.2" fill="rgba(245,245,247,0.45)"/><circle cx="8" cy="8" r="1.2" fill="rgba(245,245,247,0.45)"/><circle cx="8" cy="12" r="1.2" fill="rgba(245,245,247,0.45)"/></svg>
+          <button style="background:none;border:none;cursor:pointer;padding:4px;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4.5" r="1.4" fill="rgba(232,232,232,0.6)"/><circle cx="9" cy="9" r="1.4" fill="rgba(232,232,232,0.6)"/><circle cx="9" cy="13.5" r="1.4" fill="rgba(232,232,232,0.6)"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- Pinned message (admin pinned) -->
-      <div id="pinned-msg" style="background:rgba(10,132,255,0.1);border-bottom:0.5px solid rgba(10,132,255,0.15);padding:8px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;">
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v8M7 9.5L4 6.5M7 9.5L10 6.5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12.5h8" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-        <div style="flex:1;"><div style="color:#0A84FF;font-size:9px;font-weight:500;margin-bottom:1px;">Pinned Message</div><div id="pinned-text" style="color:rgba(245,245,247,0.55);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div></div>
+      <!-- Pinned message -->
+      <div id="pinned-msg" style="background:rgba(10,132,255,0.08);border-bottom:0.5px solid rgba(10,132,255,0.12);padding:7px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;">
+        <div style="width:3px;height:28px;background:#0A84FF;border-radius:2px;flex-shrink:0;"></div>
+        <div style="flex:1;overflow:hidden;">
+          <div style="color:#0A84FF;font-size:10px;font-weight:600;margin-bottom:1px;">📌 Pinned Message</div>
+          <div id="pinned-text" style="color:rgba(232,232,232,0.6);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div>
+        </div>
       </div>
 
       <!-- Messages -->
-      <div class="scroll" style="padding:10px 12px 6px;" id="msgs1">
-        <div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;">
-          <div style="font-size:28px;opacity:0.3;">💬</div>
-          <div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">Chat messages will appear here</div>
+      <div class="scroll" style="padding:10px 0 8px;background:#0B141A;" id="msgs1">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:60px;flex-direction:column;gap:10px;">
+          <div style="font-size:36px;opacity:0.25;">💬</div>
+          <div style="color:rgba(232,232,232,0.3);font-size:13px;text-align:center;">No messages yet — say hello!</div>
         </div>
-
-        <!-- Msg from MA (placeholder start) -->
-<div class="msg-wrap" onmouseenter="showEmojiBar('m3','them')" onmouseleave="hideAllBars()" ontouchstart="showEmojiBar('m3','them')"><div class="emoji-bar left" id="ebar-m3"><span onclick="addReaction('m3','👍')">👍</span><span onclick="addReaction('m3','❤️')">❤️</span><span onclick="addReaction('m3','😂')">😂</span><span onclick="addReaction('m3','😮')">😮</span><span onclick="addReaction('m3','😢')">😢</span><span onclick="addReaction('m3','🙏')">🙏</span></div>        <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:4px;display:none;">
-          <div style="width:26px;height:26px;border-radius:50%;background:rgba(30,59,46,0.8);border:0.5px solid rgba(93,214,138,0.25);display:flex;align-items:center;justify-content:center;color:#5DD68A;font-size:9px;font-weight:500;flex-shrink:0;">MA</div>
-          <div>
-            <div style="font-size:9px;color:#5DD68A;margin-bottom:2px;">Mohamed A</div>
-            <div class="bubble" style="background:rgba(255,255,255,0.07);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:14px;border-bottom-left-radius:4px;padding:8px 11px;font-size:12px;font-weight:300;color:#fff;max-width:190px;">Rappo client call 3 PM — anyone free?</div>
-            <div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;">10:05 AM</div>
-          </div>
-        </div><div class="reaction-row" id="rrow-m3" style="display:none;justify-content:flex-start;padding:0 36px;"></div></div>
       </div>
 
-      <!-- Emoji row -->
-      <div id="emoji-panel" style="display:none;padding:6px 12px;border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;flex-wrap:wrap;gap:4px;">
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('👍')">👍</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('🙏')">🙏</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('✅')">✅</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('😊')">😊</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('🔥')">🔥</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('📸')">📸</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('💼')">💼</span>
-        <span style="font-size:18px;cursor:pointer;" onclick="addEmoji('⚡')">⚡</span>
+      <!-- Emoji quick panel -->
+      <div id="emoji-panel" style="display:none;padding:8px 14px;background:#1F2C34;border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;flex-wrap:wrap;gap:6px;">
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('👍')">👍</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('🙏')">🙏</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('✅')">✅</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('😊')">😊</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('🔥')">🔥</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('📸')">📸</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('💼')">💼</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('⚡')">⚡</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('❤️')">❤️</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('😂')">😂</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('👏')">👏</span>
+        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('🎉')">🎉</span>
       </div>
 
-      <!-- Input bar -->
-      <div style="display:flex;align-items:center;gap:7px;padding:8px 11px 10px;background:rgba(4,4,8,0.65);backdrop-filter:blur(20px);border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;">
-        <!-- Attach -->
-        <button onclick="toggleAttach()" style="width:32px;height:32px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 7.5a5 5 0 01-10 0V4a3.5 3.5 0 017 0v4a2 2 0 01-4 0V5" stroke="rgba(245,245,247,0.55)" stroke-width="1.3" stroke-linecap="round"/></svg>
-        </button>
-        <!-- Emoji toggle -->
-        <button onclick="toggleEmoji()" style="width:32px;height:32px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">😊</button>
-        <input type="text" id="ci1" placeholder="Message..." style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;color:#fff;padding:8px 13px;font-size:12px;font-weight:300;flex:1;outline:none;font-family:inherit;">
-        <!-- Voice note / Send -->
-        <button id="vsend1" onclick="sendChat1()" onmousedown="startVoice(this)" onmouseup="stopVoice(this)" ontouchstart="startVoice(this)" ontouchend="stopVoice(this)" style="width:34px;height:34px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(10,132,255,0.4);position:relative;" id="voice-send-btn">
-          <!-- Send icon (default) -->
-          <svg id="send-icon" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M1 7L13 1L7 13L6 8L1 7Z" fill="white"/></svg>
-          <!-- Mic icon (shown when input empty) -->
-          <svg id="mic-icon" width="13" height="13" viewBox="0 0 14 14" fill="none" style="display:none;"><rect x="4.5" y="1" width="5" height="7.5" rx="2.5" stroke="white" stroke-width="1.3"/><path d="M2 7.5a5 5 0 0010 0" stroke="white" stroke-width="1.3" stroke-linecap="round"/><line x1="7" y1="12.5" x2="7" y2="14" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <!-- Input bar — WhatsApp style -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 10px;background:#1F2C34;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.06);">
+        <button onclick="toggleEmoji()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;opacity:0.75;">😊</button>
+        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:22px;border:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:6px 14px;min-height:40px;">
+          <input type="text" id="ci1" placeholder="Message" style="background:none;border:none;color:#E8E8E8;font-size:15px;font-weight:300;flex:1;outline:none;font-family:inherit;line-height:1.4;">
+        </div>
+        <button id="vsend1" onclick="sendChat1()" style="width:42px;height:42px;background:linear-gradient(135deg,#075E54,#128C7E);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 14px rgba(7,94,84,0.5);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9L16 2L10 16L8.5 10L2 9Z" fill="white"/></svg>
         </button>
         <!-- Voice recording indicator -->
-        <div id="voice-indicator" style="display:none;position:absolute;bottom:60px;left:0;right:0;background:rgba(255,69,58,0.15);backdrop-filter:blur(14px);border-top:0.5px solid rgba(255,69,58,0.25);padding:8px 14px;display:none;align-items:center;gap:8px;">
+        <div id="voice-indicator" style="display:none;position:absolute;bottom:60px;left:0;right:0;background:rgba(255,69,58,0.15);backdrop-filter:blur(14px);border-top:0.5px solid rgba(255,69,58,0.25);padding:8px 14px;align-items:center;gap:8px;">
           <div style="width:8px;height:8px;background:#FF453A;border-radius:50%;animation:recPulse 1s infinite;"></div>
-          <span style="color:#FF453A;font-size:12px;font-weight:500;">Recording... Swipe left to cancel</span>
+          <span style="color:#FF453A;font-size:12px;font-weight:500;">Recording…</span>
           <span id="rec-timer" style="margin-left:auto;color:rgba(245,245,247,0.5);font-size:12px;font-family:monospace;">0:00</span>
         </div>
       </div>
@@ -1233,7 +1231,12 @@ function connectStaffSocket(){
     var sub = document.getElementById('chat1-sub');
     if(sub) sub.textContent = 'Zeebas Cluster · Live';
   });
-  staffSocket.on('new-message', function(msg){ appendStaffMsg1(msg); });
+  staffSocket.on('new-message', function(msg){
+    // Skip self-sent messages — already appended optimistically
+    var me = zStaff() || {};
+    if(msg.staff_id === me.id) return;
+    appendStaffMsg1(msg);
+  });
   staffSocket.on('online-count', function(n){
     var sub = document.getElementById('chat1-sub');
     if(sub) sub.textContent = 'Zeebas Cluster · ' + n + ' online';
@@ -1277,27 +1280,33 @@ function appendStaffMsg1(msg, doScroll){
   if(msgs.querySelector('[style*="opacity:0.3"]') || msgs.querySelector('[style*="padding-top:40px"]')) msgs.innerHTML = '';
   var isMe = msg.staff_id === staff.id;
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
-  var av = msg.photo_url
-    ? '<img src="'+API_URL+msg.photo_url+'" style="width:26px;height:26px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
-    : '<div style="width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+  var avSrc = msg.photo_data || (msg.photo_url ? API_URL+msg.photo_url : null);
+  var av = avSrc
+    ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);">'
+    : '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);">'+init+'</div>';
   var t = (function(){
     var dt = msg.created_at ? new Date(msg.created_at) : new Date();
     var h = dt.getHours(), m = dt.getMinutes(), a = h>=12?'PM':'AM';
     h = h%12||12; return h+':'+(m<10?'0':'')+m+' '+a;
   })();
-  var bubbleStyle = isMe
-    ? 'background:linear-gradient(135deg,rgba(10,132,255,0.65),rgba(10,80,200,0.7));border:0.5px solid rgba(10,132,255,0.22);border-radius:14px;border-bottom-right-radius:4px;'
-    : 'background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:14px;border-bottom-left-radius:4px;';
   var div = document.createElement('div');
-  div.style.cssText = 'display:flex;align-items:flex-end;gap:6px;margin-bottom:8px;'+(isMe?'flex-direction:row-reverse;':'');
-  div.innerHTML = av
-    + '<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';max-width:65%;">'
-    + (isMe ? '' : '<div style="font-size:9px;color:var(--muted,rgba(235,235,245,0.4));margin-bottom:2px;padding-left:2px;">'+msg.staff_name+(msg.brand_name?' · '+msg.brand_name:'')+'</div>')
-    + '<div style="backdrop-filter:blur(14px);'+bubbleStyle+'padding:8px 11px;font-size:12px;font-weight:300;color:#fff;word-break:break-word;">'
-    + ((msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))
-    + '</div>'
-    + '<div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;'+(isMe?'text-align:right;':'')+'">'+t+(isMe?' ✓✓':'')+'</div>'
-    + '</div>';
+  div.style.cssText = 'display:flex;align-items:flex-end;gap:8px;margin-bottom:2px;padding:0 10px;'+(isMe?'flex-direction:row-reverse;':'');
+
+  if(isMe){
+    div.innerHTML = '<div style="display:flex;flex-direction:column;align-items:flex-end;max-width:78%;">'
+      + '<div style="background:linear-gradient(135deg,#005C4B,#128C7E);border-radius:18px;border-bottom-right-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#fff;word-break:break-word;line-height:1.4;">'
+      + (msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.55);text-align:right;margin-top:4px;">'+t+' ✓✓</div>'
+      + '</div></div>';
+  } else {
+    div.innerHTML = av
+      + '<div style="display:flex;flex-direction:column;align-items:flex-start;max-width:78%;">'
+      + '<div style="font-size:11px;color:rgba(100,200,255,0.85);font-weight:500;margin-bottom:3px;padding-left:2px;">'+msg.staff_name+(msg.brand_name?' <span style="color:rgba(255,255,255,0.35);font-weight:400;">· '+msg.brand_name+'</span>':'')+'</div>'
+      + '<div style="background:rgba(38,38,50,0.95);border:0.5px solid rgba(255,255,255,0.08);border-radius:18px;border-bottom-left-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#E8E8E8;word-break:break-word;line-height:1.4;">'
+      + (msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;margin-top:4px;">'+t+'</div>'
+      + '</div></div>';
+  }
   msgs.appendChild(div);
   if(doScroll !== false) msgs.scrollTop = msgs.scrollHeight;
 }
