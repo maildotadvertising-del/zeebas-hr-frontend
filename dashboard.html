@@ -761,6 +761,16 @@ textarea.inp{resize:none;}
                 <input class="inp" type="number" id="ps-hours-day" value="9" min="4" max="12" step="0.5">
               </div>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Part-Time Hours/Day</div>
+                <input class="inp" type="number" id="ps-parttime-hrs" value="4" min="1" max="8" step="0.5">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Half Day Threshold (hrs)</div>
+                <input class="inp" type="number" id="ps-halfday-hrs" value="4" min="1" max="8" step="0.5">
+              </div>
+            </div>
             <div>
               <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Work Week</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;" id="ps-workweek">
@@ -803,14 +813,10 @@ textarea.inp{resize:none;}
                 </select>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
               <div>
                 <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Flat Absent Amount (₹)</div>
                 <input class="inp" type="number" id="ps-absent-flat" value="500" min="0">
-              </div>
-              <div>
-                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Half Day = Absent After (hrs)</div>
-                <input class="inp" type="number" id="ps-halfday-hrs" value="4" min="1" max="8" step="0.5">
               </div>
             </div>
           </div>
@@ -919,6 +925,62 @@ textarea.inp{resize:none;}
         </div>
 
       </div>
+    </div>
+
+    <!-- ── Calendar + Holidays + Salary Preview (full width) ── -->
+    <div style="margin-top:16px;">
+
+      <!-- Calendar + Holidays row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+
+        <!-- Monthly Calendar -->
+        <div class="sec g">
+          <div class="sh" style="flex-wrap:wrap;gap:8px;">
+            <span class="st">📅 Monthly Working Days</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="btn-g" style="padding:4px 10px;font-size:13px;" onclick="psCalPrev()">‹</button>
+              <span id="ps-cal-label" style="font-size:13px;font-weight:500;min-width:100px;text-align:center;">—</span>
+              <button class="btn-g" style="padding:4px 10px;font-size:13px;" onclick="psCalNext()">›</button>
+            </div>
+          </div>
+          <div id="ps-cal-grid" style="margin-bottom:12px;"></div>
+          <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:12px;color:var(--muted);">Working Days this month</div>
+            <div style="font-size:18px;font-weight:700;color:#30D158;" id="ps-cal-workdays">—</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--muted);">
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#30D15844;border:1px solid #30D15888;margin-right:4px;"></span>Working</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin-right:4px;"></span>Weekend</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#FF453A33;border:1px solid #FF453A55;margin-right:4px;"></span>Holiday</span>
+          </div>
+        </div>
+
+        <!-- Extra Holidays -->
+        <div class="sec g">
+          <div class="sh"><span class="st">🎌 Extra Holidays</span></div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input class="inp" type="date" id="ps-hol-date" style="flex:1;">
+            <input class="inp" type="text" id="ps-hol-name" placeholder="Holiday name…" style="flex:2;">
+            <button class="btn" style="white-space:nowrap;padding:0 14px;" onclick="psAddHoliday()">+ Add</button>
+          </div>
+          <div id="ps-hol-list">
+            <div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">No holidays this month</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Staff Salary Preview -->
+      <div class="sec g">
+        <div class="sh">
+          <span class="st">💰 Staff Salary Preview</span>
+          <button class="btn" style="padding:6px 14px;font-size:12px;" onclick="psLoadSalaryPreview()">↺ Load Preview</button>
+        </div>
+        <div id="ps-salary-table">
+          <div style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">Click "Load Preview" to see salary breakdown based on actual attendance</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1511,7 +1573,7 @@ function syncDisplay(v){
   var dashLbl=document.getElementById('radius-label');if(dashLbl)dashLbl.textContent=v+'m';
 }
 // ── Payroll Settings ──
-function psDayToggle(el){ el.classList.toggle('active'); }
+function psDayToggle(el){ el.classList.toggle('active'); psCalRender(); }
 
 async function loadPayrollSettings(){
   try{
@@ -1529,8 +1591,9 @@ async function loadPayrollSettings(){
     set('ps-late-max',    s.late_max_per_day||200);
     set('ps-absent-type', s.absent_deduction_type||'per_day_salary');
     set('ps-absent-flat', s.absent_flat_amount||500);
-    set('ps-halfday-hrs', s.half_day_hours||4);
-    set('ps-paid-leave',  s.paid_leaves_year||12);
+    set('ps-halfday-hrs',    s.half_day_hours||4);
+    set('ps-parttime-hrs',   s.part_time_hours||4);
+    set('ps-paid-leave',     s.paid_leaves_year||12);
     set('ps-sick-leave',  s.sick_leaves_year||6);
     set('ps-casual-leave',s.casual_leaves_year||6);
     set('ps-ot-after',    s.ot_after_hours||9);
@@ -1552,6 +1615,8 @@ async function loadPayrollSettings(){
       if(days.indexOf(el.getAttribute('data-day'))!==-1) el.classList.add('active');
       else el.classList.remove('active');
     });
+    // Render calendar with updated work week
+    psCalRender();
   } catch(e){ console.error('Payroll settings load error:', e); }
 }
 
@@ -1573,6 +1638,7 @@ async function savePayrollSettings(){
     absent_deduction_type: get('ps-absent-type')||'per_day_salary',
     absent_flat_amount:    parseFloat(get('ps-absent-flat'))||500,
     half_day_hours:        parseFloat(get('ps-halfday-hrs'))||4,
+    part_time_hours:       parseFloat(get('ps-parttime-hrs'))||4,
     paid_leaves_year:      parseInt(get('ps-paid-leave'))||12,
     sick_leaves_year:      parseInt(get('ps-sick-leave'))||6,
     casual_leaves_year:    parseInt(get('ps-casual-leave'))||6,
@@ -1597,6 +1663,193 @@ async function savePayrollSettings(){
     if(d.success) showToast('✅ Payroll settings saved!');
     else showToast('❌ '+(d.message||'Save failed'));
   } catch(e){ showToast('❌ '+(e.message||'Server error')); }
+}
+
+// ── Payroll Calendar & Holidays & Salary Preview ──
+var psCalMonth = new Date().getMonth() + 1;
+var psCalYear  = new Date().getFullYear();
+var psHolidayDates = new Set();
+
+function psCalPrev(){
+  psCalMonth--; if(psCalMonth < 1){ psCalMonth = 12; psCalYear--; }
+  psCalRender(); psLoadHolidays();
+}
+function psCalNext(){
+  psCalMonth++; if(psCalMonth > 12){ psCalMonth = 1; psCalYear++; }
+  psCalRender(); psLoadHolidays();
+}
+
+function psGetWorkDayNums(){
+  var dayMap = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:0};
+  var nums = [];
+  document.querySelectorAll('.ps-day-btn.active').forEach(function(el){
+    var n = dayMap[el.getAttribute('data-day')];
+    if(n !== undefined) nums.push(n);
+  });
+  return new Set(nums);
+}
+
+function psCalRender(){
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var lbl = document.getElementById('ps-cal-label');
+  if(lbl) lbl.textContent = monthNames[psCalMonth-1] + ' ' + psCalYear;
+
+  var grid = document.getElementById('ps-cal-grid');
+  if(!grid) return;
+
+  var workDays = psGetWorkDayNums();
+  var daysInMonth = new Date(psCalYear, psCalMonth, 0).getDate();
+  var firstDay = new Date(psCalYear, psCalMonth-1, 1).getDay(); // 0=Sun
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;">';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){
+    html += '<div style="font-size:9px;color:var(--muted);padding:3px 1px;font-weight:600;">'+d+'</div>';
+  });
+  for(var i=0;i<firstDay;i++) html += '<div></div>';
+
+  var workingDaysCount = 0;
+  for(var d=1;d<=daysInMonth;d++){
+    var dt = new Date(psCalYear, psCalMonth-1, d);
+    var dow = dt.getDay();
+    var mm = String(psCalMonth).padStart(2,'0'), dd = String(d).padStart(2,'0');
+    var dateStr = psCalYear+'-'+mm+'-'+dd;
+    var isHoliday = psHolidayDates.has(dateStr);
+    var isWorkDay = workDays.has(dow) && !isHoliday;
+    if(isWorkDay) workingDaysCount++;
+    var bg = isHoliday ? 'rgba(255,69,58,0.18)' : isWorkDay ? 'rgba(48,209,88,0.15)' : 'rgba(255,255,255,0.03)';
+    var color = isHoliday ? '#FF453A' : isWorkDay ? '#30D158' : 'rgba(255,255,255,0.25)';
+    var border = isHoliday ? '1px solid rgba(255,69,58,0.35)' : isWorkDay ? '1px solid rgba(48,209,88,0.3)' : '1px solid rgba(255,255,255,0.06)';
+    html += '<div style="font-size:10px;padding:4px 2px;border-radius:5px;background:'+bg+';color:'+color+';border:'+border+'" title="'+dateStr+(isHoliday?' 🎌':'')+'">'+d+'</div>';
+  }
+  html += '</div>';
+  grid.innerHTML = html;
+
+  var wdEl = document.getElementById('ps-cal-workdays');
+  if(wdEl) wdEl.textContent = workingDaysCount;
+}
+
+async function psLoadHolidays(){
+  try{
+    var res = await fetch(API+'/api/payroll/holidays?month='+psCalMonth+'&year='+psCalYear, {headers:zHdr()});
+    var d = await res.json();
+    if(!d.success) return;
+    psHolidayDates = new Set(d.data.map(function(h){ return (h.date||'').split('T')[0]; }));
+    psRenderHolidayList(d.data);
+    psCalRender();
+  } catch(e){ console.error('psLoadHolidays:', e); }
+}
+
+function psRenderHolidayList(holidays){
+  var el = document.getElementById('ps-hol-list');
+  if(!el) return;
+  if(!holidays.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">No holidays this month</div>';
+    return;
+  }
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  el.innerHTML = holidays.map(function(h){
+    var ds = (h.date||'').split('T')[0];
+    var dn = dayNames[new Date(ds+'T00:00:00').getDay()];
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;margin-bottom:6px;">'
+      +'<div><div style="font-size:12px;font-weight:500;">'+h.name+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'+ds+' &nbsp;('+dn+')</div></div>'
+      +'<button onclick="psDeleteHoliday('+h.id+')" style="background:rgba(255,69,58,0.15);border:none;color:#FF453A;font-size:12px;padding:4px 9px;border-radius:6px;cursor:pointer;">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+async function psAddHoliday(){
+  var date = (document.getElementById('ps-hol-date')||{}).value || '';
+  var name = ((document.getElementById('ps-hol-name')||{}).value || '').trim();
+  if(!date||!name){ showToast('⚠️ Date and holiday name required'); return; }
+  try{
+    var res = await fetch(API+'/api/payroll/holidays', {
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body: JSON.stringify({date:date, name:name, type:'public'})
+    });
+    var d = await res.json();
+    if(d.success){
+      showToast('✅ Holiday added');
+      document.getElementById('ps-hol-date').value = '';
+      document.getElementById('ps-hol-name').value = '';
+      psLoadHolidays();
+    } else showToast('❌ '+(d.message||'Error'));
+  } catch(e){ showToast('❌ '+(e.message||'Error')); }
+}
+
+async function psDeleteHoliday(id){
+  try{
+    await fetch(API+'/api/payroll/holidays/'+id, {method:'DELETE', headers:zHdr()});
+    showToast('✅ Holiday removed');
+    psLoadHolidays();
+  } catch(e){ showToast('❌ Error removing holiday'); }
+}
+
+async function psLoadSalaryPreview(){
+  var el = document.getElementById('ps-salary-table');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:28px;color:var(--muted);">⏳ Loading salary data…</div>';
+  try{
+    var res = await fetch(API+'/api/payroll/salary-preview?month='+psCalMonth+'&year='+psCalYear, {headers:zHdr()});
+    var d = await res.json();
+    if(!d.success){ el.innerHTML='<div style="color:#FF453A;text-align:center;padding:20px;">❌ '+d.message+'</div>'; return; }
+    var rows = d.data || [];
+    if(!rows.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);">No active staff found</div>'; return; }
+
+    var total = rows.reduce(function(s,r){ return s+parseFloat(r.net_salary||0); }, 0);
+    var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var periodLabel = monthNames[(psCalMonth-1)] + ' ' + psCalYear;
+
+    var thStyle = 'padding:9px 10px;text-align:right;color:var(--muted);font-weight:500;font-size:11px;border-bottom:0.5px solid rgba(255,255,255,0.08);white-space:nowrap;';
+    var thStyleL = thStyle.replace('text-align:right','text-align:left');
+
+    var html = '<div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">'
+      +'<div style="font-size:12px;color:var(--muted);">Period: <strong style="color:var(--text);">'+periodLabel+'</strong> &nbsp;|&nbsp; Working Days: <strong style="color:var(--text);">'+d.working_days+'</strong></div>'
+      +'<div style="font-size:13px;font-weight:600;color:#30D158;">Total Payroll: ₹'+total.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0})+'</div>'
+      +'</div>'
+      +'<div style="overflow-x:auto;border-radius:10px;border:0.5px solid rgba(255,255,255,0.07);">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+      +'<thead><tr style="background:rgba(255,255,255,0.04);">'
+      +'<th style="'+thStyleL+'">Staff</th>'
+      +'<th style="'+thStyle+'">Base</th>'
+      +'<th style="'+thStyle+'">Present</th>'
+      +'<th style="'+thStyle+'">Late</th>'
+      +'<th style="'+thStyle+'">Absent</th>'
+      +'<th style="'+thStyle+'">Late Cut</th>'
+      +'<th style="'+thStyle+'">Absent Cut</th>'
+      +'<th style="'+thStyle+'font-size:12px;color:var(--text);">Net Salary</th>'
+      +'</tr></thead><tbody>';
+
+    rows.forEach(function(r, i){
+      var init = (r.name||'?').charAt(0).toUpperCase();
+      var bgRow = i%2===0 ? 'transparent' : 'rgba(255,255,255,0.015)';
+      var tdStyle = 'padding:9px 10px;text-align:right;border-bottom:0.5px solid rgba(255,255,255,0.04);';
+      var tdStyleL = tdStyle.replace('text-align:right','text-align:left');
+      var avatar = r.photo_url
+        ? '<img src="'+API+r.photo_url+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+        : '<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#0A84FF,#5E5CE6);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+      html += '<tr style="background:'+bgRow+';">'
+        +'<td style="'+tdStyleL+'">'
+          +'<div style="display:flex;align-items:center;gap:8px;">'+avatar
+          +'<div><div style="font-size:12px;font-weight:500;white-space:nowrap;">'+r.name+'</div>'
+          +'<div style="font-size:10px;color:var(--muted);">'+(r.brand_name||'')+'</div></div>'
+        +'</div></td>'
+        +'<td style="'+tdStyle+'">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
+        +'<td style="'+tdStyle+'color:#30D158;font-weight:500;">'+r.days_present+'</td>'
+        +'<td style="'+tdStyle+'color:#FFD60A;">'+r.late_days+'</td>'
+        +'<td style="'+tdStyle+'color:#FF453A;">'+r.days_absent+'</td>'
+        +'<td style="'+tdStyle+'color:#FF9F0A;">₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
+        +'<td style="'+tdStyle+'color:#FF453A;">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
+        +'<td style="'+tdStyle+'font-weight:700;font-size:13px;color:#30D158;">₹'+parseFloat(r.net_salary||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0})+'</td>'
+        +'</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  } catch(e){
+    el.innerHTML='<div style="color:#FF453A;text-align:center;padding:20px;">❌ '+e.message+'</div>';
+  }
 }
 
 // ── GPS Settings ──
@@ -2662,7 +2915,7 @@ window.showPage = function(page, el){
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
-  if(page==='payroll-settings')  setTimeout(loadPayrollSettings, 100);
+  if(page==='payroll-settings')  setTimeout(function(){ loadPayrollSettings(); psCalRender(); psLoadHolidays(); }, 100);
 };
 
 /* ── Hook: load data when page shown ── (second DOMContentLoaded removed, merged above) ──*/
