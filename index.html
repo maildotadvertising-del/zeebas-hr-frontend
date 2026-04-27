@@ -522,6 +522,70 @@ select.inp option{background:#1A1A2E;color:#fff;}
       <div id="n1-salary" class="bnav"></div>
     </div>
 
+    <!-- PROFILE -->
+    <div id="s1-profile" class="scr" style="flex-direction:column;">
+      <!-- Header -->
+      <div style="padding:14px 14px 12px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <div style="color:#fff;font-size:17px;font-weight:600;">My Profile</div>
+      </div>
+
+      <div class="scroll" style="padding:16px 14px 20px;">
+
+        <!-- Avatar + basic info -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 24px;gap:12px;">
+          <div style="position:relative;cursor:pointer;" onclick="document.getElementById('prof-photo-input').click()">
+            <div id="prof-avatar" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#fff;overflow:hidden;border:2.5px solid rgba(255,255,255,0.12);"></div>
+            <div style="position:absolute;bottom:2px;right:2px;width:24px;height:24px;background:#0A84FF;border-radius:50%;border:2px solid #040408;display:flex;align-items:center;justify-content:center;">
+              <svg width="11" height="11" viewBox="0 0 14 13" fill="none"><path d="M5.5 1.5h3l1.5 2H12a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7a1 1 0 011-1h2L5.5 1.5z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/><circle cx="7" cy="7.5" r="2" stroke="#fff" stroke-width="1.1"/></svg>
+            </div>
+            <input type="file" id="prof-photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="profPhotoChange(this)">
+          </div>
+          <div style="text-align:center;">
+            <div id="prof-name-display" style="color:#fff;font-size:18px;font-weight:600;"></div>
+            <div id="prof-desig-display" style="color:rgba(245,245,247,0.45);font-size:12px;margin-top:3px;"></div>
+          </div>
+        </div>
+
+        <!-- Details card -->
+        <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;margin-bottom:14px;">
+          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Employee ID</div>
+            <div id="prof-empid" style="color:#fff;font-size:13px;font-family:'DM Mono',monospace;font-weight:400;"></div>
+          </div>
+          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Brand</div>
+            <div id="prof-brand" style="color:#fff;font-size:13px;"></div>
+          </div>
+          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Role</div>
+            <div id="prof-role" style="color:#fff;font-size:13px;"></div>
+          </div>
+          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Phone</div>
+            <div id="prof-phone" style="color:#fff;font-size:13px;"></div>
+          </div>
+          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Email</div>
+            <div id="prof-email" style="color:#fff;font-size:13px;word-break:break-all;"></div>
+          </div>
+          <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Date of Birth</div>
+            <div id="prof-dob" style="color:#fff;font-size:13px;"></div>
+          </div>
+        </div>
+
+        <!-- Photo save button (hidden until photo selected) -->
+        <button id="prof-save-photo-btn" onclick="profSavePhoto()" style="display:none;width:100%;padding:13px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:14px;">📷 Save Profile Photo</button>
+
+        <!-- Logout -->
+        <button onclick="staffLogout()" style="width:100%;padding:13px;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.25);border-radius:14px;color:#FF453A;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M7 3H3a1 1 0 00-1 1v10a1 1 0 001 1h4M12 13l4-4-4-4M16 9H7" stroke="#FF453A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Logout
+        </button>
+      </div>
+      <div id="n1-profile" class="bnav"></div>
+    </div>
+
     <!-- DAILY LOG -->
     <div id="s1-dailylog" class="scr">
       <div style="padding:12px 13px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid rgba(255,255,255,0.07);">
@@ -871,9 +935,10 @@ var staffTabs=[
   {l:'Home',p:'M5.5 13V8L9 5L12.5 8V13H10.5V10.5H7.5V13Z M4 8.5L9 4L14 8.5'},
   {l:'Tasks',p:'M5 5H13V14H5V5Z M7 8H11 M7 10.5H9.5'},
   {l:'Chat',p:'M3 4.5C3 3.7 3.7 3 4.5 3H13.5C14.3 3 15 3.7 15 4.5V10C15 10.8 14.3 11.5 13.5 11.5H9.5L7 14V11.5H4.5C3.7 11.5 3 10.8 3 10V4.5Z'},
-  {l:'Salary',p:'M9 3.5V15.5 M6.5 6H11.5 M6.5 13H11.5'}
+  {l:'Salary',p:'M9 3.5V15.5 M6.5 6H11.5 M6.5 13H11.5'},
+  {l:'Profile',p:'M9 8.5A2.5 2.5 0 1 0 9 3.5A2.5 2.5 0 0 0 9 8.5Z M3.5 15.5C3.5 12.5 6 10 9 10C12 10 14.5 12.5 14.5 15.5'}
 ];
-var staffScrs=['s1-home','s1-tasks','s1-chat','s1-salary'];
+var staffScrs=['s1-home','s1-tasks','s1-chat','s1-salary','s1-profile'];
 
 var adminTabs=[
   {l:'Home',p:'M5.5 13V8L9 5L12.5 8V13H10.5V10.5H7.5V13Z M4 8.5L9 4L14 8.5'},
@@ -894,7 +959,7 @@ function makeNav(tabs,scrs,active,prefix){
 }
 
 function initNavs1(active){
-  staffScrs.forEach(function(_,i){var n=document.getElementById('n1-'+['home','tasks','chat','salary'][i]);if(n)n.innerHTML=makeNav(staffTabs,staffScrs,active,'n1');});
+  staffScrs.forEach(function(_,i){var n=document.getElementById('n1-'+['home','tasks','chat','salary','profile'][i]);if(n)n.innerHTML=makeNav(staffTabs,staffScrs,active,'n1');});
 }
 function initNavs2(active){
   ['home','approvals','staff','tasks','chat'].forEach(function(k,i){var n=document.getElementById('n2-'+k);if(n)n.innerHTML=makeNav(adminTabs,adminScrs,active,'n2');});
@@ -902,7 +967,7 @@ function initNavs2(active){
 initNavs1(0);initNavs2(0);
 
 function go1(id){
-  var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog'];
+  var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
@@ -915,6 +980,7 @@ function go1(id){
     setTimeout(initGPSScreen, 200);
   }
   if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
+  if(id==='s1-profile'){ setTimeout(loadProfile, 100); }
 }
 
 function go2(id){
@@ -1097,6 +1163,84 @@ async function markAttendance(){
 function submitLeave(){
   alert('✓ Leave request submitted! Admin will review shortly.');
   go1('s1-home');
+}
+
+// ── Profile ──
+var profPhotoB64 = null;
+
+function loadProfile(){
+  var s = zStaff() || {};
+  // Avatar
+  var av = document.getElementById('prof-avatar');
+  if(av){
+    var src = s.photo_data || (s.photo_url ? API_URL+s.photo_url : null);
+    if(src){ av.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'; av.style.overflow='hidden'; }
+    else { av.textContent=(s.name||'?').charAt(0).toUpperCase(); }
+  }
+  var set = function(id, val){ var e=document.getElementById(id); if(e) e.textContent=val||'—'; };
+  set('prof-name-display', s.name);
+  set('prof-desig-display', s.designation);
+  set('prof-empid', s.employee_id || s.emp_id);
+  set('prof-brand', s.brand_name || (s.brand&&s.brand.name));
+  var roleMap = {admin:'Admin',team_leader:'Team Leader',staff:'Staff'};
+  set('prof-role', roleMap[s.role]||s.role||'Staff');
+  set('prof-phone', s.phone || s.mobile);
+  set('prof-email', s.email);
+  if(s.dob){ var d=new Date(s.dob); set('prof-dob', isNaN(d)?s.dob:d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})); }
+  else { set('prof-dob','—'); }
+  profPhotoB64 = null;
+  var btn=document.getElementById('prof-save-photo-btn'); if(btn) btn.style.display='none';
+}
+
+function profPhotoChange(input){
+  var file = input.files[0]; if(!file) return;
+  resizeToBase64(file, function(b64){
+    profPhotoB64 = b64;
+    var av = document.getElementById('prof-avatar');
+    if(av){ av.innerHTML='<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;">'; av.style.overflow='hidden'; }
+    var btn=document.getElementById('prof-save-photo-btn'); if(btn) btn.style.display='block';
+  });
+}
+
+async function profSavePhoto(){
+  if(!profPhotoB64) return;
+  var s = zStaff() || {};
+  var btn = document.getElementById('prof-save-photo-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try{
+    var r = await fetch(API_URL+'/api/staff/'+s.id, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json', Authorization:'Bearer '+zToken()},
+      body: JSON.stringify({photo_data: profPhotoB64})
+    });
+    var d = await r.json();
+    if(d.success){
+      // Update localStorage
+      var updated = Object.assign({}, s, {photo_data: profPhotoB64});
+      localStorage.setItem('zhr_staff', JSON.stringify(updated));
+      // Update home avatar too
+      var av1=document.getElementById('s1-avatar');
+      if(av1){ av1.innerHTML='<img src="'+profPhotoB64+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">'; av1.style.overflow='hidden'; }
+      showToast1('✅ Photo updated!');
+      profPhotoB64=null;
+      if(btn){ btn.style.display='none'; }
+    } else { showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ showToast1('❌ Network error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='📷 Save Profile Photo'; } }
+}
+
+function showToast1(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,30,40,0.95);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;border:0.5px solid rgba(255,255,255,0.12);backdrop-filter:blur(14px);white-space:nowrap;';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2500);
+}
+
+function staffLogout(){
+  if(!confirm('Logout பண்ணணுமா?')) return;
+  localStorage.removeItem('zhr_token');
+  localStorage.removeItem('zhr_staff');
+  go1('s1-roleselect');
 }
 
 // ── Daily Log ──
