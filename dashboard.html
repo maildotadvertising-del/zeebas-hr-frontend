@@ -110,6 +110,8 @@ textarea.inp{resize:none;}
 
 /* TOGGLE */
 .tg{width:42px;height:24px;background:rgba(255,255,255,0.1);border-radius:12px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+.ps-day-btn{padding:5px 10px;border-radius:20px;font-size:11px;cursor:pointer;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);color:var(--muted);transition:all 0.15s;}
+.ps-day-btn.active{background:rgba(10,132,255,0.15);border-color:rgba(10,132,255,0.3);color:#0A84FF;font-weight:500;}
 .tg.on{background:var(--green);}
 .tg-th{position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.3);}
 .tg.on .tg-th{transform:translateX(18px);}
@@ -698,8 +700,201 @@ textarea.inp{resize:none;}
   </div>
 
   <div id="page-payroll-settings" class="page">
-    <div class="topbar"><div><div class="ptitle">Payroll Settings</div><div class="psub">Late deductions, OT, absent rules</div></div><div style="display:flex;gap:10px;"><button class="btn-g">Reset</button><button class="btn" onclick="showToast('✅ Payroll settings saved')">Save Settings</button></div></div>
-    <div class="sec g"><div style="color:var(--muted);font-size:13px;">Payroll settings page — grace period, deduction rules, OT rate all configurable here.</div></div>
+    <div class="topbar">
+      <div><div class="ptitle">Payroll Settings</div><div class="psub">Working hours, deductions, OT & leave rules</div></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-g" onclick="loadPayrollSettings()">↺ Reload</button>
+        <button class="btn" onclick="savePayrollSettings()">💾 Save Settings</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- LEFT COLUMN -->
+      <div>
+
+        <!-- Working Hours -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">🕘 Working Hours</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Work Start Time</div>
+                <input class="inp" type="time" id="ps-start-time" value="09:00">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Work End Time</div>
+                <input class="inp" type="time" id="ps-end-time" value="18:00">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Working Days/Month</div>
+                <input class="inp" type="number" id="ps-work-days" value="26" min="20" max="31">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Hours/Day</div>
+                <input class="inp" type="number" id="ps-hours-day" value="9" min="4" max="12" step="0.5">
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Work Week</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;" id="ps-workweek">
+                <div class="ps-day-btn active" data-day="Mon" onclick="psDayToggle(this)">Mon</div>
+                <div class="ps-day-btn active" data-day="Tue" onclick="psDayToggle(this)">Tue</div>
+                <div class="ps-day-btn active" data-day="Wed" onclick="psDayToggle(this)">Wed</div>
+                <div class="ps-day-btn active" data-day="Thu" onclick="psDayToggle(this)">Thu</div>
+                <div class="ps-day-btn active" data-day="Fri" onclick="psDayToggle(this)">Fri</div>
+                <div class="ps-day-btn active" data-day="Sat" onclick="psDayToggle(this)">Sat</div>
+                <div class="ps-day-btn" data-day="Sun" onclick="psDayToggle(this)">Sun</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Late & Absent Deductions -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">⏰ Late & Absent Deductions</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Late Grace (mins)</div>
+                <input class="inp" type="number" id="ps-grace" value="15" min="0" max="60">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Late Deduction / min (₹)</div>
+                <input class="inp" type="number" id="ps-late-per-min" value="2" min="0" step="0.5">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Max Late Deduction/day (₹)</div>
+                <input class="inp" type="number" id="ps-late-max" value="200" min="0">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Absent Deduction</div>
+                <select class="inp" id="ps-absent-type">
+                  <option value="per_day_salary">Per Day Salary</option>
+                  <option value="flat">Flat Amount (₹)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Flat Absent Amount (₹)</div>
+                <input class="inp" type="number" id="ps-absent-flat" value="500" min="0">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Half Day = Absent After (hrs)</div>
+                <input class="inp" type="number" id="ps-halfday-hrs" value="4" min="1" max="8" step="0.5">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leave Policy -->
+        <div class="sec g">
+          <div class="sh"><span class="st">🏖️ Leave Policy (Per Year)</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Paid Leaves</div>
+              <input class="inp" type="number" id="ps-paid-leave" value="12" min="0">
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Sick Leaves</div>
+              <input class="inp" type="number" id="ps-sick-leave" value="6" min="0">
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Casual Leaves</div>
+              <input class="inp" type="number" id="ps-casual-leave" value="6" min="0">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+
+        <!-- Overtime -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">💼 Overtime (OT)</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px 14px;">
+              <div><div style="font-size:13px;">Enable Overtime Pay</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Calculate OT for extra hours</div></div>
+              <div class="tg on" id="tg-ot" onclick="this.classList.toggle('on')"><div class="tg-th"></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">OT After (hrs/day)</div>
+                <input class="inp" type="number" id="ps-ot-after" value="9" min="4" max="12" step="0.5">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">OT Rate Multiplier</div>
+                <select class="inp" id="ps-ot-rate">
+                  <option value="1.0">1x (Same rate)</option>
+                  <option value="1.5" selected>1.5x (Standard)</option>
+                  <option value="2.0">2x (Double)</option>
+                  <option value="2.5">2.5x</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statutory Deductions -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">🏛️ Statutory Deductions</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px 14px;">
+              <div><div style="font-size:13px;">PF (Provident Fund)</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Employee contribution 12%</div></div>
+              <div class="tg" id="tg-pf" onclick="this.classList.toggle('on')"><div class="tg-th"></div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px 14px;">
+              <div><div style="font-size:13px;">ESI (Employee State Insurance)</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Employee contribution 0.75%</div></div>
+              <div class="tg" id="tg-esi" onclick="this.classList.toggle('on')"><div class="tg-th"></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Professional Tax (₹/month)</div>
+                <input class="inp" type="number" id="ps-ptax" value="200" min="0">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">TDS % (if applicable)</div>
+                <input class="inp" type="number" id="ps-tds" value="0" min="0" max="30" step="0.5">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Allowances -->
+        <div class="sec g">
+          <div class="sh"><span class="st">➕ Standard Allowances</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">HRA % of Basic</div>
+                <input class="inp" type="number" id="ps-hra" value="40" min="0" max="100">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Travel Allowance (₹/month)</div>
+                <input class="inp" type="number" id="ps-travel" value="1000" min="0">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Medical Allowance (₹/month)</div>
+                <input class="inp" type="number" id="ps-medical" value="1250" min="0">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Other Allowance (₹/month)</div>
+                <input class="inp" type="number" id="ps-other-allow" value="0" min="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <!-- ── ATTENDANCE ── -->
@@ -1290,6 +1485,95 @@ function syncDisplay(v){
   var circle=document.getElementById('radius-circle');if(circle){var sz=Math.min(Math.max(v/300*120,60),200);circle.style.width=sz+'px';circle.style.height=sz+'px';}
   var dashLbl=document.getElementById('radius-label');if(dashLbl)dashLbl.textContent=v+'m';
 }
+// ── Payroll Settings ──
+function psDayToggle(el){ el.classList.toggle('active'); }
+
+async function loadPayrollSettings(){
+  try{
+    var res = await fetch(API+'/api/settings/payroll', {headers:zHdr()});
+    var d = await res.json();
+    if(!d.success) return;
+    var s = d.data || {};
+    var set = function(id,val){ var el=document.getElementById(id); if(el&&val!==undefined&&val!==null) el.value=val; };
+    set('ps-start-time',  s.work_start_time||'09:00');
+    set('ps-end-time',    s.work_end_time||'18:00');
+    set('ps-work-days',   s.working_days_month||26);
+    set('ps-hours-day',   s.hours_per_day||9);
+    set('ps-grace',       s.late_grace_minutes||15);
+    set('ps-late-per-min',s.late_deduction_per_min||2);
+    set('ps-late-max',    s.late_max_per_day||200);
+    set('ps-absent-type', s.absent_deduction_type||'per_day_salary');
+    set('ps-absent-flat', s.absent_flat_amount||500);
+    set('ps-halfday-hrs', s.half_day_hours||4);
+    set('ps-paid-leave',  s.paid_leaves_year||12);
+    set('ps-sick-leave',  s.sick_leaves_year||6);
+    set('ps-casual-leave',s.casual_leaves_year||6);
+    set('ps-ot-after',    s.ot_after_hours||9);
+    set('ps-ot-rate',     s.ot_rate_multiplier||1.5);
+    set('ps-ptax',        s.professional_tax||200);
+    set('ps-tds',         s.tds_percent||0);
+    set('ps-hra',         s.hra_percent||40);
+    set('ps-travel',      s.travel_allowance||1000);
+    set('ps-medical',     s.medical_allowance||1250);
+    set('ps-other-allow', s.other_allowance||0);
+    // Toggles
+    var tgSet = function(id, on){ var el=document.getElementById(id); if(!el) return; if(on) el.classList.add('on'); else el.classList.remove('on'); };
+    tgSet('tg-ot',  s.ot_enabled!==0);
+    tgSet('tg-pf',  s.pf_enabled===1);
+    tgSet('tg-esi', s.esi_enabled===1);
+    // Work week days
+    var days = (s.work_week||'Mon,Tue,Wed,Thu,Fri,Sat').split(',');
+    document.querySelectorAll('.ps-day-btn').forEach(function(el){
+      if(days.indexOf(el.getAttribute('data-day'))!==-1) el.classList.add('active');
+      else el.classList.remove('active');
+    });
+  } catch(e){ console.error('Payroll settings load error:', e); }
+}
+
+async function savePayrollSettings(){
+  var get = function(id){ var el=document.getElementById(id); return el?el.value:''; };
+  var tgOn = function(id){ var el=document.getElementById(id); return el&&el.classList.contains('on')?1:0; };
+  // Get active work week days
+  var workWeek = [];
+  document.querySelectorAll('.ps-day-btn.active').forEach(function(el){ workWeek.push(el.getAttribute('data-day')); });
+  var body = {
+    work_start_time:       get('ps-start-time'),
+    work_end_time:         get('ps-end-time'),
+    working_days_month:    parseInt(get('ps-work-days'))||26,
+    hours_per_day:         parseFloat(get('ps-hours-day'))||9,
+    work_week:             workWeek.join(','),
+    late_grace_minutes:    parseInt(get('ps-grace'))||15,
+    late_deduction_per_min:parseFloat(get('ps-late-per-min'))||2,
+    late_max_per_day:      parseFloat(get('ps-late-max'))||200,
+    absent_deduction_type: get('ps-absent-type')||'per_day_salary',
+    absent_flat_amount:    parseFloat(get('ps-absent-flat'))||500,
+    half_day_hours:        parseFloat(get('ps-halfday-hrs'))||4,
+    paid_leaves_year:      parseInt(get('ps-paid-leave'))||12,
+    sick_leaves_year:      parseInt(get('ps-sick-leave'))||6,
+    casual_leaves_year:    parseInt(get('ps-casual-leave'))||6,
+    ot_enabled:            tgOn('tg-ot'),
+    ot_after_hours:        parseFloat(get('ps-ot-after'))||9,
+    ot_rate_multiplier:    parseFloat(get('ps-ot-rate'))||1.5,
+    pf_enabled:            tgOn('tg-pf'),
+    esi_enabled:           tgOn('tg-esi'),
+    professional_tax:      parseFloat(get('ps-ptax'))||0,
+    tds_percent:           parseFloat(get('ps-tds'))||0,
+    hra_percent:           parseFloat(get('ps-hra'))||40,
+    travel_allowance:      parseFloat(get('ps-travel'))||0,
+    medical_allowance:     parseFloat(get('ps-medical'))||0,
+    other_allowance:       parseFloat(get('ps-other-allow'))||0
+  };
+  try{
+    var res = await fetch(API+'/api/settings/payroll', {
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body: JSON.stringify(body)
+    });
+    var d = await res.json();
+    if(d.success) showToast('✅ Payroll settings saved!');
+    else showToast('❌ '+(d.message||'Save failed'));
+  } catch(e){ showToast('❌ '+(e.message||'Server error')); }
+}
+
 // ── GPS Settings ──
 async function loadGPSSettings(){
   try{
@@ -2352,7 +2636,8 @@ window.showPage = function(page, el){
   if(page==='tasks')          setTimeout(loadTasks, 100);
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
-  if(page==='gps-settings')   setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
+  if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
+  if(page==='payroll-settings')  setTimeout(loadPayrollSettings, 100);
 };
 
 /* ── Hook: load data when page shown ── (second DOMContentLoaded removed, merged above) ──*/
