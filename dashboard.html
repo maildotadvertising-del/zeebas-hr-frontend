@@ -2055,6 +2055,7 @@ var _editStaffId = null;
 
 async function openEdit(staffId){
   _editStaffId = staffId;
+  efPhotoB64 = null; // reset any previous photo selection
   document.getElementById('edit-content').innerHTML =
     '<div style="padding:40px;text-align:center;color:var(--muted);">Loading…</div>';
   document.getElementById('edit-overlay').classList.add('open');
@@ -2084,8 +2085,9 @@ async function openEdit(staffId){
     ].map(function(t){
       return '<option value="'+t.v+'"'+(p.employment_type===t.v?' selected':'')+'>'+t.n+'</option>';
     }).join('');
-    var efAvatarHtml = p.photo_url
-      ? '<img src="'+API+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'
+    var photoSrc = p.photo_data || (p.photo_url ? API+p.photo_url : null);
+    var efAvatarHtml = photoSrc
+      ? '<img src="'+photoSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" onerror="this.parentNode.innerHTML=\'<span style=font-size:20px;font-weight:500;color:#5AABF0;>'+init+'</span>\'">'
       : '<span style="font-size:20px;font-weight:500;color:#5AABF0;">'+init+'</span>';
     document.getElementById('edit-content').innerHTML =
       '<div style="padding:22px 26px 0;">'
@@ -2118,8 +2120,8 @@ async function openEdit(staffId){
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Email</div><input class="inp" id="ef-email" type="email" value="'+(p.email||'')+'"></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Date of Birth</div><input class="inp" id="ef-dob" type="date" value="'+(p.dob?p.dob.slice(0,10):'')+'"></div>'
-      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Joining Date</div><input class="inp" id="ef-join" type="date" value="'+(p.joining_date?p.joining_date.slice(0,10):'')+'"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Date of Birth 📅</div><input class="inp" id="ef-dob" type="date" value="'+(p.dob?p.dob.slice(0,10):'')+'" onclick="try{this.showPicker()}catch(e){}"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Joining Date 📅</div><input class="inp" id="ef-join" type="date" value="'+(p.joining_date?p.joining_date.slice(0,10):'')+'" onclick="try{this.showPicker()}catch(e){}"></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Base Salary (₹)</div><input class="inp" id="ef-salary" type="number" value="'+(p.base_salary||0)+'"></div>'
@@ -2134,7 +2136,7 @@ async function openEdit(staffId){
       +(p.role==='admin'||p.role==='editor'
         ?'<div style="background:rgba(191,95,255,0.1);border:0.5px solid rgba(191,95,255,0.3);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:7px;">'
           +'<span style="font-size:13px;">'+(p.role==='admin'?'👑':'✏️')+'</span>'
-          +'<span style="font-size:12px;color:#BF5FFF;">'+(p.role==='admin'?'Owner / Admin':'Editor')+'</span>'
+          +'<span style="font-size:12px;color:#BF5FFF;">'+(p.designation||( p.role==='admin'?'Admin':'Editor'))+'</span>'
           +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 Fixed</span>'
           +'</div>'
           +'<input type="hidden" id="ef-role" value="'+p.role+'">'
@@ -2210,9 +2212,8 @@ async function saveEdit(){
     var reportsEl = document.getElementById('ef-reports');
     if(roleEl && roleEl.value) fd.append('role', roleEl.value);   // always send role
     if(reportsEl) fd.append('reports_to', reportsEl.value||'');
-    // Attach photo if selected
-    var efPhoto = document.getElementById('ef-photo-input');
-    if(efPhoto && efPhoto.files && efPhoto.files[0]) fd.append('photo', efPhoto.files[0]);
+    // Attach photo — send base64 (persists across server restarts)
+    if(efPhotoB64) fd.append('photo_data', efPhotoB64);
     var res = await fetch(API+'/api/staff/'+_editStaffId, {
       method:'PUT', headers: zHdr(), body: fd
     });
@@ -2770,8 +2771,9 @@ document.addEventListener('DOMContentLoaded', function(){
     var nm=document.getElementById('sb-name'), av=document.getElementById('sb-avatar'), rl=document.getElementById('sb-role');
     if(nm) nm.textContent = staff.name||'Admin';
     if(av){
-      if(staff.photo_url){
-        av.innerHTML='<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      var sbSrc = staff.photo_data || (staff.photo_url ? API+staff.photo_url : null);
+      if(sbSrc){
+        av.innerHTML='<img src="'+sbSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML=\''+(staff.name||'A').charAt(0).toUpperCase()+'\'">';
         av.style.overflow='hidden';
       } else {
         av.textContent = (staff.name||'A').charAt(0).toUpperCase();
@@ -2856,8 +2858,9 @@ async function adminLogin(){
       var nm=document.getElementById('sb-name'), av=document.getElementById('sb-avatar'), rl=document.getElementById('sb-role');
       if(nm) nm.textContent = d.staff.name||'Admin';
       if(av){
-        if(d.staff.photo_url){
-          av.innerHTML='<img src="'+API+d.staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+        var loginSrc = d.staff.photo_data || (d.staff.photo_url ? API+d.staff.photo_url : null);
+        if(loginSrc){
+          av.innerHTML='<img src="'+loginSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML=\''+(d.staff.name||'A').charAt(0).toUpperCase()+'\'">';
           av.style.overflow='hidden';
         } else {
           av.textContent = (d.staff.name||'A').charAt(0).toUpperCase();
@@ -2971,8 +2974,9 @@ async function loadStaffList(retryCount){
       var roleKey     = s.role || 'staff';
       var roleColor   = ROLE_COLOR[roleKey] || '#636366';
       var roleLabel   = ROLE_LABEL[roleKey] || 'Staff';
-      var avatarInner = s.photo_url
-        ? '<img src="'+API+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'
+      var photoSrc1   = s.photo_data || (s.photo_url ? API+s.photo_url : null);
+      var avatarInner = photoSrc1
+        ? '<img src="'+photoSrc1+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" onerror="this.outerHTML=\''+init+'\'">'
         : init;
 
       return '<div class="sec g" style="padding:0;overflow:hidden;">'
@@ -3619,12 +3623,14 @@ function openProfilePanel(){
   var rl = document.getElementById('pp-role');
   var ei = document.getElementById('pp-empid');
   if(av){
-    if(staff.photo_url){
-      av.innerHTML = '<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    var ppSrc = staff.photo_data || (staff.photo_url ? API+staff.photo_url : null);
+    if(ppSrc){
+      av.innerHTML = '<img src="'+ppSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML=\''+init+'\'">';
     } else {
       av.innerHTML = ''; av.textContent = init;
     }
   }
+  ppPhotoB64 = null; // reset previous selection
   // Reset photo input & hint label
   var pi = document.getElementById('pp-photo-input'); if(pi) pi.value='';
   var pl = document.getElementById('pp-photo-label'); if(pl) pl.style.display='none';
@@ -3679,34 +3685,50 @@ function ppSwitchTab(tab){
   }
 }
 
+// ── Resize image to max 400px and convert to base64 JPEG ──
+function resizeToBase64(file, callback){
+  var img = new Image();
+  var url = URL.createObjectURL(file);
+  img.onload = function(){
+    var MAX = 400;
+    var w = img.width, h = img.height;
+    var ratio = Math.min(MAX/w, MAX/h, 1);
+    w = Math.round(w*ratio); h = Math.round(h*ratio);
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.75));
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
+var ppPhotoB64 = null;
 function ppPhotoPreview(input){
   if(!input.files||!input.files[0]) return;
   var file = input.files[0];
   if(file.size > 5*1024*1024){ showToast('⚠️ Photo must be under 5MB'); input.value=''; return; }
-  var reader = new FileReader();
-  reader.onload = function(e){
+  resizeToBase64(file, function(b64){
+    ppPhotoB64 = b64;
     var av = document.getElementById('pp-avatar');
-    var imgHtml = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-    if(av){ av.innerHTML = imgHtml; }
-    // Show hint label
+    if(av){ av.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; }
     var lbl = document.getElementById('pp-photo-label');
     if(lbl){ lbl.style.display='block'; }
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
+var efPhotoB64 = null;
 function efPhotoPreview(input){
   if(!input.files||!input.files[0]) return;
   var file = input.files[0];
   if(file.size > 5*1024*1024){ showToast('⚠️ Photo must be under 5MB'); input.value=''; return; }
-  var reader = new FileReader();
-  reader.onload = function(e){
+  resizeToBase64(file, function(b64){
+    efPhotoB64 = b64;
     var av = document.getElementById('ef-avatar');
-    if(av){ av.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'; }
+    if(av){ av.innerHTML = '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">'; }
     var lbl = document.getElementById('ef-photo-label');
-    if(lbl){ lbl.textContent = '📷 '+file.name+' — save to upload'; lbl.style.display='block'; }
-  };
-  reader.readAsDataURL(file);
+    if(lbl){ lbl.textContent = '📷 Photo ready — click Save to apply'; lbl.style.display='block'; }
+  });
 }
 
 async function saveProfileInfo(){
@@ -3737,11 +3759,8 @@ async function saveProfileInfo(){
     fd.append('dob',             staff.dob||'');
     fd.append('joining_date',    staff.joining_date||'');
     fd.append('address',         staff.address||'');
-    // Attach photo if selected
-    var photoInput = document.getElementById('pp-photo-input');
-    if(photoInput && photoInput.files && photoInput.files[0]){
-      fd.append('photo', photoInput.files[0]);
-    }
+    // Attach photo as base64 (survives server restarts)
+    if(ppPhotoB64) fd.append('photo_data', ppPhotoB64);
     var res = await fetch(API+'/api/staff/'+staff.id, { method:'PUT', headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
     var d = await res.json();
     if(d.success){
@@ -3764,9 +3783,11 @@ async function saveProfileInfo(){
       // Update sidebar avatar
       var sbA = document.getElementById('sb-avatar');
       if(sbA){
-        if(staff.photo_url){
-          sbA.innerHTML='<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+        var saveSrc = ppPhotoB64 || staff.photo_data || (staff.photo_url ? API+staff.photo_url : null);
+        if(saveSrc){
+          sbA.innerHTML='<img src="'+saveSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
           sbA.style.overflow='hidden';
+          if(ppPhotoB64) staff.photo_data = ppPhotoB64; // update local cache
         } else {
           sbA.textContent = name.trim().charAt(0).toUpperCase();
         }
@@ -4001,8 +4022,9 @@ async function loadAdminOverview(){
           var init = (a.name||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
           var roleColor = a.role==='admin'?'#FF453A':'#FF9F0A';
           var roleLabel = a.role==='admin'?'👑 Admin':'✏️ Editor';
-          var avatarHtml = a.photo_url
-            ? '<img src="'+API+a.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+          var aoPhotoSrc = a.photo_data || (a.photo_url ? API+a.photo_url : null);
+          var avatarHtml = aoPhotoSrc
+            ? '<img src="'+aoPhotoSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML=\''+init+'\'">'
             : init;
           return '<div class="gs" style="padding:14px;display:flex;flex-direction:column;gap:10px;">'
             // Top row — avatar + name + role
