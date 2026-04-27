@@ -631,7 +631,35 @@ textarea.inp{resize:none;}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
         <div>
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Due Date</div>
-          <input class="inp" type="date" id="task-due">
+          <div style="position:relative;">
+            <div id="task-due-trigger" onclick="toggleTaskCal()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--muted);user-select:none;" id="task-due-trigger">
+              <span id="task-due-label">Select date</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <input type="hidden" id="task-due">
+            <!-- Custom Calendar Dropdown -->
+            <div id="task-cal-popup" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:260px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <button onclick="taskCalNav(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
+                <span id="task-cal-title" style="font-size:13px;font-weight:500;color:#fff;"></span>
+                <button onclick="taskCalNav(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div>
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div>
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div>
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+              </div>
+              <div id="task-cal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
+                <button onclick="taskCalClear()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
+                <button onclick="taskCalToday()" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Priority</div>
@@ -3454,7 +3482,7 @@ async function openAddTask(){
   document.getElementById('task-desc').value     = '';
   document.getElementById('task-brand').value    = '';
   document.getElementById('task-category').value = '';
-  document.getElementById('task-due').value      = '';
+  taskCalSetValue('');
   document.getElementById('task-priority').value = 'medium';
   document.getElementById('task-status').value   = 'pending';
   document.getElementById('task-file-name').textContent = 'Click to choose file';
@@ -3483,7 +3511,7 @@ async function openEditTask(id){
     document.getElementById('task-desc').value     = t.description || '';
     document.getElementById('task-brand').value    = t.brand_id || '';
     document.getElementById('task-category').value = t.category || '';
-    document.getElementById('task-due').value      = t.due_date ? t.due_date.slice(0,10) : '';
+    taskCalSetValue(t.due_date ? t.due_date.slice(0,10) : '');
     document.getElementById('task-priority').value = t.priority || 'medium';
     document.getElementById('task-status').value   = t.status || 'pending';
     document.getElementById('task-status-row').style.display = '';
@@ -3523,6 +3551,87 @@ function renderStaffDropdown(sel, staff, selectedId){
 }
 
 /* ── Save Task (Add or Edit) ── */
+/* ── Custom Task Due-Date Calendar ── */
+var _taskCal = { year: new Date().getFullYear(), month: new Date().getMonth(), selected: '' };
+
+function toggleTaskCal(){
+  var pop = document.getElementById('task-cal-popup');
+  if(!pop) return;
+  var open = pop.style.display !== 'none';
+  if(open){ pop.style.display='none'; return; }
+  if(!_taskCal.selected){
+    var n = new Date(); _taskCal.year = n.getFullYear(); _taskCal.month = n.getMonth();
+  }
+  renderTaskCal();
+  pop.style.display = 'block';
+}
+
+function renderTaskCal(){
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var title = document.getElementById('task-cal-title');
+  var daysEl = document.getElementById('task-cal-days');
+  if(!title||!daysEl) return;
+  title.textContent = months[_taskCal.month] + ' ' + _taskCal.year;
+  var first = new Date(_taskCal.year, _taskCal.month, 1).getDay();
+  var total = new Date(_taskCal.year, _taskCal.month+1, 0).getDate();
+  var today = new Date().toISOString().slice(0,10);
+  var html = '';
+  for(var i=0;i<first;i++) html += '<div></div>';
+  for(var d=1;d<=total;d++){
+    var val = _taskCal.year+'-'+String(_taskCal.month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday = val===today;
+    var isSel = val===_taskCal.selected;
+    var bg = isSel ? '#0A84FF' : isToday ? 'rgba(10,132,255,0.18)' : 'transparent';
+    var col = isSel ? '#fff' : isToday ? '#0A84FF' : 'rgba(255,255,255,0.75)';
+    var fw = (isToday||isSel) ? '600' : '400';
+    html += '<div onclick="selectTaskCalDay(\''+val+'\')" style="text-align:center;padding:5px 2px;border-radius:8px;font-size:12px;cursor:pointer;background:'+bg+';color:'+col+';font-weight:'+fw+';transition:background 0.15s;" onmouseover="if(\''+val+'\'!==\''+_taskCal.selected+'\')this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\''+bg+'\'">'+d+'</div>';
+  }
+  daysEl.innerHTML = html;
+}
+
+function taskCalNav(dir){
+  _taskCal.month += dir;
+  if(_taskCal.month > 11){ _taskCal.month=0; _taskCal.year++; }
+  if(_taskCal.month < 0){ _taskCal.month=11; _taskCal.year--; }
+  renderTaskCal();
+}
+
+function selectTaskCalDay(val){
+  _taskCal.selected = val;
+  taskCalSetValue(val);
+  document.getElementById('task-cal-popup').style.display='none';
+}
+
+function taskCalSetValue(val){
+  _taskCal.selected = val || '';
+  var inp = document.getElementById('task-due');
+  var lbl = document.getElementById('task-due-label');
+  if(inp) inp.value = val || '';
+  if(lbl){
+    if(val){
+      var parts = val.split('-');
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      lbl.style.color = '#fff';
+      lbl.textContent = parseInt(parts[2])+' '+months[parseInt(parts[1])-1]+' '+parts[0];
+    } else {
+      lbl.style.color = '';
+      lbl.textContent = 'Select date';
+    }
+    if(val){ _taskCal.year=parseInt(parts[0]); _taskCal.month=parseInt(parts[1])-1; }
+  }
+}
+
+function taskCalClear(){ taskCalSetValue(''); document.getElementById('task-cal-popup').style.display='none'; }
+function taskCalToday(){ var t=new Date().toISOString().slice(0,10); selectTaskCalDay(t); }
+
+document.addEventListener('click', function(e){
+  var pop = document.getElementById('task-cal-popup');
+  var trigger = document.getElementById('task-due-trigger');
+  if(pop && pop.style.display!=='none' && !pop.contains(e.target) && trigger && !trigger.contains(e.target)){
+    pop.style.display='none';
+  }
+});
+
 async function saveTask(){
   var id       = document.getElementById('task-edit-id').value;
   var title    = document.getElementById('task-title').value.trim();
