@@ -2133,20 +2133,22 @@ async function openEdit(staffId){
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Role</div>'
       // If this person is owner/admin — show locked badge, not editable dropdown
-      +(p.role==='admin'||p.role==='editor'
+      // Owner profile → fully locked badge
+      +(p.is_owner
         ?'<div style="background:rgba(191,95,255,0.1);border:0.5px solid rgba(191,95,255,0.3);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:7px;">'
-          +'<span style="font-size:13px;">'+(p.role==='admin'?'👑':'✏️')+'</span>'
-          +'<span style="font-size:12px;color:#BF5FFF;">'+(p.designation||( p.role==='admin'?'Admin':'Editor'))+'</span>'
-          +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 Fixed</span>'
+          +'<span style="font-size:13px;">👑</span>'
+          +'<span style="font-size:12px;color:#BF5FFF;">'+(p.designation||'CEO / Founder')+'</span>'
+          +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 Owner</span>'
           +'</div>'
           +'<input type="hidden" id="ef-role" value="'+p.role+'">'
-        // Regular staff — only team_leader or staff choices
+        // All other staff — Admin / Team Leader / Staff dropdown
         :'<select class="inp" id="ef-role">'+
-          ['team_leader','staff'].map(function(r){
-            var lbl={team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
+          ['admin','team_leader','staff'].map(function(r){
+            var lbl={admin:'🔑 Admin',team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
             return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
           }).join('')
-          +'</select>')
+          +'</select>'
+          +'<div style="font-size:9px;color:rgba(245,245,247,0.3);margin-top:3px;">Admin = Attendance+Tasks · Team Leader = Tasks only</div>')
       +'</div>'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Reports To (Team Leader)</div>'
       +'<select class="inp" id="ef-reports"><option value="">— None —</option>'
@@ -2758,7 +2760,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   try {
     var staff = JSON.parse(staffRaw);
-    if(staff.role !== 'admin' && staff.role !== 'editor'){
+    var allowedRoles2 = ['admin','editor','team_leader'];
+    if(!allowedRoles2.includes(staff.role)){
       localStorage.removeItem('zhr_token'); localStorage.removeItem('zhr_staff');
       showOverlay(); return;
     }
@@ -2779,13 +2782,18 @@ document.addEventListener('DOMContentLoaded', function(){
         av.textContent = (staff.name||'A').charAt(0).toUpperCase();
       }
     }
-    if(rl) rl.textContent = staff.role==='admin'?'Admin':'Editor';
+    var rlText = staff.is_owner ? 'Owner' : staff.role==='admin' ? 'Admin' : staff.role==='team_leader' ? 'Team Leader' : 'Editor';
+    if(rl) rl.textContent = rlText;
+    // Apply nav restrictions
+    applyNavAccess(staff);
 
-    // Restore page from sessionStorage → hash → default dashboard
-    var validPages=['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'];
+    // Restore page — constrained to role-allowed pages
+    var roleKey2 = staff.is_owner ? 'owner' : (staff.role||'staff');
+    var allowedPages = NAV_ACCESS[roleKey2] || ['dashboard'];
     var saved=''; try{ saved=sessionStorage.getItem('zhr_page')||''; }catch(e){}
     var hash=(location.hash||'').replace('#','').trim();
-    var page=(saved&&validPages.indexOf(saved)!==-1)?saved:(hash&&validPages.indexOf(hash)!==-1)?hash:'dashboard';
+    var preferred = (saved&&allowedPages.includes(saved))?saved:(hash&&allowedPages.includes(hash))?hash:allowedPages[0];
+    var page = preferred || 'dashboard';
 
     // Pre-warm Render server
     fetch(API+'/api/health').catch(function(){});
@@ -2845,13 +2853,14 @@ async function adminLogin(){
     });
     var d = await res.json();
     if(d.success){
-      if(d.staff.role !== 'admin' && d.staff.role !== 'editor'){
-        if(errEl){ errEl.style.display='block'; errEl.textContent='❌ Admin or Editor access required. Use the Staff App instead.'; }
+      var allowedRoles = ['admin','editor','team_leader'];
+      if(!allowedRoles.includes(d.staff.role)){
+        if(errEl){ errEl.style.display='block'; errEl.textContent='❌ Access denied. Use the Staff App instead.'; }
         return;
       }
       localStorage.setItem('zhr_token', d.token);
       localStorage.setItem('zhr_staff', JSON.stringify(d.staff));
-      // Hide overlay and show dashboard without full reload
+      // Hide overlay
       var ov = document.getElementById('admin-login-overlay');
       if(ov){ ov.style.display='none'; document.body.style.overflow=''; }
       // Update sidebar profile
@@ -2866,10 +2875,13 @@ async function adminLogin(){
           av.textContent = (d.staff.name||'A').charAt(0).toUpperCase();
         }
       }
-      if(rl) rl.textContent = d.staff.role==='admin'?'Admin':'Editor';
-      // Navigate to dashboard
-      showPage('dashboard', null);
-      // Pre-warm server
+      var roleLabel = d.staff.is_owner ? 'Owner' : d.staff.role==='admin' ? 'Admin' : d.staff.role==='team_leader' ? 'Team Leader' : 'Editor';
+      if(rl) rl.textContent = roleLabel;
+      // Apply nav restrictions based on role
+      applyNavAccess(d.staff);
+      // Navigate to first allowed page
+      var firstPage = d.staff.is_owner ? 'dashboard' : d.staff.role==='admin' ? 'attendance' : 'tasks';
+      showPage(firstPage, null);
       fetch(API+'/api/health').catch(function(){});
     } else {
       if(errEl){ errEl.style.display='block'; errEl.textContent='❌ '+(d.message||'Invalid credentials'); }
@@ -2879,6 +2891,30 @@ async function adminLogin(){
   } finally {
     if(btn){ btn.textContent='Login to Dashboard'; btn.disabled=false; }
   }
+}
+
+/* ── ROLE-BASED NAV ACCESS ── */
+// Pages each role can access
+var NAV_ACCESS = {
+  owner:       ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
+  admin:       ['dashboard','attendance','tasks','team-chat'],
+  team_leader: ['tasks','team-chat'],
+  editor:      ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
+};
+
+function applyNavAccess(staff){
+  var roleKey = staff.is_owner ? 'owner' : (staff.role || 'staff');
+  var allowed = NAV_ACCESS[roleKey] || [];
+  if(allowed.length === NAV_ACCESS.owner.length) return; // owner — show everything
+  // Hide nav items not in allowed list
+  document.querySelectorAll('.ni').forEach(function(ni){
+    var oc = ni.getAttribute('onclick')||'';
+    var m  = oc.match(/'([^']+)'/);
+    if(m){
+      var page = m[1];
+      ni.style.display = allowed.includes(page) ? '' : 'none';
+    }
+  });
 }
 
 /* ── API HELPERS ── */
@@ -3159,6 +3195,15 @@ async function loadAttendancePage(){
 /* ── HOOK: load data when page shown ── */
 var _origShowPage = window.showPage;
 window.showPage = function(page, el){
+  // Page protection — redirect if role doesn't have access
+  var _s={}; try{_s=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  if(_s.role){
+    var _rk = _s.is_owner ? 'owner' : (_s.role||'staff');
+    var _allowed = NAV_ACCESS[_rk] || [];
+    if(_allowed.length && !_allowed.includes(page)){
+      page = _allowed[0]; el = null; // redirect to first allowed
+    }
+  }
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
