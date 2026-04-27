@@ -2164,7 +2164,7 @@ async function openEdit(staffId){
         ?'<div style="background:rgba(191,95,255,0.1);border:0.5px solid rgba(191,95,255,0.3);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:7px;">'
           +'<span style="font-size:13px;">👑</span>'
           +'<span style="font-size:12px;color:#BF5FFF;">'+(p.designation||'CEO / Founder')+'</span>'
-          +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 Owner</span>'
+          +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 CEO/Founder</span>'
           +'</div>'
           +'<input type="hidden" id="ef-role" value="'+p.role+'">'
         // All other staff — Admin / Team Leader / Staff dropdown
@@ -2810,7 +2810,7 @@ document.addEventListener('DOMContentLoaded', function(){
         av.textContent = (staff.name||'A').charAt(0).toUpperCase();
       }
     }
-    var rlText = staff.is_owner ? 'Owner' : staff.role==='admin' ? 'Admin' : staff.role==='team_leader' ? 'Team Leader' : 'Editor';
+    var rlText = staff.is_owner ? 'CEO/Founder' : staff.role==='admin' ? 'Admin' : staff.role==='team_leader' ? 'Team Leader' : 'Editor';
     if(rl) rl.textContent = rlText;
     // Apply nav restrictions
     applyNavAccess(staff);
@@ -2903,7 +2903,7 @@ async function adminLogin(){
           av.textContent = (d.staff.name||'A').charAt(0).toUpperCase();
         }
       }
-      var roleLabel = d.staff.is_owner ? 'Owner' : d.staff.role==='admin' ? 'Admin' : d.staff.role==='team_leader' ? 'Team Leader' : 'Editor';
+      var roleLabel = d.staff.is_owner ? 'CEO/Founder' : d.staff.role==='admin' ? 'Admin' : d.staff.role==='team_leader' ? 'Team Leader' : 'Editor';
       if(rl) rl.textContent = roleLabel;
       // Apply nav restrictions based on role
       applyNavAccess(d.staff);
