@@ -2130,12 +2130,14 @@ async function openEdit(staffId){
       // Role + Team Leader
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Role</div>'
-      +'<select class="inp" id="ef-role"'+(p.id===req_staff_id?' disabled title="Cannot change own role"':'')+'>'+
+      +'<select class="inp" id="ef-role">'+
         ['admin','editor','team_leader','staff'].map(function(r){
           var lbl={admin:'👑 Admin',editor:'✏️ Editor',team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
           return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
         }).join('')
-      +'</select></div>'
+      +'</select>'
+      +(p.id===req_staff_id?'<div style="font-size:9px;color:rgba(255,159,10,0.6);margin-top:3px;">⚠️ Changing your own role will take effect on next login</div>':'')
+      +'</div>'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Reports To (Team Leader)</div>'
       +'<select class="inp" id="ef-reports"><option value="">— None —</option>'
       +allStaff.filter(function(x){return x.id!==p.id;}).map(function(x){
@@ -2198,7 +2200,7 @@ async function saveEdit(){
     fd.append('address', addr.trim());
     var roleEl    = document.getElementById('ef-role');
     var reportsEl = document.getElementById('ef-reports');
-    if(roleEl && !roleEl.disabled) fd.append('role', roleEl.value);
+    if(roleEl && roleEl.value) fd.append('role', roleEl.value);   // always send role
     if(reportsEl) fd.append('reports_to', reportsEl.value||'');
     // Attach photo if selected
     var efPhoto = document.getElementById('ef-photo-input');
@@ -2210,8 +2212,8 @@ async function saveEdit(){
     if(d.success){
       closeEditBtn();
       showToast('✅ '+name+' updated successfully!');
-      loadStaffList();          // refresh immediately
-      setTimeout(loadStaffList, 1500); // and again after 1.5s to catch any lag
+      loadStaffList();
+      loadAdminOverview();      // refresh admin overview so roles update there too
     } else {
       showToast('❌ '+(d.message||'Update failed'));
     }
