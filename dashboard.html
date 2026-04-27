@@ -1037,6 +1037,7 @@ textarea.inp{resize:none;}
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Type</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Late Mins</th>
             <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
+            <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Action</th>
           </tr>
         </thead>
         <tbody id="att-page-tbody">
@@ -3157,7 +3158,7 @@ async function loadAttendancePage(){
   if(subEl) subEl.textContent=isToday?"Today's full log":'Attendance for '+dateEl.value;
 
   var tbody=document.getElementById('att-page-tbody');
-  if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
+  if(tbody) tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
 
   try{
     // Today uses /today endpoint (all staff with LEFT JOIN), other dates use /my pattern per staff
@@ -3183,7 +3184,7 @@ async function loadAttendancePage(){
     setEl('ats-late',cnt.late); setEl('ats-pending',cnt.pending); setEl('ats-leave',cnt.leave);
 
     if(!rows.length){
-      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
+      tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
       return;
     }
 
@@ -3211,12 +3212,30 @@ async function loadAttendancePage(){
         +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':'—')+'</td>'
         +'<td style="'+td+'text-align:center;font-size:12px;color:'+(r.late_minutes>0?'#FF9F0A':'var(--muted)')+';">'+(r.late_minutes>0?r.late_minutes+' min':'—')+'</td>'
         +'<td style="'+td+'text-align:center;padding-right:14px;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
+        +'<td style="'+td+'text-align:center;padding-right:14px;">'
+          +(r.check_in && !r.check_out
+            ? '<button onclick="manualCheckout('+r.id+',\''+r.name+'\',\''+dateEl.value+'\')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);color:#FF453A;border-radius:7px;padding:4px 10px;font-size:10px;cursor:pointer;white-space:nowrap;">⏹ Clock Out</button>'
+            : '<span style="color:rgba(255,255,255,0.15);font-size:11px;">—</span>')
+        +'</td>'
         +'</tr>';
     }).join('');
   } catch(e){
     if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#FF453A;">Error loading attendance</td></tr>';
     console.error('loadAttendancePage:',e);
   }
+}
+
+async function manualCheckout(staffId, staffName, date){
+  if(!confirm(staffName+' ஐ இப்போது clock out பண்ணணுமா?')) return;
+  try{
+    var res=await fetch(API+'/api/attendance/manual-checkout',{
+      method:'POST', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({staff_id:staffId, date:date})
+    });
+    var d=await res.json();
+    if(d.success){ showToast(staffName+' clocked out ✓'); loadAttendancePage(); }
+    else showToast(d.message||'Error','error');
+  }catch(e){ showToast('Server error','error'); }
 }
 
 /* ── HOOK: load data when page shown ── */
