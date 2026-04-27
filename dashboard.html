@@ -392,6 +392,27 @@ textarea.inp{resize:none;}
           </div>
         </div>
 
+        <!-- Auto Clock-Out -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">🕐 Auto Clock-Out</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;">
+              <div>
+                <div style="font-size:13px;font-weight:500;">Enable Auto Clock-Out</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;">Staff auto checkout at set time if not done manually</div>
+              </div>
+              <div class="tg" id="tg-auto-checkout" onclick="gpsToggle('auto-checkout')"><div class="tg-th"></div></div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Auto Clock-Out Time</div>
+              <input class="inp" type="time" id="gps-auto-checkout-time" value="19:00">
+              <div style="font-size:11px;color:rgba(255,159,10,0.7);margin-top:7px;background:rgba(255,159,10,0.07);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:8px 10px;">
+                ⚠️ Staff who haven't checked out by this time will be auto clocked out
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Live Radius Preview -->
         <div class="sec g">
           <div class="sh"><span class="st">🗺️ Radius Preview</span><span style="font-size:12px;color:var(--muted);" id="gps-rad-display">300m</span></div>
@@ -1900,11 +1921,13 @@ async function loadGPSSettings(){
     set('gps-grace-inp',   s.late_grace_minutes||15);
     set('gps-grace-slider',s.late_grace_minutes||15);
     set('gps-halfday',     s.half_day_hours||4);
+    set('gps-auto-checkout-time', s.auto_checkout_time||'19:00');
     // Toggles
     gpsSetToggle('office',   s.allow_office!==0);
     gpsSetToggle('site',     s.allow_site!==0);
     gpsSetToggle('approval', s.require_approval!==0);
     gpsSetToggle('capture',  s.capture_gps!==0);
+    gpsSetToggle('auto-checkout', s.auto_checkout_enabled==1);
     // Update displays
     updateGPSRadiusDisplay(s.radius||300);
     updateGracePreview();
@@ -2024,9 +2047,11 @@ async function saveGPS(){
     allow_site:         tgOn('site'),
     require_approval:   tgOn('approval'),
     capture_gps:        tgOn('capture'),
-    office_start_time:  get('gps-start-time')||'09:00',
-    late_grace_minutes: parseInt(get('gps-grace-inp'))||15,
-    half_day_hours:     parseInt(get('gps-halfday'))||4
+    office_start_time:    get('gps-start-time')||'09:00',
+    late_grace_minutes:   parseInt(get('gps-grace-inp'))||15,
+    half_day_hours:       parseInt(get('gps-halfday'))||4,
+    auto_checkout_enabled: tgOn('auto-checkout'),
+    auto_checkout_time:   get('gps-auto-checkout-time')||'19:00'
   };
   if(!body.office_name){ showToast('⚠️ Office name required'); return; }
   try{
