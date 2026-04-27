@@ -1434,8 +1434,12 @@ textarea.inp{resize:none;}
       </div>
       <!-- Avatar + Info -->
       <div style="display:flex;align-items:center;gap:13px;">
-        <div style="position:relative;">
-          <div id="pp-avatar" style="width:56px;height:56px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;flex-shrink:0;overflow:hidden;"></div>
+        <div style="position:relative;cursor:pointer;flex-shrink:0;" onclick="document.getElementById('pp-photo-input').click()" title="Change photo">
+          <div id="pp-avatar" style="width:56px;height:56px;background:linear-gradient(145deg,rgba(10,132,255,0.8),rgba(10,60,180,0.9));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;overflow:hidden;"></div>
+          <div style="position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;background:#0A84FF;border-radius:50%;border:2px solid #0A0A16;display:flex;align-items:center;justify-content:center;">
+            <svg width="9" height="9" viewBox="0 0 12 11" fill="none"><path d="M4.5 1.5h3l1 1.5h2a.5.5 0 01.5.5v6a.5.5 0 01-.5.5h-9a.5.5 0 01-.5-.5v-6a.5.5 0 01.5-.5h2l1-1.5z" stroke="#fff" stroke-width="1" stroke-linejoin="round"/><circle cx="6" cy="6.5" r="1.5" stroke="#fff" stroke-width="1"/></svg>
+          </div>
+          <input type="file" id="pp-photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="ppPhotoPreview(this)">
         </div>
         <div>
           <div id="pp-name" style="font-size:15px;font-weight:500;color:#fff;"></div>
@@ -1451,16 +1455,8 @@ textarea.inp{resize:none;}
     </div>
     <!-- Edit Profile Tab -->
     <div id="pp-tab-info-content" style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:11px;">
-      <!-- Photo upload -->
-      <input type="file" id="pp-photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="ppPhotoPreview(this)">
-      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border:0.5px dashed rgba(255,255,255,0.15);border-radius:12px;cursor:pointer;" onclick="document.getElementById('pp-photo-input').click()">
-        <div id="pp-photo-preview" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(10,60,180,0.7));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;overflow:hidden;flex-shrink:0;"></div>
-        <div>
-          <div style="font-size:12px;font-weight:500;color:#fff;">Profile Photo</div>
-          <div id="pp-photo-label" style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:2px;">Tap to upload · JPG or PNG</div>
-        </div>
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="margin-left:auto;opacity:0.4;"><path d="M8 2v10M3 7l5-5 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <!-- Photo hint -->
+      <div id="pp-photo-label" style="display:none;font-size:11px;color:rgba(10,132,255,0.8);text-align:center;margin-bottom:-4px;">📷 Photo selected — click Save Changes to upload</div>
       <div>
         <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Employee ID</div>
         <input id="pp-edit-empid" class="inp" type="text" placeholder="e.g. ZC-DOT-001" style="font-family:'DM Mono',monospace;font-size:13px;text-transform:uppercase;">
@@ -3488,22 +3484,14 @@ function openProfilePanel(){
   var ei = document.getElementById('pp-empid');
   if(av){
     if(staff.photo_url){
-      av.innerHTML = '<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
+      av.innerHTML = '<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
     } else {
       av.innerHTML = ''; av.textContent = init;
     }
   }
-  if(pr){
-    if(staff.photo_url){
-      pr.innerHTML = '<img src="'+API+staff.photo_url+'" style="width:100%;height:100%;object-fit:cover;">';
-    } else {
-      pr.innerHTML = ''; pr.textContent = init;
-    }
-  }
-  // Reset photo input
+  // Reset photo input & hint label
   var pi = document.getElementById('pp-photo-input'); if(pi) pi.value='';
-  var pl = document.getElementById('pp-photo-label'); if(pl) pl.textContent = 'Tap to upload · JPG or PNG';
-  if(av) av.textContent = staff.photo_url ? '' : init;
+  var pl = document.getElementById('pp-photo-label'); if(pl) pl.style.display='none';
   if(nm) nm.textContent = staff.name||'Admin';
   if(rl) rl.textContent = (staff.role==='admin'?'👑 Admin':staff.role==='editor'?'✏️ Editor':staff.role||'Admin')
                         + (staff.designation ? ' · '+staff.designation : '');
@@ -3561,16 +3549,12 @@ function ppPhotoPreview(input){
   if(file.size > 5*1024*1024){ showToast('⚠️ Photo must be under 5MB'); input.value=''; return; }
   var reader = new FileReader();
   reader.onload = function(e){
-    var pr = document.getElementById('pp-photo-preview');
     var av = document.getElementById('pp-avatar');
-    var imgHtml = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">';
-    if(pr){ pr.innerHTML = imgHtml; }
+    var imgHtml = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
     if(av){ av.innerHTML = imgHtml; }
-    // Update sidebar avatar preview
-    var sbA = document.getElementById('sb-avatar');
-    if(sbA){ sbA.innerHTML = imgHtml; sbA.style.overflow='hidden'; }
+    // Show hint label
     var lbl = document.getElementById('pp-photo-label');
-    if(lbl) lbl.textContent = '✓ '+file.name;
+    if(lbl){ lbl.style.display='block'; }
   };
   reader.readAsDataURL(file);
 }
@@ -3651,11 +3635,9 @@ async function saveProfileInfo(){
           sbA.textContent = name.trim().charAt(0).toUpperCase();
         }
       }
-      // Update panel header
+      // Update panel header name
       var ppN = document.getElementById('pp-name');
-      var ppA = document.getElementById('pp-avatar');
       if(ppN) ppN.textContent = name.trim();
-      if(ppA && !staff.photo_url) ppA.textContent = name.trim().charAt(0).toUpperCase();
       showToast('✅ Profile updated successfully!');
       closeProfilePanel();
     } else {
