@@ -161,7 +161,7 @@ textarea.inp{resize:none;}
     <div class="nl">Main</div>
     <div class="ni active" onclick="showPage('dashboard',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>Dashboard</div>
     <div class="ni" onclick="showPage('attendance',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Attendance</div>
-    <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Staff</div>
+    <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Team</div>
     <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span id="approvals-badge" style="display:none;background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('payroll',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.3"/></svg>Payroll</div>
@@ -485,82 +485,11 @@ textarea.inp{resize:none;}
   <!-- ── STAFF (with Edit) ── -->
   <div id="page-staff" class="page">
     <div class="topbar">
-      <div><div class="ptitle">Staff</div><div class="psub" id="staff-count">Loading…</div></div>
-      <div style="display:flex;gap:10px;"><button class="btn-g">Export</button><button class="btn" onclick="openAdd()">+ Add Staff</button></div>
+      <div><div class="ptitle">Team</div><div class="psub" id="staff-count">Loading…</div></div>
+      <div style="display:flex;gap:10px;"><button class="btn-g">Export</button><button class="btn" onclick="openAdd()">+ Add Member</button></div>
     </div>
-    <div id="staff-list-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-      <!-- Staff cards loaded dynamically via loadStaffList() -->
-      <div class="sec g" style="display:none;padding:0;overflow:hidden;" onclick="openEdit('arjun')">
-        <div style="padding:16px 16px 12px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
-            <div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.3);display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:18px;font-weight:500;flex-shrink:0;cursor:pointer;" onclick="event.stopPropagation();openEdit('arjun')">
-              AK
-              <div style="position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;background:rgba(10,132,255,0.85);border-radius:50%;border:2px solid rgba(5,5,14,0.9);display:flex;align-items:center;justify-content:center;">
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M1 9l2-2 6-6 2 2-6 6-2 2-2-2Z" stroke="white" stroke-width="1.2"/></svg>
-              </div>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:14px;font-weight:500;">Arjun Kumar</div>
-              <div style="font-size:12px;color:var(--muted);font-weight:300;margin-top:2px;">Senior Designer</div>
-              <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#FF9F0A;"></div><span style="font-size:11px;color:var(--muted);">DOT Advertising</span></div>
-            </div>
-            <span class="pg">Present</span>
-          </div>
-          <div style="height:0.5px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;align-items:center;gap:7px;"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 2h2.5l1 3-1.5 1a8 8 0 003 3l1-1.5 3 1V11a1.5 1.5 0 01-1.5 1.5C5.5 12.5 1.5 8.5 1.5 3.5A1.5 1.5 0 013 2Z" stroke="#30D158" stroke-width="1.2"/></svg><span style="font-size:12px;color:var(--muted);">+91 98432 10001</span></div>
-            <div style="display:flex;align-items:center;gap:7px;"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 3h10v8H2z" stroke="#0A84FF" stroke-width="1.2" rx="1"/><path d="M2 5l5 3.5L12 5" stroke="#0A84FF" stroke-width="1.2"/></svg><span style="font-size:11px;color:var(--muted);">arjun@dotad.agency</span></div>
-          </div>
-        </div>
-        <div style="padding:10px 16px;border-top:0.5px solid rgba(255,255,255,0.05);display:flex;gap:7px;">
-          <button class="btn" style="flex:1;font-size:12px;padding:7px;border-radius:9px;" onclick="event.stopPropagation();openEdit('arjun')">✏️ Edit Profile</button>
-          <button class="btn-g" style="font-size:12px;padding:7px 12px;border-radius:9px;" onclick="event.stopPropagation();">Salary</button>
-        </div>
-      </div>
-
-      <div class="sec g" style="display:none;padding:0;overflow:hidden;" onclick="openEdit('priya')">
-        <div style="padding:16px 16px 12px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
-            <div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,#2E1A4A,#1A0D30);border:1.5px solid rgba(191,159,255,0.3);display:flex;align-items:center;justify-content:center;color:#BF9FFF;font-size:18px;font-weight:500;flex-shrink:0;cursor:pointer;">
-              PS
-              <div style="position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;background:rgba(10,132,255,0.85);border-radius:50%;border:2px solid rgba(5,5,14,0.9);display:flex;align-items:center;justify-content:center;"><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M1 9l2-2 6-6 2 2-6 6-2 2-2-2Z" stroke="white" stroke-width="1.2"/></svg></div>
-            </div>
-            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Priya Suresh</div><div style="font-size:12px;color:var(--muted);font-weight:300;margin-top:2px;">Videographer</div><div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#BF5FFF;"></div><span style="font-size:11px;color:var(--muted);">Zeebas Studios</span></div></div>
-            <span class="pg">Present</span>
-          </div>
-          <div style="height:0.5px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;align-items:center;gap:7px;"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 2h2.5l1 3-1.5 1a8 8 0 003 3l1-1.5 3 1V11a1.5 1.5 0 01-1.5 1.5C5.5 12.5 1.5 8.5 1.5 3.5A1.5 1.5 0 013 2Z" stroke="#30D158" stroke-width="1.2"/></svg><span style="font-size:12px;color:var(--muted);">+91 97890 22334</span></div>
-            <div style="display:flex;align-items:center;gap:7px;"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 3h10v8H2z" stroke="#0A84FF" stroke-width="1.2" rx="1"/><path d="M2 5l5 3.5L12 5" stroke="#0A84FF" stroke-width="1.2"/></svg><span style="font-size:11px;color:var(--muted);">priya@zeebasstudios.com</span></div>
-          </div>
-        </div>
-        <div style="padding:10px 16px;border-top:0.5px solid rgba(255,255,255,0.05);display:flex;gap:7px;">
-          <button class="btn" style="flex:1;font-size:12px;padding:7px;border-radius:9px;" onclick="event.stopPropagation();openEdit('priya')">✏️ Edit Profile</button>
-          <button class="btn-g" style="font-size:12px;padding:7px 12px;border-radius:9px;" onclick="event.stopPropagation();">Salary</button>
-        </div>
-      </div>
-
-      <div class="sec g" style="display:none;padding:0;overflow:hidden;">
-        <div style="padding:16px 16px 12px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
-            <div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,#3A2210,#1E0E00);border:1.5px solid rgba(255,159,10,0.3);display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-size:18px;font-weight:500;flex-shrink:0;">
-              RM
-              <div style="position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;background:rgba(10,132,255,0.85);border-radius:50%;border:2px solid rgba(5,5,14,0.9);display:flex;align-items:center;justify-content:center;"><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M1 9l2-2 6-6 2 2-6 6-2 2-2-2Z" stroke="white" stroke-width="1.2"/></svg></div>
-            </div>
-            <div style="flex:1;"><div style="font-size:14px;font-weight:500;">Rahul M</div><div style="font-size:12px;color:var(--muted);font-weight:300;margin-top:2px;">Live Stream Operator</div><div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#FF453A;"></div><span style="font-size:11px;color:var(--muted);">LIVE Hero</span></div></div>
-            <span class="pp">Onsite</span>
-          </div>
-          <div style="height:0.5px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;align-items:center;gap:7px;"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 2h2.5l1 3-1.5 1a8 8 0 003 3l1-1.5 3 1V11a1.5 1.5 0 01-1.5 1.5C5.5 12.5 1.5 8.5 1.5 3.5A1.5 1.5 0 013 2Z" stroke="#30D158" stroke-width="1.2"/></svg><span style="font-size:12px;color:var(--muted);">+91 96001 45678</span></div>
-            <div style="display:flex;align-items:center;gap:7px;"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 3h10v8H2z" stroke="#0A84FF" stroke-width="1.2" rx="1"/><path d="M2 5l5 3.5L12 5" stroke="#0A84FF" stroke-width="1.2"/></svg><span style="font-size:11px;color:var(--muted);">rahul@livehero.in</span></div>
-          </div>
-        </div>
-        <div style="padding:10px 16px;border-top:0.5px solid rgba(255,255,255,0.05);display:flex;gap:7px;">
-          <button class="btn" style="flex:1;font-size:12px;padding:7px;border-radius:9px;" onclick="openEdit('rahul')">✏️ Edit Profile</button>
-          <button class="btn-g" style="font-size:12px;padding:7px 12px;border-radius:9px;">Salary</button>
-        </div>
-      </div>
+    <div class="sec g" style="padding:0;overflow:hidden;">
+      <div id="staff-list-grid"></div>
     </div>
   </div>
 
@@ -3012,68 +2941,53 @@ async function loadStaffList(retryCount){
 
   // Show only non-admin roles in Staff page (admins → Admin Overview page)
   var staff = (d.data || []).filter(function(s){ return s.role !== 'admin' && s.role !== 'editor'; });
-    if(cnt) cnt.textContent = staff.length+' members · click a card to edit';
-    if(!staff.length){
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No staff added yet. Click + Add Staff</div>';
-      return;
-    }
-    // Role display config
-    var ROLE_COLOR = {admin:'#FF453A',editor:'#FF9F0A',team_leader:'#0A84FF',staff:'#636366'};
-    var ROLE_LABEL = {admin:'Admin',editor:'Editor',team_leader:'Team Leader',staff:'Staff'};
+  if(cnt) cnt.textContent = staff.length+' members · click a row to edit';
+  if(!staff.length){
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No team members yet. Click + Add Member</div>';
+    return;
+  }
 
-    grid.innerHTML = staff.map(function(s){
-      var words = (s.name||'?').trim().split(/\s+/);
-      var init  = words.length >= 2
-        ? (words[0][0]||'').toUpperCase()+(words[1][0]||'').toUpperCase()
-        : (s.name||'?').substring(0,2).toUpperCase();
+  var ROLE_COLOR = {admin:'#FF453A',editor:'#FF9F0A',team_leader:'#0A84FF',staff:'#636366'};
+  var ROLE_LABEL = {admin:'Admin',editor:'Editor',team_leader:'Team Leader',staff:'Staff'};
 
-      var hasRecord   = !!s.today_status;
-      var status      = s.today_status || '';
-      var statusColor = status==='present'?'#30D158':status==='late'?'#FF9F0A':status==='leave'?'#0A84FF':status==='onsite'?'#BF5FFF':hasRecord?'#FF453A':'#636366';
-      var dotColor    = hasRecord ? statusColor : '#3A3A3C';
-      var statusLabel = status==='present'?'Present':status==='late'?'Late':status==='leave'?'On Leave':status==='onsite'?'Onsite':status==='absent'?'Absent':'—';
-      var checkin     = s.today_checkin ? (typeof s.today_checkin==='string'?s.today_checkin.substring(0,5):new Date(s.today_checkin).toTimeString().substring(0,5)) : '';
-      var brandColor  = s.brand_color || '#0A84FF';
-      var type        = s.employment_type==='full_time'?'Full Time':s.employment_type==='part_time'?'Part Time':'Daily Wage';
-      var roleKey     = s.role || 'staff';
-      var roleColor   = ROLE_COLOR[roleKey] || '#636366';
-      var roleLabel   = ROLE_LABEL[roleKey] || 'Staff';
-      var photoSrc1   = s.photo_data || (s.photo_url ? API+s.photo_url : null);
-      var avatarInner = photoSrc1
-        ? '<img src="'+photoSrc1+'" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" onerror="this.outerHTML=\''+init+'\'">'
-        : init;
+  grid.innerHTML = staff.map(function(s, i){
+    var words = (s.name||'?').trim().split(/\s+/);
+    var init  = words.length >= 2
+      ? (words[0][0]||'').toUpperCase()+(words[1][0]||'').toUpperCase()
+      : (s.name||'?').substring(0,2).toUpperCase();
 
-      return '<div class="sec g" style="padding:0;overflow:hidden;">'
-        +'<div style="padding:16px 16px 12px;cursor:pointer;" onclick="viewStaff('+s.id+')">'
-        +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">'
-        // Avatar
-        +'<div style="position:relative;width:52px;height:52px;border-radius:15px;background:linear-gradient(145deg,'+brandColor+'22,'+brandColor+'44);border:1.5px solid '+brandColor+'44;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:'+brandColor+';flex-shrink:0;overflow:hidden;">'+avatarInner
-        +'<div style="position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;background:'+dotColor+';border-radius:50%;border:2px solid #0D0D0F;"></div>'
-        +'</div>'
-        // Info
-        +'<div style="flex:1;min-width:0;">'
-        +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">'
-        +'<div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(s.name)+'</div>'
-        +'<span style="font-size:9px;padding:2px 7px;border-radius:999px;background:'+roleColor+'18;color:'+roleColor+';border:0.5px solid '+roleColor+'44;white-space:nowrap;">'+roleLabel+'</span>'
-        +'</div>'
-        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(s.designation||'Staff')+'</div>'
-        +'<div style="display:flex;align-items:center;gap:5px;margin-top:4px;">'
-        +'<div style="width:6px;height:6px;border-radius:50%;background:'+brandColor+';"></div>'
-        +'<span style="font-size:11px;color:var(--muted);">'+(s.brand_name||'—')+'</span>'
-        +(s.team_leader_name?'<span style="font-size:10px;color:rgba(245,245,247,0.25);">· TL: '+escHtml(s.team_leader_name)+'</span>':'')
-        +'</div>'
-        +'</div>'
-        // Quick remove button
-        +'<button onclick="event.stopPropagation();quickRemoveStaff('+s.id+',\''+escHtml(s.name)+'\')" title="Remove staff" style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;width:28px;height:28px;color:rgba(255,69,58,0.6);cursor:pointer;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">×</button>'
-        +'</div>'
-        +'</div>'
-        +'<div style="height:0.5px;background:rgba(255,255,255,0.06);margin:0 16px;"></div>'
-        +'<div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">'
-        +'<span style="font-size:11px;color:var(--muted);">'+type+(checkin?' · ✓'+checkin:'')+'</span>'
-        +'<span style="font-size:11px;padding:3px 9px;border-radius:999px;background:'+statusColor+'22;color:'+statusColor+';border:0.5px solid '+statusColor+'44;">'+statusLabel+'</span>'
-        +'</div>'
-        +'</div>';
-    }).join('');
+    var status      = s.today_status || '';
+    var statusColor = status==='present'?'#30D158':status==='late'?'#FF9F0A':status==='leave'?'#0A84FF':status==='onsite'?'#BF5FFF':status==='absent'?'#FF453A':'#636366';
+    var statusLabel = status==='present'?'Present':status==='late'?'Late':status==='leave'?'On Leave':status==='onsite'?'Onsite':status==='absent'?'Absent':'—';
+    var brandColor  = s.brand_color || '#0A84FF';
+    var roleKey     = s.role || 'staff';
+    var roleColor   = ROLE_COLOR[roleKey] || '#636366';
+    var roleLabel   = ROLE_LABEL[roleKey] || 'Staff';
+    var photoSrc1   = s.photo_data || (s.photo_url ? API+s.photo_url : null);
+    var avatar = photoSrc1
+      ? '<img src="'+photoSrc1+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,'+brandColor+'33,'+brandColor+'66);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:'+brandColor+';flex-shrink:0;">'+init+'</div>';
+    var border = i < staff.length-1 ? 'border-bottom:0.5px solid rgba(255,255,255,0.05);' : '';
+
+    return '<div onclick="viewStaff('+s.id+')" style="display:flex;align-items:center;gap:14px;padding:12px 16px;cursor:pointer;'+border+'transition:background 0.15s;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
+      // Avatar
+      + avatar
+      // Name + designation + brand
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(s.name)+'</span>'
+      +'<span style="font-size:9px;padding:2px 7px;border-radius:999px;background:'+roleColor+'18;color:'+roleColor+';border:0.5px solid '+roleColor+'44;flex-shrink:0;">'+roleLabel+'</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.designation||'')+'<span style="margin:0 5px;opacity:0.3;">·</span>'
+      +'<span style="color:'+brandColor+';opacity:0.8;">'+(s.brand_name||'—')+'</span>'
+      +'</div>'
+      +'</div>'
+      // Status badge
+      +'<span style="font-size:10px;padding:3px 10px;border-radius:999px;background:'+statusColor+'18;color:'+statusColor+';border:0.5px solid '+statusColor+'33;white-space:nowrap;flex-shrink:0;">'+statusLabel+'</span>'
+      // Edit button
+      +'<button onclick="event.stopPropagation();quickRemoveStaff('+s.id+',\''+escHtml(s.name)+'\')" title="Remove" style="background:transparent;border:none;color:rgba(255,69,58,0.4);cursor:pointer;font-size:16px;padding:4px 6px;flex-shrink:0;line-height:1;">×</button>'
+      +'</div>';
+  }).join('');
 }
 
 /* ── VIEW/EDIT STAFF ── */
