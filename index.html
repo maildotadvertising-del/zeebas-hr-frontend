@@ -392,7 +392,7 @@ select.inp option{background:#1A1A2E;color:#fff;}
               <div style="width:20px;height:20px;background:linear-gradient(145deg,#30D158,#20A040);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.25);box-shadow:0 3px 10px rgba(48,209,88,0.45);"></div>
             </div>
             <div style="position:absolute;bottom:8px;left:10px;font-size:9px;color:rgba(245,245,247,0.5);">Mayiladuthurai Office</div>
-            <div style="position:absolute;bottom:8px;right:10px;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.25);border-radius:8px;padding:2px 8px;font-size:9px;color:#30D158;">Within range ✓</div>
+            <div id="gps-range-badge" style="position:absolute;bottom:8px;right:10px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:2px 8px;font-size:9px;color:rgba(245,245,247,0.5);">⏳ Locating…</div>
           </div>
         </div>
 
@@ -402,8 +402,8 @@ select.inp option{background:#1A1A2E;color:#fff;}
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="#30D158" stroke-width="1.3"/><path d="M8 1v1M8 14v1M1 8h1M14 8h1M3.5 3.5l.7.7M11.8 11.8l.7.7M3.5 12.5l.7-.7M11.8 4.2l.7-.7" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
           <div style="flex:1;">
-            <div style="color:#30D158;font-size:11px;font-weight:500;">GPS Located</div>
-            <div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;">11.1085° N, 79.6478° E · 142m from office</div>
+            <div id="gps-status-label" style="color:#30D158;font-size:11px;font-weight:500;">Detecting location…</div>
+            <div id="gps-loc-text" style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;">—</div>
           </div>
         </div>
 
@@ -504,9 +504,9 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <div style="color:#fff;font-size:18px;font-weight:500;margin-bottom:4px;">Attendance Marked!</div>
         <div style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;" id="att-msg">Office attendance — 9:02 AM</div>
         <div class="gs" style="padding:12px;margin-bottom:14px;text-align:left;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Status</span><span class="pg">Present ✓</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Location</span><span style="color:#fff;font-size:11px;">11.1085°N 79.6478°E</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Distance</span><span style="color:#30D158;font-size:11px;">142m from office</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Status</span><span id="att-status-badge" style="background:rgba(48,209,88,0.18);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;padding:2px 9px;font-size:11px;font-weight:500;">Present ✓</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Location</span><span id="att-loc-line" style="color:#fff;font-size:11px;">—</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Distance</span><span id="att-dist-line" style="color:#30D158;font-size:11px;">—</span></div>
         </div>
         <button class="btn-p" onclick="go1('s1-home')">Back to Home</button>
       </div>
@@ -841,6 +841,12 @@ function go1(id){
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
   if(id==='s1-chat'){var m=document.getElementById('msgs1');if(m)setTimeout(function(){m.scrollTop=m.scrollHeight;},80);}
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
+  if(id==='s1-gps'){
+    var btn=document.getElementById('att-btn');
+    if(btn){ btn.disabled=false; btn.textContent='Mark Office Attendance'; }
+    selAtt(0);
+    setTimeout(initGPSScreen, 200);
+  }
 }
 
 function go2(id){
@@ -857,6 +863,75 @@ function go2(id){
 function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;['c1','c2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});}tick();setInterval(tick,1000);
 
 // GPS Attendance
+var myLat = null, myLng = null, gpsOfficeLat = null, gpsOfficeLng = null, gpsRadius = 300;
+
+function gpsHaversine(lat1,lon1,lat2,lon2){
+  var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+}
+
+async function initGPSScreen(){
+  // Load office GPS settings
+  try{
+    var r=await fetch(API_URL+'/api/settings/gps',{headers:zHead()});
+    var d=await r.json();
+    if(d.success&&d.data){
+      gpsOfficeLat=parseFloat(d.data.latitude)||null;
+      gpsOfficeLng=parseFloat(d.data.longitude)||null;
+      gpsRadius=parseInt(d.data.radius)||300;
+      var oname=d.data.office_name||'Office';
+      var onEl=document.querySelector('#s1-gps [style*="bottom:8px;left:10px"]');
+      if(onEl) onEl.textContent=oname;
+    }
+  } catch(e){}
+
+  var lblEl=document.getElementById('gps-status-label');
+  var locEl=document.getElementById('gps-loc-text');
+  var badgeEl=document.getElementById('gps-range-badge');
+
+  if(!navigator.geolocation){
+    if(lblEl){lblEl.textContent='GPS Unavailable';lblEl.style.color='#FF453A';}
+    if(locEl) locEl.textContent='This device does not support GPS';
+    if(badgeEl){badgeEl.textContent='No GPS';badgeEl.style.color='#FF453A';}
+    return;
+  }
+
+  if(lblEl){lblEl.textContent='Detecting location…';lblEl.style.color='rgba(245,245,247,0.5)';}
+  if(locEl) locEl.textContent='Please wait…';
+  if(badgeEl){badgeEl.textContent='⏳ Locating…';badgeEl.style.color='rgba(245,245,247,0.5)';badgeEl.style.background='rgba(255,255,255,0.07)';badgeEl.style.borderColor='rgba(255,255,255,0.12)';}
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      myLat=pos.coords.latitude; myLng=pos.coords.longitude;
+      if(locEl) locEl.textContent=myLat.toFixed(5)+'° N, '+myLng.toFixed(5)+'° E';
+
+      if(gpsOfficeLat&&gpsOfficeLng){
+        var dist=gpsHaversine(myLat,myLng,gpsOfficeLat,gpsOfficeLng);
+        var inRange=dist<=gpsRadius;
+        if(lblEl){lblEl.textContent=inRange?'GPS Located':'Out of Range';lblEl.style.color=inRange?'#30D158':'#FF453A';}
+        if(locEl) locEl.textContent=myLat.toFixed(5)+'° N, '+myLng.toFixed(5)+'° E · '+dist+'m';
+        if(badgeEl){
+          badgeEl.textContent=inRange?'Within range ✓':dist+'m — Out of range ✗';
+          badgeEl.style.color=inRange?'#30D158':'#FF453A';
+          badgeEl.style.background=inRange?'rgba(48,209,88,0.15)':'rgba(255,69,58,0.15)';
+          badgeEl.style.borderColor=inRange?'rgba(48,209,88,0.3)':'rgba(255,69,58,0.3)';
+        }
+      } else {
+        if(lblEl){lblEl.textContent='GPS Located';lblEl.style.color='#30D158';}
+        if(badgeEl){badgeEl.textContent='Detected ✓';badgeEl.style.color='#30D158';badgeEl.style.background='rgba(48,209,88,0.15)';}
+      }
+    },
+    function(err){
+      myLat=null; myLng=null;
+      if(lblEl){lblEl.textContent='Location Access Denied';lblEl.style.color='#FF453A';}
+      if(locEl) locEl.textContent='Allow location permission and try again';
+      if(badgeEl){badgeEl.textContent='GPS Error';badgeEl.style.color='#FF453A';badgeEl.style.background='rgba(255,69,58,0.12)';}
+    },
+    {enableHighAccuracy:true, timeout:12000, maximumAge:30000}
+  );
+}
+
 function selAtt(idx){
   var opts=document.querySelectorAll('#att-type > div');
   opts.forEach(function(o,i){
@@ -869,12 +944,85 @@ function selAtt(idx){
   else{note.style.display='none';btn.textContent='Mark Office Attendance';}
 }
 
-function markAttendance(){
-  var isOnsite=document.getElementById('att-btn').textContent.includes('Onsite');
-  var m=document.getElementById('att-msg');
-  if(isOnsite){m.textContent='Onsite attendance submitted — pending admin approval';}
-  else{var d=new Date(),h=d.getHours(),mn=d.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;m.textContent='Office attendance — '+(h+':'+(mn<10?'0':'')+mn+' '+a);}
-  go1('s1-attsuccess');
+async function markAttendance(){
+  var btn=document.getElementById('att-btn');
+  var isOnsite=btn.textContent.includes('Onsite');
+  var type=isOnsite?'onsite':'office';
+  var siteName=((document.getElementById('site-name')||{}).value||'').trim();
+
+  if(isOnsite&&!siteName){
+    alert('Please enter the site / client name first');
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='⏳ Marking attendance…';
+
+  try{
+    var body={type:type};
+    if(siteName) body.site_name=siteName;
+    if(myLat!==null) body.lat=myLat;
+    if(myLng!==null) body.lng=myLng;
+
+    var res=await fetch(API_URL+'/api/attendance/checkin',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},zHead()),
+      body:JSON.stringify(body)
+    });
+    var d=await res.json();
+
+    if(!d.success){
+      btn.disabled=false;
+      btn.textContent=isOnsite?'Submit Onsite Attendance':'Mark Office Attendance';
+      alert(d.message||'Check-in failed. Please try again.');
+      return;
+    }
+
+    // Update home screen check-in time
+    var now=new Date(),h=now.getHours(),mn=now.getMinutes(),am=h>=12?'PM':'AM';
+    h=h%12||12;
+    var timeStr=h+':'+(mn<10?'0':'')+mn+' '+am;
+    var ciEl=document.getElementById('s1-checkin');
+    if(ciEl) ciEl.textContent=timeStr;
+
+    // Update success screen message
+    var msgEl=document.getElementById('att-msg');
+    if(msgEl) msgEl.textContent=d.message||(isOnsite?'Onsite attendance submitted':'Office attendance recorded — '+timeStr);
+
+    // Update success screen status badge
+    var st=d.status||'present';
+    var stEl=document.getElementById('att-status-badge');
+    if(stEl){
+      if(st==='late_pending'){
+        stEl.textContent='⏳ Late — Pending Approval';
+        stEl.style.background='rgba(255,159,10,0.18)';
+        stEl.style.color='#FF9F0A';
+        stEl.style.borderColor='rgba(255,159,10,0.3)';
+      } else if(st==='onsite_pending'){
+        stEl.textContent='⏳ Pending Admin Approval';
+        stEl.style.background='rgba(191,95,255,0.18)';
+        stEl.style.color='#BF5FFF';
+        stEl.style.borderColor='rgba(191,95,255,0.3)';
+      } else {
+        stEl.textContent='Present ✓';
+        stEl.style.background='rgba(48,209,88,0.18)';
+        stEl.style.color='#30D158';
+        stEl.style.borderColor='rgba(48,209,88,0.3)';
+      }
+    }
+
+    // Update location & distance
+    var locEl=document.getElementById('att-loc-line');
+    if(locEl) locEl.textContent=myLat?myLat.toFixed(5)+'°N, '+myLng.toFixed(5)+'°E':'—';
+    var distEl=document.getElementById('att-dist-line');
+    if(distEl) distEl.textContent=d.distance?d.distance+'m from office':(isOnsite?'Onsite location':'—');
+
+    go1('s1-attsuccess');
+  } catch(e){
+    btn.disabled=false;
+    btn.textContent=isOnsite?'Submit Onsite Attendance':'Mark Office Attendance';
+    alert('Network error. Check connection and try again.');
+  }
 }
 
 // Leave

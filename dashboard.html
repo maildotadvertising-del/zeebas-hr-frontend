@@ -986,8 +986,42 @@ textarea.inp{resize:none;}
 
   <!-- ── ATTENDANCE ── -->
   <div id="page-attendance" class="page">
-    <div class="topbar"><div><div class="ptitle">Attendance</div><div class="psub">Full log with GPS & onsite records</div></div><div style="display:flex;gap:10px;"><button class="btn-g">Export PDF</button><button class="btn-g">Export Excel</button></div></div>
-    <div class="sec g"><div style="color:var(--muted);font-size:13px;">Full attendance records with office / onsite / leave breakdown — all approval statuses visible here.</div></div>
+    <div class="topbar">
+      <div><div class="ptitle">Attendance</div><div class="psub" id="att-page-sub">Today's full log</div></div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="date" id="att-filter-date" class="inp" style="width:148px;font-size:12px;" onchange="loadAttendancePage()">
+        <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Summary strip -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;" id="att-summary-strip">
+      <div class="sec g" style="padding:12px;text-align:center;"><div style="font-size:20px;font-weight:600;color:#30D158;" id="ats-present">—</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">Present</div></div>
+      <div class="sec g" style="padding:12px;text-align:center;"><div style="font-size:20px;font-weight:600;color:#FF453A;" id="ats-absent">—</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">Absent</div></div>
+      <div class="sec g" style="padding:12px;text-align:center;"><div style="font-size:20px;font-weight:600;color:#FF9F0A;" id="ats-late">—</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">Late</div></div>
+      <div class="sec g" style="padding:12px;text-align:center;"><div style="font-size:20px;font-weight:600;color:#BF5FFF;" id="ats-pending">—</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">Pending</div></div>
+      <div class="sec g" style="padding:12px;text-align:center;"><div style="font-size:20px;font-weight:600;color:#0A84FF;" id="ats-leave">—</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">On Leave</div></div>
+    </div>
+
+    <!-- Attendance table -->
+    <div class="sec g" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.08);">
+            <th style="padding:11px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Staff</th>
+            <th style="padding:11px 10px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Brand</th>
+            <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check In</th>
+            <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check Out</th>
+            <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Type</th>
+            <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Late Mins</th>
+            <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="att-page-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ── TEAM CHAT ── -->
@@ -2859,43 +2893,53 @@ async function quickRemoveStaff(id, name){
   } catch(e){ showToast('❌ Server error'); }
 }
 
+/* ── FORMAT CHECK-IN TIME ── */
+function fmtTime(dt){
+  if(!dt) return '—';
+  var d=new Date(dt); if(isNaN(d.getTime())) return '—';
+  var h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';
+  h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+a;
+}
+
 /* ── LOAD DASHBOARD STATS ── */
 async function loadDashStats(){
   try{
-    var today = new Date().toISOString().slice(0,10);
-    var res = await fetch(API+'/api/attendance?date='+today, { headers: zHdr() });
+    var res = await fetch(API+'/api/attendance/today', { headers: zHdr() });
     var d = await res.json();
-    var rows = Array.isArray(d)?d:(d.data||d.records||[]);
-    var p=0,a=0,l=0,lv=0,o=0;
+    var rows = d.data || [];
+    var p=0,a=0,l=0,lp=0,op=0,lv=0;
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
-      if(st==='present')p++;
-      else if(st==='absent')a++;
-      else if(st==='late')l++;
-      else if(st==='leave')lv++;
-      else if(st==='onsite')o++;
+      if(st==='present'||st==='onsite_approved') p++;
+      else if(st==='late') { p++; l++; }
+      else if(st==='absent') a++;
+      else if(st==='on_leave') lv++;
+      else if(st==='late_pending') lp++;
+      else if(st==='onsite_pending') op++;
+      else a++; // no record = absent
     });
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-    set('dash-present',p);
-    set('dash-absent',a+l);
-    set('dash-late-sub',(a)+' absent · '+(l)+' late');
+    set('dash-present', p);
+    set('dash-absent',  a);
+    set('dash-late-sub', a+' absent · '+l+' late'+(lp+op>0?' · '+(lp+op)+' pending':''));
     var pc=document.getElementById('present-count');
-    if(pc) pc.textContent=(p+o)+' present in zone';
-    // Populate attendance table
+    if(pc) pc.textContent=p+' present today';
+
+    // Populate dashboard attendance table
     var tbody=document.getElementById('att-table-body');
     if(tbody){
       if(!rows.length){
-        tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">No attendance records today</td></tr>';
+        tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">No staff records found</td></tr>';
       } else {
         tbody.innerHTML=rows.map(function(r){
           var st=(r.status||'absent').toLowerCase();
-          var stCol=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='leave'?'#0A84FF':st==='onsite'?'#BF5FFF':'#FF453A';
-          var stLabel=st.charAt(0).toUpperCase()+st.slice(1);
-          var init=(r.staff_name||r.name||'?').charAt(0).toUpperCase();
-          var nm=(r.staff_name||r.name||'—');
-          var ci=r.check_in?(r.check_in+'').substring(0,5):'—';
-          var type=r.location_type||'Office';
-          return '<tr><td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:rgba(10,30,60,0.7);font-size:10px;">'+init+'</div>'+nm+'</div></td>'
+          var stCol=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='onsite_approved'?'#BF5FFF':st==='late_pending'?'#FF9F0A':st==='onsite_pending'?'#BF5FFF':st==='on_leave'?'#0A84FF':'#FF453A';
+          var stLabel={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'}[st]||(st.charAt(0).toUpperCase()+st.slice(1));
+          var init=(r.name||'?').charAt(0).toUpperCase();
+          var avatar=r.photo_url?'<img src="'+API+r.photo_url+'" style="width:26px;height:26px;border-radius:7px;object-fit:cover;">':'<div class="av" style="width:26px;height:26px;background:rgba(10,30,60,0.7);font-size:10px;">'+init+'</div>';
+          var ci=fmtTime(r.check_in);
+          var type=r.type==='onsite'?'Onsite':r.type==='office'?'Office':'—';
+          return '<tr><td><div style="display:flex;align-items:center;gap:7px;">'+avatar+(r.name||'—')+'</div></td>'
             +'<td class="mono">'+ci+'</td>'
             +'<td style="color:var(--muted);">'+type+'</td>'
             +'<td><span style="background:'+stCol+'22;color:'+stCol+';border:0.5px solid '+stCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;">'+stLabel+'</span></td></tr>';
@@ -2905,12 +2949,85 @@ async function loadDashStats(){
   } catch(e){ console.log('dash stats error',e); }
 }
 
+/* ── LOAD ATTENDANCE PAGE ── */
+async function loadAttendancePage(){
+  var dateEl=document.getElementById('att-filter-date');
+  var today=new Date().toISOString().slice(0,10);
+  if(!dateEl.value) dateEl.value=today;
+  var isToday=(dateEl.value===today);
+
+  var subEl=document.getElementById('att-page-sub');
+  if(subEl) subEl.textContent=isToday?"Today's full log":'Attendance for '+dateEl.value;
+
+  var tbody=document.getElementById('att-page-tbody');
+  if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
+
+  try{
+    // Today uses /today endpoint (all staff with LEFT JOIN), other dates use /my pattern per staff
+    var url = isToday ? API+'/api/attendance/today' : API+'/api/attendance/date?date='+dateEl.value;
+    var res=await fetch(url,{headers:zHdr()});
+    var d=await res.json();
+    var rows=d.data||[];
+
+    // Summary counts
+    var cnt={present:0,absent:0,late:0,pending:0,leave:0};
+    rows.forEach(function(r){
+      var st=(r.status||'').toLowerCase();
+      if(st==='present'||st==='onsite_approved') cnt.present++;
+      else if(st==='late'){ cnt.present++; cnt.late++; }
+      else if(st==='absent') cnt.absent++;
+      else if(st==='on_leave') cnt.leave++;
+      else if(st==='late_pending'||st==='onsite_pending') cnt.pending++;
+      else cnt.absent++;
+    });
+    var setEl=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+    setEl('ats-present',cnt.present); setEl('ats-absent',cnt.absent);
+    setEl('ats-late',cnt.late); setEl('ats-pending',cnt.pending); setEl('ats-leave',cnt.leave);
+
+    if(!rows.length){
+      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
+      return;
+    }
+
+    var stColors={'present':'#30D158','late':'#FF9F0A','absent':'#FF453A','on_leave':'#0A84FF',
+      'onsite_approved':'#BF5FFF','late_pending':'#FF9F0A','onsite_pending':'#BF5FFF'};
+    var stLabels={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave',
+      'onsite_approved':'Onsite ✓','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'};
+
+    tbody.innerHTML=rows.map(function(r,i){
+      var st=(r.status||'absent').toLowerCase();
+      var col=stColors[st]||'#FF453A';
+      var lbl=stLabels[st]||(st.charAt(0).toUpperCase()+st.slice(1));
+      var init=(r.name||'?').charAt(0).toUpperCase();
+      var avatar=r.photo_url?'<img src="'+API+r.photo_url+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#0A84FF22,#5E5CE622);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--muted);flex-shrink:0;">'+init+'</div>';
+      var bgRow=i%2===0?'transparent':'rgba(255,255,255,0.015)';
+      var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
+      return '<tr style="background:'+bgRow+';">'
+        +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
+          +'<div><div style="font-size:12px;font-weight:500;">'+r.name+'</div>'
+          +'<div style="font-size:10px;color:var(--muted);">'+r.designation+'</div></div></div></td>'
+        +'<td style="'+td+'font-size:11px;color:var(--muted);">'+(r.brand_name||'—')+'</td>'
+        +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
+        +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:var(--muted);">'+fmtTime(r.check_out)+'</td>'
+        +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':'—')+'</td>'
+        +'<td style="'+td+'text-align:center;font-size:12px;color:'+(r.late_minutes>0?'#FF9F0A':'var(--muted)')+';">'+(r.late_minutes>0?r.late_minutes+' min':'—')+'</td>'
+        +'<td style="'+td+'text-align:center;padding-right:14px;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
+        +'</tr>';
+    }).join('');
+  } catch(e){
+    if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#FF453A;">Error loading attendance</td></tr>';
+    console.error('loadAttendancePage:',e);
+  }
+}
+
 /* ── HOOK: load data when page shown ── */
 var _origShowPage = window.showPage;
 window.showPage = function(page, el){
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
+  if(page==='attendance')     setTimeout(loadAttendancePage, 100);
   if(page==='tasks')          setTimeout(loadTasks, 100);
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
