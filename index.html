@@ -1540,13 +1540,43 @@ setTimeout(function(){
   var b=document.getElementById('sb');
   if(b){setTimeout(function(){b.style.width='100%';},200);}
 
-  // Fade out → login
+  // Fade out → check token → home or login
   setTimeout(function(){
     var sp=document.getElementById('s1-splash');
     if(sp){sp.style.transition='opacity 0.5s ease';sp.style.opacity='0';
       setTimeout(function(){sp.classList.remove('on');sp.style.display='none';},500);}
-    var lg=document.getElementById('s1-login');
-    if(lg){lg.style.display='flex';setTimeout(function(){lg.classList.add('on');},50);}
+
+    var savedToken = localStorage.getItem('zhr_token');
+    var savedStaff = null;
+    try{ savedStaff = JSON.parse(localStorage.getItem('zhr_staff')||'null'); }catch(e){}
+
+    if(savedToken && savedStaff && savedStaff.id){
+      // Already logged in — verify token with server then go home
+      fetch(API_URL+'/api/auth/me',{headers:{Authorization:'Bearer '+savedToken}})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d.success && d.staff){
+            // Refresh stored staff data (latest from server)
+            localStorage.setItem('zhr_staff', JSON.stringify(d.staff));
+            go1('s1-home');
+            setTimeout(function(){ checkCelebrations(); }, 500);
+          } else {
+            // Token expired or invalid → go to login
+            localStorage.removeItem('zhr_token');
+            localStorage.removeItem('zhr_staff');
+            var lg=document.getElementById('s1-login');
+            if(lg){lg.style.display='flex';setTimeout(function(){lg.classList.add('on');},50);}
+          }
+        })
+        .catch(function(){
+          // Network error — still go home with cached data (offline friendly)
+          go1('s1-home');
+        });
+    } else {
+      // No saved session → login screen
+      var lg=document.getElementById('s1-login');
+      if(lg){lg.style.display='flex';setTimeout(function(){lg.classList.add('on');},50);}
+    }
   },2900);
 },200);
 

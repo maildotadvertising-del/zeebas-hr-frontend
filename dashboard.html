@@ -2410,8 +2410,9 @@ async function loadChatMembers(){
     var list=document.getElementById('chat-members-list'); if(!list||!d.success) return;
     list.innerHTML=d.data.map(function(m){
       var init=(m.name||'?').charAt(0).toUpperCase();
-      var av=m.photo_url
-        ?'<img src="'+API+m.photo_url+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
+      var avSrc=m.photo_data||(m.photo_url?API+m.photo_url:null);
+      var av=avSrc
+        ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
         :'<div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">'+init+'</div>';
       var roleBadge=m.role==='admin'?'<span style="background:rgba(191,95,255,0.15);color:#BF5FFF;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">ADMIN</span>':m.role==='editor'?'<span style="background:rgba(255,159,10,0.15);color:#FF9F0A;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">EDITOR</span>':'';
       return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);">'
@@ -2428,8 +2429,9 @@ function appendDashMsg(msg, doScroll){
   if(msgs.querySelector('[style*="opacity:0.4"]')) msgs.innerHTML='';
   var isMe=msg.staff_id===staff.id;
   var init=(msg.staff_name||'?').charAt(0).toUpperCase();
-  var av=msg.photo_url
-    ?'<img src="'+API+msg.photo_url+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
+  var avSrc2=msg.photo_data||(msg.photo_url?API+msg.photo_url:null);
+  var av=avSrc2
+    ?'<img src="'+avSrc2+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
     :'<div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
   var t=msg.created_at?fmtTime(msg.created_at):(function(){var n=new Date(),h=n.getHours(),m=n.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
   var bubbleStyle=isMe
