@@ -126,6 +126,7 @@ select.inp option{background:#1A1A2E;color:#fff;}
   .bnav { padding-bottom: env(safe-area-inset-bottom, 8px); }
 }
 </style>
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 </head><body>
 
 <!-- ═══════════════════════════════════ -->
@@ -285,7 +286,7 @@ select.inp option{background:#1A1A2E;color:#fff;}
       <!-- Header -->
       <div style="padding:10px 13px 9px;border-bottom:0.5px solid rgba(255,255,255,0.07);flex-shrink:0;display:flex;align-items:center;gap:10px;z-index:2;position:relative;">
         <div style="position:relative;"><div style="width:36px;height:36px;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(80,10,140,0.55));border:0.5px solid rgba(255,255,255,0.14);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M2 5h14M2 9h14M2 13h8" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg></div><div style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#30D158;border-radius:50%;border:2px solid #040408;"></div></div>
-        <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Zeebas Cluster</div><div style="color:rgba(235,235,245,0.35);font-size:10px;">12 members · 9 online</div></div>
+        <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Zeebas Cluster</div><div id="chat1-sub" style="color:rgba(235,235,245,0.35);font-size:10px;">Connecting…</div></div>
         <div style="display:flex;gap:8px;">
           <button style="background:none;border:none;cursor:pointer;" onclick="toggleSearch()">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="rgba(245,245,247,0.45)" stroke-width="1.3"/><path d="M11 11l3 3" stroke="rgba(245,245,247,0.45)" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -839,7 +840,7 @@ function go1(id){
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
-  if(id==='s1-chat'){var m=document.getElementById('msgs1');if(m)setTimeout(function(){m.scrollTop=m.scrollHeight;},80);}
+  if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
     var btn=document.getElementById('att-btn');
@@ -1032,14 +1033,117 @@ function submitLeave(){
 }
 
 // Chat 1
-function sendChat1(){
-  var inp=document.getElementById('ci1');var txt=(inp.value||'').trim();if(!txt)return;
-  var msgs=document.getElementById('msgs1');
-  var d=new Date(),h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+' '+a;
-  var div=document.createElement('div');div.style.cssText='display:flex;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;';
-  div.innerHTML='<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.65),rgba(10,60,180,0.75));border:0.5px solid rgba(10,132,255,0.25);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:500;flex-shrink:0;">AK</div><div style="display:flex;flex-direction:column;align-items:flex-end;"><div style="background:linear-gradient(135deg,rgba(10,132,255,0.65),rgba(10,80,200,0.7));backdrop-filter:blur(14px);border:0.5px solid rgba(10,132,255,0.22);border-radius:14px;border-bottom-right-radius:4px;padding:8px 11px;font-size:12px;font-weight:300;color:#fff;max-width:190px;">'+txt+'</div><div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;text-align:right;">'+t+' ✓✓</div></div>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;inp.value='';
+/* ── REAL STAFF CHAT ── */
+var staffSocket = null;
+
+function initStaffChat(){
+  loadStaffMessages();
+  loadStaff1Pinned();
+  connectStaffSocket();
 }
+
+function connectStaffSocket(){
+  if(staffSocket && staffSocket.connected) return;
+  var staff = zStaff() || {};
+  staffSocket = io(API_URL, {transports:['websocket','polling'], reconnection:true, reconnectionDelay:2000});
+  staffSocket.on('connect', function(){
+    staffSocket.emit('join', staff.id);
+    var sub = document.getElementById('chat1-sub');
+    if(sub) sub.textContent = 'Zeebas Cluster · Live';
+  });
+  staffSocket.on('new-message', function(msg){ appendStaffMsg1(msg); });
+  staffSocket.on('online-count', function(n){
+    var sub = document.getElementById('chat1-sub');
+    if(sub) sub.textContent = 'Zeebas Cluster · ' + n + ' online';
+  });
+  staffSocket.on('message-pinned', function(){ loadStaff1Pinned(); });
+  staffSocket.on('disconnect', function(){
+    var sub = document.getElementById('chat1-sub');
+    if(sub) sub.textContent = 'Reconnecting…';
+  });
+}
+
+async function loadStaffMessages(){
+  try{
+    var res = await fetch(API_URL+'/api/chat/messages', {headers:zHead()});
+    var d = await res.json();
+    var msgs = document.getElementById('msgs1'); if(!msgs) return;
+    if(!d.success || !d.data.length){
+      msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;"><div style="font-size:28px;opacity:0.3;">💬</div><div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">No messages yet — say hello!</div></div>';
+      return;
+    }
+    msgs.innerHTML = '';
+    d.data.forEach(function(m){ appendStaffMsg1(m, false); });
+    msgs.scrollTop = msgs.scrollHeight;
+  }catch(e){ console.error('loadStaffMessages:', e); }
+}
+
+async function loadStaff1Pinned(){
+  try{
+    var res = await fetch(API_URL+'/api/chat/pinned', {headers:zHead()});
+    var d = await res.json();
+    var el = document.getElementById('pinned-text'); if(!el) return;
+    if(d.data) el.textContent = d.data.staff_name + ': ' + d.data.message;
+    else el.textContent = 'No pinned message';
+  }catch(e){}
+}
+
+function appendStaffMsg1(msg, doScroll){
+  var staff = zStaff() || {};
+  var msgs = document.getElementById('msgs1'); if(!msgs) return;
+  // Clear empty-state placeholder
+  if(msgs.querySelector('[style*="opacity:0.3"]') || msgs.querySelector('[style*="padding-top:40px"]')) msgs.innerHTML = '';
+  var isMe = msg.staff_id === staff.id;
+  var init = (msg.staff_name||'?').charAt(0).toUpperCase();
+  var av = msg.photo_url
+    ? '<img src="'+API_URL+msg.photo_url+'" style="width:26px;height:26px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
+    : '<div style="width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+  var t = (function(){
+    var dt = msg.created_at ? new Date(msg.created_at) : new Date();
+    var h = dt.getHours(), m = dt.getMinutes(), a = h>=12?'PM':'AM';
+    h = h%12||12; return h+':'+(m<10?'0':'')+m+' '+a;
+  })();
+  var bubbleStyle = isMe
+    ? 'background:linear-gradient(135deg,rgba(10,132,255,0.65),rgba(10,80,200,0.7));border:0.5px solid rgba(10,132,255,0.22);border-radius:14px;border-bottom-right-radius:4px;'
+    : 'background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:14px;border-bottom-left-radius:4px;';
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:flex-end;gap:6px;margin-bottom:8px;'+(isMe?'flex-direction:row-reverse;':'');
+  div.innerHTML = av
+    + '<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';max-width:65%;">'
+    + (isMe ? '' : '<div style="font-size:9px;color:var(--muted,rgba(235,235,245,0.4));margin-bottom:2px;padding-left:2px;">'+msg.staff_name+(msg.brand_name?' · '+msg.brand_name:'')+'</div>')
+    + '<div style="backdrop-filter:blur(14px);'+bubbleStyle+'padding:8px 11px;font-size:12px;font-weight:300;color:#fff;word-break:break-word;">'
+    + ((msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))
+    + '</div>'
+    + '<div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;'+(isMe?'text-align:right;':'')+'">'+t+(isMe?' ✓✓':'')+'</div>'
+    + '</div>';
+  msgs.appendChild(div);
+  if(doScroll !== false) msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function sendChat1(){
+  var inp = document.getElementById('ci1');
+  var txt = (inp.value||'').trim(); if(!txt) return;
+  inp.value = '';
+  var staff = zStaff() || {};
+
+  if(staffSocket && staffSocket.connected){
+    staffSocket.emit('send-message', {staff_id: staff.id, message: txt, type: 'text'});
+    // Optimistic: show immediately
+    appendStaffMsg1({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, brand_name:null, message:txt, created_at:new Date()});
+  } else {
+    try{
+      var res = await fetch(API_URL+'/api/chat/messages', {method:'POST', headers:zHead(), body:JSON.stringify({message:txt})});
+      var d = await res.json();
+      if(d.success) appendStaffMsg1(d.data);
+    }catch(e){ console.error('sendChat1 error:', e); }
+  }
+}
+
+// Enter key to send
+(function(){
+  var ci = document.getElementById('ci1');
+  if(ci) ci.addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat1(); });
+})();
 // Voice note
 var recInterval=null,recSecs=0,isRecording=false;
 function startVoice(btn){
