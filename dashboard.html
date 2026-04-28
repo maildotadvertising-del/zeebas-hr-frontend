@@ -2522,6 +2522,9 @@ function connectDashSocket(){
     dashSocket.emit('join', staff.id);
   });
   dashSocket.on('new-message', function(msg){
+    // Skip own messages — already appended optimistically in dashSend()
+    var me={}; try{me=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+    if(msg.staff_id === me.id) return;
     appendDashMsg(msg);
     // Show red dot only if Team Chat page is not currently active
     var chatPage = document.getElementById('page-team-chat');
