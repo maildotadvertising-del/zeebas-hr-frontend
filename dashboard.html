@@ -2990,6 +2990,13 @@ setTimeout(checkCelebrations,3500);
 /* ── API BASE ── */
 var API = 'https://zeebas-hr-backend.onrender.com';
 
+/* ── SERVER KEEPALIVE — ping every 14 min so Render never sleeps ── */
+(function keepAlive(){
+  setInterval(function(){
+    fetch(API + '/api/auth/ping', {method:'GET', cache:'no-store'}).catch(function(){});
+  }, 14 * 60 * 1000);
+})();
+
 /* ── ZEEBAS DASHBOARD — AUTH + PAGE RESTORE (single combined handler) ── */
 document.addEventListener('DOMContentLoaded', function(){
   var token    = localStorage.getItem('zhr_token');
