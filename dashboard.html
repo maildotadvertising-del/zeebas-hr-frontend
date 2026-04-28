@@ -3197,6 +3197,10 @@ window.showPage = function(page, el){
       page = _allowed[0]; el = null; // redirect to first allowed
     }
   }
+  // Close any open panels when navigating
+  var _tp=document.getElementById('task-panel'); var _to=document.getElementById('task-overlay');
+  if(_tp) _tp.style.display='none'; if(_to) _to.style.display='none';
+  var _ucPop=document.getElementById('ucal-popup'); if(_ucPop) _ucPop.style.display='none';
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
