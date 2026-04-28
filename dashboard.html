@@ -165,7 +165,7 @@ textarea.inp{resize:none;}
     <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span id="approvals-badge" style="display:none;background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('payroll',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.3"/></svg>Payroll</div>
-    <div class="ni" onclick="showPage('team-chat',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>Team Chat<div style="width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,69,58,0.6);"></div></div>
+    <div class="ni" onclick="showPage('team-chat',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>Team Chat<div id="chat-nav-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,69,58,0.6);"></div></div>
     <div class="nl">Settings</div>
     <div class="ni" onclick="showPage('gps-settings',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v1M8 13v1M1 8h1M14 8h1M3 3l.7.7M12 12l.7.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>GPS Settings</div>
     <div class="ni" onclick="showPage('payroll-settings',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Payroll Settings</div>
@@ -1067,13 +1067,13 @@ textarea.inp{resize:none;}
   <!-- ── TEAM CHAT ── -->
   <div id="page-team-chat" class="page">
     <div class="topbar">
-      <div><div class="ptitle">Team Chat</div><div class="psub">Zeebas Cluster — All Staff · 9 online</div></div>
+      <div><div class="ptitle">Team Chat</div></div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <div style="background:rgba(191,95,255,0.12);border:0.5px solid rgba(191,95,255,0.22);border-radius:9px;padding:7px 14px;font-size:12px;color:#BF5FFF;font-weight:500;">ADMIN VIEW</div>
-        <button class="btn-g">Members</button>
+        <div onclick="toggleChatMembers()" style="background:rgba(191,95,255,0.12);border:0.5px solid rgba(191,95,255,0.22);border-radius:9px;padding:7px 14px;font-size:12px;color:#BF5FFF;font-weight:500;cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(191,95,255,0.22)'" onmouseout="this.style.background='rgba(191,95,255,0.12)'">ADMIN VIEW</div>
+        <button class="btn-g" onclick="toggleChatMembers()">Members</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 140px);">
+    <div id="chat-layout" style="display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 120px);">
       <!-- Chat area -->
       <div class="g" style="display:flex;flex-direction:column;overflow:hidden;padding:0;">
         <!-- Pinned message -->
@@ -1189,7 +1189,7 @@ textarea.inp{resize:none;}
         </div>
       </div>
       <!-- Members sidebar -->
-      <div class="g" style="padding:16px;overflow-y:auto;">
+      <div id="chat-members-panel" class="g" style="padding:16px;overflow-y:auto;">
         <div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Members</div>
         <div id="chat-members-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;">
           <div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;opacity:0.6;">Members will appear when chat is connected</div>
@@ -2475,10 +2475,29 @@ function triggerPhoto(id){document.getElementById(id).click();}
 var dashSocket = null;
 
 function initDashChat(){
+  // Clear red dot when chat is opened
+  var dot = document.getElementById('chat-nav-dot');
+  if(dot) dot.style.display = 'none';
   loadDashMessages();
   loadChatMembers();
   loadDashPinned();
   connectDashSocket();
+}
+
+// Toggle members sidebar visibility
+var _chatMembersVisible = true;
+function toggleChatMembers(){
+  var panel = document.getElementById('chat-members-panel');
+  var layout = document.getElementById('chat-layout');
+  if(!panel || !layout) return;
+  _chatMembersVisible = !_chatMembersVisible;
+  if(_chatMembersVisible){
+    panel.style.display = 'block';
+    layout.style.gridTemplateColumns = '1fr 320px';
+  } else {
+    panel.style.display = 'none';
+    layout.style.gridTemplateColumns = '1fr';
+  }
 }
 
 function connectDashSocket(){
@@ -2487,14 +2506,17 @@ function connectDashSocket(){
   dashSocket = io(API, {transports:['websocket','polling'], reconnection:true, reconnectionDelay:2000});
   dashSocket.on('connect', function(){
     dashSocket.emit('join', staff.id);
-    var sub = document.querySelector('#page-team-chat .psub');
-    if(sub) sub.textContent = 'Zeebas Cluster — All Staff · Live';
   });
-  dashSocket.on('new-message', function(msg){ appendDashMsg(msg); });
-  dashSocket.on('online-count', function(n){
-    var sub=document.querySelector('#page-team-chat .psub');
-    if(sub) sub.textContent='Zeebas Cluster — All Staff · '+n+' online';
+  dashSocket.on('new-message', function(msg){
+    appendDashMsg(msg);
+    // Show red dot only if Team Chat page is not currently active
+    var chatPage = document.getElementById('page-team-chat');
+    if(!chatPage || !chatPage.classList.contains('active')){
+      var dot = document.getElementById('chat-nav-dot');
+      if(dot) dot.style.display = 'block';
+    }
   });
+  dashSocket.on('online-count', function(n){});
   dashSocket.on('message-pinned', function(){ loadDashPinned(); });
   dashSocket.on('reaction-update', function(data){
     var row=document.getElementById('drrow-'+data.message_id); if(!row) return;
@@ -2508,10 +2530,7 @@ function connectDashSocket(){
     });
     row.style.display=row.children.length?'flex':'none';
   });
-  dashSocket.on('disconnect', function(){
-    var sub=document.querySelector('#page-team-chat .psub');
-    if(sub) sub.textContent='Zeebas Cluster — Reconnecting…';
-  });
+  dashSocket.on('disconnect', function(){});
 }
 
 async function loadDashMessages(){
