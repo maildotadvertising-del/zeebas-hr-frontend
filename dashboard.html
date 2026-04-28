@@ -1128,8 +1128,61 @@ textarea.inp{resize:none;}
 
   <!-- ── PAYROLL ── -->
   <div id="page-payroll" class="page">
-    <div class="topbar"><div><div class="ptitle">Payroll</div><div class="psub">April 2026</div></div><div style="display:flex;gap:10px;"><button class="btn-g">Export PDF</button><button class="btn">Process Payroll</button></div></div>
-    <div class="sec g"><div style="color:var(--muted);font-size:13px;">Monthly payroll with late deduction, OT, advance, net pay for all staff.</div></div>
+    <div class="topbar">
+      <div>
+        <div class="ptitle">Payroll</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+          <button onclick="payrollNavMonth(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;width:22px;height:22px;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">‹</button>
+          <span id="payroll-month-label" style="font-size:12px;color:var(--muted);min-width:90px;text-align:center;"></span>
+          <button onclick="payrollNavMonth(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;width:22px;height:22px;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">›</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-g" onclick="payrollExportPDF()">Export PDF</button>
+        <button class="btn" onclick="processPayroll()">⚡ Process Payroll</button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+      <div class="sec g" style="padding:14px 16px;text-align:center;">
+        <div style="font-size:20px;font-weight:600;color:#0A84FF;" id="pr-total-staff">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Total Staff</div>
+      </div>
+      <div class="sec g" style="padding:14px 16px;text-align:center;">
+        <div style="font-size:20px;font-weight:600;color:#30D158;" id="pr-total-net">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Total Net Pay</div>
+      </div>
+      <div class="sec g" style="padding:14px 16px;text-align:center;">
+        <div style="font-size:20px;font-weight:600;color:#FF453A;" id="pr-total-ded">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Total Deductions</div>
+      </div>
+      <div class="sec g" style="padding:14px 16px;text-align:center;">
+        <div style="font-size:20px;font-weight:600;color:#FF9F0A;" id="pr-working-days">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Working Days</div>
+      </div>
+    </div>
+
+    <!-- Payroll Table -->
+    <div class="sec g" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.08);">
+            <th style="padding:10px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Staff</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Basic</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Present</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Late Ded.</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent Ded.</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Net Pay</th>
+            <th style="padding:10px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="payroll-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading payroll…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
 
@@ -3209,6 +3262,7 @@ window.showPage = function(page, el){
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
+  if(page==='payroll')           setTimeout(loadPayrollPage, 100);
   if(page==='payroll-settings')  setTimeout(function(){ loadPayrollSettings(); psCalRender(); psLoadHolidays(); }, 100);
   if(page==='team-chat')         setTimeout(initDashChat, 100);
 };
@@ -4329,6 +4383,105 @@ function saveCompanyDetails(){
 }
 // Load on page ready
 document.addEventListener('DOMContentLoaded', function(){ loadCompanyDetails(); });
+</script>
+
+<!-- ── Payroll JS ── -->
+<script>
+var _pr = { month: new Date().getMonth()+1, year: new Date().getFullYear() };
+var _prMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function payrollNavMonth(dir){
+  _pr.month += dir;
+  if(_pr.month > 12){ _pr.month=1; _pr.year++; }
+  if(_pr.month < 1){ _pr.month=12; _pr.year--; }
+  loadPayrollPage();
+}
+
+async function loadPayrollPage(){
+  var lbl = document.getElementById('payroll-month-label');
+  if(lbl) lbl.textContent = _prMonths[_pr.month-1]+' '+_pr.year;
+  var tbody = document.getElementById('payroll-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
+
+  try{
+    var res = await fetch(API+'/api/payroll/salary-preview?month='+_pr.month+'&year='+_pr.year, { headers: zHdr() });
+    var d = await res.json();
+    if(!d.success){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#FF453A;">Error: '+escHtml(d.message||'Failed')+'</td></tr>'; return; }
+
+    var rows = d.data || [];
+    var setEl = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+    setEl('pr-total-staff', rows.length);
+    setEl('pr-working-days', d.working_days||'—');
+    var totalNet=0, totalDed=0;
+    rows.forEach(function(r){ totalNet+=parseFloat(r.net_salary||0); totalDed+=parseFloat(r.late_deduction||0)+parseFloat(r.absent_deduction||0); });
+    setEl('pr-total-net', '₹'+Math.round(totalNet).toLocaleString('en-IN'));
+    setEl('pr-total-ded', '₹'+Math.round(totalDed).toLocaleString('en-IN'));
+
+    if(!rows.length){
+      tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">No staff found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function(r,i){
+      var photoSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+      var init = (r.name||'?').substring(0,2).toUpperCase();
+      var avatar = photoSrc
+        ? '<img src="'+photoSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        : '<div style="width:30px;height:30px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+      var td = 'padding:9px 8px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
+      var bg = i%2===0?'transparent':'rgba(255,255,255,0.015)';
+      var net = parseFloat(r.net_salary||0);
+      var netCol = net > 0 ? '#30D158' : '#FF453A';
+      var statusBadge = r.payroll_status==='paid'
+        ? '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
+        : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;" onclick="markPayrollPaid('+r.payroll_id+',\''+escHtml(r.name)+'\')">Pending</span>';
+      return '<tr style="background:'+bg+';">'
+        +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
+          +'<div><div style="font-size:12px;font-weight:500;">'+escHtml(r.name)+'</div>'
+          +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></div></div></td>'
+        +'<td style="'+td+'text-align:center;color:rgba(245,245,247,0.6);">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
+        +'<td style="'+td+'text-align:center;color:#30D158;">'+r.days_present+'d</td>'
+        +'<td style="'+td+'text-align:center;color:'+(r.days_absent>0?'#FF453A':'var(--muted)')+';">'+r.days_absent+'d</td>'
+        +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.late_deduction)>0?'#FF9F0A':'var(--muted)')+';">₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN')+'</td>'
+        +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
+        +'<td style="'+td+'text-align:center;font-weight:600;color:'+netCol+';">₹'+Math.round(net).toLocaleString('en-IN')+'</td>'
+        +'<td style="'+td+'text-align:center;padding-right:14px;">'+statusBadge+'</td>'
+        +'</tr>';
+    }).join('');
+  } catch(e){
+    if(tbody) tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
+    console.error('loadPayrollPage:',e);
+  }
+}
+
+async function processPayroll(){
+  if(!confirm('Process payroll for '+_prMonths[_pr.month-1]+' '+_pr.year+'?\n\nThis will calculate salaries for all staff.')) return;
+  try{
+    var res = await fetch(API+'/api/payroll/process', {
+      method:'POST', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body: JSON.stringify({ month: _pr.month, year: _pr.year })
+    });
+    var d = await res.json();
+    if(d.success){ showToast('✅ Payroll processed for '+d.results.length+' staff'); loadPayrollPage(); }
+    else showToast('❌ '+(d.message||'Error'), 'error');
+  } catch(e){ showToast('❌ Server error','error'); }
+}
+
+async function markPayrollPaid(payrollId, name){
+  if(!payrollId){ showToast('Process payroll first','error'); return; }
+  if(!confirm('Mark '+name+' salary as Paid?')) return;
+  try{
+    var res = await fetch(API+'/api/payroll/'+payrollId+'/mark-paid', { method:'PUT', headers:zHdr() });
+    var d = await res.json();
+    if(d.success){ showToast('✅ '+name+' marked as paid'); loadPayrollPage(); }
+    else showToast('❌ '+(d.message||'Error'),'error');
+  } catch(e){ showToast('❌ Server error','error'); }
+}
+
+function payrollExportPDF(){
+  window.open(API+'/api/payroll/export/pdf?month='+_pr.month+'&year='+_pr.year+'&token='+localStorage.getItem('zhr_token'),'_blank');
+}
 </script>
 
 <!-- ── Universal Dark Calendar Popup ── -->
