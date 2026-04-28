@@ -657,18 +657,18 @@ textarea.inp{resize:none;}
             <input type="hidden" id="task-due">
             <div id="task-cal-popup" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:268px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <button onclick="taskCalNav(-1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
-                <button onclick="taskCalTogglePicker('due')" id="task-cal-title" style="font-size:13px;font-weight:500;color:#fff;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;"></button>
-                <button onclick="taskCalNav(1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
+                <button type="button" onclick="taskCalNav(-1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
+                <button type="button" onclick="taskCalTogglePicker('due')" id="task-cal-title" style="font-size:13px;font-weight:500;color:#fff;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;"></button>
+                <button type="button" onclick="taskCalNav(1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
               </div>
               <div id="task-cal-picker" style="display:none;margin-bottom:10px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
-                  <button onclick="taskCalYearStep(-1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">‹</button>
+                  <button type="button" onclick="taskCalYearStep(-1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">‹</button>
                   <input id="task-cal-year-inp" type="number" min="2020" max="2035" style="flex:1;text-align:center;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;font-weight:500;padding:4px 0;outline:none;font-family:inherit;" onchange="taskCalYearChange(this.value,'due')">
-                  <button onclick="taskCalYearStep(1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">›</button>
+                  <button type="button" onclick="taskCalYearStep(1,'due')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">›</button>
                 </div>
                 <div id="task-cal-month-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
-                <button onclick="taskCalTogglePicker('due')" style="width:100%;margin-top:8px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:8px;color:#0A84FF;font-size:11px;padding:5px;cursor:pointer;font-family:inherit;">Done ✓</button>
+                <button type="button" onclick="taskCalTogglePicker('due')" style="width:100%;margin-top:8px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:8px;color:#0A84FF;font-size:11px;padding:5px;cursor:pointer;font-family:inherit;">Done ✓</button>
               </div>
               <div id="task-cal-day-view">
                 <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
@@ -677,8 +677,8 @@ textarea.inp{resize:none;}
                 <div id="task-cal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
-                <button onclick="taskCalClear('due')" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
-                <button onclick="taskCalToday('due')" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
+                <button type="button" onclick="taskCalClear('due')" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
+                <button type="button" onclick="taskCalToday('due')" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
               </div>
             </div>
           </div>
@@ -693,18 +693,18 @@ textarea.inp{resize:none;}
             <input type="hidden" id="task-end">
             <div id="task-end-cal-popup" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:268px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <button onclick="taskCalNav(-1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
-                <button onclick="taskCalTogglePicker('end')" id="task-end-cal-title" style="font-size:13px;font-weight:500;color:#fff;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;"></button>
-                <button onclick="taskCalNav(1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
+                <button type="button" onclick="taskCalNav(-1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
+                <button type="button" onclick="taskCalTogglePicker('end')" id="task-end-cal-title" style="font-size:13px;font-weight:500;color:#fff;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;"></button>
+                <button type="button" onclick="taskCalNav(1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
               </div>
               <div id="task-end-cal-picker" style="display:none;margin-bottom:10px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
-                  <button onclick="taskCalYearStep(-1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">‹</button>
+                  <button type="button" onclick="taskCalYearStep(-1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">‹</button>
                   <input id="task-end-cal-year-inp" type="number" min="2020" max="2035" style="flex:1;text-align:center;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;font-weight:500;padding:4px 0;outline:none;font-family:inherit;" onchange="taskCalYearChange(this.value,'end')">
-                  <button onclick="taskCalYearStep(1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">›</button>
+                  <button type="button" onclick="taskCalYearStep(1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:26px;height:26px;color:#fff;cursor:pointer;font-size:13px;">›</button>
                 </div>
                 <div id="task-end-cal-month-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
-                <button onclick="taskCalTogglePicker('end')" style="width:100%;margin-top:8px;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.25);border-radius:8px;color:#30D158;font-size:11px;padding:5px;cursor:pointer;font-family:inherit;">Done ✓</button>
+                <button type="button" onclick="taskCalTogglePicker('end')" style="width:100%;margin-top:8px;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.25);border-radius:8px;color:#30D158;font-size:11px;padding:5px;cursor:pointer;font-family:inherit;">Done ✓</button>
               </div>
               <div id="task-end-cal-day-view">
                 <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
@@ -713,8 +713,8 @@ textarea.inp{resize:none;}
                 <div id="task-end-cal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
-                <button onclick="taskCalClear('end')" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
-                <button onclick="taskCalToday('end')" style="background:none;border:none;color:#30D158;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
+                <button type="button" onclick="taskCalClear('end')" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
+                <button type="button" onclick="taskCalToday('end')" style="background:none;border:none;color:#30D158;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
               </div>
             </div>
           </div>
@@ -3901,10 +3901,17 @@ function renderTaskCalMPicker(mode){
 
 function taskCalPickMonth(m, mode){
   mode=mode||'due';
-  var cal = mode==='end' ? _taskEndCal : _taskCal;
+  var isEnd = mode==='end';
+  var cal = isEnd ? _taskEndCal : _taskCal;
   cal.month = m;
+  // Auto-close picker → show day view
+  if(isEnd){ _taskEndCalPickerOpen=false; } else { _taskCalPickerOpen=false; }
+  var pid  = isEnd ? 'task-end-cal-picker'   : 'task-cal-picker';
+  var dvid = isEnd ? 'task-end-cal-day-view' : 'task-cal-day-view';
+  var p = document.getElementById(pid), d = document.getElementById(dvid);
+  if(p) p.style.display = 'none';
+  if(d) d.style.display = 'block';
   renderTaskCalFor(mode);
-  renderTaskCalMPicker(mode);
 }
 
 function taskCalYearStep(dir, mode){
@@ -4941,8 +4948,13 @@ function renderUCalMonthPicker(){
 
 function ucalPickMonth(monthIndex){
   _uc.month = monthIndex;
+  // Auto-close picker → show day view
+  _ucPickerOpen = false;
+  var picker = document.getElementById('ucal-picker');
+  var dayView = document.getElementById('ucal-day-view');
+  if(picker) picker.style.display = 'none';
+  if(dayView) dayView.style.display = 'block';
   renderUCal();
-  renderUCalMonthPicker(); // refresh highlight
 }
 
 function ucalYearStep(dir){
