@@ -1658,6 +1658,19 @@ textarea.inp{resize:none;}
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Date of Birth</div><div id="add-dob-trigger" onclick="openUCal('add-dob','add-dob-label',null)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="add-dob-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div><input type="hidden" id="add-dob"></div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Joining Date</div><div id="add-join-trigger" onclick="openUCal('add-join','add-join-label',null)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="add-join-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div><input type="hidden" id="add-join"></div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Role *</div>
+          <select class="inp" id="add-role">
+            <option value="staff">👤 Staff</option>
+            <option value="team_leader">⭐ Team Leader</option>
+            <option value="editor">✏️ Editor</option>
+            <option value="admin">🔑 Admin</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;">
+          <div style="font-size:10px;color:rgba(255,159,10,0.7);font-weight:400;line-height:1.4;padding-bottom:2px;">⚠️ Admin can access all settings. Choose carefully.</div>
+        </div>
+      </div>
       <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Address</div><textarea class="inp" rows="2" placeholder="Full address..." id="add-addr"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Salary / Rate</div><input class="inp" type="number" placeholder="e.g. 25000" id="add-salary"></div>
@@ -2430,7 +2443,7 @@ async function saveNewStaff(){
     fd.append('phone', cleanPhone);
     fd.append('email', email.trim());
     fd.append('password', 'Dot*321');
-    fd.append('role', 'staff');
+    fd.append('role', (document.getElementById('add-role')||{value:'staff'}).value||'staff');
     fd.append('base_salary', salary||'0');
     fd.append('salary_type', saltype);
     fd.append('dob', dob||'');
@@ -2453,6 +2466,7 @@ async function saveNewStaff(){
       ['add-name','add-desig','add-phone','add-email','add-dob','add-join','add-addr','add-salary'].forEach(function(id){
         var el=document.getElementById(id); if(el) el.value='';
       });
+      var roleEl=document.getElementById('add-role'); if(roleEl) roleEl.value='staff';
       ucalSetDisplay('add-dob','add-dob-label','');
       ucalSetDisplay('add-join','add-join-label','');
       // Reload staff list
@@ -4707,22 +4721,38 @@ function payrollExportPDF(){
 </script>
 
 <!-- ── Universal Dark Calendar Popup ── -->
-<div id="ucal-popup" style="display:none;position:fixed;z-index:9999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:264px;box-shadow:0 24px 70px rgba(0,0,0,0.7);">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+<div id="ucal-popup" style="display:none;position:fixed;z-index:9999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:16px;padding:14px;min-width:272px;box-shadow:0 24px 70px rgba(0,0,0,0.7);">
+  <!-- Month/Year header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
     <button onclick="ucalNav(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:30px;height:30px;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;">‹</button>
-    <span id="ucal-title" style="font-size:13px;font-weight:500;color:#fff;"></span>
+    <button onclick="ucalTogglePicker()" id="ucal-title" style="font-size:13px;font-weight:500;color:#fff;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;"></button>
     <button onclick="ucalNav(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:30px;height:30px;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;">›</button>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div>
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div>
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div>
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+  <!-- Month+Year quick picker (hidden by default) -->
+  <div id="ucal-picker" style="display:none;margin-bottom:10px;">
+    <!-- Year selector -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+      <button onclick="ucalYearStep(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;">‹</button>
+      <input id="ucal-year-inp" type="number" min="1940" max="2100" style="flex:1;text-align:center;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;font-weight:500;padding:5px 0;outline:none;font-family:inherit;" onchange="ucalYearChange(this.value)">
+      <button onclick="ucalYearStep(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:7px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;">›</button>
+    </div>
+    <!-- Month grid -->
+    <div id="ucal-month-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
+    <button onclick="ucalTogglePicker()" style="width:100%;margin-top:8px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:8px;color:#0A84FF;font-size:11px;padding:6px;cursor:pointer;font-family:inherit;">Done ✓</button>
   </div>
-  <div id="ucal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+  <!-- Day grid (hidden when picker open) -->
+  <div id="ucal-day-view">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+    </div>
+    <div id="ucal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+  </div>
   <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
     <button onclick="ucalClear()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
     <button onclick="ucalToday()" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
@@ -4755,6 +4785,10 @@ function openUCal(inputId, labelId, cb){
   if(_uc.selected){ var p=_uc.selected.split('-'); _uc.year=parseInt(p[0]); _uc.month=parseInt(p[1])-1; }
   else { var n=new Date(); _uc.year=n.getFullYear(); _uc.month=n.getMonth(); }
   var pop=document.getElementById('ucal-popup');
+  // Reset picker state
+  _ucPickerOpen = false;
+  var picker=document.getElementById('ucal-picker'); if(picker) picker.style.display='none';
+  var dayView=document.getElementById('ucal-day-view'); if(dayView) dayView.style.display='block';
   renderUCal();
   pop.style.display='block';
   if(trigger){
@@ -4766,9 +4800,12 @@ function openUCal(inputId, labelId, cb){
   }
 }
 
+var _ucPickerOpen = false;
+
 function renderUCal(){
   var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('ucal-title').textContent=mn[_uc.month]+' '+_uc.year;
+  var titleBtn = document.getElementById('ucal-title');
+  if(titleBtn) titleBtn.innerHTML = mn[_uc.month]+' '+_uc.year+' <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="opacity:0.5;"><path d="M2 3.5L5 6.5L8 3.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>';
   var first=new Date(_uc.year,_uc.month,1).getDay();
   var total=new Date(_uc.year,_uc.month+1,0).getDate();
   var today=new Date().toISOString().slice(0,10);
@@ -4784,11 +4821,53 @@ function renderUCal(){
   document.getElementById('ucal-days').innerHTML=html;
 }
 
+function ucalTogglePicker(){
+  _ucPickerOpen = !_ucPickerOpen;
+  var picker = document.getElementById('ucal-picker');
+  var dayView = document.getElementById('ucal-day-view');
+  if(picker) picker.style.display = _ucPickerOpen ? 'block' : 'none';
+  if(dayView) dayView.style.display = _ucPickerOpen ? 'none' : 'block';
+  if(_ucPickerOpen) renderUCalMonthPicker();
+}
+
+function renderUCalMonthPicker(){
+  var mnShort=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var yi = document.getElementById('ucal-year-inp');
+  if(yi) yi.value = _uc.year;
+  var grid = document.getElementById('ucal-month-grid'); if(!grid) return;
+  grid.innerHTML = mnShort.map(function(m, i){
+    var isSel = i === _uc.month;
+    return '<div onclick="ucalPickMonth('+i+')" style="text-align:center;padding:7px 2px;border-radius:8px;font-size:12px;cursor:pointer;background:'+(isSel?'#0A84FF':'rgba(255,255,255,0.05)')+';color:'+(isSel?'#fff':'rgba(255,255,255,0.7)')+';font-weight:'+(isSel?'600':'400')+';border:0.5px solid '+(isSel?'#0A84FF':'transparent')+';transition:all 0.12s;" onmouseover="if('+(!isSel)+')this.style.background=\'rgba(255,255,255,0.09)\'" onmouseout="if('+(!isSel)+')this.style.background=\'rgba(255,255,255,0.05)\'">'
+      +m+'</div>';
+  }).join('');
+}
+
+function ucalPickMonth(monthIndex){
+  _uc.month = monthIndex;
+  renderUCal();
+  renderUCalMonthPicker(); // refresh highlight
+}
+
+function ucalYearStep(dir){
+  _uc.year += dir;
+  var yi = document.getElementById('ucal-year-inp');
+  if(yi) yi.value = _uc.year;
+  renderUCal();
+  renderUCalMonthPicker();
+}
+
+function ucalYearChange(val){
+  var y = parseInt(val);
+  if(y >= 1940 && y <= 2100){ _uc.year = y; renderUCal(); renderUCalMonthPicker(); }
+}
+
 function ucalNav(dir){
   _uc.month+=dir;
   if(_uc.month>11){_uc.month=0;_uc.year++;}
   if(_uc.month<0){_uc.month=11;_uc.year--;}
   renderUCal();
+  // If picker is open, refresh it too
+  if(_ucPickerOpen) renderUCalMonthPicker();
 }
 
 function ucalSelect(val){
