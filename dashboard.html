@@ -938,7 +938,8 @@ textarea.inp{resize:none;}
         <div class="sec g">
           <div class="sh"><span class="st">🎌 Extra Holidays</span></div>
           <div style="display:flex;gap:8px;margin-bottom:10px;">
-            <input class="inp" type="date" id="ps-hol-date" style="flex:1;">
+            <div id="ps-hol-date-trigger" onclick="openUCal('ps-hol-date','ps-hol-date-label',null)" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="ps-hol-date-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <input type="hidden" id="ps-hol-date">
             <input class="inp" type="text" id="ps-hol-name" placeholder="Holiday name…" style="flex:2;">
             <button class="btn" style="white-space:nowrap;padding:0 14px;" onclick="psAddHoliday()">+ Add</button>
           </div>
@@ -968,7 +969,8 @@ textarea.inp{resize:none;}
     <div class="topbar">
       <div><div class="ptitle">Attendance</div><div class="psub" id="att-page-sub">Today's full log</div></div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <input type="date" id="att-filter-date" class="inp" style="width:148px;font-size:12px;" onchange="loadAttendancePage()">
+        <div id="att-filter-date-trigger" onclick="openUCal('att-filter-date','att-filter-date-label',loadAttendancePage)" style="width:148px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="att-filter-date-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
       </div>
     </div>
@@ -1523,8 +1525,8 @@ textarea.inp{resize:none;}
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Email Address</div><input class="inp" type="email" placeholder="name@company.com" id="add-email"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Date of Birth</div><input class="inp" type="date" id="add-dob"></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Joining Date</div><input class="inp" type="date" id="add-join"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Date of Birth</div><div id="add-dob-trigger" onclick="openUCal('add-dob','add-dob-label',null)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="add-dob-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div><input type="hidden" id="add-dob"></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Joining Date</div><div id="add-join-trigger" onclick="openUCal('add-join','add-join-label',null)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="add-join-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div><input type="hidden" id="add-join"></div>
       </div>
       <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Address</div><textarea class="inp" rows="2" placeholder="Full address..." id="add-addr"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -1782,6 +1784,7 @@ async function psAddHoliday(){
     if(d.success){
       showToast('✅ Holiday added');
       document.getElementById('ps-hol-date').value = '';
+      ucalSetDisplay('ps-hol-date','ps-hol-date-label','');
       document.getElementById('ps-hol-name').value = '';
       psLoadHolidays();
     } else showToast('❌ '+(d.message||'Error'));
@@ -2103,8 +2106,8 @@ async function openEdit(staffId){
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Email</div><input class="inp" id="ef-email" type="email" value="'+(p.email||'')+'"></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Date of Birth 📅</div><input class="inp" id="ef-dob" type="date" value="'+(p.dob?p.dob.slice(0,10):'')+'" onclick="try{this.showPicker()}catch(e){}"></div>'
-      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Joining Date 📅</div><input class="inp" id="ef-join" type="date" value="'+(p.joining_date?p.joining_date.slice(0,10):'')+'" onclick="try{this.showPicker()}catch(e){}"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Date of Birth</div><div id="ef-dob-trigger" onclick="openUCal(\'ef-dob\',\'ef-dob-label\',null)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="ef-dob-label" style="color:'+(p.dob?'#fff':'var(--muted)')+';">'+(p.dob?ucalFmtDisplay(p.dob.slice(0,10)):'Select date')+'</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div><input type="hidden" id="ef-dob" value="'+(p.dob?p.dob.slice(0,10):'')+'"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Joining Date</div><div id="ef-join-trigger" onclick="openUCal(\'ef-join\',\'ef-join-label\',null)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="ef-join-label" style="color:'+(p.joining_date?'#fff':'var(--muted)')+';">'+(p.joining_date?ucalFmtDisplay(p.joining_date.slice(0,10)):'Select date')+'</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div><input type="hidden" id="ef-join" value="'+(p.joining_date?p.joining_date.slice(0,10):'')+'"></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Base Salary (₹)</div><input class="inp" id="ef-salary" type="number" value="'+(p.base_salary||0)+'"></div>'
@@ -2314,6 +2317,8 @@ async function saveNewStaff(){
       ['add-name','add-desig','add-phone','add-email','add-dob','add-join','add-addr','add-salary'].forEach(function(id){
         var el=document.getElementById(id); if(el) el.value='';
       });
+      ucalSetDisplay('add-dob','add-dob-label','');
+      ucalSetDisplay('add-join','add-join-label','');
       // Reload staff list
       setTimeout(loadStaffList, 800);
     } else {
@@ -3093,7 +3098,7 @@ async function loadDashStats(){
 async function loadAttendancePage(){
   var dateEl=document.getElementById('att-filter-date');
   var today=new Date().toISOString().slice(0,10);
-  if(!dateEl.value) dateEl.value=today;
+  if(!dateEl.value){ dateEl.value=today; ucalSetDisplay('att-filter-date','att-filter-date-label',today); }
   var isToday=(dateEl.value===today);
 
   var subEl=document.getElementById('att-page-sub');
@@ -4320,6 +4325,119 @@ function saveCompanyDetails(){
 }
 // Load on page ready
 document.addEventListener('DOMContentLoaded', function(){ loadCompanyDetails(); });
+</script>
+
+<!-- ── Universal Dark Calendar Popup ── -->
+<div id="ucal-popup" style="display:none;position:fixed;z-index:9999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:264px;box-shadow:0 24px 70px rgba(0,0,0,0.7);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <button onclick="ucalNav(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:30px;height:30px;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;">‹</button>
+    <span id="ucal-title" style="font-size:13px;font-weight:500;color:#fff;"></span>
+    <button onclick="ucalNav(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:30px;height:30px;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;">›</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+  </div>
+  <div id="ucal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
+    <button onclick="ucalClear()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
+    <button onclick="ucalToday()" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
+  </div>
+</div>
+
+<script>
+/* ── Universal Calendar ── */
+var _uc = { year:new Date().getFullYear(), month:new Date().getMonth(), selected:'', inputId:'', labelId:'', cb:null };
+
+function ucalFmtDisplay(val){
+  if(!val) return 'Select date';
+  var p=val.split('-');
+  var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return parseInt(p[2])+' '+mn[parseInt(p[1])-1]+' '+p[0];
+}
+
+function ucalSetDisplay(inputId, labelId, val){
+  var inp=document.getElementById(inputId);
+  var lbl=document.getElementById(labelId);
+  if(inp) inp.value=val||'';
+  if(lbl){ lbl.textContent=val?ucalFmtDisplay(val):'Select date'; lbl.style.color=val?'#fff':''; }
+}
+
+function openUCal(inputId, labelId, cb){
+  var inp=document.getElementById(inputId);
+  var trigger=document.getElementById(inputId+'-trigger')||document.getElementById(labelId.replace('-label','-trigger'));
+  _uc.inputId=inputId; _uc.labelId=labelId; _uc.cb=cb||null;
+  _uc.selected=(inp&&inp.value)||'';
+  if(_uc.selected){ var p=_uc.selected.split('-'); _uc.year=parseInt(p[0]); _uc.month=parseInt(p[1])-1; }
+  else { var n=new Date(); _uc.year=n.getFullYear(); _uc.month=n.getMonth(); }
+  var pop=document.getElementById('ucal-popup');
+  renderUCal();
+  pop.style.display='block';
+  if(trigger){
+    var r=trigger.getBoundingClientRect();
+    var popW=264, winW=window.innerWidth;
+    var left=r.left; if(left+popW>winW-8) left=winW-popW-8;
+    var top=r.bottom+6; if(top+320>window.innerHeight) top=r.top-320-6;
+    pop.style.left=Math.max(8,left)+'px'; pop.style.top=Math.max(8,top)+'px';
+  }
+}
+
+function renderUCal(){
+  var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('ucal-title').textContent=mn[_uc.month]+' '+_uc.year;
+  var first=new Date(_uc.year,_uc.month,1).getDay();
+  var total=new Date(_uc.year,_uc.month+1,0).getDate();
+  var today=new Date().toISOString().slice(0,10);
+  var html='';
+  for(var i=0;i<first;i++) html+='<div></div>';
+  for(var d=1;d<=total;d++){
+    var val=_uc.year+'-'+String(_uc.month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isSel=val===_uc.selected, isToday=val===today;
+    var bg=isSel?'#0A84FF':isToday?'rgba(10,132,255,0.18)':'transparent';
+    var col=isSel?'#fff':isToday?'#0A84FF':'rgba(255,255,255,0.75)';
+    html+='<div onclick="ucalSelect(\''+val+'\')" style="text-align:center;padding:5px 2px;border-radius:8px;font-size:12px;cursor:pointer;background:'+bg+';color:'+col+';font-weight:'+(isSel||isToday?'600':'400')+';transition:background 0.1s;" onmouseover="if(!this.dataset.sel)this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\''+bg+'\'" '+(isSel?'data-sel="1"':'')+'>'+d+'</div>';
+  }
+  document.getElementById('ucal-days').innerHTML=html;
+}
+
+function ucalNav(dir){
+  _uc.month+=dir;
+  if(_uc.month>11){_uc.month=0;_uc.year++;}
+  if(_uc.month<0){_uc.month=11;_uc.year--;}
+  renderUCal();
+}
+
+function ucalSelect(val){
+  _uc.selected=val;
+  ucalSetDisplay(_uc.inputId,_uc.labelId,val);
+  document.getElementById('ucal-popup').style.display='none';
+  if(_uc.cb) _uc.cb();
+}
+
+function ucalClear(){
+  _uc.selected='';
+  ucalSetDisplay(_uc.inputId,_uc.labelId,'');
+  document.getElementById('ucal-popup').style.display='none';
+  if(_uc.cb) _uc.cb();
+}
+
+function ucalToday(){
+  ucalSelect(new Date().toISOString().slice(0,10));
+}
+
+document.addEventListener('click',function(e){
+  var pop=document.getElementById('ucal-popup');
+  if(!pop||pop.style.display==='none') return;
+  var triggers=document.querySelectorAll('[id$="-trigger"]');
+  var inside=pop.contains(e.target);
+  if(!inside) for(var i=0;i<triggers.length;i++) if(triggers[i].contains(e.target)){inside=true;break;}
+  if(!inside) pop.style.display='none';
+});
 </script>
 
 </body></html>
