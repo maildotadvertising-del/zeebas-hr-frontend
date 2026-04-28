@@ -627,39 +627,13 @@ textarea.inp{resize:none;}
         </select>
       </div>
 
-      <!-- Due Date + Priority -->
+      <!-- Team Leader + Priority -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
         <div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Due Date</div>
-          <div style="position:relative;">
-            <div id="task-due-trigger" onclick="toggleTaskCal()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--muted);user-select:none;" id="task-due-trigger">
-              <span id="task-due-label">Select date</span>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg>
-            </div>
-            <input type="hidden" id="task-due">
-            <!-- Custom Calendar Dropdown -->
-            <div id="task-cal-popup" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:260px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                <button onclick="taskCalNav(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
-                <span id="task-cal-title" style="font-size:13px;font-weight:500;color:#fff;"></span>
-                <button onclick="taskCalNav(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div>
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div>
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div>
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div>
-                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
-              </div>
-              <div id="task-cal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
-              <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
-                <button onclick="taskCalClear()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
-                <button onclick="taskCalToday()" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
-              </div>
-            </div>
-          </div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Team Leader</div>
+          <select class="inp" id="task-team-leader">
+            <option value="">No Team Leader</option>
+          </select>
         </div>
         <div>
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Priority</div>
@@ -668,6 +642,60 @@ textarea.inp{resize:none;}
             <option value="medium" selected>🟡 Medium</option>
             <option value="low">🟢 Low</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Due Date + End Date -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Due Date</div>
+          <div style="position:relative;">
+            <div id="task-due-trigger" onclick="toggleTaskCal('due')" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--muted);user-select:none;">
+              <span id="task-due-label">Select date</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <input type="hidden" id="task-due">
+            <div id="task-cal-popup" style="display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:260px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <button onclick="taskCalNav(-1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
+                <span id="task-cal-title" style="font-size:13px;font-weight:500;color:#fff;"></span>
+                <button onclick="taskCalNav(1)" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+              </div>
+              <div id="task-cal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
+                <button onclick="taskCalClear('due')" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
+                <button onclick="taskCalToday('due')" style="background:none;border:none;color:#0A84FF;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Date</div>
+          <div style="position:relative;">
+            <div id="task-end-trigger" onclick="toggleTaskCal('end')" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--muted);user-select:none;">
+              <span id="task-end-label">Select date</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <input type="hidden" id="task-end">
+            <div id="task-end-cal-popup" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;min-width:260px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <button onclick="taskCalNav(-1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
+                <span id="task-end-cal-title" style="font-size:13px;font-weight:500;color:#fff;"></span>
+                <button onclick="taskCalNav(1,'end')" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+                <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">M</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">W</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">T</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">F</div><div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);padding:3px 0;">S</div>
+              </div>
+              <div id="task-end-cal-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">
+                <button onclick="taskCalClear('end')" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;padding:3px 6px;">Clear</button>
+                <button onclick="taskCalToday('end')" style="background:none;border:none;color:#30D158;font-size:11px;cursor:pointer;padding:3px 6px;">Today</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1061,6 +1089,25 @@ textarea.inp{resize:none;}
             <div style="font-size:13px;color:var(--muted);">No messages yet</div>
             <div style="font-size:11px;color:var(--muted);">Chat with your team here</div>
           </div>
+        </div>
+        <!-- Reply banner -->
+        <div id="dash-reply-banner" style="display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(10,132,255,0.07);border-top:2px solid #0A84FF;flex-shrink:0;">
+          <div style="flex:1;">
+            <div id="dash-reply-name" style="font-size:10px;font-weight:600;color:#0A84FF;margin-bottom:1px;"></div>
+            <div id="dash-reply-text" style="font-size:12px;color:rgba(245,245,247,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;"></div>
+          </div>
+          <button onclick="dClearReply()" style="background:none;border:none;color:rgba(245,245,247,0.35);font-size:18px;cursor:pointer;padding:0 4px;">✕</button>
+        </div>
+        <!-- React picker (fixed overlay) -->
+        <div id="dash-react-picker" style="display:none;position:fixed;background:rgba(28,28,38,0.97);backdrop-filter:blur(24px);border:0.5px solid rgba(255,255,255,0.1);border-radius:32px;padding:10px 14px;box-shadow:0 10px 40px rgba(0,0,0,0.6);z-index:999;gap:8px;align-items:center;">
+          <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('❤️')" title="Love">❤️</span>
+          <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('👍')" title="Like">👍</span>
+          <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('😂')" title="Haha">😂</span>
+          <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('😮')" title="Wow">😮</span>
+          <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('🙏')" title="Thanks">🙏</span>
+          <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('🔥')" title="Fire">🔥</span>
+          <div style="width:1px;height:28px;background:rgba(255,255,255,0.1);margin:0 2px;"></div>
+          <span style="font-size:13px;cursor:pointer;color:rgba(245,245,247,0.6);white-space:nowrap;" onclick="dReplyToMsg()">↩ Reply</span>
         </div>
         <!-- Input -->
         <div style="border-top:0.5px solid rgba(255,255,255,0.07);padding:12px 16px;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.2);backdrop-filter:blur(20px);flex-shrink:0;position:relative;">
@@ -2449,6 +2496,18 @@ function connectDashSocket(){
     if(sub) sub.textContent='Zeebas Cluster — All Staff · '+n+' online';
   });
   dashSocket.on('message-pinned', function(){ loadDashPinned(); });
+  dashSocket.on('reaction-update', function(data){
+    var row=document.getElementById('drrow-'+data.message_id); if(!row) return;
+    row.innerHTML='';
+    (data.reactions||[]).forEach(function(r){
+      var chip=document.createElement('div');
+      chip.className='reaction-chip-d';chip.setAttribute('data-emoji',r.emoji);
+      chip.innerHTML=r.emoji+' <span class="dcnt">'+r.cnt+'</span>';
+      chip.onclick=(function(e,mid){ return function(){ dashToggleReact(e,mid); }; })(r.emoji,data.message_id);
+      row.appendChild(chip);
+    });
+    row.style.display=row.children.length?'flex':'none';
+  });
   dashSocket.on('disconnect', function(){
     var sub=document.querySelector('#page-team-chat .psub');
     if(sub) sub.textContent='Zeebas Cluster — Reconnecting…';
@@ -2487,7 +2546,7 @@ async function loadChatMembers(){
     var list=document.getElementById('chat-members-list'); if(!list||!d.success) return;
     list.innerHTML=d.data.map(function(m){
       var init=(m.name||'?').charAt(0).toUpperCase();
-      var avSrc=m.photo_data||(m.photo_url?API+m.photo_url:null);
+      var avSrc=m.photo_url?API+m.photo_url:null;
       var av=avSrc
         ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
         :'<div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">'+init+'</div>';
@@ -2499,32 +2558,104 @@ async function loadChatMembers(){
   }catch(e){ console.error('loadChatMembers:',e); }
 }
 
+var _dReplyTo=null, _dReactMsgId=null, _dReactMsgName='', _dReactMsgText='';
+function dSetReply(id,name,text){
+  _dReplyTo={id:id,name:name,text:text};
+  var rb=document.getElementById('dash-reply-banner'),rn=document.getElementById('dash-reply-name'),rt=document.getElementById('dash-reply-text');
+  if(rn)rn.textContent=name; if(rt)rt.textContent=(text||'').slice(0,80);
+  if(rb)rb.style.display='flex';
+}
+function dClearReply(){
+  _dReplyTo=null;
+  var rb=document.getElementById('dash-reply-banner'); if(rb)rb.style.display='none';
+}
+function dReplyToMsg(){
+  var rp=document.getElementById('dash-react-picker'); if(rp)rp.style.display='none';
+  if(_dReactMsgId) dSetReply(_dReactMsgId,_dReactMsgName||'',_dReactMsgText||'');
+  var ci=document.getElementById('dash-ci'); if(ci)ci.focus();
+}
+function dashSendReact(emoji){
+  var rp=document.getElementById('dash-react-picker'); if(rp)rp.style.display='none';
+  if(!_dReactMsgId||String(_dReactMsgId).indexOf('loc-')===0) return;
+  var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  if(dashSocket&&dashSocket.connected){
+    dashSocket.emit('react',{message_id:_dReactMsgId,staff_id:staff.id,emoji:emoji});
+  } else {
+    fetch(API+'/api/chat/react/'+_dReactMsgId,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({emoji:emoji})}).catch(function(){});
+  }
+}
+function dashToggleReact(emoji,msgId){
+  if(!msgId||String(msgId).indexOf('loc-')===0) return;
+  var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  if(dashSocket&&dashSocket.connected){
+    dashSocket.emit('react',{message_id:msgId,staff_id:staff.id,emoji:emoji});
+  } else {
+    fetch(API+'/api/chat/react/'+msgId,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({emoji:emoji})}).catch(function(){});
+  }
+}
+
 function appendDashMsg(msg, doScroll){
   var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
   var msgs=document.getElementById('dash-msgs'); if(!msgs) return;
-  // Clear empty state
   if(msgs.querySelector('[style*="opacity:0.4"]')) msgs.innerHTML='';
   var isMe=msg.staff_id===staff.id;
   var init=(msg.staff_name||'?').charAt(0).toUpperCase();
-  var avSrc2=msg.photo_data||(msg.photo_url?API+msg.photo_url:null);
-  var av=avSrc2
-    ?'<img src="'+avSrc2+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
+  var avSrc=msg.photo_url?API+msg.photo_url:null;
+  var av=avSrc
+    ?'<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
     :'<div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
   var t=msg.created_at?fmtTime(msg.created_at):(function(){var n=new Date(),h=n.getHours(),m=n.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
   var bubbleStyle=isMe
     ?'background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));border:0.5px solid rgba(10,132,255,0.22);border-radius:16px;border-bottom-right-radius:4px;'
     :'background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:16px;border-bottom-left-radius:4px;';
-  var div=document.createElement('div');
-  div.style.cssText='display:flex;align-items:flex-end;gap:8px;'+(isMe?'flex-direction:row-reverse;':'');
-  div.innerHTML=av
+
+  // Reply quote
+  var replyHtml='';
+  if(msg.reply_to_id){
+    replyHtml='<div style="border-left:3px solid '+(isMe?'rgba(255,255,255,0.4)':'#0A84FF')+';background:rgba(0,0,0,0.2);border-radius:6px;padding:5px 9px;margin-bottom:6px;">'
+      +'<div style="font-size:10px;font-weight:600;color:#0A84FF;margin-bottom:1px;">'+(msg.reply_to_name||'')+'</div>'
+      +'<div style="font-size:11px;color:rgba(245,245,247,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">'+(msg.reply_to_text||'').slice(0,80)+'</div>'
+      +'</div>';
+  }
+
+  // Reactions
+  var reactHtml='<div class="reaction-row-d" id="drrow-'+(msg.id||'')+'" style="display:none;"></div>';
+  if(msg.reactions&&msg.reactions.length){
+    var chips='';
+    msg.reactions.forEach(function(r){
+      chips+='<div class="reaction-chip-d" data-emoji="'+r.emoji+'" onclick="dashToggleReact(\''+r.emoji+'\',\''+(msg.id||'')+'\')">'+r.emoji+' <span class="dcnt">'+r.count+'</span></div>';
+    });
+    reactHtml='<div class="reaction-row-d" id="drrow-'+(msg.id||'')+'" style="display:flex;">'+chips+'</div>';
+  }
+
+  var msgId=msg.id||('loc-'+Date.now());
+  var wrap=document.createElement('div');
+  wrap.style.cssText='margin-bottom:6px;';
+  wrap.setAttribute('data-msgid',msgId);
+  wrap.innerHTML='<div style="display:flex;align-items:flex-end;gap:8px;'+(isMe?'flex-direction:row-reverse;':'')+'margin-bottom:2px;">'
+    +av
     +'<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';max-width:65%;">'
-    +(isMe?''
-      :'<div style="font-size:9px;color:var(--muted);margin-bottom:3px;padding-left:2px;">'+msg.staff_name+(msg.brand_name?' · '+msg.brand_name:'')+'</div>')
-    +'<div style="'+bubbleStyle+'backdrop-filter:blur(14px);padding:9px 13px;font-size:13px;font-weight:300;color:#fff;word-break:break-word;">'
-    +((msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</div>'
+    +(isMe?'':'<div style="font-size:9px;color:var(--muted);margin-bottom:3px;padding-left:2px;">'+(msg.staff_name||'')+(msg.brand_name?' · '+msg.brand_name:'')+'</div>')
+    +'<div class="dbubble" style="'+bubbleStyle+'backdrop-filter:blur(14px);padding:9px 13px;font-size:13px;font-weight:300;color:#fff;word-break:break-word;cursor:default;">'
+    +replyHtml+((msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</div>'
     +'<div style="font-size:9px;color:rgba(245,245,247,0.22);margin-top:3px;padding:'+(isMe?'0 2px 0 0':'0 0 0 2px')+';">'+t+(isMe?' ✓✓':'')+'</div>'
-    +'</div>';
-  msgs.appendChild(div);
+    +reactHtml
+    +'</div></div>';
+
+  // Right-click / context menu → reaction picker
+  var bubble=wrap.querySelector('.dbubble');
+  if(bubble){
+    bubble.addEventListener('contextmenu',function(e){
+      e.preventDefault();
+      _dReactMsgId=msgId; _dReactMsgName=msg.staff_name||''; _dReactMsgText=msg.message||'';
+      var rp=document.getElementById('dash-react-picker'); if(!rp) return;
+      var top=e.clientY-70; if(top<10) top=e.clientY+8;
+      var left=Math.max(8,Math.min(e.clientX-140,window.innerWidth-300));
+      rp.style.top=top+'px'; rp.style.left=left+'px'; rp.style.display='flex';
+    });
+  }
+
+  msgs.appendChild(wrap);
   if(doScroll!==false) msgs.scrollTop=msgs.scrollHeight;
 }
 
@@ -2533,14 +2664,16 @@ async function dashSend(){
   var txt=(inp.value||'').trim(); if(!txt) return;
   inp.value='';
   var staff={};try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  var reply=_dReplyTo?{reply_to_id:_dReplyTo.id,reply_to_text:_dReplyTo.text,reply_to_name:_dReplyTo.name}:{};
+  dClearReply();
 
   if(dashSocket && dashSocket.connected){
-    dashSocket.emit('send-message',{staff_id:staff.id, message:txt, type:'text'});
-    // Optimistic: append right away so sender sees it instantly
-    appendDashMsg({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, brand_name:staff.brand&&staff.brand.name, message:txt, created_at:new Date()});
+    dashSocket.emit('send-message',Object.assign({staff_id:staff.id,message:txt,type:'text'},reply));
+    appendDashMsg(Object.assign({staff_id:staff.id,staff_name:staff.name,photo_url:staff.photo_url,brand_name:staff.brand&&staff.brand.name,message:txt,created_at:new Date(),reactions:[]},reply));
   } else {
     try{
-      var res=await fetch(API+'/api/chat/messages',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({message:txt})});
+      var body=Object.assign({message:txt},reply);
+      var res=await fetch(API+'/api/chat/messages',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify(body)});
       var d=await res.json();
       if(d.success) appendDashMsg(d.data);
       else showToast('❌ '+(d.message||'Send failed'));
@@ -2668,36 +2801,13 @@ document.getElementById('dash-ci').addEventListener('input',function(){
 });
 (function(){var si=document.getElementById('dash-send-icon');var mi=document.getElementById('dash-mic-icon');if(si)si.style.display='none';if(mi)mi.style.display='block';})();
 
-// Dashboard emoji reactions
-var dActiveBar=null;
-function dShowEmoji(id,side){
-  dHideAll();
-  var b=document.getElementById('debar-'+id);
-  if(b){b.style.display='block';dActiveBar=b;}
-}
-function dHideAll(){
-  document.querySelectorAll('.emoji-bar-d').forEach(function(b){b.style.display='none';});
-  dActiveBar=null;
-}
-function dReact(id,emoji){
-  dHideAll();
-  var row=document.getElementById('drrow-'+id);
-  if(!row)return;
-  var chips=row.querySelectorAll('.reaction-chip-d');
-  for(var i=0;i<chips.length;i++){
-    if(chips[i].getAttribute('data-emoji')===emoji){
-      var cnt=chips[i].querySelector('span.dcnt');
-      if(cnt)cnt.textContent=parseInt(cnt.textContent||'1')+1;
-      return;
-    }
+// Dashboard reaction picker dismiss
+document.addEventListener('click',function(e){
+  var rp=document.getElementById('dash-react-picker');
+  if(rp&&rp.style.display==='flex'&&!e.target.closest('#dash-react-picker')&&!e.target.closest('.dbubble')){
+    rp.style.display='none';
   }
-  var chip=document.createElement('div');
-  chip.className='reaction-chip-d';chip.setAttribute('data-emoji',emoji);
-  chip.innerHTML=emoji+' <span class="dcnt">1</span>';
-  chip.onclick=function(){var c=this.querySelector('.dcnt');if(c){var n=parseInt(c.textContent)+1;if(n>8)this.remove();else c.textContent=n;}};
-  row.appendChild(chip);row.style.display='flex';
-}
-document.addEventListener('click',function(e){if(dActiveBar&&!e.target.closest('.emoji-bar-d')&&!e.target.closest('.g'))dHideAll();});
+});
 function selConnType(el,type){
   document.querySelectorAll('#conn-type > div').forEach(function(d){
     d.style.background='rgba(255,255,255,0.04)';
@@ -3581,7 +3691,8 @@ async function openAddTask(){
   document.getElementById('task-desc').value     = '';
   document.getElementById('task-brand').value    = '';
   document.getElementById('task-category').value = '';
-  taskCalSetValue('');
+  taskCalSetValue('', 'due');
+  taskCalSetValue('', 'end');
   document.getElementById('task-priority').value = 'medium';
   document.getElementById('task-status').value   = 'pending';
   document.getElementById('task-file-name').textContent = 'Click to choose file';
@@ -3591,6 +3702,7 @@ async function openAddTask(){
   resetSubTasks();
 
   await loadStaffDropdown();
+  await loadTeamLeaderDropdown();
   document.getElementById('task-overlay').style.display = 'block';
   document.getElementById('task-panel').style.display   = 'block';
 }
@@ -3610,7 +3722,8 @@ async function openEditTask(id){
     document.getElementById('task-desc').value     = t.description || '';
     document.getElementById('task-brand').value    = t.brand_id || '';
     document.getElementById('task-category').value = t.category || '';
-    taskCalSetValue(t.due_date ? t.due_date.slice(0,10) : '');
+    taskCalSetValue(t.due_date ? t.due_date.slice(0,10) : '', 'due');
+    taskCalSetValue(t.end_date ? t.end_date.slice(0,10) : '', 'end');
     document.getElementById('task-priority').value = t.priority || 'medium';
     document.getElementById('task-status').value   = t.status || 'pending';
     document.getElementById('task-status-row').style.display = '';
@@ -3623,6 +3736,7 @@ async function openEditTask(id){
     loadSubTasksFromData(t.subtasks);
 
     await loadStaffDropdown(t.assigned_to);
+    await loadTeamLeaderDropdown(t.team_leader_id);
     document.getElementById('task-overlay').style.display = 'block';
     document.getElementById('task-panel').style.display   = 'block';
   } catch(e){ showToast('Error loading task'); }
@@ -3649,86 +3763,137 @@ function renderStaffDropdown(sel, staff, selectedId){
       }).join('');
 }
 
-/* ── Save Task (Add or Edit) ── */
-/* ── Custom Task Due-Date Calendar ── */
-var _taskCal = { year: new Date().getFullYear(), month: new Date().getMonth(), selected: '' };
+async function loadTeamLeaderDropdown(selectedId){
+  var sel = document.getElementById('task-team-leader'); if(!sel) return;
+  try{
+    var staff = _staffCache.length ? _staffCache : (function(){
+      return fetch(API+'/api/staff',{headers:zHdr()}).then(function(r){return r.json();}).then(function(d){ _staffCache=d.data||[]; return _staffCache; });
+    })();
+    if(staff && staff.then) staff = await staff;
+    var leaders = staff.filter(function(s){ return s.role==='team_leader'||s.role==='admin'||s.is_owner; });
+    sel.innerHTML = '<option value="">No Team Leader</option>'
+      + leaders.map(function(s){
+          var badge = s.is_owner ? '👑' : s.role==='admin' ? '🔑' : '⭐';
+          return '<option value="'+s.id+'"'+(String(s.id)===String(selectedId)?' selected':'')+'>'+badge+' '+escHtml(s.name)+'</option>';
+        }).join('');
+  }catch(e){ sel.innerHTML='<option value="">No Team Leader</option>'; }
+}
 
-function toggleTaskCal(){
-  var pop = document.getElementById('task-cal-popup');
+/* ── Save Task (Add or Edit) ── */
+/* ── Custom Task Calendar (shared for Due + End) ── */
+var _taskCal    = { year: new Date().getFullYear(), month: new Date().getMonth(), selected: '' };
+var _taskEndCal = { year: new Date().getFullYear(), month: new Date().getMonth(), selected: '' };
+
+function toggleTaskCal(mode){
+  mode = mode || 'due';
+  var popId = mode==='end' ? 'task-end-cal-popup' : 'task-cal-popup';
+  var otherPopId = mode==='end' ? 'task-cal-popup' : 'task-end-cal-popup';
+  document.getElementById(otherPopId).style.display = 'none';
+  var pop = document.getElementById(popId);
   if(!pop) return;
-  var open = pop.style.display !== 'none';
-  if(open){ pop.style.display='none'; return; }
-  if(!_taskCal.selected){
-    var n = new Date(); _taskCal.year = n.getFullYear(); _taskCal.month = n.getMonth();
-  }
-  renderTaskCal();
+  if(pop.style.display !== 'none'){ pop.style.display='none'; return; }
+  var cal = mode==='end' ? _taskEndCal : _taskCal;
+  if(!cal.selected){ var n=new Date(); cal.year=n.getFullYear(); cal.month=n.getMonth(); }
+  renderTaskCalFor(mode);
   pop.style.display = 'block';
 }
 
-function renderTaskCal(){
+function renderTaskCalFor(mode){
+  var cal = mode==='end' ? _taskEndCal : _taskCal;
+  var titleId = mode==='end' ? 'task-end-cal-title' : 'task-cal-title';
+  var daysId  = mode==='end' ? 'task-end-cal-days'  : 'task-cal-days';
+  var accentColor = mode==='end' ? '#30D158' : '#0A84FF';
+  var accentRgba  = mode==='end' ? 'rgba(48,209,88,0.18)' : 'rgba(10,132,255,0.18)';
   var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var title = document.getElementById('task-cal-title');
-  var daysEl = document.getElementById('task-cal-days');
+  var title = document.getElementById(titleId);
+  var daysEl = document.getElementById(daysId);
   if(!title||!daysEl) return;
-  title.textContent = months[_taskCal.month] + ' ' + _taskCal.year;
-  var first = new Date(_taskCal.year, _taskCal.month, 1).getDay();
-  var total = new Date(_taskCal.year, _taskCal.month+1, 0).getDate();
+  title.textContent = months[cal.month] + ' ' + cal.year;
+  var first = new Date(cal.year, cal.month, 1).getDay();
+  var total = new Date(cal.year, cal.month+1, 0).getDate();
   var today = new Date().toISOString().slice(0,10);
   var html = '';
   for(var i=0;i<first;i++) html += '<div></div>';
   for(var d=1;d<=total;d++){
-    var val = _taskCal.year+'-'+String(_taskCal.month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var val = cal.year+'-'+String(cal.month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isPast = val < today;
     var isToday = val===today;
-    var isSel = val===_taskCal.selected;
-    var bg = isSel ? '#0A84FF' : isToday ? 'rgba(10,132,255,0.18)' : 'transparent';
-    var col = isSel ? '#fff' : isToday ? '#0A84FF' : 'rgba(255,255,255,0.75)';
-    var fw = (isToday||isSel) ? '600' : '400';
-    html += '<div onclick="selectTaskCalDay(\''+val+'\')" style="text-align:center;padding:5px 2px;border-radius:8px;font-size:12px;cursor:pointer;background:'+bg+';color:'+col+';font-weight:'+fw+';transition:background 0.15s;" onmouseover="if(\''+val+'\'!==\''+_taskCal.selected+'\')this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\''+bg+'\'">'+d+'</div>';
+    var isSel = val===cal.selected;
+    if(isPast){
+      html += '<div style="text-align:center;padding:5px 2px;border-radius:8px;font-size:12px;color:rgba(255,255,255,0.18);cursor:not-allowed;user-select:none;">'+d+'</div>';
+    } else {
+      var bg = isSel ? accentColor : isToday ? accentRgba : 'transparent';
+      var col = isSel ? '#fff' : isToday ? accentColor : 'rgba(255,255,255,0.8)';
+      var fw = (isToday||isSel) ? '600' : '400';
+      html += '<div onclick="selectTaskCalDay(\''+val+'\',\''+mode+'\')" style="text-align:center;padding:5px 2px;border-radius:8px;font-size:12px;cursor:pointer;background:'+bg+';color:'+col+';font-weight:'+fw+';transition:background 0.15s;" onmouseover="if(!'+isSel+')this.style.background=\'rgba(255,255,255,0.09)\'" onmouseout="this.style.background=\''+bg+'\'">'+d+'</div>';
+    }
   }
   daysEl.innerHTML = html;
 }
 
-function taskCalNav(dir){
-  _taskCal.month += dir;
-  if(_taskCal.month > 11){ _taskCal.month=0; _taskCal.year++; }
-  if(_taskCal.month < 0){ _taskCal.month=11; _taskCal.year--; }
-  renderTaskCal();
+function taskCalNav(dir, mode){
+  mode = mode || 'due';
+  var cal = mode==='end' ? _taskEndCal : _taskCal;
+  cal.month += dir;
+  if(cal.month > 11){ cal.month=0; cal.year++; }
+  if(cal.month < 0){ cal.month=11; cal.year--; }
+  renderTaskCalFor(mode);
 }
 
-function selectTaskCalDay(val){
-  _taskCal.selected = val;
-  taskCalSetValue(val);
-  document.getElementById('task-cal-popup').style.display='none';
+function selectTaskCalDay(val, mode){
+  mode = mode || 'due';
+  var cal = mode==='end' ? _taskEndCal : _taskCal;
+  cal.selected = val;
+  taskCalSetValue(val, mode);
+  var popId = mode==='end' ? 'task-end-cal-popup' : 'task-cal-popup';
+  document.getElementById(popId).style.display='none';
 }
 
-function taskCalSetValue(val){
-  _taskCal.selected = val || '';
-  var inp = document.getElementById('task-due');
-  var lbl = document.getElementById('task-due-label');
+function taskCalSetValue(val, mode){
+  mode = mode || 'due';
+  var cal = mode==='end' ? _taskEndCal : _taskCal;
+  cal.selected = val || '';
+  var inpId = mode==='end' ? 'task-end' : 'task-due';
+  var lblId = mode==='end' ? 'task-end-label' : 'task-due-label';
+  var accentColor = mode==='end' ? '#30D158' : '#fff';
+  var inp = document.getElementById(inpId);
+  var lbl = document.getElementById(lblId);
   if(inp) inp.value = val || '';
   if(lbl){
     if(val){
       var parts = val.split('-');
-      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      lbl.style.color = '#fff';
-      lbl.textContent = parseInt(parts[2])+' '+months[parseInt(parts[1])-1]+' '+parts[0];
+      var mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      lbl.style.color = accentColor;
+      lbl.textContent = parseInt(parts[2])+' '+mos[parseInt(parts[1])-1]+' '+parts[0];
+      cal.year=parseInt(parts[0]); cal.month=parseInt(parts[1])-1;
     } else {
       lbl.style.color = '';
       lbl.textContent = 'Select date';
     }
-    if(val){ _taskCal.year=parseInt(parts[0]); _taskCal.month=parseInt(parts[1])-1; }
   }
 }
 
-function taskCalClear(){ taskCalSetValue(''); document.getElementById('task-cal-popup').style.display='none'; }
-function taskCalToday(){ var t=new Date().toISOString().slice(0,10); selectTaskCalDay(t); }
+function taskCalClear(mode){
+  taskCalSetValue('', mode||'due');
+  var popId = (mode==='end') ? 'task-end-cal-popup' : 'task-cal-popup';
+  document.getElementById(popId).style.display='none';
+}
+function taskCalToday(mode){
+  var t = new Date().toISOString().slice(0,10);
+  selectTaskCalDay(t, mode||'due');
+}
+// Also keep old signature alias (in case called without mode from existing code)
+function renderTaskCal(){ renderTaskCalFor('due'); }
 
 document.addEventListener('click', function(e){
-  var pop = document.getElementById('task-cal-popup');
-  var trigger = document.getElementById('task-due-trigger');
-  if(pop && pop.style.display!=='none' && !pop.contains(e.target) && trigger && !trigger.contains(e.target)){
-    pop.style.display='none';
-  }
+  ['task-cal-popup','task-end-cal-popup'].forEach(function(pid){
+    var pop = document.getElementById(pid);
+    var tId = pid==='task-cal-popup' ? 'task-due-trigger' : 'task-end-trigger';
+    var trigger = document.getElementById(tId);
+    if(pop && pop.style.display!=='none' && !pop.contains(e.target) && trigger && !trigger.contains(e.target)){
+      pop.style.display='none';
+    }
+  });
 });
 
 async function saveTask(){
@@ -3749,9 +3914,11 @@ async function saveTask(){
   fd.append('title',       title);
   fd.append('description', document.getElementById('task-desc').value.trim());
   fd.append('brand_id',    document.getElementById('task-brand').value);
-  fd.append('category',    category);
-  fd.append('assigned_to', assigned);
-  fd.append('due_date',    document.getElementById('task-due').value);
+  fd.append('category',       category);
+  fd.append('assigned_to',    assigned);
+  fd.append('due_date',       document.getElementById('task-due').value);
+  fd.append('end_date',       document.getElementById('task-end').value);
+  fd.append('team_leader_id', document.getElementById('task-team-leader').value);
   fd.append('priority',    document.getElementById('task-priority').value);
   if(id) fd.append('status', document.getElementById('task-status').value);
   var file = document.getElementById('task-file').files[0];

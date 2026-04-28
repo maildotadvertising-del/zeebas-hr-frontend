@@ -311,78 +311,181 @@ select.inp option{background:#1A1A2E;color:#fff;}
 
     <!-- CHAT (WhatsApp style) — TAB 3 -->
     <div id="s1-chat" class="scr" style="background:#0B141A;">
-      <!-- Header — WhatsApp style -->
-      <div style="padding:10px 14px 10px;background:#1F2C34;flex-shrink:0;display:flex;align-items:center;gap:11px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
-        <div style="position:relative;flex-shrink:0;">
-          <div style="width:42px;height:42px;background:linear-gradient(145deg,#075E54,#128C7E);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <!-- Header -->
+      <div style="padding:10px 14px 0;background:#1F2C34;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:10px;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:42px;height:42px;background:linear-gradient(145deg,#075E54,#128C7E);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:#30D158;border-radius:50%;border:2px solid #1F2C34;"></div>
           </div>
-          <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:#30D158;border-radius:50%;border:2px solid #1F2C34;"></div>
-        </div>
-        <div style="flex:1;">
-          <div style="color:#E8E8E8;font-size:15px;font-weight:500;">Zeebas Cluster</div>
-          <div id="chat1-sub" style="color:rgba(232,232,232,0.5);font-size:11px;">Connecting…</div>
-        </div>
-        <div style="display:flex;gap:14px;align-items:center;">
-          <button style="background:none;border:none;cursor:pointer;padding:4px;" onclick="toggleSearch()">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="5.5" stroke="rgba(232,232,232,0.6)" stroke-width="1.5"/><path d="M13 13l3 3" stroke="rgba(232,232,232,0.6)" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
-          <button style="background:none;border:none;cursor:pointer;padding:4px;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4.5" r="1.4" fill="rgba(232,232,232,0.6)"/><circle cx="9" cy="9" r="1.4" fill="rgba(232,232,232,0.6)"/><circle cx="9" cy="13.5" r="1.4" fill="rgba(232,232,232,0.6)"/></svg>
+          <div style="flex:1;">
+            <div style="color:#E8E8E8;font-size:15px;font-weight:500;">Zeebas Cluster</div>
+            <div id="chat1-sub" style="color:rgba(232,232,232,0.5);font-size:11px;">Connecting…</div>
+          </div>
+          <button onclick="openDmList()" style="background:none;border:none;cursor:pointer;padding:4px;position:relative;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="8" r="3.5" stroke="rgba(232,232,232,0.6)" stroke-width="1.4"/><circle cx="14" cy="7" r="2.5" stroke="rgba(232,232,232,0.6)" stroke-width="1.4"/><path d="M2 16c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke="rgba(232,232,232,0.6)" stroke-width="1.4" stroke-linecap="round"/><path d="M16 14c0-1.5-1-2.5-2-3" stroke="rgba(232,232,232,0.6)" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <div id="dm-badge" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;background:#FF453A;border-radius:50%;border:1.5px solid #1F2C34;"></div>
           </button>
         </div>
-      </div>
-
-      <!-- Pinned message -->
-      <div id="pinned-msg" style="background:rgba(10,132,255,0.08);border-bottom:0.5px solid rgba(10,132,255,0.12);padding:7px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;">
-        <div style="width:3px;height:28px;background:#0A84FF;border-radius:2px;flex-shrink:0;"></div>
-        <div style="flex:1;overflow:hidden;">
-          <div style="color:#0A84FF;font-size:10px;font-weight:600;margin-bottom:1px;">📌 Pinned Message</div>
-          <div id="pinned-text" style="color:rgba(232,232,232,0.6);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div>
+        <!-- Tab strip -->
+        <div style="display:flex;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+          <button id="tab-group" onclick="switchChatTab('group')" style="flex:1;padding:8px 0;background:none;border:none;border-bottom:2px solid #25D366;color:#25D366;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">💬 Group</button>
+          <button id="tab-dms" onclick="switchChatTab('dms')" style="flex:1;padding:8px 0;background:none;border:none;border-bottom:2px solid transparent;color:rgba(232,232,232,0.4);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">👤 Direct Messages</button>
         </div>
       </div>
 
-      <!-- Messages -->
-      <div class="scroll" style="padding:10px 0 8px;background:#0B141A;" id="msgs1">
-        <div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:60px;flex-direction:column;gap:10px;">
-          <div style="font-size:36px;opacity:0.25;">💬</div>
-          <div style="color:rgba(232,232,232,0.3);font-size:13px;text-align:center;">No messages yet — say hello!</div>
+      <!-- GROUP CHAT PANEL -->
+      <div id="chat-group-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+        <!-- Pinned message -->
+        <div id="pinned-msg" style="background:rgba(10,132,255,0.08);border-bottom:0.5px solid rgba(10,132,255,0.12);padding:7px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;">
+          <div style="width:3px;height:28px;background:#0A84FF;border-radius:2px;flex-shrink:0;"></div>
+          <div style="flex:1;overflow:hidden;">
+            <div style="color:#0A84FF;font-size:10px;font-weight:600;margin-bottom:1px;">📌 Pinned Message</div>
+            <div id="pinned-text" style="color:rgba(232,232,232,0.6);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div>
+          </div>
+        </div>
+        <!-- Messages -->
+        <div class="scroll" style="flex:1;padding:10px 0 8px;background:#0B141A;" id="msgs1">
+          <div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:60px;flex-direction:column;gap:10px;">
+            <div style="font-size:36px;opacity:0.25;">💬</div>
+            <div style="color:rgba(232,232,232,0.3);font-size:13px;text-align:center;">No messages yet — say hello!</div>
+          </div>
+        </div>
+        <!-- Emoji picker panel -->
+        <div id="emoji-panel" style="display:none;background:#1F2C34;border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;max-height:200px;overflow-y:auto;">
+          <div style="padding:6px 10px 4px;display:flex;gap:6px;border-bottom:0.5px solid rgba(255,255,255,0.06);overflow-x:auto;">
+            <button onclick="emojiCat('smileys')" id="ecat-smileys" style="background:#075E54;border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;">😊</button>
+            <button onclick="emojiCat('gestures')" id="ecat-gestures" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;">👍</button>
+            <button onclick="emojiCat('work')" id="ecat-work" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;">💼</button>
+            <button onclick="emojiCat('hearts')" id="ecat-hearts" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;">❤️</button>
+            <button onclick="emojiCat('symbols')" id="ecat-symbols" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;">✅</button>
+          </div>
+          <div id="emoji-grid" style="display:flex;flex-wrap:wrap;padding:8px 10px;gap:2px;"></div>
+        </div>
+        <!-- Reply banner (group) -->
+        <div id="reply-banner" style="display:none;background:rgba(7,94,84,0.15);border-top:2px solid #075E54;padding:8px 14px;flex-shrink:0;align-items:center;gap:8px;">
+          <div style="flex:1;"><div id="reply-name" style="font-size:11px;font-weight:600;color:#25D366;"></div><div id="reply-text" style="font-size:12px;color:rgba(232,232,232,0.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;"></div></div>
+          <button onclick="clearReply1()" style="background:none;border:none;color:rgba(232,232,232,0.4);font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <!-- Voice recording indicator (group) -->
+        <div id="voice-rec-bar" style="display:none;background:rgba(255,69,58,0.1);border-top:1px solid rgba(255,69,58,0.2);padding:8px 14px;flex-shrink:0;align-items:center;gap:10px;">
+          <div style="width:9px;height:9px;background:#FF453A;border-radius:50%;animation:recPulse 1s infinite;flex-shrink:0;"></div>
+          <span style="color:#FF453A;font-size:12px;font-weight:500;flex:1;">Recording… release to send</span>
+          <span id="vrec-timer" style="color:rgba(232,232,232,0.5);font-size:12px;font-family:monospace;">0:00</span>
+        </div>
+        <!-- Input bar (group) -->
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 10px 10px;background:#1F2C34;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.06);">
+          <input type="file" id="fi-chat-grp" style="display:none" accept="image/*,.pdf,.doc,.docx,.mp4,.mov" onchange="handleChatFileUpload(this,'group')">
+          <button onclick="document.getElementById('fi-chat-grp').click()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0.6;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 14.5L8.5 9.5L11.5 13L14 10.5L17 14.5H4Z" stroke="rgba(232,232,232,0.7)" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7" cy="7.5" r="1.5" stroke="rgba(232,232,232,0.7)" stroke-width="1.3"/><rect x="2" y="3" width="16" height="14" rx="2.5" stroke="rgba(232,232,232,0.7)" stroke-width="1.3"/></svg>
+          </button>
+          <button onclick="toggleEmoji()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;opacity:0.75;">😊</button>
+          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:22px;border:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:6px 14px;min-height:40px;">
+            <input type="text" id="ci1" placeholder="Message" style="background:none;border:none;color:#E8E8E8;font-size:15px;font-weight:300;flex:1;outline:none;font-family:inherit;line-height:1.4;">
+          </div>
+          <!-- Send / Mic button -->
+          <button id="grp-action-btn"
+            ontouchstart="grpMicStart(event)" ontouchend="grpMicStop(event)" ontouchcancel="grpMicStop(event)"
+            onclick="sendChat1()"
+            style="width:42px;height:42px;background:linear-gradient(135deg,#075E54,#128C7E);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 14px rgba(7,94,84,0.5);transition:background 0.2s;">
+            <svg id="grp-send-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9L16 2L10 16L8.5 10L2 9Z" fill="white"/></svg>
+            <svg id="grp-mic-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" style="display:none;"><rect x="6" y="1" width="6" height="9" rx="3" fill="white"/><path d="M3 9a6 6 0 0012 0" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/><line x1="9" y1="15" x2="9" y2="17" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
         </div>
       </div>
 
-      <!-- Emoji quick panel -->
-      <div id="emoji-panel" style="display:none;padding:8px 14px;background:#1F2C34;border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;flex-wrap:wrap;gap:6px;">
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('👍')">👍</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('🙏')">🙏</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('✅')">✅</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('😊')">😊</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('🔥')">🔥</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('📸')">📸</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('💼')">💼</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('⚡')">⚡</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('❤️')">❤️</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('😂')">😂</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('👏')">👏</span>
-        <span style="font-size:22px;cursor:pointer;" onclick="addEmoji('🎉')">🎉</span>
+      <!-- DM CONVERSATIONS LIST PANEL -->
+      <div id="chat-dms-panel" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+        <div class="scroll" style="flex:1;" id="dm-conv-list">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;opacity:0.4;padding-top:60px;">
+            <div style="font-size:36px;">👤</div>
+            <div style="color:rgba(232,232,232,0.5);font-size:13px;">No DMs yet — tap a member to message</div>
+          </div>
+        </div>
+        <div style="padding:12px 14px;background:#1F2C34;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
+          <button onclick="openDmList()" style="width:100%;background:linear-gradient(135deg,#075E54,#128C7E);border:none;border-radius:12px;padding:11px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">+ New Direct Message</button>
+        </div>
       </div>
 
-      <!-- Input bar — WhatsApp style -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 10px;background:#1F2C34;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.06);">
-        <button onclick="toggleEmoji()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;opacity:0.75;">😊</button>
-        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:22px;border:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:6px 14px;min-height:40px;">
-          <input type="text" id="ci1" placeholder="Message" style="background:none;border:none;color:#E8E8E8;font-size:15px;font-weight:300;flex:1;outline:none;font-family:inherit;line-height:1.4;">
-        </div>
-        <button id="vsend1" onclick="sendChat1()" style="width:42px;height:42px;background:linear-gradient(135deg,#075E54,#128C7E);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 14px rgba(7,94,84,0.5);">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9L16 2L10 16L8.5 10L2 9Z" fill="white"/></svg>
-        </button>
-        <!-- Voice recording indicator -->
-        <div id="voice-indicator" style="display:none;position:absolute;bottom:60px;left:0;right:0;background:rgba(255,69,58,0.15);backdrop-filter:blur(14px);border-top:0.5px solid rgba(255,69,58,0.25);padding:8px 14px;align-items:center;gap:8px;">
-          <div style="width:8px;height:8px;background:#FF453A;border-radius:50%;animation:recPulse 1s infinite;"></div>
-          <span style="color:#FF453A;font-size:12px;font-weight:500;">Recording…</span>
-          <span id="rec-timer" style="margin-left:auto;color:rgba(245,245,247,0.5);font-size:12px;font-family:monospace;">0:00</span>
-        </div>
+      <!-- Reaction picker popup (group) -->
+      <div id="react-picker" style="display:none;position:fixed;background:#2A3942;border-radius:28px;padding:8px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:999;gap:6px;align-items:center;">
+        <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('❤️')">❤️</span>
+        <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('👍')">👍</span>
+        <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('😂')">😂</span>
+        <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('😮')">😮</span>
+        <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('🙏')">🙏</span>
+        <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('🔥')">🔥</span>
+        <span style="font-size:20px;cursor:pointer;color:rgba(232,232,232,0.5);" onclick="replyToMsg1()">↩ Reply</span>
       </div>
+
       <div id="n1-chat" class="bnav"></div>
+    </div>
+
+    <!-- ── DM MEMBER PICKER OVERLAY ── -->
+    <div id="dm-list-overlay" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);" onclick="closeDmList()"></div>
+    <div id="dm-list-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:701;background:#1F2C34;border-radius:24px 24px 0 0;padding:16px 0 32px;max-height:70vh;overflow-y:auto;">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 14px;"></div>
+      <div style="font-size:14px;font-weight:500;color:#E8E8E8;padding:0 16px 12px;">Message a Member</div>
+      <div id="dm-member-list"></div>
+    </div>
+
+    <!-- ── DM CHAT OVERLAY (full screen) ── -->
+    <div id="dm-chat-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:#0B141A;flex-direction:column;">
+      <!-- DM Header -->
+      <div style="padding:10px 14px;background:#1F2C34;flex-shrink:0;display:flex;align-items:center;gap:12px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+        <button onclick="closeDmChat()" style="background:none;border:none;cursor:pointer;padding:4px;color:rgba(232,232,232,0.6);">
+          <svg width="10" height="16" viewBox="0 0 10 18" fill="none"><path d="M9 1L1 9l8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div id="dm-av" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div id="dm-name" style="color:#E8E8E8;font-size:15px;font-weight:500;"></div>
+          <div id="dm-status" style="color:rgba(232,232,232,0.45);font-size:11px;">tap to view profile</div>
+        </div>
+      </div>
+      <!-- DM Messages -->
+      <div class="scroll" id="dm-msgs" style="flex:1;padding:10px 0 8px;background:#0B141A;"></div>
+      <!-- DM Emoji panel -->
+      <div id="dm-emoji-panel" style="display:none;background:#1F2C34;border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;max-height:180px;overflow-y:auto;">
+        <div style="padding:6px 10px 4px;display:flex;gap:6px;border-bottom:0.5px solid rgba(255,255,255,0.06);overflow-x:auto;">
+          <button onclick="emojiCat('smileys','dm')" style="background:#075E54;border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;" id="dm-ecat-smileys">😊</button>
+          <button onclick="emojiCat('gestures','dm')" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;" id="dm-ecat-gestures">👍</button>
+          <button onclick="emojiCat('work','dm')" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;" id="dm-ecat-work">💼</button>
+          <button onclick="emojiCat('hearts','dm')" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;" id="dm-ecat-hearts">❤️</button>
+          <button onclick="emojiCat('symbols','dm')" style="background:rgba(255,255,255,0.07);border:none;border-radius:6px;padding:4px 8px;font-size:16px;cursor:pointer;" id="dm-ecat-symbols">✅</button>
+        </div>
+        <div id="dm-emoji-grid" style="display:flex;flex-wrap:wrap;padding:8px 10px;gap:2px;"></div>
+      </div>
+      <!-- DM Reply banner -->
+      <div id="dm-reply-banner" style="display:none;background:rgba(10,132,255,0.1);border-top:2px solid #0A84FF;padding:8px 14px;flex-shrink:0;align-items:center;gap:8px;">
+        <div style="flex:1;"><div id="dm-reply-name" style="font-size:11px;font-weight:600;color:#64C8FF;"></div><div id="dm-reply-text" style="font-size:12px;color:rgba(232,232,232,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;"></div></div>
+        <button onclick="clearDmReply()" style="background:none;border:none;color:rgba(232,232,232,0.4);font-size:20px;cursor:pointer;">✕</button>
+      </div>
+      <!-- DM Voice recording indicator -->
+      <div id="dm-voice-rec-bar" style="display:none;background:rgba(255,69,58,0.1);border-top:1px solid rgba(255,69,58,0.2);padding:8px 14px;flex-shrink:0;align-items:center;gap:10px;">
+        <div style="width:9px;height:9px;background:#FF453A;border-radius:50%;animation:recPulse 1s infinite;flex-shrink:0;"></div>
+        <span style="color:#FF453A;font-size:12px;font-weight:500;flex:1;">Recording… release to send</span>
+        <span id="dm-vrec-timer" style="color:rgba(232,232,232,0.5);font-size:12px;font-family:monospace;">0:00</span>
+      </div>
+      <!-- DM Input bar -->
+      <div style="display:flex;align-items:center;gap:7px;padding:8px 10px 14px;background:#1F2C34;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.06);">
+        <input type="file" id="fi-chat-dm" style="display:none" accept="image/*,.pdf,.doc,.docx,.mp4,.mov" onchange="handleChatFileUpload(this,'dm')">
+        <button onclick="document.getElementById('fi-chat-dm').click()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0.6;">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 14.5L8.5 9.5L11.5 13L14 10.5L17 14.5H4Z" stroke="rgba(232,232,232,0.7)" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7" cy="7.5" r="1.5" stroke="rgba(232,232,232,0.7)" stroke-width="1.3"/><rect x="2" y="3" width="16" height="14" rx="2.5" stroke="rgba(232,232,232,0.7)" stroke-width="1.3"/></svg>
+        </button>
+        <button onclick="toggleDmEmoji()" style="width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;opacity:0.75;">😊</button>
+        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:22px;border:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:6px 14px;min-height:40px;">
+          <input type="text" id="dm-ci" placeholder="Message" style="background:none;border:none;color:#E8E8E8;font-size:15px;font-weight:300;flex:1;outline:none;font-family:inherit;line-height:1.4;">
+        </div>
+        <button id="dm-action-btn"
+          ontouchstart="dmMicStart(event)" ontouchend="dmMicStop(event)" ontouchcancel="dmMicStop(event)"
+          onclick="sendDmMsg()"
+          style="width:42px;height:42px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 14px rgba(10,132,255,0.4);transition:background 0.2s;">
+          <svg id="dm-send-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9L16 2L10 16L8.5 10L2 9Z" fill="white"/></svg>
+          <svg id="dm-mic-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" style="display:none;"><rect x="6" y="1" width="6" height="9" rx="3" fill="white"/><path d="M3 9a6 6 0 0012 0" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/><line x1="9" y1="15" x2="9" y2="17" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- GPS ATTENDANCE -->
@@ -1404,6 +1507,35 @@ function connectStaffSocket(){
     if(sub) sub.textContent = 'Zeebas Cluster · ' + n + ' online';
   });
   staffSocket.on('message-pinned', function(){ loadStaff1Pinned(); });
+  staffSocket.on('reaction-update', function(data){
+    var row = document.getElementById('rrow-'+data.message_id); if(!row) return;
+    row.innerHTML = '';
+    (data.reactions||[]).forEach(function(r){
+      var chip = document.createElement('div');
+      chip.className = 'reaction-chip';
+      chip.setAttribute('data-emoji', r.emoji);
+      chip.innerHTML = r.emoji+' <span class="cnt">'+r.cnt+'</span>';
+      chip.onclick = function(){ toggleReact1(chip, r.emoji, data.message_id); };
+      row.appendChild(chip);
+    });
+    row.style.display = row.children.length ? 'flex' : 'none';
+  });
+  staffSocket.on('dm-message', function(msg){
+    var me = zStaff() || {};
+    // If DM overlay open and matches this conversation
+    if(_dmPeerId && (msg.sender_id === _dmPeerId || msg.receiver_id === _dmPeerId)){
+      appendDmMsg(msg);
+    }
+    // Update DM badge + conversation list
+    loadDmConversations();
+    if(msg.sender_id !== me.id) showDmBadge(true);
+  });
+  staffSocket.on('dm-sent', function(msg){
+    // Confirm message from server (replace optimistic if needed)
+    var dmMsgs = document.getElementById('dm-msgs'); if(!dmMsgs) return;
+    var optim = dmMsgs.querySelector('[data-optimistic="1"]');
+    if(optim) optim.removeAttribute('data-optimistic');
+  });
   staffSocket.on('disconnect', function(){
     var sub = document.getElementById('chat1-sub');
     if(sub) sub.textContent = 'Reconnecting…';
@@ -1438,11 +1570,10 @@ async function loadStaff1Pinned(){
 function appendStaffMsg1(msg, doScroll){
   var staff = zStaff() || {};
   var msgs = document.getElementById('msgs1'); if(!msgs) return;
-  // Clear empty-state placeholder
-  if(msgs.querySelector('[style*="opacity:0.3"]') || msgs.querySelector('[style*="padding-top:40px"]')) msgs.innerHTML = '';
+  if(msgs.querySelector('[style*="padding-top:40px"]') || msgs.querySelector('[style*="padding-top:60px"]')) msgs.innerHTML = '';
   var isMe = msg.staff_id === staff.id;
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
-  var avSrc = msg.photo_data || (msg.photo_url ? API_URL+msg.photo_url : null);
+  var avSrc = msg.photo_url ? API_URL+msg.photo_url : null;
   var av = avSrc
     ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);">'
     : '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);">'+init+'</div>';
@@ -1451,107 +1582,244 @@ function appendStaffMsg1(msg, doScroll){
     var h = dt.getHours(), m = dt.getMinutes(), a = h>=12?'PM':'AM';
     h = h%12||12; return h+':'+(m<10?'0':'')+m+' '+a;
   })();
-  var div = document.createElement('div');
-  div.style.cssText = 'display:flex;align-items:flex-end;gap:8px;margin-bottom:2px;padding:0 10px;'+(isMe?'flex-direction:row-reverse;':'');
+
+  // Reply quote
+  var replyHtml = '';
+  if(msg.reply_to_id){
+    replyHtml = '<div style="border-left:3px solid '+(isMe?'rgba(255,255,255,0.4)':'#25D366')+';background:rgba(0,0,0,0.18);border-radius:6px;padding:5px 9px;margin-bottom:6px;">'
+      +'<div style="font-size:10px;font-weight:600;color:#25D366;margin-bottom:1px;">'+escHtml(msg.reply_to_name||'')+'</div>'
+      +'<div style="font-size:12px;color:rgba(232,232,232,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">'+escHtml((msg.reply_to_text||'').slice(0,80))+'</div>'
+      +'</div>';
+  }
+
+  // Reactions row
+  var reactHtml = '<div class="reaction-row" id="rrow-'+(msg.id||'')+'"></div>';
+  if(msg.reactions && msg.reactions.length){
+    var chips = '';
+    msg.reactions.forEach(function(r){
+      chips += '<div class="reaction-chip" data-emoji="'+r.emoji+'" onclick="toggleReact1(this,\''+escHtml(r.emoji)+'\',\''+(msg.id||'')+'\')">'+r.emoji+' <span class="cnt">'+r.count+'</span></div>';
+    });
+    reactHtml = '<div class="reaction-row" id="rrow-'+(msg.id||'')+'" style="display:flex;">'+chips+'</div>';
+  }
+
+  var msgId = msg.id || ('loc-'+Date.now());
+  var wrap = document.createElement('div');
+  wrap.className = 'msg-wrap';
+  wrap.setAttribute('data-msgid', msgId);
+  wrap.style.cssText = 'margin-bottom:4px;padding:0 10px;';
 
   if(isMe){
-    div.innerHTML = '<div style="display:flex;flex-direction:column;align-items:flex-end;max-width:78%;">'
-      + '<div style="background:linear-gradient(135deg,#005C4B,#128C7E);border-radius:18px;border-bottom-right-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#fff;word-break:break-word;line-height:1.4;">'
-      + (msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      + '<div style="font-size:10px;color:rgba(255,255,255,0.55);text-align:right;margin-top:4px;">'+t+' ✓✓</div>'
-      + '</div></div>';
+    wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;flex-direction:row-reverse;">'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;max-width:78%;">'
+      +'<div class="bubble" style="background:linear-gradient(135deg,#005C4B,#128C7E);border-radius:18px;border-bottom-right-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#fff;word-break:break-word;line-height:1.4;">'
+      +replyHtml+escHtml(msg.message||'')
+      +'<div style="font-size:10px;color:rgba(255,255,255,0.55);text-align:right;margin-top:4px;">'+t+' ✓✓</div>'
+      +'</div>'+reactHtml+'</div></div>';
   } else {
-    div.innerHTML = av
-      + '<div style="display:flex;flex-direction:column;align-items:flex-start;max-width:78%;">'
-      + '<div style="font-size:11px;color:rgba(100,200,255,0.85);font-weight:500;margin-bottom:3px;padding-left:2px;">'+msg.staff_name+(msg.brand_name?' <span style="color:rgba(255,255,255,0.35);font-weight:400;">· '+msg.brand_name+'</span>':'')+'</div>'
-      + '<div style="background:rgba(38,38,50,0.95);border:0.5px solid rgba(255,255,255,0.08);border-radius:18px;border-bottom-left-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#E8E8E8;word-break:break-word;line-height:1.4;">'
-      + (msg.message||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      + '<div style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;margin-top:4px;">'+t+'</div>'
-      + '</div></div>';
+    wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;">'
+      +av
+      +'<div style="display:flex;flex-direction:column;align-items:flex-start;max-width:78%;">'
+      +'<div style="font-size:11px;color:rgba(100,200,255,0.85);font-weight:500;margin-bottom:3px;padding-left:2px;">'+escHtml(msg.staff_name||'')+(msg.brand_name?' <span style="color:rgba(255,255,255,0.35);font-weight:400;">· '+escHtml(msg.brand_name)+'</span>':'')+'</div>'
+      +'<div class="bubble" style="background:rgba(38,38,50,0.95);border:0.5px solid rgba(255,255,255,0.08);border-radius:18px;border-bottom-left-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#E8E8E8;word-break:break-word;line-height:1.4;">'
+      +replyHtml+escHtml(msg.message||'')
+      +'<div style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;margin-top:4px;">'+t+'</div>'
+      +'</div>'+reactHtml+'</div></div>';
   }
-  msgs.appendChild(div);
+
+  // Long-press → reaction picker
+  var bubble = wrap.querySelector('.bubble');
+  if(bubble){
+    var _pt = null;
+    bubble.addEventListener('touchstart', function(e){
+      _pt = setTimeout(function(){
+        _reactMsgId1 = msgId;
+        _reactMsgName1 = msg.staff_name;
+        _reactMsgText1 = msg.message;
+        var rp = document.getElementById('react-picker'); if(!rp) return;
+        var rect = bubble.getBoundingClientRect();
+        var top = rect.top - 68; if(top < 10) top = rect.bottom + 8;
+        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 290));
+        rp.style.top = top+'px'; rp.style.left = left+'px'; rp.style.display = 'flex';
+      }, 450);
+    },{passive:true});
+    bubble.addEventListener('touchend',  function(){ clearTimeout(_pt); },{passive:true});
+    bubble.addEventListener('touchmove', function(){ clearTimeout(_pt); },{passive:true});
+  }
+
+  msgs.appendChild(wrap);
   if(doScroll !== false) msgs.scrollTop = msgs.scrollHeight;
 }
 
-async function sendChat1(){
+async function sendChat1(overrideMsg){
   var inp = document.getElementById('ci1');
-  var txt = (inp.value||'').trim(); if(!txt) return;
-  inp.value = '';
+  var txt = overrideMsg ? overrideMsg.message : (inp.value||'').trim();
+  if(!txt && !(overrideMsg && overrideMsg.file_url)) return;
+  if(!overrideMsg) inp.value = '';
   var staff = zStaff() || {};
+  var reply = _replyTo1 ? {reply_to_id:_replyTo1.id, reply_to_text:_replyTo1.text, reply_to_name:_replyTo1.name} : {};
+  clearReply1();
+  var payload = Object.assign({staff_id:staff.id, message:txt||null, type:(overrideMsg&&overrideMsg.type)||'text'}, reply, overrideMsg||{});
 
   if(staffSocket && staffSocket.connected){
-    staffSocket.emit('send-message', {staff_id: staff.id, message: txt, type: 'text'});
-    // Optimistic: show immediately
-    appendStaffMsg1({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, brand_name:null, message:txt, created_at:new Date()});
+    staffSocket.emit('send-message', payload);
+    appendStaffMsg1(Object.assign({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, brand_name:null, created_at:new Date(), reactions:[]}, payload));
   } else {
     try{
-      var res = await fetch(API_URL+'/api/chat/messages', {method:'POST', headers:zHead(), body:JSON.stringify({message:txt})});
+      var res = await fetch(API_URL+'/api/chat/messages', {method:'POST', headers:zHead(), body:JSON.stringify(payload)});
       var d = await res.json();
       if(d.success) appendStaffMsg1(d.data);
     }catch(e){ console.error('sendChat1 error:', e); }
   }
 }
 
-// Enter key to send
-(function(){
-  var ci = document.getElementById('ci1');
-  if(ci) ci.addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat1(); });
-})();
-// Voice note
-var recInterval=null,recSecs=0,isRecording=false;
-function startVoice(btn){
-  var inp=document.getElementById('ci1');
-  if((inp.value||'').trim().length>0)return; // has text = send mode
-  isRecording=true;recSecs=0;
-  var vi=document.getElementById('voice-indicator');
-  if(vi){vi.style.display='flex';}
-  btn.style.background='linear-gradient(135deg,#FF453A,#CC2020)';
-  btn.style.boxShadow='0 0 20px rgba(255,69,58,0.6)';
-  recInterval=setInterval(function(){
-    recSecs++;
-    var t=document.getElementById('rec-timer');
-    if(t)t.textContent=Math.floor(recSecs/60)+':'+(recSecs%60<10?'0':'')+recSecs%60;
-  },1000);
-}
-function stopVoice(btn){
-  if(!isRecording)return;
-  isRecording=false;
-  clearInterval(recInterval);
-  var vi=document.getElementById('voice-indicator');
-  if(vi){vi.style.display='none';}
-  btn.style.background='linear-gradient(135deg,#0A84FF,#0A60CC)';
-  btn.style.boxShadow='0 3px 12px rgba(10,132,255,0.4)';
-  if(recSecs>=1){
-    // Add voice message bubble
-    var msgs=document.getElementById('msgs1');
-    var d=new Date(),h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;
-    var t=h+':'+(m<10?'0':'')+m+' '+a;
-    var dur=Math.floor(recSecs/60)+':'+(recSecs%60<10?'0':'')+recSecs%60;
-    var div=document.createElement('div');
-    div.style.cssText='display:flex;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;';
-    div.innerHTML='<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.65),rgba(10,60,180,0.75));display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:500;flex-shrink:0;">AK</div>'
-      +'<div style="display:flex;flex-direction:column;align-items:flex-end;">'
-      +'<div style="background:linear-gradient(135deg,rgba(10,132,255,0.65),rgba(10,80,200,0.7));backdrop-filter:blur(14px);border:0.5px solid rgba(10,132,255,0.22);border-radius:14px;border-bottom-right-radius:4px;padding:9px 13px;display:flex;align-items:center;gap:10px;min-width:160px;">'
-      +'<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="6" y="2" width="6" height="9" rx="3" fill="rgba(255,255,255,0.9)"/><path d="M3 9a6 6 0 0012 0" stroke="white" stroke-width="1.4" stroke-linecap="round" fill="none"/><line x1="9" y1="15" x2="9" y2="17" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>'
-      +'<div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,0.3);border-radius:2px;position:relative;"><div style="position:absolute;left:0;top:0;height:100%;width:40%;background:#fff;border-radius:2px;"></div></div></div>'
-      +'<span style="color:rgba(255,255,255,0.8);font-size:10px;font-family:monospace;">'+dur+'</span>'
-      +'</div>'
-      +'<div style="font-size:9px;color:rgba(235,235,245,0.22);margin-top:2px;text-align:right;">'+t+' ✓✓</div>'
-      +'</div>';
-    msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-  }
-  recSecs=0;
-}
-// Toggle mic/send icon based on input
-document.getElementById('ci1').addEventListener('input',function(){
-  var hasText=(this.value||'').trim().length>0;
-  var si=document.getElementById('send-icon');
-  var mi=document.getElementById('mic-icon');
-  if(si)si.style.display=hasText?'block':'none';
-  if(mi)mi.style.display=hasText?'none':'block';
+// ── Input listeners ──
+document.getElementById('ci1').addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat1(); });
+document.getElementById('ci1').addEventListener('input', function(){
+  var has = (this.value||'').trim().length > 0;
+  var si = document.getElementById('grp-send-icon'), mi = document.getElementById('grp-mic-icon');
+  if(si) si.style.display = has ? 'block' : 'none';
+  if(mi) mi.style.display = has ? 'none' : 'block';
 });
-// Init: show mic by default
-(function(){var si=document.getElementById('send-icon');var mi=document.getElementById('mic-icon');if(si)si.style.display='none';if(mi)mi.style.display='block';})();
+
+// ── Chat tab switch ──
+function switchChatTab(tab){
+  var gp = document.getElementById('chat-group-panel');
+  var dp = document.getElementById('chat-dms-panel');
+  var tg = document.getElementById('tab-group'), td = document.getElementById('tab-dms');
+  if(tab==='group'){
+    gp.style.display='flex'; dp.style.display='none';
+    tg.style.borderBottomColor='#25D366'; tg.style.color='#25D366';
+    td.style.borderBottomColor='transparent'; td.style.color='rgba(232,232,232,0.4)';
+  } else {
+    gp.style.display='none'; dp.style.display='flex';
+    td.style.borderBottomColor='#0A84FF'; td.style.color='#0A84FF';
+    tg.style.borderBottomColor='transparent'; tg.style.color='rgba(232,232,232,0.4)';
+    loadDmConversations();
+    showDmBadge(false);
+  }
+}
+
+// ── Voice Recording (MediaRecorder) ──
+var _grpMediaRec = null, _grpRecChunks = [], _grpRecTimer = null, _grpRecSecs = 0, _grpRecHeld = false;
+var _dmMediaRec  = null, _dmRecChunks  = [], _dmRecTimer  = null, _dmRecSecs  = 0, _dmRecHeld  = false;
+
+function _startRec(chunks, recRef, timerEl, barEl, btn, accentColor){
+  return navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var mr = new MediaRecorder(stream, {mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg'});
+    chunks.length = 0;
+    mr.ondataavailable = function(e){ if(e.data.size>0) chunks.push(e.data); };
+    mr.start(200);
+    if(barEl) barEl.style.display='flex';
+    btn.style.background='linear-gradient(135deg,#FF453A,#CC2020)';
+    btn.style.boxShadow='0 0 20px rgba(255,69,58,0.6)';
+    return mr;
+  });
+}
+function _stopRec(mr, chunks, timerEl, barEl, btn, origBg, boxSh){
+  return new Promise(function(resolve){
+    if(!mr || mr.state==='inactive'){ resolve(null); return; }
+    mr.onstop = function(){
+      mr.stream.getTracks().forEach(function(t){t.stop();});
+      if(barEl) barEl.style.display='none';
+      if(btn){ btn.style.background=origBg; btn.style.boxShadow=boxSh; }
+      var blob = chunks.length ? new Blob(chunks, {type: chunks[0].type||'audio/webm'}) : null;
+      resolve(blob);
+    };
+    mr.stop();
+  });
+}
+
+async function grpMicStart(e){
+  var ci = document.getElementById('ci1');
+  if((ci.value||'').trim()) return; // has text → onclick will send
+  _grpRecHeld = true;
+  _grpRecSecs = 0;
+  var btn = document.getElementById('grp-action-btn');
+  var bar = document.getElementById('voice-rec-bar');
+  var si = document.getElementById('grp-send-icon'), mi = document.getElementById('grp-mic-icon');
+  if(si) si.style.display='none'; if(mi) mi.style.display='block';
+  try{
+    _grpMediaRec = await _startRec(_grpRecChunks, _grpMediaRec, 'vrec-timer', bar, btn, '#075E54');
+    _grpRecTimer = setInterval(function(){
+      _grpRecSecs++;
+      var t = document.getElementById('vrec-timer');
+      if(t) t.textContent = Math.floor(_grpRecSecs/60)+':'+((_grpRecSecs%60)<10?'0':'')+_grpRecSecs%60;
+    },1000);
+  }catch(err){ _grpRecHeld=false; showToast1('Mic permission denied'); }
+}
+async function grpMicStop(e){
+  if(!_grpRecHeld) return;
+  _grpRecHeld = false;
+  clearInterval(_grpRecTimer);
+  var btn = document.getElementById('grp-action-btn');
+  var bar = document.getElementById('voice-rec-bar');
+  var blob = await _stopRec(_grpMediaRec, _grpRecChunks, 'vrec-timer', bar, btn, 'linear-gradient(135deg,#075E54,#128C7E)', '0 3px 14px rgba(7,94,84,0.5)');
+  _grpMediaRec = null;
+  if(blob && _grpRecSecs >= 1){
+    uploadAndSendVoice(blob, 'group');
+  }
+  _grpRecSecs = 0;
+}
+
+async function dmMicStart(e){
+  var ci = document.getElementById('dm-ci');
+  if((ci.value||'').trim()) return;
+  _dmRecHeld = true; _dmRecSecs = 0;
+  var btn = document.getElementById('dm-action-btn');
+  var bar = document.getElementById('dm-voice-rec-bar');
+  try{
+    _dmMediaRec = await _startRec(_dmRecChunks, _dmMediaRec, 'dm-vrec-timer', bar, btn, '#0A84FF');
+    _dmRecTimer = setInterval(function(){
+      _dmRecSecs++;
+      var t = document.getElementById('dm-vrec-timer');
+      if(t) t.textContent = Math.floor(_dmRecSecs/60)+':'+((_dmRecSecs%60)<10?'0':'')+_dmRecSecs%60;
+    },1000);
+  }catch(err){ _dmRecHeld=false; showToast1('Mic permission denied'); }
+}
+async function dmMicStop(e){
+  if(!_dmRecHeld) return;
+  _dmRecHeld = false;
+  clearInterval(_dmRecTimer);
+  var btn = document.getElementById('dm-action-btn');
+  var bar = document.getElementById('dm-voice-rec-bar');
+  var blob = await _stopRec(_dmMediaRec, _dmRecChunks, 'dm-vrec-timer', bar, btn, 'linear-gradient(135deg,#0A84FF,#0A60CC)', '0 3px 14px rgba(10,132,255,0.4)');
+  _dmMediaRec = null;
+  if(blob && _dmRecSecs >= 1){
+    uploadAndSendVoice(blob, 'dm');
+  }
+  _dmRecSecs = 0;
+}
+
+async function uploadAndSendVoice(blob, mode){
+  try{
+    var fd = new FormData();
+    var ext = blob.type.includes('webm') ? '.webm' : '.ogg';
+    fd.append('file', blob, 'voice'+ext);
+    var res = await fetch(API_URL+'/api/chat/upload', {method:'POST', headers:{'Authorization':'Bearer '+zTok()}, body:fd});
+    var d = await res.json();
+    if(d.success){
+      if(mode==='dm') sendDmMsg({file_url:d.file_url, file_name:d.file_name, type:'voice', message:''});
+      else sendChat1({file_url:d.file_url, file_name:d.file_name, type:'voice', message:''});
+    }
+  }catch(e){ showToast1('Voice upload failed'); }
+}
+
+async function handleChatFileUpload(input, mode){
+  var file = input.files[0]; if(!file) return;
+  input.value = '';
+  try{
+    var fd = new FormData();
+    fd.append('file', file);
+    var res = await fetch(API_URL+'/api/chat/upload', {method:'POST', headers:{'Authorization':'Bearer '+zTok()}, body:fd});
+    var d = await res.json();
+    if(d.success){
+      if(mode==='dm') sendDmMsg({file_url:d.file_url, file_name:d.file_name, type:d.type, message:''});
+      else sendChat1({file_url:d.file_url, file_name:d.file_name, type:d.type, message:''});
+    } else { showToast1('Upload failed: '+d.message); }
+  }catch(e){ showToast1('Upload failed'); }
+}
+
+function showToast1(msg){ var t=document.getElementById('toast1')||document.createElement('div'); t.id='toast1'; t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,30,40,0.95);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;z-index:9999;pointer-events:none;backdrop-filter:blur(10px);'; t.textContent=msg; document.body.appendChild(t); clearTimeout(t._to); t._to=setTimeout(function(){t.remove();},2500); }
 
 // Chat 2 (admin)
 function sendAdmin(){
@@ -1576,9 +1844,84 @@ function unpinMsg(){document.getElementById('pinned-msg').style.opacity='0.3';}
 function approveLeave(btn){var card=btn.closest('.g');card.style.opacity='0.5';card.style.pointerEvents='none';btn.textContent='✓ Approved';}
 function approveOnsite(btn){var card=btn.closest('.g');card.style.opacity='0.5';card.style.pointerEvents='none';btn.textContent='✓ Approved';}
 
-// Emoji
+// ── Chat reply / react state ──
+var _replyTo1 = null, _reactMsgId1 = null, _reactMsgName1 = '', _reactMsgText1 = '';
+
+function setReply1(id, name, text){
+  _replyTo1 = {id:id, name:name, text:text};
+  var rb = document.getElementById('reply-banner');
+  var rn = document.getElementById('reply-name');
+  var rt = document.getElementById('reply-text');
+  if(rn) rn.textContent = name;
+  if(rt) rt.textContent = (text||'').slice(0,80);
+  if(rb){ rb.style.display='flex'; }
+}
+function clearReply1(){
+  _replyTo1 = null;
+  var rb = document.getElementById('reply-banner');
+  if(rb) rb.style.display = 'none';
+}
+function replyToMsg1(){
+  var rp = document.getElementById('react-picker'); if(rp) rp.style.display='none';
+  if(_reactMsgId1 && _reactMsgText1 !== undefined){
+    setReply1(_reactMsgId1, _reactMsgName1||'', _reactMsgText1||'');
+  }
+  var inp = document.getElementById('ci1'); if(inp) inp.focus();
+}
+function sendReact1(emoji){
+  var rp = document.getElementById('react-picker'); if(rp) rp.style.display='none';
+  if(!_reactMsgId1 || String(_reactMsgId1).indexOf('loc-')===0) return; // local-only msg has no DB id
+  var staff = zStaff() || {};
+  if(staffSocket && staffSocket.connected){
+    staffSocket.emit('react', {message_id: _reactMsgId1, staff_id: staff.id, emoji: emoji});
+  } else {
+    fetch(API_URL+'/api/chat/react/'+_reactMsgId1, {method:'POST', headers:zHead(), body:JSON.stringify({emoji:emoji})}).catch(function(){});
+  }
+}
+function toggleReact1(chip, emoji, msgId){
+  var staff = zStaff() || {};
+  if(!msgId || String(msgId).indexOf('loc-')===0) return;
+  if(staffSocket && staffSocket.connected){
+    staffSocket.emit('react', {message_id: msgId, staff_id: staff.id, emoji: emoji});
+  } else {
+    fetch(API_URL+'/api/chat/react/'+msgId, {method:'POST', headers:zHead(), body:JSON.stringify({emoji:emoji})}).catch(function(){});
+  }
+}
+
+// Emoji picker
 var emojiOn=false;
-function toggleEmoji(){emojiOn=!emojiOn;document.getElementById('emoji-panel').style.display=emojiOn?'flex':'none';}
+var _emojiData = {
+  smileys:  ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','😘','😗','😙','😚','😋','😛','😝','😜','🤪','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕'],
+  gestures: ['👍','👎','👌','🤌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👋','🤚','🖐️','✋','🖖','🤝','🙏','✍️','💅','🤳','💪','🦵','🦶','👂','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄'],
+  work:     ['💼','📋','📌','📍','📎','🖇️','📏','📐','✂️','🗂️','📁','📂','🗒️','📝','✏️','🖊️','🖋️','🖌️','🖍️','📊','📈','📉','🗓️','📅','📆','📇','📔','📒','📕','📗','📘','📙','📚','🔍','🔎','💡','🔦','🏷️','💰','💵','💴','💶','💷','💸','💳','🏆','🎯','🎖️','🥇','🏅','📣','📢','🔔','🔕','📱','💻','🖥️','🖨️','⌨️','🖱️','🖲️','💾','💿','📀','📷','📸','📹','🎥','☎️','📞','📟','📠'],
+  hearts:   ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'],
+  symbols:  ['✅','❌','⭕','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳','▪️','▫️','◾','◽','◼️','◻️','🔥','⚡','💥','✨','🌟','⭐','🌈','☀️','🌤️','⛅','🌦️','🌧️','⛈️','🌩️','❄️','🌊','💧','🌀','🌪️','🔑','🗝️','🔓','🔒','🔏','🔐','🚀','🛸','🛩️','🚁','🎉','🎊','🎈','🎁','🎀','🎗️','🏳️','🏴','🚩','🏁']
+};
+function toggleEmoji(){
+  emojiOn=!emojiOn;
+  var p = document.getElementById('emoji-panel');
+  if(p){ p.style.display = emojiOn ? 'flex' : 'none'; }
+  if(emojiOn) emojiCat('smileys');
+}
+function emojiCat(cat){
+  // Update active tab
+  ['smileys','gestures','work','hearts','symbols'].forEach(function(c){
+    var b = document.getElementById('ecat-'+c);
+    if(b) b.style.background = c===cat ? '#075E54' : 'rgba(255,255,255,0.07)';
+  });
+  var grid = document.getElementById('emoji-grid'); if(!grid) return;
+  grid.innerHTML = '';
+  (_emojiData[cat]||[]).forEach(function(em){
+    var s = document.createElement('span');
+    s.style.cssText = 'font-size:22px;cursor:pointer;padding:4px 3px;display:inline-block;';
+    s.textContent = em;
+    s.onclick = function(){
+      var inp = document.getElementById('ci1');
+      if(inp){ inp.value += em; inp.focus(); }
+    };
+    grid.appendChild(s);
+  });
+}
 function addEmoji(e){var inp=document.getElementById('ci1');inp.value+=e;}
 function toggleSearch(){}
 var attachOpen=false;
@@ -1652,42 +1995,23 @@ function showAttach(){toggleAttach();}
 setTimeout(function(){var m=document.getElementById('msgs1');if(m)m.scrollTop=m.scrollHeight;var m2=document.getElementById('msgs2');if(m2)m2.scrollTop=m2.scrollHeight;},300);
 
 
-// Emoji reactions
-var activeBar=null;
-function showEmojiBar(msgId, side){
-  hideAllBars();
-  var bar=document.getElementById('ebar-'+msgId);
-  if(bar){bar.style.display='block';activeBar=bar;}
-}
-function hideAllBars(){
-  document.querySelectorAll('.emoji-bar').forEach(function(b){b.style.display='none';});
-  activeBar=null;
-}
-function addReaction(msgId, emoji){
-  hideAllBars();
-  var row=document.getElementById('rrow-'+msgId);
-  if(!row)return;
-  // Check if chip exists
-  var chips=row.querySelectorAll('.reaction-chip');
-  for(var i=0;i<chips.length;i++){
-    if(chips[i].getAttribute('data-emoji')===emoji){
-      var cnt=chips[i].querySelector('span.cnt');
-      if(cnt)cnt.textContent=parseInt(cnt.textContent||'1')+1;
-      return;
-    }
+// Dismiss react-picker on outside tap
+document.addEventListener('touchstart', function(e){
+  var rp = document.getElementById('react-picker');
+  if(rp && rp.style.display==='flex' && !e.target.closest('#react-picker') && !e.target.closest('.bubble')){
+    rp.style.display = 'none';
   }
-  // New chip
-  var chip=document.createElement('div');
-  chip.className='reaction-chip';chip.setAttribute('data-emoji',emoji);
-  chip.innerHTML=emoji+' <span class="cnt">1</span>';
-  chip.onclick=function(){
-    var cnt=this.querySelector('span.cnt');
-    if(cnt){var n=parseInt(cnt.textContent)+1;if(n>5)this.remove();else cnt.textContent=n;}
-  };
-  row.appendChild(chip);
-  row.style.display='flex';
-}
-document.addEventListener('click',function(e){if(activeBar&&!e.target.closest('.emoji-bar')&&!e.target.closest('.bubble'))hideAllBars();});
+  var ep = document.getElementById('emoji-panel');
+  if(ep && ep.style.display==='flex' && !e.target.closest('#emoji-panel') && !e.target.closest('[onclick="toggleEmoji()"]')){
+    ep.style.display='none'; emojiOn=false;
+  }
+}, {passive:true});
+document.addEventListener('click', function(e){
+  var rp = document.getElementById('react-picker');
+  if(rp && rp.style.display==='flex' && !e.target.closest('#react-picker') && !e.target.closest('.bubble')){
+    rp.style.display = 'none';
+  }
+});
 
 // Splash screen — logo image animation
 setTimeout(function(){
