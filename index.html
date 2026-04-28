@@ -1038,12 +1038,24 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <div id="pin-toast" style="display:none;background:rgba(191,95,255,0.12);border:0.5px solid rgba(191,95,255,0.22);border-radius:10px;padding:8px 12px;font-size:11px;color:#BF5FFF;text-align:center;margin-bottom:8px;">✓ Message pinned for all staff</div>
       </div>
 
-      <div style="display:flex;align-items:center;gap:6px;padding:7px 11px 9px;background:rgba(4,4,8,0.65);backdrop-filter:blur(20px);border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;">
-        <button style="width:30px;height:30px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">📎</button>
-        <button style="width:30px;height:30px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">😊</button>
-        <input type="text" id="ci2" placeholder="Admin message..." style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:18px;color:#fff;padding:7px 12px;font-size:11px;font-weight:300;flex:1;outline:none;font-family:inherit;">
-        <button onclick="sendAdmin()" style="width:32px;height:32px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(10,132,255,0.4);">
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M1 7L13 1L7 13L6 8L1 7Z" fill="white"/></svg>
+      <!-- Admin voice recording indicator -->
+      <div id="adm-voice-bar" style="display:none;align-items:center;gap:8px;padding:6px 13px;background:rgba(255,69,58,0.08);border-top:0.5px solid rgba(255,69,58,0.18);flex-shrink:0;">
+        <div style="width:7px;height:7px;border-radius:50%;background:#FF453A;animation:pulse 1s infinite;flex-shrink:0;"></div>
+        <span style="font-size:11px;color:rgba(255,69,58,0.9);flex:1;">Recording… <span id="adm-vrec-timer" style="font-weight:600;">0:00</span></span>
+        <span style="font-size:10px;color:rgba(245,245,247,0.3);">Release to send</span>
+      </div>
+      <!-- Admin input bar -->
+      <div style="display:flex;align-items:center;gap:6px;padding:7px 11px 9px;background:rgba(14,14,30,0.98);backdrop-filter:blur(20px);border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;">
+        <button type="button" style="width:34px;height:34px;background:rgba(10,132,255,0.08);border:0.5px solid rgba(10,132,255,0.18);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">📎</button>
+        <input type="text" id="ci2" placeholder="Message all staff…" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;color:#fff;padding:9px 14px;font-size:12px;font-weight:300;flex:1;outline:none;font-family:inherit;">
+        <button id="adm-mic-btn" type="button"
+          ontouchstart="admMicStart(event)" ontouchend="admMicStop(event)" ontouchcancel="admMicStop(event)"
+          onmousedown="admMicStart(event)" onmouseup="admMicStop(event)" onmouseleave="admMicStop(event)"
+          style="width:38px;height:38px;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="7" y="1" width="6" height="11" rx="3" stroke="#0A84FF" stroke-width="1.5"/><path d="M3 10a7 7 0 0 0 14 0" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="17" x2="10" y2="20" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="20" x2="13" y2="20" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" onclick="sendAdmin()" style="width:38px;height:38px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(10,132,255,0.45);">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M1 7L13 1L7 13L6 8L1 7Z" fill="white"/></svg>
         </button>
       </div>
       <div id="n2-chat" class="bnav"></div>
@@ -1563,19 +1575,32 @@ function connectStaffSocket(){
   });
 }
 
+var _staffMsgRetryTimer = null;
 async function loadStaffMessages(){
+  var msgs = document.getElementById('msgs1'); if(!msgs) return;
+  if(_staffMsgRetryTimer){ clearTimeout(_staffMsgRetryTimer); _staffMsgRetryTimer=null; }
+  msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;"><div style="font-size:26px;opacity:0.35;">⏳</div><div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">Loading messages…</div></div>';
   try{
     var res = await fetch(API_URL+'/api/chat/messages', {headers:zHead()});
     var d = await res.json();
-    var msgs = document.getElementById('msgs1'); if(!msgs) return;
-    if(!d.success || !d.data.length){
+    if(!d.success){
+      msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:10px;"><div style="font-size:26px;opacity:0.5;">⚠️</div><div style="color:rgba(245,245,247,0.35);font-size:12px;text-align:center;">Could not load messages.<br>Server may be waking up…</div><button onclick="loadStaffMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:7px 18px;cursor:pointer;font-family:inherit;margin-top:2px;">🔄 Retry</button><div style="font-size:10px;color:rgba(245,245,247,0.2);margin-top:2px;">Auto-retrying in 5s…</div></div>';
+      _staffMsgRetryTimer = setTimeout(loadStaffMessages, 5000);
+      return;
+    }
+    if(!d.data || !d.data.length){
       msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;"><div style="font-size:28px;opacity:0.3;">💬</div><div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">No messages yet — say hello!</div></div>';
       return;
     }
     msgs.innerHTML = '';
     d.data.forEach(function(m){ appendStaffMsg1(m, false); });
     msgs.scrollTop = msgs.scrollHeight;
-  }catch(e){ console.error('loadStaffMessages:', e); }
+  }catch(e){
+    console.error('loadStaffMessages:', e);
+    var msgs2 = document.getElementById('msgs1'); if(!msgs2) return;
+    msgs2.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:10px;"><div style="font-size:26px;opacity:0.5;">⚠️</div><div style="color:rgba(245,245,247,0.35);font-size:12px;text-align:center;">Connection error.<br>Server may be waking up…</div><button onclick="loadStaffMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:7px 18px;cursor:pointer;font-family:inherit;margin-top:2px;">🔄 Retry</button><div style="font-size:10px;color:rgba(245,245,247,0.2);margin-top:2px;">Auto-retrying in 5s…</div></div>';
+    _staffMsgRetryTimer = setTimeout(loadStaffMessages, 5000);
+  }
 }
 
 async function loadStaff1Pinned(){
@@ -1696,12 +1721,7 @@ async function sendChat1(overrideMsg){
 
 // ── Input listeners ──
 document.getElementById('ci1').addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat1(); });
-document.getElementById('ci1').addEventListener('input', function(){
-  var has = (this.value||'').trim().length > 0;
-  var si = document.getElementById('grp-send-icon'), mi = document.getElementById('grp-mic-icon');
-  if(si) si.style.display = has ? 'block' : 'none';
-  if(mi) mi.style.display = has ? 'none' : 'block';
-});
+document.getElementById('ci1').addEventListener('input', function(){});
 
 // ── Chat tab switch ──
 function switchChatTab(tab){
@@ -2097,12 +2117,7 @@ function toggleDmEmoji(){
 
 // ── DM input listeners ──
 document.getElementById('dm-ci').addEventListener('keydown', function(e){ if(e.key==='Enter') sendDmMsg(); });
-document.getElementById('dm-ci').addEventListener('input', function(){
-  var has = (this.value||'').trim().length > 0;
-  var si=document.getElementById('dm-send-icon'), mi=document.getElementById('dm-mic-icon');
-  if(si) si.style.display = has ? 'block' : 'none';
-  if(mi) mi.style.display = has ? 'none' : 'block';
-});
+document.getElementById('dm-ci').addEventListener('input', function(){});
 
 // Chat 2 (admin)
 function sendAdmin(){
@@ -2114,6 +2129,37 @@ function sendAdmin(){
   msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;inp.value='';
 }
 document.getElementById('ci2').addEventListener('keydown',function(e){if(e.key==='Enter')sendAdmin();});
+
+// ── Admin (s2-chat) voice recording ──
+var _admMediaRec=null, _admRecChunks=[], _admRecTimer=null, _admRecSecs=0, _admRecHeld=false;
+async function admMicStart(e){
+  if(e && e.preventDefault) e.preventDefault();
+  if(_admRecHeld) return;
+  _admRecHeld=true; _admRecSecs=0;
+  var btn=document.getElementById('adm-mic-btn');
+  var bar=document.getElementById('adm-voice-bar');
+  if(btn){ btn.style.background='rgba(255,69,58,0.25)'; btn.style.borderColor='rgba(255,69,58,0.5)'; btn.style.transform='scale(1.12)'; }
+  try{
+    _admMediaRec = await _startRec(_admRecChunks, _admMediaRec, 'adm-vrec-timer', bar, btn, 'rgba(255,69,58,0.3)');
+    _admRecTimer = setInterval(function(){
+      _admRecSecs++;
+      var el=document.getElementById('adm-vrec-timer');
+      if(el){ var m=Math.floor(_admRecSecs/60),s=_admRecSecs%60; el.textContent=m+':'+(s<10?'0':'')+s; }
+    },1000);
+  }catch(err){ _admRecHeld=false; showToast1('Mic permission denied'); }
+}
+async function admMicStop(e){
+  if(e && e.preventDefault) e.preventDefault();
+  if(!_admRecHeld) return;
+  _admRecHeld=false; clearInterval(_admRecTimer);
+  var btn=document.getElementById('adm-mic-btn');
+  var bar=document.getElementById('adm-voice-bar');
+  if(btn){ btn.style.background='rgba(10,132,255,0.1)'; btn.style.borderColor='rgba(10,132,255,0.22)'; btn.style.transform='scale(1)'; }
+  var blob = await _stopRec(_admMediaRec, _admRecChunks, 'adm-vrec-timer', bar, btn, 'rgba(10,132,255,0.1)', '');
+  _admMediaRec=null;
+  if(blob && _admRecSecs>=1){ uploadAndSendVoice(blob,'group'); }
+  _admRecSecs=0;
+}
 
 function showPinOption(btn){
   var t=document.getElementById('pin-toast');

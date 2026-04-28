@@ -2566,14 +2566,17 @@ function connectDashSocket(){
   dashSocket.on('disconnect', function(){});
 }
 
+var _dashMsgRetryTimer = null;
 async function loadDashMessages(){
   var msgs=document.getElementById('dash-msgs'); if(!msgs) return;
+  if(_dashMsgRetryTimer){ clearTimeout(_dashMsgRetryTimer); _dashMsgRetryTimer=null; }
   msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;opacity:0.4;"><div style="font-size:28px;">⏳</div><div style="font-size:12px;color:var(--muted);">Loading messages…</div></div>';
   try{
     var res=await fetch(API+'/api/chat/messages',{headers:zHdr()});
     var d=await res.json();
     if(!d.success){
-      msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--muted);text-align:center;">Could not load messages.<br>Server may be waking up.</div><button onclick="loadDashMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:8px 20px;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 Retry</button></div>';
+      msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--muted);text-align:center;">Could not load messages.<br>Server may be waking up…</div><button onclick="loadDashMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:8px 20px;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 Retry</button><div style="font-size:10px;color:var(--muted);opacity:0.5;">Auto-retrying in 5s…</div></div>';
+      _dashMsgRetryTimer = setTimeout(loadDashMessages, 5000);
       return;
     }
     if(!d.data.length){
@@ -2585,7 +2588,8 @@ async function loadDashMessages(){
     msgs.scrollTop=msgs.scrollHeight;
   }catch(e){
     console.error('loadDashMessages:',e);
-    msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--muted);text-align:center;">Connection error.<br>Check your internet or server.</div><button onclick="loadDashMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:8px 20px;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 Retry</button></div>';
+    msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--muted);text-align:center;">Connection error.<br>Server may be waking up…</div><button onclick="loadDashMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:8px 20px;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 Retry</button><div style="font-size:10px;color:var(--muted);opacity:0.5;">Auto-retrying in 5s…</div></div>';
+    _dashMsgRetryTimer = setTimeout(loadDashMessages, 5000);
   }
 }
 
