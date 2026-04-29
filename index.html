@@ -1084,11 +1084,18 @@ select.inp option{background:#1A1A2E;color:#fff;}
             <div style="flex:1;"><div style="color:#fff;font-size:13px;">Tasks</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Assign & track</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
-          <div onclick="go2('s2-attendance')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
+          <div onclick="go2('s2-attendance')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
             <div style="width:34px;height:34px;background:rgba(255,159,10,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#FF9F0A" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="#FF9F0A" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
             <div style="flex:1;"><div style="color:#fff;font-size:13px;">Attendance</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Full log</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-payroll')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
+            <div style="width:34px;height:34px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#30D158" stroke-width="1.3"/><path d="M2 7h12" stroke="#30D158" stroke-width="1.3"/><path d="M6 10.5h4" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Payroll</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Monthly salary</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
         </div>
@@ -1124,6 +1131,49 @@ select.inp option{background:#1A1A2E;color:#fff;}
       <div class="scroll" style="padding:10px 13px 8px;" id="s2-staff-list">
         <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
       </div>
+    </div>
+
+    <!-- STAFF PROFILE -->
+    <div id="s2-staffprofile" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-stafflist')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Profile</div>
+      </div>
+      <div class="scroll" style="padding:10px 13px 60px;" id="s2-profile-body">
+        <div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- PAYROLL -->
+    <div id="s2-payroll" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Payroll</div>
+        <button id="s2-pr-process-btn" onclick="s2ProcessPayroll()" style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.25);border-radius:9px;padding:7px 13px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;display:none;">Process</button>
+      </div>
+      <!-- Month selector -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 13px 0;flex-shrink:0;">
+        <button onclick="s2PrPrevMonth()" style="width:30px;height:30px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div id="s2-pr-month-label" style="flex:1;text-align:center;color:#fff;font-size:13px;font-weight:500;">—</div>
+        <button onclick="s2PrNextMonth()" style="width:30px;height:30px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <!-- Summary bar -->
+      <div id="s2-pr-summary" style="padding:9px 13px 0;flex-shrink:0;"></div>
+      <!-- Staff payroll list -->
+      <div class="scroll" style="padding:8px 13px 8px;">
+        <div id="s2-pr-list" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>
+        </div>
+      </div>
+      <div id="n2-payroll" class="bnav"></div>
     </div>
 
   </div>
@@ -1184,16 +1234,17 @@ function go1(id){
 }
 
 function go2(id){
-  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist'];
+  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=adminScrs.indexOf(id);if(idx>=0)initNavs2(idx);
-  if(id==='s2-home')       { loadAdminHome(); }
-  if(id==='s2-attendance') { loadAdminAttendance(); }
-  if(id==='s2-approvals')  { loadAdminApprovals(); }
-  if(id==='s2-chat')       { initAdminChat2(); }
-  if(id==='s2-tasks')      { loadAdminTasks(); s2PopulateAssign(); }
-  if(id==='s2-stafflist')  { loadAdminStaffList(); }
+  if(id==='s2-home')         { loadAdminHome(); }
+  if(id==='s2-attendance')   { loadAdminAttendance(); }
+  if(id==='s2-approvals')    { loadAdminApprovals(); }
+  if(id==='s2-chat')         { initAdminChat2(); }
+  if(id==='s2-tasks')        { loadAdminTasks(); s2PopulateAssign(); }
+  if(id==='s2-stafflist')    { loadAdminStaffList(); }
+  if(id==='s2-payroll')      { loadAdminPayroll(); }
 }
 
 /* staffLogin() — handled by API script */
@@ -2615,7 +2666,7 @@ async function s2CreateTask(){
   }catch(e){ showToast1('❌ Network error'); }
 }
 
-// ── Staff List ──
+// ── Staff List (tappable → profile) ──
 async function loadAdminStaffList(){
   var listEl=document.getElementById('s2-staff-list');
   if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
@@ -2623,6 +2674,7 @@ async function loadAdminStaffList(){
     var r=await fetch(API_URL+'/api/staff',{headers:zHead()});
     var d=await r.json();
     var staff=Array.isArray(d)?d:(d.data||d.staff||[]);
+    _s2AllStaff=staff;
     var active=staff.filter(function(s){return s.active!==0;});
     var cntEl=document.getElementById('s2-staff-count');
     if(cntEl) cntEl.textContent=active.length+' members';
@@ -2630,17 +2682,177 @@ async function loadAdminStaffList(){
     if(!active.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">No staff found</div>'; return; }
     var empColors={'full_time':'#30D158','part_time':'#FF9F0A','daily_wage':'#0A84FF','day_time':'#BF5FFF'};
     var empLabel={'full_time':'Full Time','part_time':'Part Time','daily_wage':'Daily Wage','day_time':'Day Time'};
+    var roleColors={'admin':'#BF5FFF','team_leader':'#FF9F0A','staff':'#0A84FF'};
     listEl.innerHTML=active.map(function(s){
       var emp=s.employment_type||'full_time';
       var ec=empColors[emp]||'#0A84FF';
       var el=empLabel[emp]||emp;
-      return'<div class="gs" style="padding:11px;display:flex;align-items:center;gap:10px;margin-bottom:7px;">'
-        +'<div style="width:36px;height:36px;background:rgba(10,132,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;flex-shrink:0;">'+(s.name||'?').charAt(0).toUpperCase()+'</div>'
-        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:400;">'+escHtml(s.name||'—')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">'+(s.designation||'')+(s.brand_name?' · '+s.brand_name:'')+'</div></div>'
+      var avBg=s.photo_url?'':'rgba(10,132,255,0.2)';
+      var avContent=s.photo_url?'<img src="'+API_URL+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">':'<span style="color:#fff;font-size:14px;font-weight:500;">'+(s.name||'?').charAt(0).toUpperCase()+'</span>';
+      return'<div class="gs" style="padding:11px;display:flex;align-items:center;gap:10px;margin-bottom:7px;cursor:pointer;active:scale(0.98);" onclick="openStaffProfile('+s.id+')">'
+        +'<div style="width:36px;height:36px;background:'+avBg+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">'+avContent+'</div>'
+        +'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:12px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(s.name||'—')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.designation||'—')+(s.brand_name?' · '+s.brand_name:'')+'</div></div>'
         +'<span style="background:'+ec+'22;color:'+ec+';border:0.5px solid '+ec+'44;border-radius:5px;padding:2px 7px;font-size:9px;white-space:nowrap;">'+el+'</span>'
+        +'<svg width="5" height="9" viewBox="0 0 6 10" fill="none" style="flex-shrink:0;"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>'
         +'</div>';
     }).join('');
   }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+// ── Staff Profile ──
+async function openStaffProfile(id){
+  go2('s2-staffprofile');
+  var body=document.getElementById('s2-profile-body');
+  if(body) body.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var r=await fetch(API_URL+'/api/staff/'+id,{headers:zHead()});
+    var d=await r.json();
+    if(!d.success||!d.data){ body.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Not found</div>'; return; }
+    var s=d.data;
+    // Also load this month attendance summary
+    var today=new Date();
+    var month=today.getMonth()+1, year=today.getFullYear();
+    var attSummary={days_present:0,days_absent:0,late_days:0};
+    try{
+      var ar=await fetch(API_URL+'/api/payroll/salary-preview?month='+month+'&year='+year,{headers:zHead()});
+      var ad=await ar.json();
+      var found=(ad.data||[]).find(function(x){return x.id===s.id;});
+      if(found) attSummary={days_present:found.days_present||0,days_absent:found.days_absent||0,late_days:found.late_days||0};
+    }catch(e){}
+    var emp=s.employment_type||'full_time';
+    var empColors={'full_time':'#30D158','part_time':'#FF9F0A','daily_wage':'#0A84FF','day_time':'#BF5FFF'};
+    var empLabel={'full_time':'Full Time','part_time':'Part Time','daily_wage':'Daily Wage','day_time':'Day Time'};
+    var ec=empColors[emp]||'#0A84FF'; var el=empLabel[emp]||emp;
+    var avContent=s.photo_url?'<img src="'+API_URL+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">':'<span style="color:#fff;font-size:26px;font-weight:500;">'+(s.name||'?').charAt(0).toUpperCase()+'</span>';
+    var salary=s.salary_type==='daily'?('₹'+(parseFloat(s.daily_rate||0).toLocaleString('en-IN'))+'/day'):('₹'+(parseFloat(s.base_salary||0).toLocaleString('en-IN'))+'/mo');
+    var joining=s.joining_date?new Date(s.joining_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
+    var dob=s.dob?new Date(s.dob).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
+    body.innerHTML=
+      // Avatar + name header
+      '<div class="g" style="padding:20px 16px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,50,140,0.5),rgba(80,10,140,0.4));display:flex;flex-direction:column;align-items:center;gap:10px;">'
+      +'<div style="width:72px;height:72px;background:rgba(10,132,255,0.2);border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:hidden;">'+avContent+'</div>'
+      +'<div style="text-align:center;"><div style="color:#fff;font-size:17px;font-weight:500;">'+escHtml(s.name||'—')+'</div>'
+      +'<div style="color:rgba(245,245,247,0.45);font-size:11px;margin-top:3px;">'+(s.designation||'—')+'</div>'
+      +'<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;">'
+      +'<span style="background:'+ec+'22;color:'+ec+';border:0.5px solid '+ec+'44;border-radius:999px;padding:3px 10px;font-size:10px;">'+el+'</span>'
+      +(s.brand_name?'<span style="background:rgba(191,95,255,0.12);color:#BF5FFF;border:0.5px solid rgba(191,95,255,0.25);border-radius:999px;padding:3px 10px;font-size:10px;">'+escHtml(s.brand_name)+'</span>':'')
+      +'</div>'
+      +(s.phone?'<a href="tel:'+s.phone+'" style="display:inline-flex;align-items:center;gap:5px;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:999px;padding:5px 14px;color:#30D158;font-size:11px;text-decoration:none;margin-top:8px;">📞 '+s.phone+'</a>':'')
+      +'</div></div>'
+      // This month stats
+      +'<div style="color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">This Month</div>'
+      +'<div class="g" style="padding:12px;margin-bottom:10px;display:flex;justify-content:space-around;">'
+      +'<div style="text-align:center;"><div style="color:#30D158;font-size:18px;font-weight:500;">'+attSummary.days_present+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:2px;">Present</div></div>'
+      +'<div style="text-align:center;"><div style="color:#FF453A;font-size:18px;font-weight:500;">'+attSummary.days_absent+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:2px;">Absent</div></div>'
+      +'<div style="text-align:center;"><div style="color:#FF9F0A;font-size:18px;font-weight:500;">'+attSummary.late_days+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:2px;">Late</div></div>'
+      +'</div>'
+      // Details
+      +'<div style="color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Details</div>'
+      +'<div class="g" style="overflow:hidden;margin-bottom:10px;">'
+      +s2InfoRow('Employee ID', s.emp_id||'—')
+      +s2InfoRow('Phone', s.phone||'—')
+      +s2InfoRow('Email', s.email||'—')
+      +s2InfoRow('Date of Birth', dob)
+      +s2InfoRow('Joining Date', joining)
+      +s2InfoRow('Address', s.address||'—', true)
+      +'</div>'
+      +'<div style="color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Salary</div>'
+      +'<div class="g" style="overflow:hidden;margin-bottom:16px;">'
+      +s2InfoRow('Base Salary', salary)
+      +s2InfoRow('Salary Type', (s.salary_type||'monthly').charAt(0).toUpperCase()+(s.salary_type||'monthly').slice(1), false, true)
+      +'</div>';
+  }catch(e){ if(body) body.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+function s2InfoRow(label, value, isLast, isLastGroup){
+  return'<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;'+(isLast||isLastGroup?'':'border-bottom:0.5px solid rgba(255,255,255,0.06);')+'">'
+    +'<div style="color:rgba(245,245,247,0.35);font-size:11px;width:80px;flex-shrink:0;padding-top:1px;">'+label+'</div>'
+    +'<div style="color:#fff;font-size:11px;flex:1;word-break:break-word;">'+escHtml(value||'—')+'</div>'
+    +'</div>';
+}
+
+// ── Payroll Page ──
+var _s2PrMonth=new Date().getMonth()+1, _s2PrYear=new Date().getFullYear(), _s2PrData=[];
+var _monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function s2PrPrevMonth(){ if(_s2PrMonth===1){_s2PrMonth=12;_s2PrYear--;}else _s2PrMonth--; loadAdminPayroll(); }
+function s2PrNextMonth(){ var n=new Date(); if(_s2PrYear>n.getFullYear()||(_s2PrYear===n.getFullYear()&&_s2PrMonth>=n.getMonth()+1)) return; if(_s2PrMonth===12){_s2PrMonth=1;_s2PrYear++;}else _s2PrMonth++; loadAdminPayroll(); }
+
+async function loadAdminPayroll(){
+  var label=document.getElementById('s2-pr-month-label');
+  if(label) label.textContent=_monthNames[_s2PrMonth-1]+' '+_s2PrYear;
+  var listEl=document.getElementById('s2-pr-list');
+  var sumEl=document.getElementById('s2-pr-summary');
+  var procBtn=document.getElementById('s2-pr-process-btn');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  if(sumEl) sumEl.innerHTML='';
+  try{
+    var res=await fetch(API_URL+'/api/payroll/salary-preview?month='+_s2PrMonth+'&year='+_s2PrYear,{headers:zHead()});
+    var d=await res.json();
+    if(!d.success){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ '+(d.message||'Load failed')+'</div>'; return; }
+    _s2PrData=d.data||[];
+    var workDays=d.working_days||26;
+    var totalNet=_s2PrData.reduce(function(a,s){return a+parseFloat(s.net_salary||0);},0);
+    var notProcessed=_s2PrData.filter(function(s){return s.payroll_status==='not_processed';}).length;
+    var paid=_s2PrData.filter(function(s){return s.payroll_status==='paid';}).length;
+    var pending=_s2PrData.filter(function(s){return s.payroll_status==='pending';}).length;
+    // Summary
+    if(sumEl) sumEl.innerHTML='<div class="g" style="padding:11px 14px;margin-bottom:4px;display:flex;align-items:center;gap:10px;">'
+      +'<div style="flex:1;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:2px;">Total Payable</div><div style="color:#30D158;font-size:16px;font-weight:500;">₹'+totalNet.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0})+'</div></div>'
+      +'<div style="text-align:center;padding:0 10px;border-left:0.5px solid rgba(255,255,255,0.07);"><div style="color:#30D158;font-size:13px;font-weight:500;">'+paid+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;">Paid</div></div>'
+      +'<div style="text-align:center;padding:0 10px;border-left:0.5px solid rgba(255,255,255,0.07);"><div style="color:#FF9F0A;font-size:13px;font-weight:500;">'+pending+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;">Pending</div></div>'
+      +'<div style="text-align:center;padding:0 0 0 10px;border-left:0.5px solid rgba(255,255,255,0.07);"><div style="color:rgba(245,245,247,0.4);font-size:13px;font-weight:500;">'+notProcessed+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;">Unprocessed</div></div>'
+      +'</div>';
+    if(procBtn) procBtn.style.display=notProcessed>0?'block':'none';
+    // List
+    if(!_s2PrData.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:24px;opacity:0.3;margin-bottom:8px;">💰</div>No staff found</div>'; return; }
+    listEl.innerHTML=_s2PrData.map(function(s){
+      var ps=s.payroll_status||'not_processed';
+      var statusCol=ps==='paid'?'#30D158':ps==='pending'?'#FF9F0A':'rgba(245,245,247,0.3)';
+      var statusLbl=ps==='paid'?'Paid':ps==='pending'?'Pending':'Not Processed';
+      var absDed=parseFloat(s.absent_deduction||0);
+      var lateDed=parseFloat(s.late_deduction||0);
+      return'<div class="g" style="padding:12px;" data-pid="'+(s.payroll_id||'')+'" data-sid="'+s.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
+        +'<div style="width:34px;height:34px;background:rgba(48,209,88,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:500;flex-shrink:0;">'+(s.name||'?').charAt(0).toUpperCase()+'</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(s.name||'—')+'</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+(s.designation||'')+(s.brand_name?' · '+s.brand_name:'')+'</div></div>'
+        +'<span style="background:'+statusCol+'22;color:'+statusCol+';border:0.5px solid '+statusCol+'44;border-radius:5px;padding:2px 8px;font-size:9px;">'+statusLbl+'</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:9px 11px;margin-bottom:9px;">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Base</span><span style="color:#fff;font-size:10px;">₹'+parseFloat(s.base_salary||0).toLocaleString('en-IN')+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Days '+(s.days_present||0)+'/'+workDays+'</span><span style="color:rgba(245,245,247,0.55);font-size:10px;">'+(absDed>0?'−₹'+absDed.toLocaleString('en-IN'):'✓')+'</span></div>'
+        +(lateDed>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Late '+s.late_days+' days</span><span style="color:#FF9F0A;font-size:10px;">−₹'+lateDed.toLocaleString('en-IN')+'</span></div>':'')
+        +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>'
+        +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.6);font-size:11px;font-weight:500;">Net Salary</span><span style="color:#30D158;font-size:13px;font-weight:600;">₹'+parseFloat(s.net_salary||0).toLocaleString('en-IN')+'</span></div>'
+        +'</div>'
+        +(ps==='pending'?'<button onclick="s2MarkPaid('+s.payroll_id+',this)" style="width:100%;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Mark as Paid</button>'
+          :(ps==='not_processed'?'<div style="color:rgba(245,245,247,0.28);font-size:10px;text-align:center;padding:4px 0;">Process payroll to generate this record</div>':'<div style="display:flex;align-items:center;justify-content:center;gap:4px;color:rgba(48,209,88,0.6);font-size:10px;padding:2px 0;">✓ Paid</div>'))
+        +'</div>';
+    }).join('');
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+async function s2ProcessPayroll(){
+  var btn=document.getElementById('s2-pr-process-btn');
+  if(btn){btn.textContent='Processing…';btn.style.pointerEvents='none';}
+  try{
+    var r=await fetch(API_URL+'/api/payroll/process',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({month:_s2PrMonth,year:_s2PrYear})});
+    var d=await r.json();
+    if(d.success){ showToast1('✅ Payroll processed!'); loadAdminPayroll(); }
+    else { showToast1('❌ '+(d.message||'Failed')); if(btn){btn.textContent='Process';btn.style.pointerEvents='auto';} }
+  }catch(e){ showToast1('❌ Network error'); if(btn){btn.textContent='Process';btn.style.pointerEvents='auto';} }
+}
+
+async function s2MarkPaid(payrollId, btn){
+  var card=btn.closest('[data-pid]');
+  if(card){card.style.opacity='0.6';card.style.pointerEvents='none';}
+  try{
+    var r=await fetch(API_URL+'/api/payroll/'+payrollId+'/mark-paid',{method:'PUT',headers:zHead()});
+    var d=await r.json();
+    if(d.success){ showToast1('✅ Marked as paid!'); loadAdminPayroll(); }
+    else { if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
 }
 
 // ── Chat reply / react state ──
