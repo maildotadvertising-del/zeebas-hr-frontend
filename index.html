@@ -863,205 +863,267 @@ select.inp option{background:#1A1A2E;color:#fff;}
     <div style="position:absolute;width:160px;height:160px;background:radial-gradient(circle,rgba(191,95,255,0.14),transparent 70%);top:-30px;left:-20px;z-index:0;border-radius:50%;"></div>
     <div style="position:absolute;width:130px;height:130px;background:radial-gradient(circle,rgba(10,132,255,0.1),transparent 70%);bottom:70px;right:-15px;z-index:0;border-radius:50%;"></div>
 
-    <!-- ADMIN HOME -->
+    <!-- ═══════════ ADMIN APP ═══════════ -->
+
+    <!-- HOME -->
     <div id="s2-home" class="scr on">
-      <div class="scroll" style="padding:12px 13px 8px;">
-        <!-- Admin profile banner -->
-        <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(80,10,140,0.5),rgba(10,60,160,0.45));">
-          <div style="display:flex;align-items:center;gap:11px;margin-bottom:10px;">
-            <div id="s2-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,rgba(10,132,255,0.75),rgba(10,60,180,0.85));border:1.5px solid rgba(10,132,255,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:500;flex-shrink:0;">S</div>
+      <div class="scroll" style="padding:12px 13px 0;">
+        <!-- Profile header -->
+        <div class="g" style="padding:13px;margin-bottom:10px;background:linear-gradient(135deg,rgba(80,10,140,0.45),rgba(10,50,140,0.4));">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div id="s2-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,rgba(10,132,255,0.75),rgba(10,60,180,0.85));border:1.5px solid rgba(10,132,255,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:500;flex-shrink:0;">A</div>
             <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;"><div id="s2-name" style="color:#fff;font-size:15px;font-weight:500;">Sabeez</div><div class="admin-badge">ADMIN</div></div>
-              <div style="color:rgba(245,245,247,0.38);font-size:11px;">Zeebas Cluster LLP</div>
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><div id="s2-name" style="color:#fff;font-size:15px;font-weight:500;">Admin</div><div class="admin-badge">ADMIN</div></div>
+              <div id="s2-date" style="color:rgba(245,245,247,0.38);font-size:11px;">—</div>
             </div>
+            <button onclick="go2('s2-more')" style="width:32px;height:32px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;color:rgba(245,245,247,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="14" cy="9" r="1.5" fill="currentColor"/></svg>
+            </button>
           </div>
           <div style="height:0.5px;background:rgba(255,255,255,0.08);margin-bottom:10px;"></div>
-          <!-- Today's overview -->
           <div style="display:flex;justify-content:space-between;">
-            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Present</div><div id="s2-present" style="color:#30D158;font-size:16px;font-weight:500;">—</div></div>
-            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Absent</div><div id="s2-absent" style="color:#FF453A;font-size:16px;font-weight:500;">—</div></div>
-            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Late</div><div id="s2-late" style="color:#FF9F0A;font-size:16px;font-weight:500;">—</div></div>
-            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Leave Req</div><div id="s2-leave" style="color:#0A84FF;font-size:16px;font-weight:500;">—</div></div>
-            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Onsite</div><div id="s2-onsite" style="color:#BF5FFF;font-size:16px;font-weight:500;">—</div></div>
+            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Present</div><div id="s2-stat-present" style="color:#30D158;font-size:16px;font-weight:500;">—</div></div>
+            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Absent</div><div id="s2-stat-absent" style="color:#FF453A;font-size:16px;font-weight:500;">—</div></div>
+            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Late</div><div id="s2-stat-late" style="color:#FF9F0A;font-size:16px;font-weight:500;">—</div></div>
+            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Onsite</div><div id="s2-stat-onsite" style="color:#BF5FFF;font-size:16px;font-weight:500;">—</div></div>
+            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.38);font-size:9px;margin-bottom:3px;">Pending</div><div id="s2-stat-pending" style="color:#0A84FF;font-size:16px;font-weight:500;">—</div></div>
           </div>
         </div>
-
-        <!-- Admin quick actions -->
+        <!-- Quick actions -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <div class="gs" style="padding:11px;cursor:pointer;" onclick="go2('s2-approvals')">
+          <div class="gs" style="padding:11px;cursor:pointer;" onclick="go2('s2-attendance')">
+            <div style="width:30px;height:30px;background:rgba(48,209,88,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#30D158" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="color:#fff;font-size:11px;font-weight:500;">Attendance</div>
+            <div id="s2-home-att-sub" style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">Today's log</div>
+          </div>
+          <div class="gs" style="padding:11px;cursor:pointer;position:relative;" onclick="go2('s2-approvals')">
             <div style="width:30px;height:30px;background:rgba(255,159,10,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;position:relative;">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#FF9F0A" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="#FF9F0A" stroke-width="1.3" stroke-linecap="round"/></svg>
-              <div style="position:absolute;top:-3px;right:-3px;width:10px;height:10px;background:#FF453A;border-radius:50%;border:1.5px solid #040408;"></div>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="#FF9F0A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div id="s2-appr-dot" style="display:none;position:absolute;top:-3px;right:-3px;width:10px;height:10px;background:#FF453A;border-radius:50%;border:1.5px solid #040408;"></div>
             </div>
             <div style="color:#fff;font-size:11px;font-weight:500;">Approvals</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">3 pending</div>
+            <div id="s2-home-appr-sub" style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">Leave & Onsite</div>
           </div>
           <div class="gs" style="padding:11px;cursor:pointer;" onclick="go2('s2-tasks')">
             <div style="width:30px;height:30px;background:rgba(10,132,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">
               <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#0A84FF" stroke-width="1.3"/><path d="M5 8h6M5 11h4" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
-            <div style="color:#fff;font-size:11px;font-weight:500;">Assign Tasks</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">7 active tasks</div>
-          </div>
-          <div class="gs" style="padding:11px;cursor:pointer;" onclick="go2('s2-staff')">
-            <div style="width:30px;height:30px;background:rgba(48,209,88,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#30D158" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
-            </div>
-            <div style="color:#fff;font-size:11px;font-weight:500;">Staff Today</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">12 members</div>
+            <div style="color:#fff;font-size:11px;font-weight:500;">Tasks</div>
+            <div id="s2-home-tasks-sub" style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">Active tasks</div>
           </div>
           <div class="gs" style="padding:11px;cursor:pointer;" onclick="go2('s2-chat')">
-            <div style="width:30px;height:30px;background:rgba(191,95,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;position:relative;">
+            <div style="width:30px;height:30px;background:rgba(191,95,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">
               <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="#BF5FFF" stroke-width="1.3"/></svg>
-              <div style="position:absolute;top:-3px;right:-3px;width:10px;height:10px;background:#FF453A;border-radius:50%;border:1.5px solid #040408;"></div>
             </div>
-            <div style="color:#fff;font-size:11px;font-weight:500;">Admin Chat</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">5 unread</div>
+            <div style="color:#fff;font-size:11px;font-weight:500;">Team Chat</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">All staff</div>
           </div>
         </div>
-
-        <!-- Pending approvals preview -->
-        <div class="g" style="padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="color:#fff;font-size:12px;font-weight:500;">Pending Approvals</div>
-            <span style="color:#0A84FF;font-size:11px;cursor:pointer;" onclick="go2('s2-approvals')">See all</span>
+        <!-- Today mini attendance -->
+        <div class="g" style="padding:12px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+            <div style="color:#fff;font-size:12px;font-weight:500;">Today's Attendance</div>
+            <span style="color:#0A84FF;font-size:11px;cursor:pointer;" onclick="go2('s2-attendance')">See all →</span>
           </div>
-          <div id="approvals-preview" style="text-align:center;padding:14px 0;color:rgba(245,245,247,0.28);font-size:11px;">No pending approvals</div>
+          <div id="s2-att-mini" style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:8px 0;">Loading…</div>
+        </div>
+        <!-- Pending approvals mini -->
+        <div class="g" style="padding:12px;margin-bottom:60px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+            <div style="color:#fff;font-size:12px;font-weight:500;">Pending Approvals</div>
+            <span style="color:#0A84FF;font-size:11px;cursor:pointer;" onclick="go2('s2-approvals')">See all →</span>
+          </div>
+          <div id="s2-appr-mini" style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:8px 0;">Loading…</div>
         </div>
       </div>
       <div id="n2-home" class="bnav"></div>
     </div>
 
+    <!-- ATTENDANCE -->
+    <div id="s2-attendance" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Attendance</div>
+        <input type="date" id="s2-att-date" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(245,245,247,0.7);font-size:11px;padding:5px 8px;outline:none;font-family:inherit;" onchange="loadAdminAttendance()">
+      </div>
+      <div id="s2-att-stats" style="display:flex;gap:6px;padding:9px 13px 0;flex-wrap:wrap;flex-shrink:0;"></div>
+      <div class="scroll" style="padding:8px 13px 8px;">
+        <div id="s2-att-list" style="display:flex;flex-direction:column;gap:7px;">
+          <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
+        </div>
+      </div>
+      <div id="n2-attendance" class="bnav"></div>
+    </div>
+
     <!-- APPROVALS -->
     <div id="s2-approvals" class="scr">
       <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
-        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
         <div style="color:#fff;font-size:17px;font-weight:500;">Approvals</div>
       </div>
+      <div style="display:flex;gap:7px;padding:10px 13px 0;flex-shrink:0;">
+        <button id="s2-appr-tab-leave" onclick="s2ApprTab('leave')" style="background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.3);border-radius:14px;padding:5px 13px;font-size:11px;color:#FF9F0A;cursor:pointer;font-family:inherit;">Leave</button>
+        <button id="s2-appr-tab-onsite" onclick="s2ApprTab('onsite')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;">Onsite</button>
+      </div>
       <div class="scroll" style="padding:10px 13px 8px;">
-        <!-- Tab selector -->
-        <div style="display:flex;gap:7px;margin-bottom:12px;">
-          <div style="background:rgba(255,159,10,0.14);border:0.5px solid rgba(255,159,10,0.22);border-radius:14px;padding:5px 11px;font-size:11px;color:#FF9F0A;cursor:pointer;">Leave (2)</div>
-          <div style="background:rgba(191,95,255,0.12);border:0.5px solid rgba(191,95,255,0.18);border-radius:14px;padding:5px 11px;font-size:11px;color:#BF5FFF;cursor:pointer;">Onsite (1)</div>
-          <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 11px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;">Done</div>
-        </div>
-
-        <!-- Approvals list — loaded from API -->
-        <div id="approvals-list" style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:12px;">
-          <div style="font-size:28px;margin-bottom:8px;opacity:0.35;">📋</div>
-          No pending approvals
+        <div id="s2-appr-list" style="display:flex;flex-direction:column;gap:9px;">
+          <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:28px;margin-bottom:8px;opacity:0.3;">✅</div>Loading…</div>
         </div>
       </div>
       <div id="n2-approvals" class="bnav"></div>
     </div>
 
-    <!-- STAFF TODAY -->
-    <div id="s2-staff" class="scr">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
-        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
-          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-        <div style="color:#fff;font-size:17px;font-weight:500;">Staff Today</div>
-      </div>
-      <div class="scroll" style="padding:10px 13px 8px;">
-        <div id="staff-today-stats" style="display:flex;gap:7px;margin-bottom:10px;">
-          <span id="s2-present-pill" class="pg">Present <span id="s2-present">0</span></span>
-          <span id="s2-absent-pill" class="pr">Absent <span id="s2-absent">0</span></span>
-          <span id="s2-late-pill" class="po">Late <span id="s2-late">0</span></span>
-        </div>
-        <div id="staff-today-list" style="display:flex;flex-direction:column;gap:7px;">
-          <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading attendance…</div>
-        </div>
-      </div>
-      <div id="n2-staff" class="bnav"></div>
-    </div>
-
-    <!-- ADMIN TASKS -->
-    <div id="s2-tasks" class="scr">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 13px 0;flex-shrink:0;">
-        <div style="display:flex;align-items:center;gap:9px;">
-          <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
-            <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
-          <div style="color:#fff;font-size:17px;font-weight:500;">Assign Tasks</div>
-        </div>
-        <button style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.22);border-radius:9px;padding:7px 12px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">+ New Task</button>
-      </div>
-      <div class="scroll" style="padding:10px 13px 8px;">
-        <div id="admin-tasks-list" style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">
-          <div style="font-size:26px;margin-bottom:8px;opacity:0.35;">📌</div>
-          No tasks assigned yet
-        </div>
-      </div>
-      <div id="n2-tasks" class="bnav"></div>
-    </div>
-
-    <!-- ADMIN CHAT (with Pin) -->
-    <div id="s2-chat" class="scr">
+    <!-- TEAM CHAT -->
+    <div id="s2-chat" class="scr" style="background:#07071A;">
       <div style="padding:10px 13px 9px;border-bottom:0.5px solid rgba(255,255,255,0.07);flex-shrink:0;display:flex;align-items:center;gap:10px;">
-        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:28px;height:28px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:28px;height:28px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
-        <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Zeebas Cluster</div><div style="color:rgba(235,235,245,0.35);font-size:10px;">Admin · 12 members</div></div>
+        <div style="flex:1;"><div style="color:#fff;font-size:13px;font-weight:500;">Team Chat</div><div style="color:rgba(235,235,245,0.35);font-size:10px;" id="s2-chat-sub">All staff</div></div>
         <div class="admin-badge">ADMIN</div>
       </div>
-      <!-- Pinned -->
-      <div style="background:rgba(10,132,255,0.1);border-bottom:0.5px solid rgba(10,132,255,0.14);padding:7px 13px;display:flex;align-items:center;gap:7px;flex-shrink:0;">
-        <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v8M7 9.5L4 6.5M7 9.5L10 6.5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M3 12.5h8" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-        <div id="admin-pinned-text" style="flex:1;color:rgba(245,245,247,0.5);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div>
-        <button onclick="unpinMsg()" style="background:none;border:none;cursor:pointer;color:rgba(245,245,247,0.3);font-size:12px;">✕</button>
+      <!-- Pinned bar -->
+      <div id="s2-pinned-bar" style="background:rgba(10,132,255,0.08);border-bottom:0.5px solid rgba(10,132,255,0.12);padding:7px 13px;display:flex;align-items:center;gap:7px;flex-shrink:0;">
+        <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M5 1l4 4-5 5 4 4" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <div id="s2-pinned-txt" style="flex:1;color:rgba(245,245,247,0.45);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">No pinned message</div>
       </div>
-
-      <div class="scroll" style="padding:10px 12px 6px;" id="msgs2">
-        <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.22);font-size:11px;">
-          <div style="font-size:24px;margin-bottom:8px;opacity:0.3;">💬</div>
-          No messages yet
-        </div>
-
-        <!-- Admin message with pin option (hidden placeholder) -->
-        <div style="display:none;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;">
-          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.7),rgba(10,60,180,0.8));display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:500;flex-shrink:0;">S</div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;">
-            <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
-              <span style="font-size:9px;color:rgba(245,245,247,0.35);">You (Admin)</span>
-              <button onclick="showPinOption(this)" style="background:rgba(191,95,255,0.15);border:0.5px solid rgba(191,95,255,0.22);border-radius:6px;padding:1px 6px;font-size:9px;color:#BF5FFF;cursor:pointer;font-family:inherit;">📌 Pin</button>
-            </div>
-            <div style="background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));backdrop-filter:blur(12px);border:0.5px solid rgba(10,132,255,0.2);border-radius:13px;border-bottom-right-radius:3px;padding:7px 10px;font-size:11px;color:#fff;max-width:180px;"></div>
-            <div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;"></div>
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:10px;">
-          <div style="width:24px;height:24px;border-radius:50%;background:rgba(30,59,46,0.8);display:flex;align-items:center;justify-content:center;color:#5DD68A;font-size:9px;font-weight:500;flex-shrink:0;">MA</div>
-          <div><div style="font-size:9px;color:#5DD68A;margin-bottom:2px;">Mohamed A</div><div style="background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.08);border-radius:13px;border-bottom-left-radius:3px;padding:7px 10px;font-size:11px;color:#fff;max-width:180px;">Rappo client call 3 PM — anyone free? 📞</div><div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;">10:05 AM</div></div>
-        </div>
-
-        <div id="pin-toast" style="display:none;background:rgba(191,95,255,0.12);border:0.5px solid rgba(191,95,255,0.22);border-radius:10px;padding:8px 12px;font-size:11px;color:#BF5FFF;text-align:center;margin-bottom:8px;">✓ Message pinned for all staff</div>
+      <!-- Messages -->
+      <div class="scroll" style="flex:1;padding:10px 12px 6px;background:#07071A;" id="s2-msgs">
+        <div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.22);font-size:11px;"><div style="font-size:24px;margin-bottom:8px;opacity:0.3;">💬</div>Loading…</div>
       </div>
-
-      <!-- Admin voice recording indicator -->
+      <!-- Reply banner -->
+      <div id="s2-reply-banner" style="display:none;background:rgba(10,132,255,0.08);border-top:0.5px solid rgba(10,132,255,0.15);padding:6px 13px;display:none;align-items:center;gap:8px;flex-shrink:0;">
+        <div style="flex:1;"><div id="s2-reply-name" style="font-size:10px;color:#0A84FF;font-weight:500;"></div><div id="s2-reply-text" style="font-size:10px;color:rgba(245,245,247,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;"></div></div>
+        <button onclick="s2ClearReply()" style="background:none;border:none;cursor:pointer;color:rgba(245,245,247,0.4);font-size:15px;padding:2px;">✕</button>
+      </div>
+      <!-- Voice bar -->
       <div id="adm-voice-bar" style="display:none;align-items:center;gap:8px;padding:6px 13px;background:rgba(255,69,58,0.08);border-top:0.5px solid rgba(255,69,58,0.18);flex-shrink:0;">
-        <div style="width:7px;height:7px;border-radius:50%;background:#FF453A;animation:pulse 1s infinite;flex-shrink:0;"></div>
+        <div style="width:7px;height:7px;border-radius:50%;background:#FF453A;animation:recPulse 1s infinite;flex-shrink:0;"></div>
         <span style="font-size:11px;color:rgba(255,69,58,0.9);flex:1;">Recording… <span id="adm-vrec-timer" style="font-weight:600;">0:00</span></span>
         <span style="font-size:10px;color:rgba(245,245,247,0.3);">Release to send</span>
       </div>
-      <!-- Admin input bar -->
-      <div style="display:flex;align-items:center;gap:6px;padding:7px 11px 9px;background:rgba(14,14,30,0.98);backdrop-filter:blur(20px);border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;">
-        <button type="button" style="width:34px;height:34px;background:rgba(10,132,255,0.08);border:0.5px solid rgba(10,132,255,0.18);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">📎</button>
+      <!-- Input -->
+      <div style="display:flex;align-items:center;gap:6px;padding:7px 11px 9px;background:rgba(7,7,26,0.98);backdrop-filter:blur(20px);border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;">
         <input type="text" id="ci2" placeholder="Message all staff…" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;color:#fff;padding:9px 14px;font-size:12px;font-weight:300;flex:1;outline:none;font-family:inherit;">
         <button id="adm-mic-btn" type="button"
           ontouchstart="admMicStart(event)" ontouchend="admMicStop(event)" ontouchcancel="admMicStop(event)"
           onmousedown="admMicStart(event)" onmouseup="admMicStop(event)" onmouseleave="admMicStop(event)"
           style="width:38px;height:38px;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="7" y="1" width="6" height="11" rx="3" stroke="#0A84FF" stroke-width="1.5"/><path d="M3 10a7 7 0 0 0 14 0" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="17" x2="10" y2="20" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="20" x2="13" y2="20" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="7" y="1" width="6" height="11" rx="3" stroke="#0A84FF" stroke-width="1.5"/><path d="M3 10a7 7 0 0 0 14 0" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="17" x2="10" y2="20" stroke="#0A84FF" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
         <button type="button" onclick="sendAdmin()" style="width:38px;height:38px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(10,132,255,0.45);">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M1 7L13 1L7 13L6 8L1 7Z" fill="white"/></svg>
         </button>
       </div>
       <div id="n2-chat" class="bnav"></div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="s2-tasks" class="scr">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 13px 0;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <div style="color:#fff;font-size:17px;font-weight:500;">Tasks</div>
+        </div>
+        <button onclick="s2ToggleNewTask()" style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.25);border-radius:9px;padding:7px 13px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">+ New</button>
+      </div>
+      <!-- New task form -->
+      <div id="s2-new-task-form" style="display:none;padding:10px 13px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <input id="s2-task-title" placeholder="Task title…" class="inp" style="margin-bottom:7px;">
+        <textarea id="s2-task-desc" placeholder="Description (optional)" class="inp" style="height:54px;resize:none;margin-bottom:7px;"></textarea>
+        <select id="s2-task-assign" class="inp" style="margin-bottom:7px;"><option value="">Assign to…</option></select>
+        <div style="display:flex;gap:7px;margin-bottom:8px;">
+          <select id="s2-task-priority" class="inp" style="flex:1;"><option value="medium">Medium Priority</option><option value="high">High Priority</option><option value="low">Low Priority</option></select>
+          <input type="date" id="s2-task-due" class="inp" style="flex:1;">
+        </div>
+        <button onclick="s2CreateTask()" class="btn-p" style="padding:11px;">Create Task</button>
+      </div>
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:6px;padding:9px 13px 0;flex-shrink:0;">
+        <button id="s2-ttab-all" onclick="s2TaskTab('all')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.28);border-radius:14px;padding:5px 12px;font-size:11px;color:#0A84FF;cursor:pointer;font-family:inherit;">All</button>
+        <button id="s2-ttab-pending" onclick="s2TaskTab('pending')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 12px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;">Pending</button>
+        <button id="s2-ttab-done" onclick="s2TaskTab('done')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 12px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;">Done</button>
+      </div>
+      <div class="scroll" style="padding:8px 13px 8px;">
+        <div id="s2-tasks-list" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
+        </div>
+      </div>
+      <div id="n2-tasks" class="bnav"></div>
+    </div>
+
+    <!-- MORE -->
+    <div id="s2-more" class="scr">
+      <div style="padding:14px 13px 0;flex-shrink:0;">
+        <div style="color:#fff;font-size:20px;font-weight:500;margin-bottom:2px;">More</div>
+        <div style="color:rgba(245,245,247,0.35);font-size:11px;" id="s2-more-sub">Admin Panel</div>
+      </div>
+      <div class="scroll" style="padding:12px 13px 8px;">
+        <!-- Section label -->
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;margin-top:2px;">Management</div>
+        <div class="g" style="overflow:hidden;margin-bottom:10px;">
+          <div onclick="go2('s2-stafflist')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#30D158" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Staff List</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">All members</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-tasks')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#0A84FF" stroke-width="1.3"/><path d="M5 8h6M5 11h4" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Tasks</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Assign & track</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-attendance')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
+            <div style="width:34px;height:34px;background:rgba(255,159,10,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#FF9F0A" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="#FF9F0A" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Attendance</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Full log</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Settings</div>
+        <div class="g" style="overflow:hidden;margin-bottom:16px;">
+          <div onclick="window.open('https://zeebas-hr-frontend.vercel.app/dashboard.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(191,95,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#BF5FFF" stroke-width="1.3"/><path d="M2 7h12" stroke="#BF5FFF" stroke-width="1.3"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Full Dashboard</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Payroll, GPS, Settings</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="zLogout()" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
+            <div style="width:34px;height:34px;background:rgba(255,69,58,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3M11 11l3-3-3-3M14 8H6" stroke="#FF453A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#FF453A;font-size:13px;">Logout</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Sign out of admin</div></div>
+          </div>
+        </div>
+      </div>
+      <div id="n2-more" class="bnav"></div>
+    </div>
+
+    <!-- STAFF LIST -->
+    <div id="s2-stafflist" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Staff</div>
+        <div id="s2-staff-count" style="color:rgba(245,245,247,0.35);font-size:11px;"></div>
+      </div>
+      <div class="scroll" style="padding:10px 13px 8px;" id="s2-staff-list">
+        <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
+      </div>
     </div>
 
   </div>
@@ -1080,28 +1142,27 @@ var staffTabs=[
 var staffScrs=['s1-home','s1-tasks','s1-chat','s1-salary','s1-profile'];
 
 var adminTabs=[
-  {l:'Home',p:'M5.5 13V8L9 5L12.5 8V13H10.5V10.5H7.5V13Z M4 8.5L9 4L14 8.5'},
-  {l:'Staff',p:'M9 8.5A2.5 2.5 0 1 0 9 3.5A2.5 2.5 0 0 0 9 8.5Z M3.5 15.5C3.5 12.5 6 10 9 10C12 10 14.5 12.5 14.5 15.5'},
-  {l:'Tasks',p:'M5 5H13V14H5V5Z M7 8H11 M7 10.5H9.5'},
-  {l:'Chat',p:'M3 4.5C3 3.7 3.7 3 4.5 3H13.5C14.3 3 15 3.7 15 4.5V10C15 10.8 14.3 11.5 13.5 11.5H9.5L7 14V11.5H4.5C3.7 11.5 3 10.8 3 10V4.5Z'},
-  {l:'More',p:'M4 8h1M8 8h1M12 8h1'}
+  {l:'Home',   p:'M5.5 13V8L9 5L12.5 8V13H10.5V10.5H7.5V13Z M4 8.5L9 4L14 8.5'},
+  {l:'Attend.', p:'M9 3A6 6 0 1 0 9 15A6 6 0 0 0 9 3Z M9 6v3.5l2.5 2.5'},
+  {l:'Approve', p:'M2.5 8.5l3.5 3.5 9-9'},
+  {l:'Chat',   p:'M3 4.5C3 3.7 3.7 3 4.5 3H13.5C14.3 3 15 3.7 15 4.5V10C15 10.8 14.3 11.5 13.5 11.5H9.5L7 14V11.5H4.5C3.7 11.5 3 10.8 3 10V4.5Z'},
+  {l:'More',   p:'M4 9h1M8.5 9h1M13 9h1'}
 ];
-var adminScrs=['s2-home','s2-staff','s2-tasks','s2-chat','s2-approvals'];
+var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-more'];
+var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[];
 
 function makeNav(tabs,scrs,active,prefix){
   return tabs.map(function(x,i){
     var c=i===active?'#0A84FF':'rgba(235,235,245,0.32)';
-    var dot=(i===3&&active!==3&&prefix==='n2')||((i===3||i===0)&&active!==i&&prefix==='n2'&&i===0)?'':'';
-    var badge=((prefix==='n1'&&i===2)||(prefix==='n2'&&(i===3||i===4)))&&active!==i?'<div class="notif-dot"></div>':'';
+    var badge=(prefix==='n1'&&i===2&&active!==2)?'<div class="notif-dot"></div>':(prefix==='n2'&&i===2&&active!==2)?'<div class="notif-dot"></div>':'';
     return'<button class="ntb'+(i===active?' on':'')+'" onclick="'+(prefix==='n1'?'go1':'go2')+'(\''+scrs[i]+'\')">'+badge+'<svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="'+x.p+'" stroke="'+c+'" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="color:'+c+'">'+x.l+'</span></button>';
   }).join('');
 }
-
 function initNavs1(active){
   staffScrs.forEach(function(_,i){var n=document.getElementById('n1-'+['home','tasks','chat','salary','profile'][i]);if(n)n.innerHTML=makeNav(staffTabs,staffScrs,active,'n1');});
 }
 function initNavs2(active){
-  ['home','approvals','staff','tasks','chat'].forEach(function(k,i){var n=document.getElementById('n2-'+k);if(n)n.innerHTML=makeNav(adminTabs,adminScrs,active,'n2');});
+  ['home','attendance','approvals','chat','more','tasks'].forEach(function(k){var n=document.getElementById('n2-'+k);if(n)n.innerHTML=makeNav(adminTabs,adminScrs,active,'n2');});
 }
 initNavs1(0);initNavs2(0);
 
@@ -1123,11 +1184,16 @@ function go1(id){
 }
 
 function go2(id){
-  var all=['s2-home','s2-approvals','s2-staff','s2-tasks','s2-chat'];
+  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=adminScrs.indexOf(id);if(idx>=0)initNavs2(idx);
-  if(id==='s2-chat'){var m=document.getElementById('msgs2');if(m)setTimeout(function(){m.scrollTop=m.scrollHeight;},80);}
+  if(id==='s2-home')       { loadAdminHome(); }
+  if(id==='s2-attendance') { loadAdminAttendance(); }
+  if(id==='s2-approvals')  { loadAdminApprovals(); }
+  if(id==='s2-chat')       { initAdminChat2(); }
+  if(id==='s2-tasks')      { loadAdminTasks(); s2PopulateAssign(); }
+  if(id==='s2-stafflist')  { loadAdminStaffList(); }
 }
 
 /* staffLogin() — handled by API script */
@@ -2135,13 +2201,24 @@ document.getElementById('dm-ci').addEventListener('keydown', function(e){ if(e.k
 document.getElementById('dm-ci').addEventListener('input', function(){});
 
 // Chat 2 (admin)
+// ── Admin chat — send via same staff socket / API ──
 function sendAdmin(){
-  var inp=document.getElementById('ci2');var txt=(inp.value||'').trim();if(!txt)return;
-  var msgs=document.getElementById('msgs2');
-  var d=new Date(),h=d.getHours(),m=d.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+' '+a;
-  var div=document.createElement('div');div.style.cssText='display:flex;align-items:flex-end;gap:6px;flex-direction:row-reverse;margin-bottom:10px;';
-  div.innerHTML='<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.7),rgba(10,60,180,0.8));display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:500;flex-shrink:0;">S</div><div style="display:flex;flex-direction:column;align-items:flex-end;"><div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;"><span style="font-size:9px;color:rgba(245,245,247,0.3);">You (Admin)</span><button onclick="showPinOption(this)" style="background:rgba(191,95,255,0.14);border:0.5px solid rgba(191,95,255,0.2);border-radius:5px;padding:1px 5px;font-size:9px;color:#BF5FFF;cursor:pointer;font-family:inherit;">📌 Pin</button></div><div style="background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));backdrop-filter:blur(12px);border:0.5px solid rgba(10,132,255,0.2);border-radius:13px;border-bottom-right-radius:3px;padding:7px 10px;font-size:11px;color:#fff;max-width:180px;">'+txt+'</div><div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;text-align:right;">'+t+' ✓✓</div></div>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;inp.value='';
+  var inp=document.getElementById('ci2');
+  var txt=(inp.value||'').trim(); if(!txt) return;
+  inp.value='';
+  var staff=zStaff()||{};
+  var reply=_s2ReplyTo?{reply_to_id:_s2ReplyTo.id,reply_to_text:_s2ReplyTo.text,reply_to_name:_s2ReplyTo.name}:{};
+  s2ClearReply();
+  var payload=Object.assign({staff_id:staff.id,message:txt,type:'text'},reply);
+  if(staffSocket&&staffSocket.connected){
+    staffSocket.emit('send-message',payload);
+    appendAdminMsg2(Object.assign({staff_id:staff.id,staff_name:staff.name,photo_url:staff.photo_url,message:txt,message_type:'text',created_at:new Date(),reactions:[]},reply));
+  } else {
+    fetch(API_URL+'/api/chat/messages',{method:'POST',headers:zHead(),body:JSON.stringify(payload)})
+      .then(function(r){return r.json();})
+      .then(function(d){if(d.success)appendAdminMsg2(d.data);})
+      .catch(function(){showToast1('❌ Send failed');});
+  }
 }
 document.getElementById('ci2').addEventListener('keydown',function(e){if(e.key==='Enter')sendAdmin();});
 
@@ -2176,17 +2253,395 @@ async function admMicStop(e){
   _admRecSecs=0;
 }
 
-function showPinOption(btn){
-  var t=document.getElementById('pin-toast');
-  t.style.display='block';
-  setTimeout(function(){t.style.display='none';},2500);
-  btn.textContent='📌 Pinned';btn.style.background='rgba(191,95,255,0.22)';
-}
-function unpinMsg(){document.getElementById('pinned-msg').style.opacity='0.3';}
+// ── Admin Chat helpers ──
+var _s2ReplyTo = null;
+function s2ClearReply(){ _s2ReplyTo=null; var b=document.getElementById('s2-reply-banner'); if(b) b.style.display='none'; }
 
-// Approvals
-function approveLeave(btn){var card=btn.closest('.g');card.style.opacity='0.5';card.style.pointerEvents='none';btn.textContent='✓ Approved';}
-function approveOnsite(btn){var card=btn.closest('.g');card.style.opacity='0.5';card.style.pointerEvents='none';btn.textContent='✓ Approved';}
+function appendAdminMsg2(msg){
+  var msgs=document.getElementById('s2-msgs'); if(!msgs) return;
+  var ph=msgs.querySelector('[style*="padding:40px"]')||msgs.querySelector('[style*="Loading"]');
+  if(ph) msgs.innerHTML='';
+  var staff=zStaff()||{};
+  var isMe=msg.staff_id===staff.id;
+  var init=(msg.staff_name||'?').charAt(0).toUpperCase();
+  var avSrc=msg.photo_url?API_URL+msg.photo_url:null;
+  var avS='width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;flex-shrink:0;';
+  var av=avSrc?'<img src="'+avSrc+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';">':'<div style="'+avS+'">'+init+'</div>';
+  var t=(function(){var dt=msg.created_at?new Date(msg.created_at):new Date();var h=dt.getHours(),m=dt.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
+  var content='';
+  var mt=msg.message_type||'text';
+  var url=msg.file_url?API_URL+msg.file_url:'';
+  if(mt==='voice'&&url){ content='<audio controls src="'+url+'" style="max-width:180px;height:32px;border-radius:8px;"></audio>'; }
+  else if(mt==='image'&&url){ content='<img src="'+url+'" style="max-width:180px;border-radius:10px;display:block;">'; }
+  else { content='<span style="font-size:11px;color:#fff;word-break:break-word;">'+(msg.message||'')+'</span>'; }
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;align-items:flex-end;gap:6px;margin-bottom:10px;'+(isMe?'flex-direction:row-reverse;':'');
+  wrap.innerHTML=av+'<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';max-width:72%;">'
+    +(isMe?'':'<div style="font-size:9px;color:rgba(245,245,247,0.45);margin-bottom:2px;">'+escHtml(msg.staff_name||'')+'</div>')
+    +'<div style="background:'+(isMe?'linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65))':'rgba(255,255,255,0.07)')+';backdrop-filter:blur(12px);border:0.5px solid '+(isMe?'rgba(10,132,255,0.2)':'rgba(255,255,255,0.08)')+';border-radius:13px;border-bottom-'+(isMe?'right':'left')+'-radius:3px;padding:7px 10px;">'+content+'</div>'
+    +'<div style="font-size:9px;color:rgba(235,235,245,0.2);margin-top:2px;">'+t+'</div>'
+    +'</div>';
+  msgs.appendChild(wrap);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function initAdminChat2(){
+  var msgs=document.getElementById('s2-msgs'); if(!msgs) return;
+  // Load pinned
+  try{
+    var pr=await fetch(API_URL+'/api/chat/pinned',{headers:zHead()});
+    var pd=await pr.json();
+    var pt=document.getElementById('s2-pinned-txt');
+    if(pd.success&&pd.data&&pt) pt.textContent=pd.data.message||'No pinned message';
+  }catch(e){}
+  // Load messages
+  msgs.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.25);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var res=await fetch(API_URL+'/api/chat/messages',{headers:zHead()});
+    var d=await res.json();
+    msgs.innerHTML='';
+    if(d.success&&d.data&&d.data.length){
+      d.data.forEach(function(m){appendAdminMsg2(m);});
+    } else {
+      msgs.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.22);font-size:11px;"><div style="font-size:22px;margin-bottom:8px;opacity:0.3;">💬</div>No messages yet</div>';
+    }
+    // Connect socket for real-time
+    if(!staffSocket||!staffSocket.connected) connectStaffSocket();
+  }catch(e){ msgs.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed — <span style="color:#0A84FF;cursor:pointer;" onclick="initAdminChat2()">Retry</span></div>'; }
+}
+
+// ── Admin Home ──
+async function loadAdminHome(){
+  // Set date
+  var dateEl=document.getElementById('s2-date');
+  if(dateEl){ var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],d=new Date();dateEl.textContent=days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]; }
+  try{
+    var res=await fetch(API_URL+'/api/attendance/today',{headers:zHead()});
+    var d=await res.json();
+    var rows=(d.data||[]).filter(function(r){return r.role!=='admin'&&r.role!=='editor';});
+    var p=0,a=0,l=0,o=0;
+    rows.forEach(function(r){
+      var st=(r.status||'').toLowerCase();
+      if(st==='present'||st==='onsite_approved') p++;
+      else if(st==='late'){p++;l++;}
+      else if(st==='onsite') o++;
+      else if(st!=='on_leave') a++;
+    });
+    var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+    set('s2-stat-present',p); set('s2-stat-absent',a); set('s2-stat-late',l); set('s2-stat-onsite',o);
+    // Mini attendance list (top 5)
+    var mini=document.getElementById('s2-att-mini');
+    if(mini){
+      if(!rows.length){ mini.innerHTML='<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:8px 0;">No records</div>'; }
+      else {
+        mini.innerHTML=rows.slice(0,5).map(function(r){
+          var st=(r.status||'absent').toLowerCase();
+          var col=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='onsite_approved'?'#BF5FFF':st==='on_leave'?'#0A84FF':'#FF453A';
+          var lbl={'present':'Present','late':'Late','absent':'Absent','on_leave':'Leave','onsite_approved':'Onsite','onsite_pending':'Onsite?'}[st]||'Absent';
+          var ci=r.check_in?(function(){var dt=new Date(r.check_in),h=dt.getHours(),m=dt.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})():'—';
+          return'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+            +'<div style="width:26px;height:26px;background:rgba(10,132,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:500;flex-shrink:0;">'+(r.name||'?').charAt(0).toUpperCase()+'</div>'
+            +'<div style="flex:1;color:#fff;font-size:11px;">'+escHtml(r.name||'—')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-right:6px;">'+ci+'</div>'
+            +'<span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:5px;padding:1px 7px;font-size:9px;">'+lbl+'</span>'
+            +'</div>';
+        }).join('')+(rows.length>5?'<div style="text-align:center;padding:6px 0;color:#0A84FF;font-size:10px;cursor:pointer;" onclick="go2(\'s2-attendance\')">+'+( rows.length-5)+' more →</div>':'');
+      }
+    }
+  }catch(e){}
+  // Pending approvals
+  try{
+    var lr=await fetch(API_URL+'/api/leave/pending',{headers:zHead()});
+    var ld=await lr.json();
+    var leaves=(ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
+    var ar=await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
+    var ad=await ar.json();
+    var onsites=(ad.data||[]);
+    var total=leaves.length+onsites.length;
+    var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+    set('s2-stat-pending',total);
+    var dot=document.getElementById('s2-appr-dot');
+    if(dot) dot.style.display=total>0?'block':'none';
+    var apprSub=document.getElementById('s2-home-appr-sub');
+    if(apprSub) apprSub.textContent=total>0?total+' pending':'No pending';
+    // Mini list
+    var mini2=document.getElementById('s2-appr-mini');
+    if(mini2){
+      var all2=leaves.slice(0,2).map(function(l){
+        return'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+          +'<div style="width:28px;height:28px;background:rgba(255,159,10,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">🌴</div>'
+          +'<div style="flex:1;"><div style="color:#fff;font-size:11px;">'+escHtml(l.staff_name||'Staff')+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">'+(l.leave_type||'Leave')+' · '+l.from_date+' – '+l.to_date+'</div></div>'
+          +'<div style="display:flex;gap:5px;">'
+          +'<button onclick="quickApproveLeave('+l.id+',\'approved\',this)" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.25);border-radius:7px;padding:4px 9px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">✓</button>'
+          +'<button onclick="quickApproveLeave('+l.id+',\'rejected\',this)" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:7px;padding:4px 9px;color:#FF453A;font-size:10px;cursor:pointer;font-family:inherit;">✕</button>'
+          +'</div></div>';
+      });
+      mini2.innerHTML=all2.length?all2.join('')+'<div style="text-align:center;padding:5px 0;color:#0A84FF;font-size:10px;cursor:pointer;" onclick="go2(\'s2-approvals\')">See all →</div>':'<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:8px 0;">No pending approvals ✓</div>';
+    }
+  }catch(e){}
+}
+
+// ── Attendance Page ──
+async function loadAdminAttendance(){
+  var dateInp=document.getElementById('s2-att-date');
+  if(!dateInp) return;
+  var today=new Date().toISOString().slice(0,10);
+  if(!dateInp.value) dateInp.value=today;
+  var date=dateInp.value;
+  var isToday=(date===today);
+  var statsEl=document.getElementById('s2-att-stats');
+  var listEl=document.getElementById('s2-att-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var url=isToday?API_URL+'/api/attendance/today':API_URL+'/api/attendance/date?date='+date;
+    var res=await fetch(url,{headers:zHead()});
+    var d=await res.json();
+    var rows=(d.data||[]).filter(function(r){return r.role!=='admin'&&r.role!=='editor';});
+    var p=0,a=0,l=0,lv=0,o=0;
+    rows.forEach(function(r){
+      var st=(r.status||'').toLowerCase();
+      if(st==='present') p++;
+      else if(st==='late'){p++;l++;}
+      else if(st==='onsite_approved') o++;
+      else if(st==='on_leave') lv++;
+      else a++;
+    });
+    if(statsEl) statsEl.innerHTML='<span class="pg" style="font-size:10px;">Present '+p+'</span><span class="pr" style="font-size:10px;">Absent '+a+'</span><span class="po" style="font-size:10px;">Late '+l+'</span><span class="pb" style="font-size:10px;">Leave '+lv+'</span><span class="pp" style="font-size:10px;">Onsite '+o+'</span>';
+    if(listEl){
+      if(!rows.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">No records for this date</div>'; return; }
+      listEl.innerHTML=rows.map(function(r){
+        var st=(r.status||'absent').toLowerCase();
+        var col=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='onsite_approved'?'#BF5FFF':st==='on_leave'?'#0A84FF':'#FF453A';
+        var lbl={'present':'Present','late':'Late','absent':'Absent','on_leave':'Leave','onsite_approved':'Onsite','onsite_pending':'Onsite?'}[st]||'Absent';
+        var ci=r.check_in?(function(){var dt=new Date(r.check_in),h=dt.getHours(),m=dt.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})():'—';
+        var co=r.check_out?(function(){var dt=new Date(r.check_out),h=dt.getHours(),m=dt.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})():'—';
+        return'<div class="gs" style="padding:10px;display:flex;align-items:center;gap:9px;">'
+          +'<div style="width:32px;height:32px;background:rgba(10,132,255,0.18);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:500;flex-shrink:0;">'+(r.name||'?').charAt(0).toUpperCase()+'</div>'
+          +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:400;">'+escHtml(r.name||'—')+'</div><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:2px;">'+(r.designation||'')+'</div></div>'
+          +'<div style="text-align:right;"><div style="color:rgba(245,245,247,0.5);font-size:10px;">In '+ci+'</div><div style="color:rgba(245,245,247,0.3);font-size:9px;">Out '+co+'</div></div>'
+          +'<span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:2px 7px;font-size:9px;white-space:nowrap;margin-left:2px;">'+lbl+'</span>'
+          +'</div>';
+      }).join('');
+    }
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+// ── Approvals Page ──
+var _s2ApprLeaves=[], _s2ApprOnsites=[];
+async function loadAdminApprovals(){
+  var listEl=document.getElementById('s2-appr-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var lr=await fetch(API_URL+'/api/leave/pending',{headers:zHead()});
+    var ld=await lr.json();
+    _s2ApprLeaves=(ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
+    var ar=await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
+    var ad=await ar.json();
+    _s2ApprOnsites=ad.data||[];
+    s2ApprTab(_s2ApprTab);
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+function s2ApprTab(tab){
+  _s2ApprTab=tab;
+  var tl=document.getElementById('s2-appr-tab-leave');
+  var to=document.getElementById('s2-appr-tab-onsite');
+  var activeStyle='background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;';
+  var inactStyle='background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);';
+  if(tl){ tl.style.cssText=(tab==='leave'?activeStyle:inactStyle)+'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;'; }
+  if(to){ to.style.cssText=(tab==='onsite'?'background:rgba(191,95,255,0.18);border:0.5px solid rgba(191,95,255,0.3);color:#BF5FFF;':inactStyle)+'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;'; }
+  var listEl=document.getElementById('s2-appr-list');
+  if(!listEl) return;
+  if(tab==='leave'){
+    if(!_s2ApprLeaves.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">🌴</div>No pending leave requests</div>'; return; }
+    listEl.innerHTML=_s2ApprLeaves.map(function(l){
+      return'<div class="g" style="padding:12px;" data-lid="'+l.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
+        +'<div style="width:34px;height:34px;background:rgba(255,159,10,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🌴</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(l.staff_name||'Staff')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+(l.leave_type||'casual').charAt(0).toUpperCase()+(l.leave_type||'casual').slice(1)+' Leave · '+l.days_count+' day'+(l.days_count>1?'s':'')+'</div></div>'
+        +'<span class="po" style="font-size:9px;">Pending</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 10px;margin-bottom:9px;">'
+        +'<div style="display:flex;gap:10px;margin-bottom:3px;"><span style="color:rgba(245,245,247,0.4);font-size:10px;width:40px;">From</span><span style="color:#fff;font-size:10px;">'+l.from_date+'</span></div>'
+        +'<div style="display:flex;gap:10px;margin-bottom:3px;"><span style="color:rgba(245,245,247,0.4);font-size:10px;width:40px;">To</span><span style="color:#fff;font-size:10px;">'+l.to_date+'</span></div>'
+        +(l.reason?'<div style="display:flex;gap:10px;"><span style="color:rgba(245,245,247,0.4);font-size:10px;width:40px;">Reason</span><span style="color:rgba(245,245,247,0.7);font-size:10px;flex:1;">'+escHtml(l.reason)+'</span></div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="s2ActLeave('+l.id+',\'approved\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
+        +'<button onclick="s2ActLeave('+l.id+',\'rejected\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div></div>';
+    }).join('');
+  } else {
+    if(!_s2ApprOnsites.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">📍</div>No pending onsite requests</div>'; return; }
+    listEl.innerHTML=_s2ApprOnsites.map(function(o){
+      return'<div class="g" style="padding:12px;" data-oid="'+o.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
+        +'<div style="width:34px;height:34px;background:rgba(191,95,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📍</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(o.staff_name||'Staff')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Onsite · '+(o.date||'Today')+'</div></div>'
+        +'<span class="pp" style="font-size:9px;">Pending</span>'
+        +'</div>'
+        +(o.site_name?'<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 10px;margin-bottom:9px;"><span style="color:rgba(245,245,247,0.4);font-size:10px;">Site: </span><span style="color:#fff;font-size:10px;">'+escHtml(o.site_name)+'</span></div>':'')
+        +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="s2ActOnsite('+o.id+',\'approved\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
+        +'<button onclick="s2ActOnsite('+o.id+',\'rejected\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div></div>';
+    }).join('');
+  }
+}
+
+async function s2ActLeave(id,action,btn){
+  var card=btn.closest('[data-lid]');
+  if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  try{
+    var r=await fetch(API_URL+'/api/leave/'+id+'/approve',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:action})});
+    var d=await r.json();
+    if(d.success){ showToast1(action==='approved'?'✅ Leave approved':'❌ Leave rejected'); _s2ApprLeaves=_s2ApprLeaves.filter(function(l){return l.id!==id;}); s2ApprTab('leave'); }
+    else { if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
+}
+
+async function s2ActOnsite(id,action,btn){
+  var card=btn.closest('[data-oid]');
+  if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  try{
+    var r=await fetch(API_URL+'/api/attendance/approve/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({action:action})});
+    var d=await r.json();
+    if(d.success){ showToast1(action==='approved'?'✅ Onsite approved':'❌ Onsite rejected'); _s2ApprOnsites=_s2ApprOnsites.filter(function(o){return o.id!==id;}); s2ApprTab('onsite'); }
+    else { if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
+}
+
+async function quickApproveLeave(id,action,btn){
+  var row=btn.parentNode.parentNode;
+  if(row){row.style.opacity='0.4';row.style.pointerEvents='none';}
+  try{
+    await fetch(API_URL+'/api/leave/'+id+'/approve',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:action})});
+    showToast1(action==='approved'?'✅ Approved':'✕ Rejected');
+    setTimeout(loadAdminHome, 500);
+  }catch(e){ showToast1('❌ Failed'); }
+}
+
+// ── Tasks Page ──
+async function loadAdminTasks(){
+  var listEl=document.getElementById('s2-tasks-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
+    var d=await res.json();
+    _s2AllTasks=Array.isArray(d)?d:(d.data||d.tasks||[]);
+    s2TaskTab(_s2TaskTab);
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+function s2TaskTab(tab){
+  _s2TaskTab=tab;
+  ['all','pending','done'].forEach(function(t){
+    var b=document.getElementById('s2-ttab-'+t);
+    if(b) b.style.cssText=(t===tab?'background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.28);color:#0A84FF;':'background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);')+'border-radius:14px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;';
+  });
+  var filtered=_s2AllTasks.filter(function(t){return tab==='all'||(tab==='done'?t.status==='done':t.status!=='done');});
+  var listEl=document.getElementById('s2-tasks-list');
+  if(!listEl) return;
+  if(!filtered.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:24px;margin-bottom:8px;opacity:0.3;">📋</div>No tasks</div>'; return; }
+  var prColor={'high':'#FF453A','medium':'#FF9F0A','low':'#30D158'};
+  listEl.innerHTML=filtered.map(function(t){
+    var done=t.status==='done';
+    var pr=t.priority||'medium';
+    return'<div class="gs" style="padding:11px;opacity:'+(done?0.6:1)+';">'
+      +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;">'
+      +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;'+(done?'text-decoration:line-through;color:rgba(245,245,247,0.5);':'')+'">'+escHtml(t.title||'Task')+'</div>'
+      +(t.assigned_name?'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">👤 '+escHtml(t.assigned_name)+'</div>':'')
+      +'</div>'
+      +'<span style="background:'+prColor[pr]+'22;color:'+prColor[pr]+';border:0.5px solid '+prColor[pr]+'44;border-radius:5px;padding:1px 7px;font-size:9px;white-space:nowrap;">'+(pr.charAt(0).toUpperCase()+pr.slice(1))+'</span>'
+      +'</div>'
+      +(t.due_date?'<div style="color:rgba(245,245,247,0.3);font-size:9px;margin-bottom:7px;">📅 Due '+t.due_date+'</div>':'')
+      +(done?'':'<div style="display:flex;gap:6px;">'
+        +(t.status==='pending'?'<button onclick="s2UpdateTaskStatus('+t.id+',\'in_progress\')" style="flex:1;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:6px;color:#FF9F0A;font-size:10px;cursor:pointer;font-family:inherit;">Start</button>':'')
+        +(t.status==='in_progress'?'<button onclick="s2UpdateTaskStatus('+t.id+',\'done\')" style="flex:1;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:8px;padding:6px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">Mark Done ✓</button>':'')
+        +'</div>')
+      +'</div>';
+  }).join('');
+}
+
+async function s2UpdateTaskStatus(id,status){
+  try{
+    var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
+    var d=await r.json();
+    if(d.success){ showToast1(status==='done'?'✅ Task done!':'▶ Task started'); loadAdminTasks(); }
+    else showToast1('❌ '+(d.message||'Failed'));
+  }catch(e){ showToast1('❌ Network error'); }
+}
+
+var _s2NewTaskOpen=false;
+function s2ToggleNewTask(){
+  _s2NewTaskOpen=!_s2NewTaskOpen;
+  var f=document.getElementById('s2-new-task-form');
+  if(f) f.style.display=_s2NewTaskOpen?'block':'none';
+}
+
+async function s2PopulateAssign(){
+  var sel=document.getElementById('s2-task-assign'); if(!sel||sel.options.length>1) return;
+  try{
+    var r=await fetch(API_URL+'/api/staff',{headers:zHead()});
+    var d=await r.json();
+    var staff=Array.isArray(d)?d:(d.data||d.staff||[]);
+    _s2AllStaff=staff;
+    staff.filter(function(s){return s.active!==0;}).forEach(function(s){
+      var o=document.createElement('option');o.value=s.id;o.textContent=s.name+(s.designation?' — '+s.designation:'');sel.appendChild(o);
+    });
+  }catch(e){}
+}
+
+async function s2CreateTask(){
+  var title=(document.getElementById('s2-task-title').value||'').trim();
+  var desc=(document.getElementById('s2-task-desc').value||'').trim();
+  var assignTo=document.getElementById('s2-task-assign').value;
+  var priority=document.getElementById('s2-task-priority').value;
+  var due=document.getElementById('s2-task-due').value;
+  if(!title){ showToast1('⚠️ Task title required'); return; }
+  if(!assignTo){ showToast1('⚠️ Assign to someone'); return; }
+  var staff=zStaff()||{};
+  try{
+    var r=await fetch(API_URL+'/api/tasks',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({title:title,description:desc,assigned_to:parseInt(assignTo),assigned_by:staff.id,priority:priority,due_date:due||undefined})});
+    var d=await r.json();
+    if(d.success){
+      showToast1('✅ Task created!');
+      document.getElementById('s2-task-title').value='';
+      document.getElementById('s2-task-desc').value='';
+      document.getElementById('s2-task-due').value='';
+      s2ToggleNewTask();
+      loadAdminTasks();
+    } else showToast1('❌ '+(d.message||'Failed'));
+  }catch(e){ showToast1('❌ Network error'); }
+}
+
+// ── Staff List ──
+async function loadAdminStaffList(){
+  var listEl=document.getElementById('s2-staff-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var r=await fetch(API_URL+'/api/staff',{headers:zHead()});
+    var d=await r.json();
+    var staff=Array.isArray(d)?d:(d.data||d.staff||[]);
+    var active=staff.filter(function(s){return s.active!==0;});
+    var cntEl=document.getElementById('s2-staff-count');
+    if(cntEl) cntEl.textContent=active.length+' members';
+    if(!listEl) return;
+    if(!active.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">No staff found</div>'; return; }
+    var empColors={'full_time':'#30D158','part_time':'#FF9F0A','daily_wage':'#0A84FF','day_time':'#BF5FFF'};
+    var empLabel={'full_time':'Full Time','part_time':'Part Time','daily_wage':'Daily Wage','day_time':'Day Time'};
+    listEl.innerHTML=active.map(function(s){
+      var emp=s.employment_type||'full_time';
+      var ec=empColors[emp]||'#0A84FF';
+      var el=empLabel[emp]||emp;
+      return'<div class="gs" style="padding:11px;display:flex;align-items:center;gap:10px;margin-bottom:7px;">'
+        +'<div style="width:36px;height:36px;background:rgba(10,132,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;flex-shrink:0;">'+(s.name||'?').charAt(0).toUpperCase()+'</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:400;">'+escHtml(s.name||'—')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">'+(s.designation||'')+(s.brand_name?' · '+s.brand_name:'')+'</div></div>'
+        +'<span style="background:'+ec+'22;color:'+ec+';border:0.5px solid '+ec+'44;border-radius:5px;padding:2px 7px;font-size:9px;white-space:nowrap;">'+el+'</span>'
+        +'</div>';
+    }).join('');
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
 
 // ── Chat reply / react state ──
 var _replyTo1 = null, _reactMsgId1 = null, _reactMsgName1 = '', _reactMsgText1 = '', _reactIsMe1 = false;
@@ -2720,33 +3175,16 @@ function populateStaff(s){
 
 /* ── POPULATE ADMIN UI ── */
 function populateAdmin(s){
-  var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-  set('s2-name', s.name||'Admin');
   var av=document.getElementById('s2-avatar');
   if(av) av.textContent=(s.name||'A').charAt(0).toUpperCase();
+  var nm=document.getElementById('s2-name');
+  if(nm) nm.textContent=s.name||'Admin';
+  var sub=document.getElementById('s2-more-sub');
+  if(sub) sub.textContent=(s.designation||'Admin')+' · '+(s.brand&&s.brand.name?s.brand.name:'Zeebas Cluster');
 }
 
-/* ── ADMIN STATS ── */
-async function fetchAdminStats(){
-  try{
-    var today=new Date().toISOString().slice(0,10);
-    var res=await fetch(API_URL+'/api/attendance?date='+today,{headers:zHead()});
-    var d=await res.json();
-    var rows=Array.isArray(d)?d:(d.data||d.records||[]);
-    var p=0,a=0,l=0,lv=0,o=0;
-    rows.forEach(function(r){
-      var st=(r.status||'').toLowerCase();
-      if(st==='present')p++;
-      else if(st==='absent')a++;
-      else if(st==='late')l++;
-      else if(st==='leave')lv++;
-      else if(st==='onsite')o++;
-    });
-    var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-    set('s2-present',p); set('s2-absent',a);
-    set('s2-late',l);    set('s2-leave',lv); set('s2-onsite',o);
-  } catch(e){ console.log('Stats error',e); }
-}
+/* ── ADMIN STATS — delegated to loadAdminHome ── */
+async function fetchAdminStats(){ loadAdminHome(); }
 
 /* ── MY TASKS COUNT ── */
 async function fetchMyTasks(staffId){
