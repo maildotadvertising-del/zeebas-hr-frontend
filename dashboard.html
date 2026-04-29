@@ -202,7 +202,7 @@ textarea.inp{resize:none;}
   <div id="page-dashboard" class="page active">
     <div class="topbar">
       <div><div class="ptitle">Dashboard</div><div class="psub" id="dclock"></div></div>
-      <div style="display:flex;gap:10px;"><button class="btn-g">Export</button><button class="btn">+ Add Staff</button></div>
+      <div style="display:flex;gap:10px;"><button class="btn-g" onclick="exportDashboard()">Export</button></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
       <div class="stat sg"><div class="sl">Present</div><div class="sv" style="color:#30D158;" id="dash-present">—</div><div class="ss" id="dash-total-sub">of —</div></div>
@@ -3625,6 +3625,37 @@ async function loadDashStats(){
       }
     }
   } catch(e){ console.log('dash stats error',e); }
+}
+
+/* ── EXPORT DASHBOARD (Today's Attendance CSV) ── */
+async function exportDashboard(){
+  try{
+    showToast('⏳ Preparing export…');
+    var res=await fetch(API+'/api/attendance/today',{headers:zHdr()});
+    var d=await res.json();
+    var rows=(d.data||[]).filter(function(r){return r.role!=='admin'&&r.role!=='editor';});
+    if(!rows.length){ showToast('⚠️ No attendance data to export'); return; }
+    var today=new Date().toISOString().slice(0,10);
+    var lines=['Name,Designation,Brand,Check-In,Type,Status,Late Minutes'];
+    rows.forEach(function(r){
+      var ci=r.check_in?new Date(r.check_in).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+      var st={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite','onsite_pending':'Onsite Pending'}[r.status]||r.status||'Absent';
+      var type=r.type==='onsite'?'Onsite':r.type==='office'?'Office':'—';
+      lines.push([
+        '"'+(r.name||'')         +'"',
+        '"'+(r.designation||'')  +'"',
+        '"'+(r.brand_name||'')   +'"',
+        ci, type, st,
+        r.late_minutes||0
+      ].join(','));
+    });
+    var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='attendance_'+today+'.csv';
+    a.click(); URL.revokeObjectURL(a.href);
+    showToast('✓ Exported attendance_'+today+'.csv');
+  }catch(e){ showToast('❌ Export failed'); }
 }
 
 /* ── LOAD ATTENDANCE PAGE ── */
