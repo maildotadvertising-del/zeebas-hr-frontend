@@ -1267,12 +1267,14 @@ textarea.inp{resize:none;}
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Late Ded.</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent Ded.</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;color:#30D158;">Incentive</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Net Pay</th>
-            <th style="padding:10px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
+            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
+            <th style="padding:10px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Action</th>
           </tr>
         </thead>
         <tbody id="payroll-tbody">
-          <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading payroll…</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading payroll…</td></tr>
         </tbody>
       </table>
     </div>
@@ -4747,35 +4749,122 @@ async function loadPayrollPage(){
       return;
     }
 
-    tbody.innerHTML = rows.map(function(r,i){
-      var photoSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
-      var init = (r.name||'?').substring(0,2).toUpperCase();
-      var avatar = photoSrc
-        ? '<img src="'+photoSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
-        : '<div style="width:30px;height:30px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
-      var td = 'padding:9px 8px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
-      var bg = i%2===0?'transparent':'rgba(255,255,255,0.015)';
-      var net = parseFloat(r.net_salary||0);
-      var netCol = net > 0 ? '#30D158' : '#FF453A';
-      var statusBadge = r.payroll_status==='paid'
-        ? '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
-        : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;" onclick="markPayrollPaid('+r.payroll_id+',\''+escHtml(r.name)+'\')">Pending</span>';
-      return '<tr style="background:'+bg+';">'
-        +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
-          +'<div><div style="font-size:12px;font-weight:500;">'+escHtml(r.name)+'</div>'
-          +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></div></div></td>'
-        +'<td style="'+td+'text-align:center;color:rgba(245,245,247,0.6);">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
-        +'<td style="'+td+'text-align:center;color:#30D158;">'+r.days_present+'d</td>'
-        +'<td style="'+td+'text-align:center;color:'+(r.days_absent>0?'#FF453A':'var(--muted)')+';">'+r.days_absent+'d</td>'
-        +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.late_deduction)>0?'#FF9F0A':'var(--muted)')+';">₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN')+'</td>'
-        +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
-        +'<td style="'+td+'text-align:center;font-weight:600;color:'+netCol+';">₹'+Math.round(net).toLocaleString('en-IN')+'</td>'
-        +'<td style="'+td+'text-align:center;padding-right:14px;">'+statusBadge+'</td>'
-        +'</tr>';
-    }).join('');
+    window._prRows = rows;
+    tbody.innerHTML = rows.map(function(r,i){ return prViewRow(r,i); }).join('');
   } catch(e){
     if(tbody) tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
     console.error('loadPayrollPage:',e);
+  }
+}
+
+/* ── PAYROLL INLINE EDIT ── */
+function prViewRow(r,i){
+  var photoSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+  var init = (r.name||'?').substring(0,2).toUpperCase();
+  var avatar = photoSrc
+    ? '<img src="'+photoSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+    : '<div style="width:30px;height:30px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+  var td = 'padding:9px 8px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
+  var bg = i%2===0?'transparent':'rgba(255,255,255,0.015)';
+  var net = parseFloat(r.net_salary||0);
+  var inc = parseFloat(r.other_incentive||0);
+  var statusBadge = r.payroll_status==='paid'
+    ? '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
+    : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;" onclick="markPayrollPaid('+r.payroll_id+',\''+escHtml(r.name)+'\')">Pending</span>';
+  return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
+    +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
+      +'<div><div style="font-size:12px;font-weight:500;">'+escHtml(r.name)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></div></div></td>'
+    +'<td style="'+td+'text-align:center;color:rgba(245,245,247,0.6);">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;color:#30D158;">'+(r.days_present||0)+'d</td>'
+    +'<td style="'+td+'text-align:center;color:'+(r.days_absent>0?'#FF453A':'var(--muted)')+';">'+(r.days_absent||0)+'d</td>'
+    +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.late_deduction)>0?'#FF9F0A':'var(--muted)')+';">₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;color:'+(inc>0?'#30D158':'var(--muted)')+';">'+(inc>0?'₹'+inc.toLocaleString('en-IN'):'—')+'</td>'
+    +'<td style="'+td+'text-align:center;font-weight:600;color:'+(net>0?'#30D158':'#FF453A')+';">₹'+Math.round(net).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;">'+statusBadge+'</td>'
+    +'<td style="'+td+'text-align:center;padding-right:10px;">'
+      +(r.payroll_id
+        ? '<button onclick="prStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
+        : '<span style="color:rgba(255,255,255,0.2);font-size:10px;">Process first</span>')
+    +'</td></tr>';
+}
+
+function prEditRow(r,i){
+  var inp = 'background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:7px;color:#fff;padding:5px 7px;font-size:11px;font-family:inherit;outline:none;width:76px;text-align:center;';
+  var td  = 'padding:6px 6px;border-bottom:0.5px solid rgba(10,132,255,0.15);background:rgba(10,132,255,0.04);';
+  var net = parseFloat(r.net_salary||0);
+  return '<tr id="pr-row-'+i+'">'
+    +'<td style="'+td+'padding-left:14px;"><div style="font-size:12px;font-weight:500;">'+escHtml(r.name)+'</div><div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></td>'
+    +'<td style="'+td+'text-align:center;color:rgba(245,245,247,0.5);font-size:11px;">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;color:#30D158;font-size:11px;">'+(r.days_present||0)+'d</td>'
+    +'<td style="'+td+'text-align:center;color:#FF453A;font-size:11px;">'+(r.days_absent||0)+'d</td>'
+    // Late ded — editable
+    +'<td style="'+td+'text-align:center;">'
+      +'<div style="font-size:9px;color:var(--muted);margin-bottom:2px;">Other Ded.</div>'
+      +'<input type="number" id="pe-od-'+i+'" value="'+parseFloat(r.other_deduction||0)+'" min="0" style="'+inp+'">'
+    +'</td>'
+    +'<td style="'+td+'text-align:center;color:#FF453A;font-size:11px;">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
+    // Incentive — editable
+    +'<td style="'+td+'text-align:center;">'
+      +'<div style="font-size:9px;color:#30D158;margin-bottom:2px;">Incentive</div>'
+      +'<input type="number" id="pe-inc-'+i+'" value="'+parseFloat(r.other_incentive||0)+'" min="0" style="'+inp+'border-color:rgba(48,209,88,0.3);">'
+    +'</td>'
+    +'<td style="'+td+'text-align:center;font-weight:600;color:'+(net>0?'#30D158':'#FF453A')+';">₹'+Math.round(net).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;">'
+      +'<div style="font-size:9px;color:var(--muted);margin-bottom:2px;">Notes</div>'
+      +'<input type="text" id="pe-note-'+i+'" value="'+escHtml(r.notes||'')+'" placeholder="optional" style="'+inp+'width:90px;text-align:left;">'
+    +'</td>'
+    +'<td style="'+td+'text-align:center;padding-right:10px;">'
+      +'<div style="display:flex;gap:5px;justify-content:center;">'
+      +'<button onclick="prSaveEdit('+i+')" style="background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;color:#fff;border-radius:7px;padding:5px 10px;font-size:10px;cursor:pointer;font-weight:500;">✓ Save</button>'
+      +'<button onclick="prCancelEdit('+i+')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);color:rgba(245,245,247,0.5);border-radius:7px;padding:5px 7px;font-size:10px;cursor:pointer;">✕</button>'
+      +'</div>'
+    +'</td></tr>';
+}
+
+function prStartEdit(i){
+  var row = document.getElementById('pr-row-'+i);
+  if(row) row.outerHTML = prEditRow(window._prRows[i], i);
+}
+function prCancelEdit(i){
+  var row = document.getElementById('pr-row-'+i);
+  if(row) row.outerHTML = prViewRow(window._prRows[i], i);
+}
+async function prSaveEdit(i){
+  var r = window._prRows[i];
+  var btn = document.querySelector('#pr-row-'+i+' button');
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  var payload = {
+    other_deduction:  parseFloat(document.getElementById('pe-od-'+i).value)  || 0,
+    other_incentive:  parseFloat(document.getElementById('pe-inc-'+i).value) || 0,
+    advance_deduction: parseFloat(r.advance_deduction||0),
+    notes: document.getElementById('pe-note-'+i).value
+  };
+  try{
+    var res = await fetch(API+'/api/payroll/'+r.payroll_id+'/adjust', {
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body: JSON.stringify(payload)
+    });
+    var d = await res.json();
+    if(d.success){
+      window._prRows[i] = Object.assign({}, r, {
+        other_deduction: payload.other_deduction,
+        other_incentive: payload.other_incentive,
+        net_salary: d.net_salary,
+        notes: payload.notes
+      });
+      var row = document.getElementById('pr-row-'+i);
+      if(row) row.outerHTML = prViewRow(window._prRows[i], i);
+      showToast('✅ Payroll updated');
+      loadPayrollPage();
+    } else {
+      showToast('❌ '+(d.message||'Save failed'));
+      if(btn){ btn.disabled=false; btn.textContent='✓ Save'; }
+    }
+  }catch(e){
+    showToast('❌ Connection error');
+    if(btn){ btn.disabled=false; btn.textContent='✓ Save'; }
   }
 }
 
