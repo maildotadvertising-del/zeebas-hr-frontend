@@ -3411,6 +3411,7 @@ async function loadAttendancePage(){
     var stLabels={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave',
       'onsite_approved':'Onsite ✓','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'};
 
+    window._attRows = rows;  // store for edit modal lookup
     tbody.innerHTML=rows.map(function(r,i){
       var st=(r.status||'absent').toLowerCase();
       var col=stColors[st]||'#FF453A';
@@ -3431,9 +3432,12 @@ async function loadAttendancePage(){
         +'<td style="'+td+'text-align:center;font-size:12px;color:'+(r.late_minutes>0?'#FF9F0A':'var(--muted)')+';">'+(r.late_minutes>0?r.late_minutes+' min':'—')+'</td>'
         +'<td style="'+td+'text-align:center;padding-right:14px;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
         +'<td style="'+td+'text-align:center;padding-right:14px;">'
+          +'<div style="display:flex;align-items:center;justify-content:center;gap:6px;">'
+          +'<button onclick="openAttEdit(window._attRows['+i+'],\''+dateEl.value+'\')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 10px;font-size:10px;cursor:pointer;white-space:nowrap;">✏️ Edit</button>'
           +(r.check_in && !r.check_out
-            ? '<button onclick="manualCheckout('+r.id+',\''+r.name+'\',\''+dateEl.value+'\')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);color:#FF453A;border-radius:7px;padding:4px 10px;font-size:10px;cursor:pointer;white-space:nowrap;">⏹ Clock Out</button>'
-            : '<span style="color:rgba(255,255,255,0.15);font-size:11px;">—</span>')
+            ? '<button onclick="manualCheckout('+r.id+',\''+r.name+'\',\''+dateEl.value+'\')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);color:#FF453A;border-radius:7px;padding:4px 10px;font-size:10px;cursor:pointer;white-space:nowrap;">⏹ Out</button>'
+            : '')
+          +'</div>'
         +'</td>'
         +'</tr>';
     }).join('');
@@ -5011,6 +5015,127 @@ document.addEventListener('click',function(e){
   if(!inside) for(var i=0;i<triggers.length;i++) if(triggers[i].contains(e.target)){inside=true;break;}
   if(!inside) pop.style.display='none';
 });
+
+/* ── ATTENDANCE MANUAL EDIT ── */
+var _attEditData = {};
+
+function openAttEdit(r, dateStr){
+  _attEditData = { staff_id: r.id, date: dateStr, name: r.name };
+
+  // parse existing times
+  function toHHMM(dt){ if(!dt) return ''; var d=new Date(dt); if(isNaN(d)) return ''; var h=d.getHours(),m=d.getMinutes(); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m; }
+
+  document.getElementById('ae-title').textContent  = 'Edit — '+r.name;
+  document.getElementById('ae-date').textContent   = dateStr;
+  document.getElementById('ae-ci').value           = toHHMM(r.check_in);
+  document.getElementById('ae-co').value           = toHHMM(r.check_out);
+  document.getElementById('ae-type').value         = r.type || 'office';
+  document.getElementById('ae-latemins').value     = r.late_minutes || 0;
+  document.getElementById('ae-status').value       = r.status || 'present';
+  document.getElementById('ae-err').textContent    = '';
+
+  document.getElementById('att-edit-overlay').style.display = 'flex';
+}
+
+function closeAttEdit(){
+  document.getElementById('att-edit-overlay').style.display = 'none';
+}
+
+async function saveAttEdit(){
+  var btn = document.getElementById('ae-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  document.getElementById('ae-err').textContent = '';
+
+  var payload = {
+    staff_id:     _attEditData.staff_id,
+    date:         _attEditData.date,
+    check_in:     document.getElementById('ae-ci').value || null,
+    check_out:    document.getElementById('ae-co').value || null,
+    type:         document.getElementById('ae-type').value,
+    late_minutes: parseInt(document.getElementById('ae-latemins').value) || 0,
+    status:       document.getElementById('ae-status').value
+  };
+
+  try{
+    var res = await fetch(API+'/api/attendance/manual-edit', {
+      method:'PUT',
+      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify(payload)
+    });
+    var d = await res.json();
+    if(d.success){
+      showToast('✅ Attendance updated');
+      closeAttEdit();
+      loadAttendancePage();
+    } else {
+      document.getElementById('ae-err').textContent = d.message || 'Save failed';
+    }
+  }catch(e){
+    document.getElementById('ae-err').textContent = 'Connection error';
+  }
+  btn.disabled = false; btn.textContent = 'Save Changes';
+}
 </script>
+
+<!-- ── ATTENDANCE EDIT MODAL ── -->
+<div id="att-edit-overlay" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);align-items:center;justify-content:center;">
+  <div style="background:rgba(12,12,26,0.98);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px 28px 24px;width:380px;box-shadow:0 24px 80px rgba(0,0,0,0.7);position:relative;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div id="ae-title" style="font-size:15px;font-weight:500;color:#fff;">Edit Attendance</div>
+      <button onclick="closeAttEdit()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:28px;height:28px;color:rgba(245,245,247,0.5);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div id="ae-date" style="font-size:11px;color:var(--muted);margin-bottom:20px;"></div>
+
+    <!-- Fields -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:5px;">Check In</label>
+        <input type="time" id="ae-ci" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;outline:none;font-family:inherit;color-scheme:dark;">
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:5px;">Check Out</label>
+        <input type="time" id="ae-co" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;outline:none;font-family:inherit;color-scheme:dark;">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:5px;">Type</label>
+        <select id="ae-type" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;outline:none;font-family:inherit;cursor:pointer;">
+          <option value="office">🏢 Office</option>
+          <option value="onsite">🏗 Onsite</option>
+          <option value="leave">🏖 Leave</option>
+          <option value="absent">❌ Absent</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:5px;">Late (mins)</label>
+        <input type="number" id="ae-latemins" min="0" max="999" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;outline:none;font-family:inherit;">
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:5px;">Status</label>
+      <select id="ae-status" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;outline:none;font-family:inherit;cursor:pointer;">
+        <option value="present">✅ Present</option>
+        <option value="late">🟡 Late</option>
+        <option value="absent">❌ Absent</option>
+        <option value="on_leave">🏖 On Leave</option>
+        <option value="onsite_approved">🏗 Onsite Approved</option>
+        <option value="onsite_pending">⏳ Onsite Pending</option>
+      </select>
+    </div>
+
+    <!-- Error -->
+    <div id="ae-err" style="color:#FF453A;font-size:11px;min-height:16px;margin-bottom:12px;"></div>
+
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeAttEdit()" style="flex:1;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:11px;color:rgba(245,245,247,0.5);font-size:13px;padding:11px;cursor:pointer;font-family:inherit;">Cancel</button>
+      <button id="ae-save-btn" onclick="saveAttEdit()" style="flex:2;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:11px;color:#fff;font-size:13px;font-weight:500;padding:11px;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(10,132,255,0.35);">Save Changes</button>
+    </div>
+  </div>
+</div>
 
 </body></html>
