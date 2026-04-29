@@ -430,6 +430,9 @@ select.inp option{background:#1A1A2E;color:#fff;}
         <span style="font-size:24px;cursor:pointer;" onclick="sendReact1('🔥')">🔥</span>
         <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
         <span style="font-size:13px;cursor:pointer;color:rgba(245,245,247,0.55);" onclick="replyToMsg1()">↩ Reply</span>
+        <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
+        <span id="m-ctx-pin" onclick="pinMsg1()" style="display:none;font-size:13px;cursor:pointer;color:rgba(191,95,255,0.9);white-space:nowrap;">📌 Pin</span>
+        <span id="m-ctx-vreply" onclick="voiceReply1()" style="display:none;font-size:13px;cursor:pointer;color:rgba(10,132,255,0.9);white-space:nowrap;">🎤 Voice Reply</span>
       </div>
 
       <div id="n1-chat" class="bnav"></div>
@@ -1627,9 +1630,10 @@ function appendStaffMsg1(msg, doScroll){
   var isMe = msg.staff_id === staff.id;
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
   var avSrc = msg.photo_url ? API_URL+msg.photo_url : null;
+  var avFbStyle1 = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);';
   var av = avSrc
-    ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);">'
-    : '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);">'+init+'</div>';
+    ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle1+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
+    : '<div style="'+avFbStyle1+'">'+init+'</div>';
   var t = (function(){
     var dt = msg.created_at ? new Date(msg.created_at) : new Date();
     var h = dt.getHours(), m = dt.getMinutes(), a = h>=12?'PM':'AM';
@@ -1680,19 +1684,22 @@ function appendStaffMsg1(msg, doScroll){
       +'</div>'+reactHtml+'</div></div>';
   }
 
-  // Long-press → reaction picker
+  // Long-press → reaction picker + context options
   var bubble = wrap.querySelector('.bubble');
   if(bubble){
     var _pt = null;
     bubble.addEventListener('touchstart', function(e){
       _pt = setTimeout(function(){
-        _reactMsgId1 = msgId;
-        _reactMsgName1 = msg.staff_name;
-        _reactMsgText1 = msg.message;
+        _reactMsgId1 = msgId; _reactMsgName1 = msg.staff_name; _reactMsgText1 = msg.message; _reactIsMe1 = isMe;
+        // Show/hide context-sensitive options
+        var pinOpt = document.getElementById('m-ctx-pin');
+        var vrOpt  = document.getElementById('m-ctx-vreply');
+        if(pinOpt) pinOpt.style.display = isMe ? 'inline' : 'none';
+        if(vrOpt)  vrOpt.style.display  = !isMe ? 'inline' : 'none';
         var rp = document.getElementById('react-picker'); if(!rp) return;
         var rect = bubble.getBoundingClientRect();
         var top = rect.top - 68; if(top < 10) top = rect.bottom + 8;
-        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 290));
+        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 310));
         rp.style.top = top+'px'; rp.style.left = left+'px'; rp.style.display = 'flex';
       }, 450);
     },{passive:true});
@@ -2054,9 +2061,10 @@ function appendDmMsg(msg, doScroll){
       +'</div></div></div>';
   } else {
     var init = (msg.sender_name||'?').charAt(0).toUpperCase();
+    var avFbStyleDm = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;';
     var av = msg.photo_url
-      ? '<img src="'+API_URL+msg.photo_url+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);">'
-      : '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+      ? '<img src="'+API_URL+msg.photo_url+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyleDm+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
+      : '<div style="'+avFbStyleDm+'">'+init+'</div>';
     wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;">'
       +av+'<div style="display:flex;flex-direction:column;align-items:flex-start;max-width:78%;">'
       +'<div style="font-size:11px;color:rgba(100,200,255,0.85);font-weight:500;margin-bottom:3px;padding-left:2px;">'+escHtml(msg.sender_name||'')+'</div>'
@@ -2181,7 +2189,7 @@ function approveLeave(btn){var card=btn.closest('.g');card.style.opacity='0.5';c
 function approveOnsite(btn){var card=btn.closest('.g');card.style.opacity='0.5';card.style.pointerEvents='none';btn.textContent='✓ Approved';}
 
 // ── Chat reply / react state ──
-var _replyTo1 = null, _reactMsgId1 = null, _reactMsgName1 = '', _reactMsgText1 = '';
+var _replyTo1 = null, _reactMsgId1 = null, _reactMsgName1 = '', _reactMsgText1 = '', _reactIsMe1 = false;
 
 function setReply1(id, name, text){
   _replyTo1 = {id:id, name:name, text:text};
@@ -2214,6 +2222,25 @@ function sendReact1(emoji){
     fetch(API_URL+'/api/chat/react/'+_reactMsgId1, {method:'POST', headers:zHead(), body:JSON.stringify({emoji:emoji})}).catch(function(){});
   }
 }
+function pinMsg1(){
+  var rp = document.getElementById('react-picker'); if(rp) rp.style.display='none';
+  if(!_reactMsgId1 || String(_reactMsgId1).indexOf('loc-')===0){ showToast1('⚠️ Cannot pin this message'); return; }
+  fetch(API_URL+'/api/chat/pin/'+_reactMsgId1, {method:'POST', headers:zHead()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success) showToast1('📌 Message pinned!');
+      else showToast1('❌ '+(d.message||'Pin failed'));
+    }).catch(function(){ showToast1('❌ Pin failed'); });
+}
+
+function voiceReply1(){
+  var rp = document.getElementById('react-picker'); if(rp) rp.style.display='none';
+  setReply1(_reactMsgId1, _reactMsgName1||'', _reactMsgText1||'');
+  // Trigger group mic voice recording
+  var micBtn = document.querySelector('[ontouchstart*="grpMicStart"]');
+  if(micBtn){ micBtn.dispatchEvent(new TouchEvent('touchstart', {bubbles:true, cancelable:true})); }
+}
+
 function toggleReact1(chip, emoji, msgId){
   var staff = zStaff() || {};
   if(!msgId || String(msgId).indexOf('loc-')===0) return;

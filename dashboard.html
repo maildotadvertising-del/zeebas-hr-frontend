@@ -776,15 +776,21 @@ textarea.inp{resize:none;}
 
             <!-- Full Time -->
             <div style="background:rgba(10,132,255,0.06);border:0.5px solid rgba(10,132,255,0.18);border-radius:11px;padding:13px 14px;">
-              <div style="font-size:11px;font-weight:600;color:#0A84FF;margin-bottom:10px;letter-spacing:0.3px;">🧑‍💼 Full Time</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:600;color:#0A84FF;letter-spacing:0.3px;">🧑‍💼 Full Time</div>
+                <div style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#0A84FF" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#0A84FF" stroke-width="1.1" stroke-linecap="round"/></svg>
+                  <span id="ps-ft-daytime" style="font-size:11px;color:#0A84FF;font-weight:600;">9h 0m</span>
+                </div>
+              </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
-                  <input class="inp" type="time" id="ps-start-time" value="09:00">
+                  <input class="inp" type="time" id="ps-start-time" value="09:00" oninput="psFtCalcTime()">
                 </div>
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
-                  <input class="inp" type="time" id="ps-end-time" value="18:00">
+                  <input class="inp" type="time" id="ps-end-time" value="18:00" oninput="psFtCalcTime()">
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -801,15 +807,21 @@ textarea.inp{resize:none;}
 
             <!-- Part Time -->
             <div style="background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.18);border-radius:11px;padding:13px 14px;">
-              <div style="font-size:11px;font-weight:600;color:#30D158;margin-bottom:10px;letter-spacing:0.3px;">👤 Part Time</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:600;color:#30D158;letter-spacing:0.3px;">👤 Part Time</div>
+                <div style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#30D158" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#30D158" stroke-width="1.1" stroke-linecap="round"/></svg>
+                  <span id="ps-pt-daytime" style="font-size:11px;color:#30D158;font-weight:600;">4h 0m</span>
+                </div>
+              </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
-                  <input class="inp" type="time" id="ps-pt-start-time" value="09:00">
+                  <input class="inp" type="time" id="ps-pt-start-time" value="09:00" oninput="psPtCalcTime()">
                 </div>
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
-                  <input class="inp" type="time" id="ps-pt-end-time" value="13:00">
+                  <input class="inp" type="time" id="ps-pt-end-time" value="13:00" oninput="psPtCalcTime()">
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -828,7 +840,14 @@ textarea.inp{resize:none;}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               <div>
                 <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Working Days/Month (FT)</div>
-                <input class="inp" type="number" id="ps-work-days" value="26" min="20" max="31">
+                <input class="inp" type="number" id="ps-work-days" value="26" min="20" max="31" oninput="psUpdateHolAdj()">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">After Holidays</div>
+                <div style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:11px;color:var(--muted);">🎌 This month</span>
+                  <span id="ps-hol-adj-days" style="font-size:16px;font-weight:700;color:#FF453A;">26</span>
+                </div>
               </div>
             </div>
 
@@ -960,8 +979,8 @@ textarea.inp{resize:none;}
         </div>
 
         <!-- Allowances -->
-        <div class="sec g">
-          <div class="sh"><span class="st">➕ Standard Allowances</span></div>
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">➕ Standard Allowances</span><span style="font-size:10px;color:var(--muted);font-weight:400;">(Default for all staff)</span></div>
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               <div>
@@ -983,6 +1002,20 @@ textarea.inp{resize:none;}
                 <input class="inp" type="number" id="ps-other-allow" value="0" min="0">
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Per-Staff Allowances -->
+        <div class="sec g">
+          <div class="sh" style="flex-wrap:wrap;gap:8px;">
+            <div>
+              <span class="st">👤 Staff-wise Allowances</span>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px;">Override defaults per staff — blank = use standard</div>
+            </div>
+            <button class="btn-g" style="padding:5px 13px;font-size:12px;" onclick="psLoadStaffAllowances()">↺ Load</button>
+          </div>
+          <div id="ps-staff-allow-list">
+            <div style="font-size:12px;color:var(--muted);text-align:center;padding:18px;opacity:0.6;">Click "Load" to see per-staff allowances</div>
           </div>
         </div>
 
@@ -1133,6 +1166,9 @@ textarea.inp{resize:none;}
           <span style="font-size:26px;cursor:pointer;" onclick="dashSendReact('🔥')" title="Fire">🔥</span>
           <div style="width:1px;height:28px;background:rgba(255,255,255,0.1);margin:0 2px;"></div>
           <span style="font-size:13px;cursor:pointer;color:rgba(245,245,247,0.6);white-space:nowrap;" onclick="dReplyToMsg()">↩ Reply</span>
+          <div style="width:1px;height:28px;background:rgba(255,255,255,0.1);margin:0 2px;"></div>
+          <span id="d-ctx-pin" onclick="dashPinMsg()" style="display:none;font-size:13px;cursor:pointer;color:rgba(191,95,255,0.85);white-space:nowrap;align-items:center;gap:4px;">📌 Pin</span>
+          <span id="d-ctx-vreply" onclick="dVoiceReply()" style="display:none;font-size:13px;cursor:pointer;color:rgba(10,132,255,0.85);white-space:nowrap;align-items:center;gap:4px;">🎤 Voice Reply</span>
         </div>
         <!-- Input -->
         <div style="border-top:0.5px solid rgba(255,255,255,0.07);padding:10px 14px 12px;background:rgba(8,8,20,0.8);backdrop-filter:blur(24px);flex-shrink:0;position:relative;">
@@ -1174,6 +1210,44 @@ textarea.inp{resize:none;}
             <button type="button" onclick="closeDashAttach()" style="width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;color:rgba(245,245,247,0.35);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button>
           </div>
 
+          <!-- Emoji picker panel -->
+          <div id="dash-emoji-panel" style="display:none;position:absolute;bottom:66px;left:0;right:0;background:rgba(12,12,24,0.97);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:14px 16px 18px;z-index:50;">
+            <div style="width:32px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 12px;"></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;">
+              <span onclick="dashInsertEmoji('😀')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😀</span>
+              <span onclick="dashInsertEmoji('😂')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😂</span>
+              <span onclick="dashInsertEmoji('😍')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😍</span>
+              <span onclick="dashInsertEmoji('🥰')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🥰</span>
+              <span onclick="dashInsertEmoji('😊')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😊</span>
+              <span onclick="dashInsertEmoji('🤣')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🤣</span>
+              <span onclick="dashInsertEmoji('😎')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😎</span>
+              <span onclick="dashInsertEmoji('🤩')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🤩</span>
+              <span onclick="dashInsertEmoji('😭')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😭</span>
+              <span onclick="dashInsertEmoji('🥹')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🥹</span>
+              <span onclick="dashInsertEmoji('😤')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😤</span>
+              <span onclick="dashInsertEmoji('🤔')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🤔</span>
+              <span onclick="dashInsertEmoji('🫡')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🫡</span>
+              <span onclick="dashInsertEmoji('🙏')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🙏</span>
+              <span onclick="dashInsertEmoji('👍')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">👍</span>
+              <span onclick="dashInsertEmoji('👎')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">👎</span>
+              <span onclick="dashInsertEmoji('👏')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">👏</span>
+              <span onclick="dashInsertEmoji('🔥')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🔥</span>
+              <span onclick="dashInsertEmoji('❤️')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">❤️</span>
+              <span onclick="dashInsertEmoji('💯')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">💯</span>
+              <span onclick="dashInsertEmoji('✅')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">✅</span>
+              <span onclick="dashInsertEmoji('❌')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">❌</span>
+              <span onclick="dashInsertEmoji('⚡')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">⚡</span>
+              <span onclick="dashInsertEmoji('🎉')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🎉</span>
+              <span onclick="dashInsertEmoji('💪')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">💪</span>
+              <span onclick="dashInsertEmoji('🤝')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🤝</span>
+              <span onclick="dashInsertEmoji('😢')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😢</span>
+              <span onclick="dashInsertEmoji('😅')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">😅</span>
+              <span onclick="dashInsertEmoji('🫠')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🫠</span>
+              <span onclick="dashInsertEmoji('🥳')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🥳</span>
+              <span onclick="dashInsertEmoji('🫶')" style="font-size:24px;cursor:pointer;line-height:1;padding:4px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">🫶</span>
+            </div>
+          </div>
+
           <!-- Voice recording indicator -->
           <div id="dash-voice-indicator" style="display:none;position:absolute;bottom:66px;left:0;right:0;background:rgba(255,69,58,0.1);backdrop-filter:blur(14px);border-top:0.5px solid rgba(255,69,58,0.2);padding:9px 18px;align-items:center;gap:10px;">
             <div style="width:9px;height:9px;background:#FF453A;border-radius:50%;animation:recPulse 1s infinite;flex-shrink:0;"></div>
@@ -1191,6 +1265,8 @@ textarea.inp{resize:none;}
             <button type="button" onclick="toggleDashAttach()" style="width:38px;height:38px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Attach file">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8.5a6 6 0 01-12 0V5a4 4 0 018 0v4a2.5 2.5 0 01-5 0V6" stroke="rgba(245,245,247,0.55)" stroke-width="1.3" stroke-linecap="round"/></svg>
             </button>
+            <!-- Emoji -->
+            <button type="button" id="dash-emoji-btn" onclick="toggleDashEmoji()" title="Emoji" style="width:38px;height:38px;background:rgba(255,200,0,0.08);border:0.5px solid rgba(255,200,0,0.18);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;line-height:1;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,200,0,0.16)'" onmouseout="this.style.background='rgba(255,200,0,0.08)'">😊</button>
             <!-- Text input -->
             <input type="text" id="dash-ci" placeholder="Message all staff…" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:24px;color:var(--text);padding:10px 18px;font-size:13px;font-weight:300;flex:1;outline:none;font-family:'DM Sans',sans-serif;letter-spacing:0.1px;">
             <!-- Mic (hold to record — separate, always visible) -->
@@ -1748,6 +1824,35 @@ function syncDisplay(v){
 // ── Payroll Settings ──
 function psDayToggle(el){ el.classList.toggle('active'); psCalRender(); }
 
+// Day Time calculator — auto-compute hours between two time inputs
+function psCalcTimeDiff(startId, endId){
+  var s=document.getElementById(startId), e=document.getElementById(endId);
+  if(!s||!e||!s.value||!e.value) return null;
+  var [sh,sm]=s.value.split(':').map(Number), [eh,em]=e.value.split(':').map(Number);
+  var mins=(eh*60+em)-(sh*60+sm);
+  if(mins<=0) mins+=24*60;
+  return {h:Math.floor(mins/60), m:mins%60};
+}
+function psFtCalcTime(){
+  var t=psCalcTimeDiff('ps-start-time','ps-end-time');
+  var el=document.getElementById('ps-ft-daytime');
+  if(el&&t) el.textContent=t.h+'h '+(t.m?t.m+'m':'0m');
+}
+function psPtCalcTime(){
+  var t=psCalcTimeDiff('ps-pt-start-time','ps-pt-end-time');
+  var el=document.getElementById('ps-pt-daytime');
+  if(el&&t) el.textContent=t.h+'h '+(t.m?t.m+'m':'0m');
+}
+
+// Holiday-adjusted working days display
+function psUpdateHolAdj(){
+  var base=parseInt((document.getElementById('ps-work-days')||{}).value)||26;
+  var holidayCount=psHolidayDates?psHolidayDates.size:0;
+  var adj=Math.max(0,base-holidayCount);
+  var el=document.getElementById('ps-hol-adj-days');
+  if(el) el.textContent=adj;
+}
+
 async function loadPayrollSettings(){
   try{
     var res = await fetch(API+'/api/settings/payroll', {headers:zHdr()});
@@ -1793,6 +1898,8 @@ async function loadPayrollSettings(){
     });
     // Render calendar with updated work week
     psCalRender();
+    // Update day-time badges
+    psFtCalcTime(); psPtCalcTime();
   } catch(e){ console.error('Payroll settings load error:', e); }
 }
 
@@ -1905,6 +2012,7 @@ function psCalRender(){
 
   var wdEl = document.getElementById('ps-cal-workdays');
   if(wdEl) wdEl.textContent = workingDaysCount;
+  psUpdateHolAdj();
 }
 
 async function psLoadHolidays(){
@@ -1964,6 +2072,76 @@ async function psDeleteHoliday(id){
     showToast('✅ Holiday removed');
     psLoadHolidays();
   } catch(e){ showToast('❌ Error removing holiday'); }
+}
+
+// ── Staff-wise Allowances ──
+async function psLoadStaffAllowances(){
+  var el=document.getElementById('ps-staff-allow-list');
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);">⏳ Loading staff…</div>';
+  try{
+    var res=await fetch(API+'/api/settings/staff-allowances',{headers:zHdr()});
+    var d=await res.json();
+    if(!d.success){ el.innerHTML='<div style="color:#FF453A;text-align:center;padding:16px;">❌ '+(d.message||'Error')+'</div>'; return; }
+    var staff=d.data||[];
+    if(!staff.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">No active staff found</div>'; return; }
+    // Get global defaults for placeholder hints
+    var gHra=(document.getElementById('ps-hra')||{}).value||40;
+    var gTrav=(document.getElementById('ps-travel')||{}).value||1000;
+    var gMed=(document.getElementById('ps-medical')||{}).value||1250;
+    var gOth=(document.getElementById('ps-other-allow')||{}).value||0;
+
+    var html='<div style="display:flex;flex-direction:column;gap:7px;">';
+    staff.forEach(function(s){
+      var init=(s.name||'?').charAt(0).toUpperCase();
+      var av=s.photo_url
+        ?'<img src="'+API+s.photo_url+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';">'
+        :'<div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+      var empBadge=s.employment_type==='part_time'
+        ?'<span style="font-size:9px;background:rgba(48,209,88,0.15);color:#30D158;border-radius:4px;padding:1px 5px;margin-left:5px;">PT</span>'
+        :'<span style="font-size:9px;background:rgba(10,132,255,0.15);color:#0A84FF;border-radius:4px;padding:1px 5px;margin-left:5px;">FT</span>';
+      html+='<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
+        +av+'<div><div style="font-size:12px;font-weight:500;">'+s.name+empBadge+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);">'+(s.designation||'')+'</div></div></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;">'
+        +'<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">HRA %</div>'
+        +'<input type="number" class="inp" id="sa-hra-'+s.id+'" value="'+(s.custom_hra_pct!==null&&s.custom_hra_pct!==undefined?s.custom_hra_pct:'')+'" placeholder="'+gHra+'" min="0" max="100" style="font-size:11px;padding:6px 8px;"></div>'
+        +'<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Travel ₹</div>'
+        +'<input type="number" class="inp" id="sa-trav-'+s.id+'" value="'+(s.custom_travel_allow!==null&&s.custom_travel_allow!==undefined?s.custom_travel_allow:'')+'" placeholder="'+gTrav+'" min="0" style="font-size:11px;padding:6px 8px;"></div>'
+        +'<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Medical ₹</div>'
+        +'<input type="number" class="inp" id="sa-med-'+s.id+'" value="'+(s.custom_medical_allow!==null&&s.custom_medical_allow!==undefined?s.custom_medical_allow:'')+'" placeholder="'+gMed+'" min="0" style="font-size:11px;padding:6px 8px;"></div>'
+        +'<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Other ₹</div>'
+        +'<input type="number" class="inp" id="sa-oth-'+s.id+'" value="'+(s.custom_other_allow!==null&&s.custom_other_allow!==undefined?s.custom_other_allow:'')+'" placeholder="'+gOth+'" min="0" style="font-size:11px;padding:6px 8px;"></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;justify-content:flex-end;">'
+        +'<button onclick="psResetStaffAllow('+s.id+')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--muted);font-size:11px;padding:4px 11px;cursor:pointer;">↺ Reset defaults</button>'
+        +'<button onclick="psSaveStaffAllow('+s.id+')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:7px;color:#0A84FF;font-size:11px;padding:4px 12px;cursor:pointer;font-weight:500;">✓ Save</button>'
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+    el.innerHTML=html;
+  } catch(e){ el.innerHTML='<div style="color:#FF453A;text-align:center;padding:16px;">❌ '+e.message+'</div>'; }
+}
+
+async function psSaveStaffAllow(id){
+  var gv=function(pfx){ var el=document.getElementById(pfx+'-'+id); return el&&el.value!==''?parseFloat(el.value):null; };
+  var body={ custom_hra_pct:gv('sa-hra'), custom_travel_allow:gv('sa-trav'), custom_medical_allow:gv('sa-med'), custom_other_allow:gv('sa-oth') };
+  try{
+    var res=await fetch(API+'/api/settings/staff-allowances/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify(body)});
+    var d=await res.json();
+    if(d.success) showToast('✅ Allowances saved!');
+    else showToast('❌ '+(d.message||'Error'));
+  } catch(e){ showToast('❌ '+(e.message||'Error')); }
+}
+
+async function psResetStaffAllow(id){
+  ['sa-hra','sa-trav','sa-med','sa-oth'].forEach(function(pfx){
+    var el=document.getElementById(pfx+'-'+id); if(el) el.value='';
+  });
+  await psSaveStaffAllow(id);
+  showToast('✅ Reset to global defaults');
 }
 
 async function psLoadSalaryPreview(){
@@ -2632,7 +2810,7 @@ async function loadChatMembers(){
   }catch(e){ console.error('loadChatMembers:',e); }
 }
 
-var _dReplyTo=null, _dReactMsgId=null, _dReactMsgName='', _dReactMsgText='';
+var _dReplyTo=null, _dReactMsgId=null, _dReactMsgName='', _dReactMsgText='', _dReactIsMe=false;
 function dSetReply(id,name,text){
   _dReplyTo={id:id,name:name,text:text};
   var rb=document.getElementById('dash-reply-banner'),rn=document.getElementById('dash-reply-name'),rt=document.getElementById('dash-reply-text');
@@ -2675,9 +2853,10 @@ function appendDashMsg(msg, doScroll){
   var isMe=msg.staff_id===staff.id;
   var init=(msg.staff_name||'?').charAt(0).toUpperCase();
   var avSrc=msg.photo_url?API+msg.photo_url:null;
+  var avFbStyle='width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;';
   var av=avSrc
-    ?'<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
-    :'<div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+    ?'<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
+    :'<div style="'+avFbStyle+'">'+init+'</div>';
   var t=msg.created_at?fmtTime(msg.created_at):(function(){var n=new Date(),h=n.getHours(),m=n.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
   var bubbleStyle=isMe
     ?'background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(10,80,200,0.65));border:0.5px solid rgba(10,132,255,0.22);border-radius:16px;border-bottom-right-radius:4px;'
@@ -2716,15 +2895,20 @@ function appendDashMsg(msg, doScroll){
     +reactHtml
     +'</div></div>';
 
-  // Right-click / context menu → reaction picker
+  // Right-click / context menu → reaction picker + context actions
   var bubble=wrap.querySelector('.dbubble');
   if(bubble){
     bubble.addEventListener('contextmenu',function(e){
       e.preventDefault();
-      _dReactMsgId=msgId; _dReactMsgName=msg.staff_name||''; _dReactMsgText=msg.message||'';
+      _dReactMsgId=msgId; _dReactMsgName=msg.staff_name||''; _dReactMsgText=msg.message||''; _dReactIsMe=isMe;
+      // Show/hide context-sensitive options
+      var pinOpt=document.getElementById('d-ctx-pin');
+      var vrOpt=document.getElementById('d-ctx-vreply');
+      if(pinOpt) pinOpt.style.display=isMe?'flex':'none';
+      if(vrOpt)  vrOpt.style.display=!isMe?'flex':'none';
       var rp=document.getElementById('dash-react-picker'); if(!rp) return;
       var top=e.clientY-70; if(top<10) top=e.clientY+8;
-      var left=Math.max(8,Math.min(e.clientX-140,window.innerWidth-300));
+      var left=Math.max(8,Math.min(e.clientX-160,window.innerWidth-320));
       rp.style.top=top+'px'; rp.style.left=left+'px'; rp.style.display='flex';
     });
   }
@@ -2770,8 +2954,56 @@ async function dashPin(){
     showToast('📌 Message pinned for all staff!');
   }catch(e){ showToast('❌ Pin failed'); }
 }
+// ── Pin a specific message from context menu ──
+function dashPinMsg(){
+  var rp=document.getElementById('dash-react-picker'); if(rp) rp.style.display='none';
+  if(!_dReactMsgId||String(_dReactMsgId).indexOf('loc-')===0){ showToast('⚠️ Cannot pin this message'); return; }
+  fetch(API+'/api/chat/pin/'+_dReactMsgId,{method:'POST',headers:zHdr()})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.success){ loadDashPinned(); showToast('📌 Message pinned for all staff!'); }
+      else showToast('❌ '+(d.message||'Pin failed'));
+    }).catch(function(){ showToast('❌ Pin failed'); });
+}
+
+// ── Voice reply to a received message ──
+function dVoiceReply(){
+  var rp=document.getElementById('dash-react-picker'); if(rp) rp.style.display='none';
+  _dReplyTo={id:_dReactMsgId,text:_dReactMsgText,name:_dReactMsgName};
+  var banner=document.getElementById('dash-reply-banner');
+  var nameEl=document.getElementById('dash-reply-name');
+  var textEl=document.getElementById('dash-reply-text');
+  if(nameEl) nameEl.textContent='Replying to '+(_dReactMsgName||'');
+  if(textEl) textEl.textContent=_dReactMsgText||'';
+  if(banner) banner.style.display='flex';
+  dashStartVoice();
+}
+
+// ── Emoji picker ──
+var _dashEmojiOpen=false;
+function toggleDashEmoji(){
+  _dashEmojiOpen=!_dashEmojiOpen;
+  var ep=document.getElementById('dash-emoji-panel');
+  var btn=document.getElementById('dash-emoji-btn');
+  if(ep) ep.style.display=_dashEmojiOpen?'block':'none';
+  if(btn){ btn.style.background=_dashEmojiOpen?'rgba(255,200,0,0.22)':'rgba(255,200,0,0.08)'; }
+  if(_dashEmojiOpen){ closeDashAttach(); }
+}
+function closeDashEmoji(){
+  _dashEmojiOpen=false;
+  var ep=document.getElementById('dash-emoji-panel'); if(ep) ep.style.display='none';
+  var btn=document.getElementById('dash-emoji-btn'); if(btn) btn.style.background='rgba(255,200,0,0.08)';
+}
+function dashInsertEmoji(e){
+  var inp=document.getElementById('dash-ci'); if(!inp) return;
+  var pos=inp.selectionStart||inp.value.length;
+  inp.value=inp.value.slice(0,pos)+e+inp.value.slice(pos);
+  inp.focus(); inp.setSelectionRange(pos+e.length,pos+e.length);
+  closeDashEmoji();
+}
+
 var dashAttachOpen=false;
-function toggleDashAttach(){dashAttachOpen=!dashAttachOpen;var s=document.getElementById('dash-attach-sheet');if(s)s.style.display=dashAttachOpen?'block':'none';}
+function toggleDashAttach(){dashAttachOpen=!dashAttachOpen;var s=document.getElementById('dash-attach-sheet');if(s)s.style.display=dashAttachOpen?'block':'none'; if(dashAttachOpen) closeDashEmoji();}
 function closeDashAttach(){dashAttachOpen=false;var s=document.getElementById('dash-attach-sheet');if(s)s.style.display='none';}
 function dashPickAttach(type){
   closeDashAttach();
