@@ -1694,7 +1694,7 @@ function appendStaffMsg1(msg, doScroll){
         // Show/hide context-sensitive options
         var pinOpt = document.getElementById('m-ctx-pin');
         var vrOpt  = document.getElementById('m-ctx-vreply');
-        if(pinOpt) pinOpt.style.display = isMe ? 'inline' : 'none';
+        if(pinOpt) pinOpt.style.display = 'inline';
         if(vrOpt)  vrOpt.style.display  = !isMe ? 'inline' : 'none';
         var rp = document.getElementById('react-picker'); if(!rp) return;
         var rect = bubble.getBoundingClientRect();
@@ -2236,9 +2236,8 @@ function pinMsg1(){
 function voiceReply1(){
   var rp = document.getElementById('react-picker'); if(rp) rp.style.display='none';
   setReply1(_reactMsgId1, _reactMsgName1||'', _reactMsgText1||'');
-  // Trigger group mic voice recording
-  var micBtn = document.querySelector('[ontouchstart*="grpMicStart"]');
-  if(micBtn){ micBtn.dispatchEvent(new TouchEvent('touchstart', {bubbles:true, cancelable:true})); }
+  // Start recording — user taps mic button to stop
+  grpMicStart(null);
 }
 
 function toggleReact1(chip, emoji, msgId){
