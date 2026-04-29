@@ -2582,7 +2582,8 @@ async function loadDashMessages(){
     }
     var d=await res.json();
     if(!d.success){
-      msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--muted);text-align:center;">Could not load messages.<br>Server may be waking up…</div><button onclick="loadDashMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:8px 20px;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 Retry</button><div style="font-size:10px;color:var(--muted);opacity:0.5;">Auto-retrying in 5s…</div></div>';
+      var errDetail = '[HTTP '+res.status+'] '+(d.message||'Unknown error');
+      msgs.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--muted);text-align:center;">Could not load messages.<br>Server may be waking up…</div><div style="font-size:10px;color:rgba(255,69,58,0.7);background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:6px;padding:5px 10px;max-width:280px;word-break:break-all;text-align:left;">'+errDetail+'</div><button onclick="loadDashMessages()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#0A84FF;font-size:12px;padding:8px 20px;cursor:pointer;font-family:inherit;margin-top:4px;">🔄 Retry</button><div style="font-size:10px;color:var(--muted);opacity:0.5;">Auto-retrying in 5s…</div></div>';
       _dashMsgRetryTimer = setTimeout(loadDashMessages, 5000);
       return;
     }
