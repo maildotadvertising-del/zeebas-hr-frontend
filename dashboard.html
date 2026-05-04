@@ -1032,34 +1032,14 @@ textarea.inp{resize:none;}
         <div class="sec g">
           <div class="sh"><span class="st">➕ Allowances</span></div>
 
-          <!-- Standard defaults -->
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Standard — Default for all</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-            <div>
-              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">HRA % of Basic</div>
-              <input class="inp" type="number" id="ps-hra" value="40" min="0" max="100">
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Travel (₹/month)</div>
-              <input class="inp" type="number" id="ps-travel" value="1000" min="0">
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-            <div>
-              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Medical (₹/month)</div>
-              <input class="inp" type="number" id="ps-medical" value="1250" min="0">
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Other (₹/month)</div>
-              <input class="inp" type="number" id="ps-other-allow" value="0" min="0">
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div style="border-top:0.5px solid rgba(255,255,255,0.07);margin-bottom:16px;"></div>
+          <!-- Hidden standard defaults (used in save) -->
+          <input type="hidden" id="ps-hra" value="40">
+          <input type="hidden" id="ps-travel" value="1000">
+          <input type="hidden" id="ps-medical" value="1250">
+          <input type="hidden" id="ps-other-allow" value="0">
 
           <!-- Per-member override -->
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Per Member Override</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Select Member</div>
           <div style="position:relative;margin-bottom:14px;">
             <select id="sa-member-select" class="inp" onchange="saSelectMember(this.value)" style="appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;">
               <option value="">Select team member…</option>
