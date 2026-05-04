@@ -142,7 +142,7 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
 <!--  PHONE 1: STAFF MODE               -->
 <!-- ═══════════════════════════════════ -->
 <div>
-<h3>Staff Mode</h3>
+<h3>Team Mode</h3>
 <div class="phone" id="app1">
   <div class="pstatus">
     <span style="color:#fff;font-size:12px;font-weight:400;" id="c1">9:41</span>
@@ -1080,7 +1080,7 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
             <div style="width:34px;height:34px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#30D158" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
-            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Staff List</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">All members</div></div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Team List</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">All members</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
           <div onclick="go2('s2-tasks')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
@@ -1152,7 +1152,7 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
         <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
-        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Staff</div>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Team</div>
         <div id="s2-staff-count" style="color:rgba(245,245,247,0.35);font-size:11px;"></div>
       </div>
       <div class="scroll" style="padding:10px 13px 8px;" id="s2-staff-list">
@@ -1246,7 +1246,7 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
             <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-allow-office" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
-            <div><div style="color:#fff;font-size:12px;">Allow Onsite Request</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Staff can request onsite work</div></div>
+            <div><div style="color:#fff;font-size:12px;">Allow Onsite Request</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Team can request onsite work</div></div>
             <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-allow-site" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
@@ -1610,8 +1610,8 @@ function loadProfile(){
   set('prof-desig-display', s.designation);
   set('prof-empid', s.employee_id || s.emp_id);
   set('prof-brand', s.brand_name || (s.brand&&s.brand.name));
-  var roleMap = {admin:'Admin',team_leader:'Team Leader',staff:'Staff'};
-  set('prof-role', roleMap[s.role]||s.role||'Staff');
+  var roleMap = {admin:'Admin',team_leader:'Team Leader',staff:'Team'};
+  set('prof-role', roleMap[s.role]||s.role||'Team');
   set('prof-phone', s.phone || s.mobile);
   set('prof-email', s.email);
   if(s.dob){ var d=new Date(s.dob); set('prof-dob', isNaN(d)?s.dob:d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})); }

@@ -213,7 +213,7 @@ textarea.inp{resize:none;}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="sec g">
         <div class="sh"><span class="st">Today's Attendance</span><span style="color:#0A84FF;font-size:12px;cursor:pointer;" onclick="showPage('attendance',null)">See all →</span></div>
-        <table class="tbl"><thead><tr><th>Staff</th><th>Check-in</th><th>Type</th><th>Status</th></tr></thead><tbody id="att-table-body">
+        <table class="tbl"><thead><tr><th>Team</th><th>Check-in</th><th>Type</th><th>Status</th></tr></thead><tbody id="att-table-body">
           <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">Loading attendance…</td></tr>
         </tbody></table>
       </div>
@@ -292,7 +292,7 @@ textarea.inp{resize:none;}
           <div class="sh"><span class="st">📏 Attendance Radius</span></div>
           <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <div style="font-size:13px;color:var(--muted);">Staff must be within</div>
+              <div style="font-size:13px;color:var(--muted);">Team must be within</div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <input class="inp" type="number" id="gps-radius-inp" value="300" min="50" max="2000" step="10" style="width:90px;text-align:center;font-weight:500;" oninput="gpsRadiusSync('inp')">
                 <span style="font-size:13px;color:var(--muted);">meters</span>
@@ -402,7 +402,7 @@ textarea.inp{resize:none;}
             <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;">
               <div>
                 <div style="font-size:13px;font-weight:500;">Enable Auto Clock-Out</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:3px;">Staff auto checkout at set time if not done manually</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;">Team auto checkout at set time if not done manually</div>
               </div>
               <div class="tg" id="tg-auto-checkout" onclick="gpsToggle('auto-checkout')"><div class="tg-th"></div></div>
             </div>
@@ -410,7 +410,7 @@ textarea.inp{resize:none;}
               <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Auto Clock-Out Time</div>
               <input class="inp" type="time" id="gps-auto-checkout-time" value="19:00">
               <div style="font-size:11px;color:rgba(255,159,10,0.7);margin-top:7px;background:rgba(255,159,10,0.07);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:8px 10px;">
-                ⚠️ Staff who haven't checked out by this time will be auto clocked out
+                ⚠️ Team members who haven't checked out by this time will be auto clocked out
               </div>
             </div>
           </div>
@@ -626,7 +626,7 @@ textarea.inp{resize:none;}
       <div style="margin-bottom:14px;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Assign To *</div>
         <select class="inp" id="task-assigned" required>
-          <option value="">Select Staff Member</option>
+          <option value="">Select Team Member</option>
         </select>
       </div>
 
@@ -1009,8 +1009,8 @@ textarea.inp{resize:none;}
         <div class="sec g">
           <div class="sh" style="flex-wrap:wrap;gap:8px;">
             <div>
-              <span class="st">👤 Staff-wise Allowances</span>
-              <div style="font-size:10px;color:var(--muted);margin-top:2px;">Override defaults per staff — blank = use standard</div>
+              <span class="st">👤 Team-wise Allowances</span>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px;">Override defaults per member — blank = use standard</div>
             </div>
             <button class="btn-g" style="padding:5px 13px;font-size:12px;" onclick="psLoadStaffAllowances()">↺ Load</button>
           </div>
@@ -1069,7 +1069,7 @@ textarea.inp{resize:none;}
       <!-- Staff Salary Preview -->
       <div class="sec g">
         <div class="sh">
-          <span class="st">💰 Staff Salary Preview</span>
+          <span class="st">💰 Team Salary Preview</span>
           <button class="btn" style="padding:6px 14px;font-size:12px;" onclick="psLoadSalaryPreview()">↺ Load Preview</button>
         </div>
         <div id="ps-salary-table">
@@ -1105,7 +1105,7 @@ textarea.inp{resize:none;}
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
           <tr style="background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.08);">
-            <th style="padding:11px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Staff</th>
+            <th style="padding:11px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Team</th>
             <th style="padding:11px 10px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Brand</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check In</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check Out</th>
@@ -1312,7 +1312,7 @@ textarea.inp{resize:none;}
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
       <div class="sec g" style="padding:14px 16px;text-align:center;">
         <div style="font-size:20px;font-weight:600;color:#0A84FF;" id="pr-total-staff">—</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Total Staff</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">Total Team</div>
       </div>
       <div class="sec g" style="padding:14px 16px;text-align:center;">
         <div style="font-size:20px;font-weight:600;color:#30D158;" id="pr-total-net">—</div>
@@ -1333,7 +1333,7 @@ textarea.inp{resize:none;}
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead>
           <tr style="background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.08);">
-            <th style="padding:10px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Staff</th>
+            <th style="padding:10px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Team</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Basic</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Present</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent</th>
@@ -1402,7 +1402,7 @@ textarea.inp{resize:none;}
             <div style="width:36px;height:36px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#0A84FF" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
-            <div><div style="font-size:10px;color:var(--muted);">Total Staff</div><div id="ao-staff-count" style="font-size:13px;margin-top:2px;">Loading…</div></div>
+            <div><div style="font-size:10px;color:var(--muted);">Total Team</div><div id="ao-staff-count" style="font-size:13px;margin-top:2px;">Loading…</div></div>
           </div>
           <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(255,159,10,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -1581,7 +1581,7 @@ textarea.inp{resize:none;}
               <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--muted);">IP</span><span style="font-size:12px;font-family:'DM Mono',monospace;">192.168.1.100:4370</span></div>
               <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--muted);">Last Sync</span><span style="font-size:12px;">Today 9:32 AM</span></div>
               <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--muted);">Records Today</span><span style="font-size:12px;color:#30D158;">9 punches</span></div>
-              <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--muted);">Enrolled Staff</span><span style="font-size:12px;">12 fingerprints</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--muted);">Enrolled Team</span><span style="font-size:12px;">12 fingerprints</span></div>
             </div>
           </div>
           <div style="display:flex;gap:8px;">
@@ -1713,8 +1713,8 @@ textarea.inp{resize:none;}
   <div class="modal" style="width:500px;">
     <button class="mc" onclick="document.getElementById('add-overlay').classList.remove('open')">✕</button>
     <div style="padding:26px 26px 0;">
-      <div style="font-size:18px;font-weight:500;margin-bottom:4px;">Add New Staff</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Fill in all details to create a new staff profile</div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:4px;">Add New Member</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Fill in all details to create a new member profile</div>
       <!-- Photo upload -->
       <div style="display:flex;justify-content:center;margin-bottom:20px;">
         <div class="photo-upload" style="width:88px;height:88px;" onclick="triggerPhoto('add-photo')">
@@ -1751,7 +1751,7 @@ textarea.inp{resize:none;}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Role *</div>
           <select class="inp" id="add-role">
-            <option value="staff">👤 Staff</option>
+            <option value="staff">👤 Team Member</option>
             <option value="team_leader">⭐ Team Leader</option>
             <option value="editor">✏️ Editor</option>
             <option value="admin">🔑 Admin</option>
@@ -1768,7 +1768,7 @@ textarea.inp{resize:none;}
           <select class="inp" id="add-saltype"><option value="monthly">Monthly</option><option value="daily">Daily</option></select>
         </div>
       </div>
-      <button class="btn" style="width:100%;padding:12px;font-size:14px;" onclick="saveNewStaff()">Create Staff Profile</button>
+      <button class="btn" style="width:100%;padding:12px;font-size:14px;" onclick="saveNewStaff()">Create Profile</button>
     </div>
   </div>
 </div>
@@ -2475,7 +2475,7 @@ async function openEdit(staffId){
         // All other staff — Admin / Team Leader / Staff dropdown
         :'<select class="inp" id="ef-role">'+
           ['admin','team_leader','staff'].map(function(r){
-            var lbl={admin:'🔑 Admin',team_leader:'⭐ Team Leader',staff:'👤 Staff'}[r]||r;
+            var lbl={admin:'🔑 Admin',team_leader:'⭐ Team Leader',staff:'👤 Team Member'}[r]||r;
             return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
           }).join('')
           +'</select>'
@@ -3514,7 +3514,7 @@ async function loadStaffList(retryCount){
   }
 
   var ROLE_COLOR = {admin:'#FF453A',editor:'#FF9F0A',team_leader:'#0A84FF',staff:'#636366'};
-  var ROLE_LABEL = {admin:'Admin',editor:'Editor',team_leader:'Team Leader',staff:'Staff'};
+  var ROLE_LABEL = {admin:'Admin',editor:'Editor',team_leader:'Team Leader',staff:'Team'};
 
   grid.innerHTML = staff.map(function(s, i){
     var words = (s.name||'?').trim().split(/\s+/);
@@ -3528,7 +3528,7 @@ async function loadStaffList(retryCount){
     var brandColor  = s.brand_color || '#0A84FF';
     var roleKey     = s.role || 'staff';
     var roleColor   = ROLE_COLOR[roleKey] || '#636366';
-    var roleLabel   = ROLE_LABEL[roleKey] || 'Staff';
+    var roleLabel   = ROLE_LABEL[roleKey] || 'Team';
     var photoSrc1   = s.photo_data || (s.photo_url ? API+s.photo_url : null);
     var avatar = photoSrc1
       ? '<img src="'+photoSrc1+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
@@ -4854,7 +4854,7 @@ async function loadAdminOverview(){
     var dw=regularStaff.filter(function(s){return s.employment_type==='daily_wage';}).length;
     var dt=regularStaff.filter(function(s){return s.employment_type==='day_time';}).length;
     var sc=document.getElementById('ao-staff-count');
-    if(sc) sc.textContent=regularStaff.length+' staff · '+ft+' Full Time'+(pt?' · '+pt+' Part Time':'')+(dw?' · '+dw+' Daily Wage':'')+(dt?' · '+dt+' Day Time':'');
+    if(sc) sc.textContent=regularStaff.length+' members · '+ft+' Full Time'+(pt?' · '+pt+' Part Time':'')+(dw?' · '+dw+' Daily Wage':'')+(dt?' · '+dt+' Day Time':'');
   }catch(e){ console.error('loadAdminOverview staff error',e); }
   try{
     // Active brands
@@ -4933,7 +4933,7 @@ async function loadAdminOverview(){
 
       <button id="al-btn" onclick="adminLogin()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:0.2px;">Login to Dashboard</button>
 
-      <div style="margin-top:16px;text-align:center;font-size:11px;color:rgba(245,245,247,0.25);">Staff members → use the <a href="/" style="color:rgba(10,132,255,0.7);text-decoration:none;">Staff App</a></div>
+      <div style="margin-top:16px;text-align:center;font-size:11px;color:rgba(245,245,247,0.25);">Team members → use the <a href="/" style="color:rgba(10,132,255,0.7);text-decoration:none;">Team App</a></div>
     </div>
   </div>
 </div>
