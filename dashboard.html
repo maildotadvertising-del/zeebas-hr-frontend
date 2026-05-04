@@ -827,16 +827,11 @@ textarea.inp{resize:none;}
                   <input class="inp" type="time" id="ps-end-time" value="18:00" oninput="psFtCalcTime()">
                 </div>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                  <input class="inp" type="number" id="ps-hours-day" value="9" min="4" max="12" step="0.5">
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Half Day Threshold (hrs)</div>
-                  <input class="inp" type="number" id="ps-halfday-hrs" value="4" min="1" max="8" step="0.5">
-                </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
+                <input class="inp" type="number" id="ps-hours-day" value="9" min="4" max="12" step="0.5">
               </div>
+              <input type="hidden" id="ps-halfday-hrs" value="4">
             </div>
 
             <!-- Day Time -->
@@ -858,16 +853,11 @@ textarea.inp{resize:none;}
                   <input class="inp" type="time" id="ps-dt-end-time" value="18:00" oninput="psDtCalcTime()">
                 </div>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                  <input class="inp" type="number" id="ps-daytime-hrs" value="8" min="1" max="12" step="0.5">
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Working Days/Month</div>
-                  <input class="inp" type="number" id="ps-dt-work-days" value="26" min="1" max="31">
-                </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
+                <input class="inp" type="number" id="ps-daytime-hrs" value="8" min="1" max="12" step="0.5">
               </div>
+              <input type="hidden" id="ps-dt-work-days" value="26">
             </div>
 
             <!-- Part Time -->
@@ -889,22 +879,17 @@ textarea.inp{resize:none;}
                   <input class="inp" type="time" id="ps-pt-end-time" value="13:00" oninput="psPtCalcTime()">
                 </div>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                  <input class="inp" type="number" id="ps-parttime-hrs" value="4" min="1" max="8" step="0.5">
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Working Days/Month</div>
-                  <input class="inp" type="number" id="ps-pt-work-days" value="26" min="1" max="31">
-                </div>
+              <div>
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
+                <input class="inp" type="number" id="ps-parttime-hrs" value="4" min="1" max="8" step="0.5">
               </div>
+              <input type="hidden" id="ps-pt-work-days" value="26">
             </div>
 
             <!-- Common -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               <div>
-                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Working Days/Month (FT)</div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Working Days/Month</div>
                 <input class="inp" type="number" id="ps-work-days" value="26" min="20" max="31" oninput="psUpdateHolAdj()">
               </div>
               <div>
@@ -1917,6 +1902,11 @@ function psUpdateHolAdj(){
   var adj=Math.max(0,base-holidayCount);
   var el=document.getElementById('ps-hol-adj-days');
   if(el) el.textContent=adj;
+  // Sync hidden inputs so all 3 categories share the same working days
+  var ptEl=document.getElementById('ps-pt-work-days');
+  var dtEl=document.getElementById('ps-dt-work-days');
+  if(ptEl) ptEl.value=base;
+  if(dtEl) dtEl.value=base;
 }
 
 async function loadPayrollSettings(){
@@ -1933,8 +1923,8 @@ async function loadPayrollSettings(){
     set('ps-dt-start-time', s.dt_start_time||'10:00');
     set('ps-dt-end-time',   s.dt_end_time||'18:00');
     set('ps-work-days',     s.working_days_month||26);
-    set('ps-pt-work-days',  s.pt_working_days_month||s.working_days_month||26);
-    set('ps-dt-work-days',  s.dt_working_days_month||s.working_days_month||26);
+    set('ps-pt-work-days',  s.working_days_month||26);
+    set('ps-dt-work-days',  s.working_days_month||26);
     set('ps-hours-day',     s.hours_per_day||9);
     set('ps-grace',         s.late_grace_minutes||15);
     set('ps-late-per-min',  s.late_deduction_per_min||2);
@@ -1987,8 +1977,8 @@ async function savePayrollSettings(){
     dt_start_time:         get('ps-dt-start-time')||'10:00',
     dt_end_time:           get('ps-dt-end-time')||'18:00',
     working_days_month:    parseInt(get('ps-work-days'))||26,
-    pt_working_days_month: parseInt(get('ps-pt-work-days'))||26,
-    dt_working_days_month: parseInt(get('ps-dt-work-days'))||26,
+    pt_working_days_month: parseInt(get('ps-work-days'))||26,
+    dt_working_days_month: parseInt(get('ps-work-days'))||26,
     hours_per_day:         parseFloat(get('ps-hours-day'))||9,
     work_week:             workWeek.join(','),
     late_grace_minutes:    parseInt(get('ps-grace'))||15,
