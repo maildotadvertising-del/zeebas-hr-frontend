@@ -242,6 +242,18 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
           </div>
         </div>
 
+        <!-- WiFi Attendance Banner -->
+        <div id="wifi-banner" style="display:none;border-radius:13px;padding:11px 13px;margin-bottom:10px;align-items:center;gap:10px;">
+          <div id="wifi-banner-icon" style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2 7c2.2-2.2 5.2-3.5 8-3.5s5.8 1.3 8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 10.5C6.5 9 8.2 8 10 8s3.5 1 5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7.5 13.5C8.3 12.6 9.1 12 10 12s1.7.6 2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="17" r="1.2" fill="currentColor"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div id="wifi-banner-title" style="font-size:12px;font-weight:500;"></div>
+            <div id="wifi-banner-sub" style="font-size:10px;margin-top:1px;opacity:0.7;"></div>
+          </div>
+          <button id="wifi-banner-btn" style="display:none;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;" onclick="wifiCheckoutPrompt()">Check Out</button>
+        </div>
+
         <!-- Quick Actions -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-gps')">
@@ -249,7 +261,7 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.4"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.4" stroke-linecap="round"/></svg>
             </div>
             <div style="color:#fff;font-size:12px;font-weight:500;">Attendance</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">GPS check-in</div>
+            <div id="s1-att-sub" style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">GPS / WiFi check-in</div>
           </div>
           <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-dailylog')">
             <div style="width:32px;height:32px;background:rgba(255,159,10,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
@@ -1239,6 +1251,17 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
           </div>
           <div id="gps-checkout-time-row" style="display:none;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Auto Checkout Time</div><input id="gps-checkout-time" class="inp" type="time" style="margin-bottom:0;"></div>
         </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">WiFi Auto Attendance</div>
+        <div class="g" style="padding:2px 13px;margin-bottom:11px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div><div style="color:#fff;font-size:12px;">Enable WiFi Auto Check-in</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Auto clock-in when on office WiFi</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-wifi-enabled" style="opacity:0;width:0;height:0;" onchange="document.getElementById('gps-wifi-fields').style.display=this.checked?'flex':'none'"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+          <div id="gps-wifi-fields" style="display:none;flex-direction:column;gap:10px;padding:11px 0;">
+            <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Office Public IP Address</div><input id="gps-office-ip" class="inp" placeholder="e.g. 103.xx.xx.xx" inputmode="url" style="margin-bottom:0;font-family:monospace;font-size:12px;"></div>
+            <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Break Window (minutes) — return within this = break, beyond = late return</div><input id="gps-break-mins" class="inp" type="number" placeholder="40" style="margin-bottom:0;"></div>
+          </div>
+        </div>
         <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Permissions</div>
         <div class="g" style="padding:2px 13px;margin-bottom:11px;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
@@ -1390,6 +1413,7 @@ function go1(id){
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
@@ -3547,6 +3571,129 @@ async function loadMySalary(){
 }
 
 /* ══════════════════════════════════════════
+   WIFI AUTO ATTENDANCE
+   ══════════════════════════════════════════ */
+
+function wifiBanner(show, color, iconColor, title, sub, showCheckoutBtn){
+  var b=document.getElementById('wifi-banner');
+  var ic=document.getElementById('wifi-banner-icon');
+  var t=document.getElementById('wifi-banner-title');
+  var s=document.getElementById('wifi-banner-sub');
+  var btn=document.getElementById('wifi-banner-btn');
+  if(!b) return;
+  if(!show){ b.style.display='none'; return; }
+  b.style.display='flex';
+  b.style.background=color;
+  b.style.border='0.5px solid '+iconColor.replace('1)','0.3)');
+  ic.style.background=iconColor.replace('1)','0.15)');
+  ic.style.color=iconColor;
+  t.style.color='#fff';
+  s.style.color='rgba(245,245,247,0.55)';
+  t.textContent=title;
+  s.textContent=sub;
+  if(btn){
+    btn.style.display=showCheckoutBtn?'block':'none';
+    btn.style.background=iconColor.replace('1)','0.2)');
+    btn.style.color=iconColor;
+    btn.style.border='0.5px solid '+iconColor.replace('1)','0.35)');
+  }
+}
+
+async function wifiCheckAndAct(){
+  try{
+    var r=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
+    var d=await r.json();
+
+    if(!d.wifiEnabled){
+      // WiFi attendance not configured — hide banner silently
+      wifiBanner(false);
+      return;
+    }
+
+    var bw=d.breakWindowMinutes||40;
+
+    if(d.isOffice){
+      // ── ON OFFICE WIFI ──
+      if(!d.alreadyCheckedIn){
+        // Not checked in → auto check-in
+        wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Office WiFi Detected — Checking in…','Please wait…',false);
+        try{
+          var cr=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
+          var cd=await cr.json();
+          if(cd.success){
+            var now=new Date(),h=now.getHours(),mn=now.getMinutes(),ap=h>=12?'PM':'AM';
+            h=h%12||12;
+            var ts=h+':'+(mn<10?'0':'')+mn+' '+ap;
+            var ciEl=document.getElementById('s1-checkin');
+            if(ciEl) ciEl.textContent=ts;
+            if(cd.status==='late'){
+              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 WiFi Auto Check-in — Late',cd.message,false);
+            } else {
+              wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 WiFi Auto Check-in ✓','Checked in at '+ts+' via Office WiFi',false);
+            }
+            var sub=document.getElementById('s1-att-sub');
+            if(sub) sub.textContent='Checked in via WiFi ✓';
+          } else {
+            wifiBanner(false);
+          }
+        } catch(e2){ wifiBanner(false); }
+
+      } else if(d.checkedOut && d.minutesSinceCheckout!==null){
+        // Checked out — check break window
+        if(d.minutesSinceCheckout < bw){
+          // Within break window → auto resume
+          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Back in Office — Resuming…','Break: '+d.minutesSinceCheckout+' min',false);
+          try{
+            var br=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'break'})});
+            var bd=await br.json();
+            if(bd.success){
+              wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Break Ended — Back at Work ✓','You were out for '+d.minutesSinceCheckout+' min',false);
+            } else { wifiBanner(false); }
+          } catch(e3){ wifiBanner(false); }
+        } else {
+          // Beyond break window → late return → notify admin
+          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Late Return — Notifying Admin…','Out for '+d.minutesSinceCheckout+' min',false);
+          try{
+            var lr=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'late'})});
+            var ld=await lr.json();
+            if(ld.success){
+              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Late Return — Admin Notified','Out for '+d.minutesSinceCheckout+' min · Request sent',false);
+            } else { wifiBanner(false); }
+          } catch(e4){ wifiBanner(false); }
+        }
+      } else if(!d.checkedOut && d.alreadyCheckedIn){
+        // Currently in office and checked in — show status
+        var now=new Date(),h=now.getHours(),mn=now.getMinutes(),ap=h>=12?'PM':'AM';
+        h=h%12||12;
+        var ts=h+':'+(mn<10?'0':'')+mn+' '+ap;
+        var ciEl=document.getElementById('s1-checkin');
+        if(ciEl && d.checkInTime){
+          var ci=new Date(d.checkInTime),ch=ci.getHours(),cm=ci.getMinutes(),ca=ch>=12?'PM':'AM';
+          ch=ch%12||12;
+          ciEl.textContent=ch+':'+(cm<10?'0':'')+cm+' '+ca;
+        }
+        wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
+      }
+
+    } else {
+      // ── NOT ON OFFICE WIFI ──
+      if(d.alreadyCheckedIn && !d.checkedOut){
+        // Checked in but not on office WiFi — prompt checkout
+        wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You left office — ready to check out?',true);
+      } else {
+        wifiBanner(false);
+      }
+    }
+  } catch(e){ console.log('wifi detect err',e); wifiBanner(false); }
+}
+
+async function wifiCheckoutPrompt(){
+  // Manual checkout from banner — go to daily log screen
+  wifiBanner(false);
+  go1('s1-dailylog');
+}
+
+/* ══════════════════════════════════════════
    PHASE 3 — SETTINGS SCREENS
    ══════════════════════════════════════════ */
 
@@ -3567,7 +3714,13 @@ async function loadGpsSettings(){
     v('gps-grace',       g.late_grace_minutes||15);
     v('gps-halfday',     g.half_day_hours||4);
     v('gps-checkout-time', g.auto_checkout_time||'19:00');
+    v('gps-office-ip',     g.office_ip||'');
+    v('gps-break-mins',    g.wifi_break_minutes||40);
     c('gps-auto-checkout',   g.auto_checkout_enabled);
+    c('gps-wifi-enabled',    g.wifi_enabled);
+    // show/hide WiFi fields
+    var wf=document.getElementById('gps-wifi-fields');
+    if(wf) wf.style.display=g.wifi_enabled?'flex':'none';
     c('gps-allow-office',    g.allow_office);
     c('gps-allow-site',      g.allow_site);
     c('gps-require-approval',g.require_approval);
@@ -3604,6 +3757,9 @@ async function saveGpsSettings(btn){
       half_day_hours:  parseInt(g('gps-halfday').value)||4,
       auto_checkout_enabled: g('gps-auto-checkout').checked?1:0,
       auto_checkout_time: g('gps-checkout-time').value||'19:00',
+      office_ip:      (g('gps-office-ip').value||'').trim()||null,
+      wifi_enabled:   g('gps-wifi-enabled').checked?1:0,
+      wifi_break_minutes: parseInt(g('gps-break-mins').value)||40,
       allow_office:    g('gps-allow-office').checked?1:0,
       allow_site:      g('gps-allow-site').checked?1:0,
       require_approval:g('gps-require-approval').checked?1:0,
@@ -3798,7 +3954,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); }
+    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); }
   }
 });
 </script>

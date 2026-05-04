@@ -416,6 +416,30 @@ textarea.inp{resize:none;}
           </div>
         </div>
 
+        <!-- WiFi Auto Attendance -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh"><span class="st">📶 WiFi Auto Attendance</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;">
+              <div>
+                <div style="font-size:13px;font-weight:500;">Enable WiFi Auto Check-in</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;">Auto clock-in when team opens app on office WiFi</div>
+              </div>
+              <div class="tg" id="tg-wifi" onclick="gpsToggle('wifi')"><div class="tg-th"></div></div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Office Public IP Address</div>
+              <input class="inp" type="text" id="gps-office-ip" placeholder="e.g. 103.xx.xx.xx" style="font-family:monospace;font-size:13px;">
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Your office internet's static IP. Team must be on this WiFi to auto check-in.</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Break Window (minutes)</div>
+              <input class="inp" type="number" id="gps-break-mins" value="40" min="5" max="120" step="5">
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Return within this time = break resume. Beyond = late return → admin notified.</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Live Radius Preview -->
         <div class="sec g">
           <div class="sh"><span class="st">🗺️ Radius Preview</span><span style="font-size:12px;color:var(--muted);" id="gps-rad-display">300m</span></div>
@@ -471,6 +495,16 @@ textarea.inp{resize:none;}
       </div>
       <div id="onsite-approvals-list">
         <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+    <!-- WiFi Late Return Notifications -->
+    <div class="sec g" style="margin-bottom:14px;">
+      <div class="sh">
+        <span class="st">📶 WiFi Late Returns</span>
+        <span id="late-returns-count" class="po" style="font-size:11px;padding:3px 9px;background:rgba(255,159,10,0.15);color:#FF9F0A;border-color:rgba(255,159,10,0.3);"></span>
+      </div>
+      <div id="late-returns-list">
+        <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No pending late return alerts</div>
       </div>
     </div>
     <!-- Leave Requests -->
@@ -2228,12 +2262,15 @@ async function loadGPSSettings(){
     set('gps-grace-slider',s.late_grace_minutes||15);
     set('gps-halfday',     s.half_day_hours||4);
     set('gps-auto-checkout-time', s.auto_checkout_time||'19:00');
+    set('gps-office-ip',   s.office_ip||'');
+    set('gps-break-mins',  s.wifi_break_minutes||40);
     // Toggles
     gpsSetToggle('office',   s.allow_office!==0);
     gpsSetToggle('site',     s.allow_site!==0);
     gpsSetToggle('approval', s.require_approval!==0);
     gpsSetToggle('capture',  s.capture_gps!==0);
     gpsSetToggle('auto-checkout', s.auto_checkout_enabled==1);
+    gpsSetToggle('wifi',     s.wifi_enabled==1);
     // Update displays
     updateGPSRadiusDisplay(s.radius||300);
     updateGracePreview();
@@ -2357,7 +2394,10 @@ async function saveGPS(){
     late_grace_minutes:   parseInt(get('gps-grace-inp'))||15,
     half_day_hours:       parseInt(get('gps-halfday'))||4,
     auto_checkout_enabled: tgOn('auto-checkout'),
-    auto_checkout_time:   get('gps-auto-checkout-time')||'19:00'
+    auto_checkout_time:   get('gps-auto-checkout-time')||'19:00',
+    office_ip:            (get('gps-office-ip')||'').trim()||null,
+    wifi_enabled:         tgOn('wifi'),
+    wifi_break_minutes:   parseInt(get('gps-break-mins'))||40
   };
   if(!body.office_name){ showToast('⚠️ Office name required'); return; }
   try{
@@ -4719,6 +4759,7 @@ async function loadApprovals(){
     var attRows = (attD.success && attD.data) ? attD.data : [];
     var lateRows   = attRows.filter(function(r){ return r.status==='late_pending'; });
     var onsiteRows = attRows.filter(function(r){ return r.status==='onsite_pending'; });
+    var lateReturnRows = (attD.late_returns||[]);
 
     // Late
     var lateCnt = document.getElementById('late-approval-count');
@@ -4730,6 +4771,30 @@ async function loadApprovals(){
     if(onsiteCnt) onsiteCnt.textContent = onsiteRows.length ? onsiteRows.length+' pending' : '0 pending';
     if(onsiteEl) onsiteEl.innerHTML = onsiteRows.length ? onsiteRows.map(function(r){ return approvalCard(r,'onsite'); }).join('') : empty;
 
+    // WiFi Late Returns
+    var lrEl = document.getElementById('late-returns-list');
+    var lrCnt = document.getElementById('late-returns-count');
+    if(lrCnt) lrCnt.textContent = lateReturnRows.length ? lateReturnRows.length+' pending' : '0';
+    if(lrEl){
+      lrEl.innerHTML = lateReturnRows.length ? lateReturnRows.map(function(r){
+        var mins = r.late_return_minutes || '?';
+        var t = r.late_return_at ? new Date(r.late_return_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+        var init = (r.staff_name||'S').charAt(0).toUpperCase();
+        var avatarHtml = r.photo_url ? '<img src="'+API+r.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
+        return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.18);border-radius:12px;margin-bottom:8px;">'
+          +'<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,159,10,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FF9F0A;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
+          +'<div style="flex:1;">'
+          +'<div style="font-size:13px;font-weight:500;">'+(r.staff_name||'—')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+(r.brand_name||'')+'</div>'
+          +'<div style="margin-top:5px;display:flex;align-items:center;gap:8px;">'
+          +'<span style="font-size:11px;background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:6px;padding:2px 8px;">📶 WiFi Late Return</span>'
+          +'<span style="font-size:11px;color:var(--muted);">Out '+mins+' min · returned '+t+'</span>'
+          +'</div></div>'
+          +'<button onclick="dismissLateReturn('+r.id+',this)" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.25);color:#30D158;border-radius:9px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✓ OK</button>'
+          +'</div>';
+      }).join('') : empty;
+    }
+
     // Leave
     var leaveRes = await fetch(API+'/api/leave/pending', {headers:zHdr()});
     var leaveD   = await leaveRes.json();
@@ -4738,7 +4803,7 @@ async function loadApprovals(){
     if(leaveCnt) leaveCnt.textContent = leaveRows.length ? leaveRows.length+' pending' : '0 pending';
 
     // Total badge
-    var total = lateRows.length + onsiteRows.length + leaveRows.length;
+    var total = lateRows.length + onsiteRows.length + leaveRows.length + lateReturnRows.length;
     if(badge){ if(total){ badge.textContent=total; badge.style.display=''; } else { badge.style.display='none'; } }
 
     if(leaveEl){
@@ -4770,6 +4835,16 @@ async function loadApprovals(){
   } catch(e){
     if(lateEl) lateEl.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px;">Could not load. <button onclick="loadApprovals()" style="color:#0A84FF;background:none;border:none;cursor:pointer;">Retry</button></div>';
   }
+}
+
+async function dismissLateReturn(id, btn){
+  try{
+    btn.textContent='…'; btn.disabled=true;
+    var res=await fetch(API+'/api/attendance/late-return/'+id+'/dismiss',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr())});
+    var d=await res.json();
+    if(d.success){ showToast('✅ Late return acknowledged'); loadApprovals(); }
+    else { showToast('❌ '+(d.message||'Failed')); btn.textContent='✓ OK'; btn.disabled=false; }
+  } catch(e){ showToast('❌ Network error'); btn.textContent='✓ OK'; btn.disabled=false; }
 }
 
 async function approveLate(id, action){
