@@ -839,37 +839,6 @@ textarea.inp{resize:none;}
               </div>
             </div>
 
-            <!-- Part Time -->
-            <div style="background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.18);border-radius:11px;padding:13px 14px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <div style="font-size:11px;font-weight:600;color:#30D158;letter-spacing:0.3px;">👤 Part Time</div>
-                <div style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#30D158" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#30D158" stroke-width="1.1" stroke-linecap="round"/></svg>
-                  <span id="ps-pt-daytime" style="font-size:11px;color:#30D158;font-weight:600;">4h 0m</span>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
-                  <input class="inp" type="time" id="ps-pt-start-time" value="09:00" oninput="psPtCalcTime()">
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
-                  <input class="inp" type="time" id="ps-pt-end-time" value="13:00" oninput="psPtCalcTime()">
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                  <input class="inp" type="number" id="ps-parttime-hrs" value="4" min="1" max="8" step="0.5">
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Working Days/Month</div>
-                  <input class="inp" type="number" id="ps-pt-work-days" value="26" min="1" max="31">
-                </div>
-              </div>
-            </div>
-
             <!-- Day Time -->
             <div style="background:rgba(255,159,10,0.06);border:0.5px solid rgba(255,159,10,0.18);border-radius:11px;padding:13px 14px;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -897,6 +866,37 @@ textarea.inp{resize:none;}
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Working Days/Month</div>
                   <input class="inp" type="number" id="ps-dt-work-days" value="26" min="1" max="31">
+                </div>
+              </div>
+            </div>
+
+            <!-- Part Time -->
+            <div style="background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.18);border-radius:11px;padding:13px 14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:600;color:#30D158;letter-spacing:0.3px;">👤 Part Time</div>
+                <div style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#30D158" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#30D158" stroke-width="1.1" stroke-linecap="round"/></svg>
+                  <span id="ps-pt-daytime" style="font-size:11px;color:#30D158;font-weight:600;">4h 0m</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <div>
+                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
+                  <input class="inp" type="time" id="ps-pt-start-time" value="09:00" oninput="psPtCalcTime()">
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
+                  <input class="inp" type="time" id="ps-pt-end-time" value="13:00" oninput="psPtCalcTime()">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
+                  <input class="inp" type="number" id="ps-parttime-hrs" value="4" min="1" max="8" step="0.5">
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Working Days/Month</div>
+                  <input class="inp" type="number" id="ps-pt-work-days" value="26" min="1" max="31">
                 </div>
               </div>
             </div>
