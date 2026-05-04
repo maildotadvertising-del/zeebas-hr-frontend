@@ -63,6 +63,12 @@ select.inp option{background:#1A1A2E;color:#fff;}
 
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.3);}}
 @keyframes splashFadeIn{from{opacity:0;transform:scale(0.88);}to{opacity:1;transform:scale(1);}}
+/* TOGGLE SWITCH */
+label input[type=checkbox]:checked+span{background:rgba(10,132,255,0.35)!important;border-color:rgba(10,132,255,0.5)!important;}
+label input[type=checkbox]:checked+span::after,
+label input[type=checkbox]+span::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2.5px;left:2.5px;transition:0.25s;}
+label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
+
 .admin-badge{background:linear-gradient(135deg,rgba(191,95,255,0.25),rgba(100,20,180,0.2));border:0.5px solid rgba(191,95,255,0.3);border-radius:8px;padding:3px 10px;font-size:10px;color:#BF5FFF;font-weight:500;}
 /* Emoji reactions */
 .msg-wrap{position:relative;display:flex;flex-direction:column;}
@@ -1101,11 +1107,32 @@ select.inp option{background:#1A1A2E;color:#fff;}
         </div>
         <div style="color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Settings</div>
         <div class="g" style="overflow:hidden;margin-bottom:16px;">
+          <div onclick="go2('s2-gps-settings')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="2.5" stroke="#30D158" stroke-width="1.3"/><path d="M8 2C5.24 2 3 4.24 3 7c0 4 5 8 5 8s5-4 5-8c0-2.76-2.24-5-5-5z" stroke="#30D158" stroke-width="1.3"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">GPS Settings</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Office location &amp; radius</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-payroll-settings')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(255,159,10,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#FF9F0A" stroke-width="1.3"/><path d="M8 5v3l2 2" stroke="#FF9F0A" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Payroll Settings</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Deductions &amp; overtime rules</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-biometric-settings')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 8c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M3 8c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M1 8c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="8" r="1" fill="#0A84FF"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Biometric Device</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">ZKTeco / eSSL connection</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
           <div onclick="window.open('https://zeebas-hr-frontend.vercel.app/dashboard.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
             <div style="width:34px;height:34px;background:rgba(191,95,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#BF5FFF" stroke-width="1.3"/><path d="M2 7h12" stroke="#BF5FFF" stroke-width="1.3"/></svg>
             </div>
-            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Full Dashboard</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Payroll, GPS, Settings</div></div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Full Dashboard</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Desktop admin view</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
           <div onclick="zLogout()" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
@@ -1176,6 +1203,148 @@ select.inp option{background:#1A1A2E;color:#fff;}
       <div id="n2-payroll" class="bnav"></div>
     </div>
 
+    <!-- GPS SETTINGS -->
+    <div id="s2-gps-settings" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">GPS Settings</div>
+        <button onclick="saveGpsSettings(this)" style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.28);border-radius:9px;padding:7px 13px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;">Save</button>
+      </div>
+      <div class="scroll" style="padding:12px 13px 20px;">
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Office Location</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Office Name</div><input id="gps-office-name" class="inp" placeholder="Main Office" style="margin-bottom:0;"></div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Latitude</div><input id="gps-lat" class="inp" type="number" step="0.0000001" placeholder="11.1085000" style="margin-bottom:0;"></div>
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Longitude</div><input id="gps-lng" class="inp" type="number" step="0.0000001" placeholder="79.6478000" style="margin-bottom:0;"></div>
+          </div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Radius (meters)</div><input id="gps-radius" class="inp" type="number" placeholder="300" style="margin-bottom:0;"></div>
+          <button onclick="useMyLocation()" style="background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:9px;padding:9px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;width:100%;">📍 Use My Current Location</button>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Work Timing</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Office Start Time</div><input id="gps-start-time" class="inp" type="time" style="margin-bottom:0;"></div>
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Grace Period (mins)</div><input id="gps-grace" class="inp" type="number" placeholder="15" style="margin-bottom:0;"></div>
+          </div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Half-Day Hours Threshold</div><input id="gps-halfday" class="inp" type="number" placeholder="4" style="margin-bottom:0;"></div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Auto Checkout</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div style="color:#fff;font-size:12px;">Auto Checkout</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Auto check out staff at set time</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-auto-checkout" style="opacity:0;width:0;height:0;" onchange="document.getElementById('gps-checkout-time-row').style.display=this.checked?'flex':'none'"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+          <div id="gps-checkout-time-row" style="display:none;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Auto Checkout Time</div><input id="gps-checkout-time" class="inp" type="time" style="margin-bottom:0;"></div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Permissions</div>
+        <div class="g" style="padding:2px 13px;margin-bottom:11px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div><div style="color:#fff;font-size:12px;">Allow Office Check-in</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">GPS-based office attendance</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-allow-office" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div><div style="color:#fff;font-size:12px;">Allow Onsite Request</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Staff can request onsite work</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-allow-site" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div><div style="color:#fff;font-size:12px;">Require Onsite Approval</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Admin must approve onsite</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-require-approval" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;">
+            <div><div style="color:#fff;font-size:12px;">Capture GPS on Check-in</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Record coordinates each check-in</div></div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="gps-capture" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+        </div>
+        <div id="gps-save-status" style="text-align:center;font-size:11px;color:rgba(245,245,247,0.35);padding-bottom:10px;min-height:18px;"></div>
+      </div>
+    </div>
+
+    <!-- PAYROLL SETTINGS -->
+    <div id="s2-payroll-settings" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Payroll Settings</div>
+        <button onclick="savePayrollSettings(this)" style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.28);border-radius:9px;padding:7px 13px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;">Save</button>
+      </div>
+      <div class="scroll" style="padding:12px 13px 20px;">
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Work Schedule</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Work Days Per Month</div><input id="ps-workdays" class="inp" type="number" placeholder="26" style="margin-bottom:0;"></div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Work Hours Per Day</div><input id="ps-hours" class="inp" type="number" step="0.5" placeholder="9" style="margin-bottom:0;"></div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Work Week</div><input id="ps-workweek" class="inp" placeholder="Mon,Tue,Wed,Thu,Fri,Sat" style="margin-bottom:0;"></div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Late &amp; Absent Deductions</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Grace Period (mins)</div><input id="ps-grace" class="inp" type="number" placeholder="15" style="margin-bottom:0;"></div>
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Late Cut ₹/min</div><input id="ps-late-per-min" class="inp" type="number" step="0.5" placeholder="2" style="margin-bottom:0;"></div>
+          </div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Max Late Cut Per Day (₹)</div><input id="ps-late-max" class="inp" type="number" placeholder="200" style="margin-bottom:0;"></div>
+          <div>
+            <div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Absent Deduction Type</div>
+            <select id="ps-absent-type" class="inp" style="margin-bottom:0;"><option value="per_day_salary">Per Day Salary (auto)</option><option value="flat">Flat Amount Per Day</option></select>
+          </div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Flat Absent Deduction (₹)</div><input id="ps-absent-flat" class="inp" type="number" placeholder="500" style="margin-bottom:0;"></div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Overtime</div>
+        <div class="g" style="padding:2px 13px;margin-bottom:11px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="color:#fff;font-size:12px;">Enable Overtime Pay</div>
+            <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="ps-ot-enabled" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
+          </div>
+          <div style="padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">OT After (hrs/day)</div><input id="ps-ot-after" class="inp" type="number" step="0.5" placeholder="9" style="margin-bottom:0;"></div>
+          <div style="padding:11px 0;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">OT Rate Multiplier (e.g. 1.5)</div><input id="ps-ot-rate" class="inp" type="number" step="0.1" placeholder="1.5" style="margin-bottom:0;"></div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Leave Allowance (Per Year)</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Paid Leave</div><input id="ps-paid-leave" class="inp" type="number" placeholder="12" style="margin-bottom:0;"></div>
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Sick Leave</div><input id="ps-sick-leave" class="inp" type="number" placeholder="6" style="margin-bottom:0;"></div>
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Casual Leave</div><input id="ps-casual-leave" class="inp" type="number" placeholder="6" style="margin-bottom:0;"></div>
+          </div>
+        </div>
+        <div id="ps-save-status" style="text-align:center;font-size:11px;color:rgba(245,245,247,0.35);padding-bottom:10px;min-height:18px;"></div>
+      </div>
+    </div>
+
+    <!-- BIOMETRIC SETTINGS -->
+    <div id="s2-biometric-settings" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Biometric Device</div>
+        <button onclick="saveBiometricSettings(this)" style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.28);border-radius:9px;padding:7px 13px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;">Save</button>
+      </div>
+      <div class="scroll" style="padding:12px 13px 20px;">
+        <div id="bio-status-card" class="g" style="padding:13px;margin-bottom:11px;display:flex;align-items:center;gap:10px;">
+          <div id="bio-status-dot" style="width:10px;height:10px;border-radius:50%;background:#FF453A;flex-shrink:0;box-shadow:0 0 6px rgba(255,69,58,0.5);"></div>
+          <div><div id="bio-status-label" style="color:#fff;font-size:12px;">Not Connected</div><div id="bio-status-sub" style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Configure device below and tap Test Connection</div></div>
+        </div>
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Device Configuration</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Device Name</div><input id="bio-name" class="inp" placeholder="ZKTeco K40" style="margin-bottom:0;"></div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:2;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Device IP Address</div><input id="bio-ip" class="inp" placeholder="192.168.1.100" style="margin-bottom:0;" inputmode="url"></div>
+            <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Port</div><input id="bio-port" class="inp" type="number" placeholder="4370" style="margin-bottom:0;"></div>
+          </div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Device Password</div><input id="bio-password" class="inp" type="password" placeholder="Leave blank if none" style="margin-bottom:0;"></div>
+          <div>
+            <div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Connection Type</div>
+            <select id="bio-conn-type" class="inp" style="margin-bottom:0;"><option value="TCP">TCP (recommended)</option><option value="UDP">UDP</option></select>
+          </div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Auto Sync Every (minutes)</div><input id="bio-sync-interval" class="inp" type="number" placeholder="30" style="margin-bottom:0;"></div>
+        </div>
+        <button onclick="testBiometricConnection(this)" style="width:100%;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:10px;padding:12px;color:#0A84FF;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:8px;">🔗 Test Connection</button>
+        <div id="bio-save-status" style="text-align:center;font-size:11px;color:rgba(245,245,247,0.35);padding-bottom:10px;min-height:18px;"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -1234,7 +1403,7 @@ function go1(id){
 }
 
 function go2(id){
-  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll'];
+  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=adminScrs.indexOf(id);if(idx>=0)initNavs2(idx);
@@ -1243,8 +1412,11 @@ function go2(id){
   if(id==='s2-approvals')    { loadAdminApprovals(); }
   if(id==='s2-chat')         { initAdminChat2(); }
   if(id==='s2-tasks')        { loadAdminTasks(); s2PopulateAssign(); }
-  if(id==='s2-stafflist')    { loadAdminStaffList(); }
-  if(id==='s2-payroll')      { loadAdminPayroll(); }
+  if(id==='s2-stafflist')         { loadAdminStaffList(); }
+  if(id==='s2-payroll')           { loadAdminPayroll(); }
+  if(id==='s2-gps-settings')      { loadGpsSettings(); }
+  if(id==='s2-payroll-settings')  { loadPayrollSettings(); }
+  if(id==='s2-biometric-settings'){ loadBiometricSettings(); }
 }
 
 /* staffLogin() — handled by API script */
@@ -3372,6 +3544,210 @@ async function loadMySalary(){
   } catch(e){
     if(el) el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load salary data</div>';
   }
+}
+
+/* ══════════════════════════════════════════
+   PHASE 3 — SETTINGS SCREENS
+   ══════════════════════════════════════════ */
+
+/* ── GPS SETTINGS ── */
+async function loadGpsSettings(){
+  try{
+    var r=await fetch(API_URL+'/api/settings/gps',{headers:zHead()});
+    var d=await r.json();
+    if(!d.success||!d.data) return;
+    var g=d.data;
+    var v=function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
+    var c=function(id,val){ var el=document.getElementById(id); if(el){ el.checked=!!val; el.dispatchEvent(new Event('change')); } };
+    v('gps-office-name', g.office_name||'Main Office');
+    v('gps-lat',         g.latitude);
+    v('gps-lng',         g.longitude);
+    v('gps-radius',      g.radius||300);
+    v('gps-start-time',  g.office_start_time||'09:00');
+    v('gps-grace',       g.late_grace_minutes||15);
+    v('gps-halfday',     g.half_day_hours||4);
+    v('gps-checkout-time', g.auto_checkout_time||'19:00');
+    c('gps-auto-checkout',   g.auto_checkout_enabled);
+    c('gps-allow-office',    g.allow_office);
+    c('gps-allow-site',      g.allow_site);
+    c('gps-require-approval',g.require_approval);
+    c('gps-capture',         g.capture_gps);
+    // show/hide time row
+    var row=document.getElementById('gps-checkout-time-row');
+    if(row) row.style.display=g.auto_checkout_enabled?'flex':'none';
+  } catch(e){ console.log('loadGpsSettings err',e); }
+}
+
+function useMyLocation(){
+  if(!navigator.geolocation){alert('GPS not available');return;}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=document.getElementById('gps-lat');
+    var lng=document.getElementById('gps-lng');
+    if(lat) lat.value=pos.coords.latitude.toFixed(7);
+    if(lng) lng.value=pos.coords.longitude.toFixed(7);
+    var st=document.getElementById('gps-save-status');
+    if(st){ st.style.color='#30D158'; st.textContent='📍 Location captured!'; setTimeout(function(){st.textContent='';},2000); }
+  },function(){ alert('Could not get location. Check GPS permissions.'); });
+}
+
+async function saveGpsSettings(btn){
+  var orig=btn.textContent; btn.textContent='Saving…'; btn.disabled=true;
+  try{
+    var g=function(id){ return document.getElementById(id); };
+    var payload={
+      office_name:     g('gps-office-name').value,
+      latitude:        parseFloat(g('gps-lat').value),
+      longitude:       parseFloat(g('gps-lng').value),
+      radius:          parseInt(g('gps-radius').value)||300,
+      office_start_time: g('gps-start-time').value,
+      late_grace_minutes: parseInt(g('gps-grace').value)||15,
+      half_day_hours:  parseInt(g('gps-halfday').value)||4,
+      auto_checkout_enabled: g('gps-auto-checkout').checked?1:0,
+      auto_checkout_time: g('gps-checkout-time').value||'19:00',
+      allow_office:    g('gps-allow-office').checked?1:0,
+      allow_site:      g('gps-allow-site').checked?1:0,
+      require_approval:g('gps-require-approval').checked?1:0,
+      capture_gps:     g('gps-capture').checked?1:0
+    };
+    var r=await fetch(API_URL+'/api/settings/gps',{method:'PUT',headers:zHead(),body:JSON.stringify(payload)});
+    var d=await r.json();
+    var st=document.getElementById('gps-save-status');
+    if(d.success){ if(st){st.style.color='#30D158';st.textContent='✓ GPS settings saved';} }
+    else { if(st){st.style.color='#FF453A';st.textContent='Error: '+(d.message||'Failed');} }
+    setTimeout(function(){if(st)st.textContent='';},3000);
+  } catch(e){ var st=document.getElementById('gps-save-status'); if(st){st.style.color='#FF453A';st.textContent='Network error';} }
+  btn.textContent=orig; btn.disabled=false;
+}
+
+/* ── PAYROLL SETTINGS ── */
+async function loadPayrollSettings(){
+  try{
+    var r=await fetch(API_URL+'/api/settings/payroll',{headers:zHead()});
+    var d=await r.json();
+    if(!d.success||!d.data) return;
+    var p=d.data;
+    var v=function(id,val){ var el=document.getElementById(id); if(el) el.value=(val!==undefined&&val!==null)?val:''; };
+    var c=function(id,val){ var el=document.getElementById(id); if(el) el.checked=!!val; };
+    v('ps-workdays',     p.working_days_month||26);
+    v('ps-hours',        p.hours_per_day||9);
+    v('ps-workweek',     p.work_week||'Mon,Tue,Wed,Thu,Fri,Sat');
+    v('ps-grace',        p.late_grace_minutes||15);
+    v('ps-late-per-min', p.late_deduction_per_min||2);
+    v('ps-late-max',     p.late_max_per_day||200);
+    v('ps-absent-type',  p.absent_deduction_type||'per_day_salary');
+    v('ps-absent-flat',  p.absent_flat_amount||500);
+    v('ps-ot-after',     p.ot_after_hours||9);
+    v('ps-ot-rate',      p.ot_rate_multiplier||1.5);
+    v('ps-paid-leave',   p.paid_leaves_year||12);
+    v('ps-sick-leave',   p.sick_leaves_year||6);
+    v('ps-casual-leave', p.casual_leaves_year||6);
+    c('ps-ot-enabled',   p.ot_enabled);
+  } catch(e){ console.log('loadPayrollSettings err',e); }
+}
+
+async function savePayrollSettings(btn){
+  var orig=btn.textContent; btn.textContent='Saving…'; btn.disabled=true;
+  try{
+    var g=function(id){ return document.getElementById(id); };
+    var payload={
+      working_days_month:    parseInt(g('ps-workdays').value)||26,
+      hours_per_day:         parseFloat(g('ps-hours').value)||9,
+      work_week:             g('ps-workweek').value||'Mon,Tue,Wed,Thu,Fri,Sat',
+      late_grace_minutes:    parseInt(g('ps-grace').value)||15,
+      late_deduction_per_min:parseFloat(g('ps-late-per-min').value)||2,
+      late_max_per_day:      parseInt(g('ps-late-max').value)||200,
+      absent_deduction_type: g('ps-absent-type').value,
+      absent_flat_amount:    parseInt(g('ps-absent-flat').value)||500,
+      ot_enabled:            g('ps-ot-enabled').checked?1:0,
+      ot_after_hours:        parseFloat(g('ps-ot-after').value)||9,
+      ot_rate_multiplier:    parseFloat(g('ps-ot-rate').value)||1.5,
+      paid_leaves_year:      parseInt(g('ps-paid-leave').value)||12,
+      sick_leaves_year:      parseInt(g('ps-sick-leave').value)||6,
+      casual_leaves_year:    parseInt(g('ps-casual-leave').value)||6
+    };
+    var r=await fetch(API_URL+'/api/settings/payroll',{method:'PUT',headers:zHead(),body:JSON.stringify(payload)});
+    var d=await r.json();
+    var st=document.getElementById('ps-save-status');
+    if(d.success){ if(st){st.style.color='#30D158';st.textContent='✓ Payroll settings saved';} }
+    else { if(st){st.style.color='#FF453A';st.textContent='Error: '+(d.message||'Failed');} }
+    setTimeout(function(){if(st)st.textContent='';},3000);
+  } catch(e){ var st=document.getElementById('ps-save-status'); if(st){st.style.color='#FF453A';st.textContent='Network error';} }
+  btn.textContent=orig; btn.disabled=false;
+}
+
+/* ── BIOMETRIC SETTINGS ── */
+async function loadBiometricSettings(){
+  try{
+    var r=await fetch(API_URL+'/api/settings/biometric',{headers:zHead()});
+    var d=await r.json();
+    if(!d.success||!d.data) return;
+    var b=d.data;
+    var v=function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
+    v('bio-name',          b.device_name||'');
+    v('bio-ip',            b.device_ip||'');
+    v('bio-port',          b.device_port||4370);
+    v('bio-password',      b.device_password||'');
+    v('bio-conn-type',     b.connection_type||'TCP');
+    v('bio-sync-interval', b.sync_interval_minutes||30);
+    // status
+    var dot=document.getElementById('bio-status-dot');
+    var lbl=document.getElementById('bio-status-label');
+    var sub=document.getElementById('bio-status-sub');
+    var connected=(b.status==='connected');
+    if(dot){ dot.style.background=connected?'#30D158':'#FF453A'; dot.style.boxShadow=connected?'0 0 6px rgba(48,209,88,0.5)':'0 0 6px rgba(255,69,58,0.5)'; }
+    if(lbl) lbl.textContent=connected?'Connected':'Not Connected';
+    if(sub) sub.textContent=connected&&b.last_sync?'Last sync: '+new Date(b.last_sync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Configure device and test connection';
+  } catch(e){ console.log('loadBiometricSettings err',e); }
+}
+
+async function saveBiometricSettings(btn){
+  var orig=btn.textContent; btn.textContent='Saving…'; btn.disabled=true;
+  try{
+    var g=function(id){ return document.getElementById(id); };
+    var payload={
+      device_name:          g('bio-name').value,
+      device_ip:            g('bio-ip').value.trim(),
+      device_port:          parseInt(g('bio-port').value)||4370,
+      device_password:      g('bio-password').value,
+      connection_type:      g('bio-conn-type').value,
+      sync_interval_minutes:parseInt(g('bio-sync-interval').value)||30
+    };
+    var r=await fetch(API_URL+'/api/settings/biometric',{method:'PUT',headers:zHead(),body:JSON.stringify(payload)});
+    var d=await r.json();
+    var st=document.getElementById('bio-save-status');
+    if(d.success){ if(st){st.style.color='#30D158';st.textContent='✓ Device settings saved';} }
+    else { if(st){st.style.color='#FF453A';st.textContent='Error: '+(d.message||'Failed');} }
+    setTimeout(function(){if(st)st.textContent='';},3000);
+  } catch(e){ var st=document.getElementById('bio-save-status'); if(st){st.style.color='#FF453A';st.textContent='Network error';} }
+  btn.textContent=orig; btn.disabled=false;
+}
+
+async function testBiometricConnection(btn){
+  var orig=btn.textContent; btn.textContent='Testing…'; btn.disabled=true;
+  var st=document.getElementById('bio-save-status');
+  try{
+    var r=await fetch(API_URL+'/api/settings/biometric/test',{method:'POST',headers:zHead()});
+    var d=await r.json();
+    var dot=document.getElementById('bio-status-dot');
+    var lbl=document.getElementById('bio-status-label');
+    var sub=document.getElementById('bio-status-sub');
+    if(d.success){
+      if(dot){ dot.style.background='#30D158'; dot.style.boxShadow='0 0 6px rgba(48,209,88,0.5)'; }
+      if(lbl) lbl.textContent='Connected';
+      if(sub) sub.textContent=d.message||'Connection successful';
+      if(st){ st.style.color='#30D158'; st.textContent='✓ '+( d.message||'Connected'); }
+    } else {
+      if(dot){ dot.style.background='#FF453A'; dot.style.boxShadow='0 0 6px rgba(255,69,58,0.5)'; }
+      if(lbl) lbl.textContent='Connection Failed';
+      if(sub) sub.textContent=d.message||'Could not reach device';
+      if(st){ st.style.color='#FF453A'; st.textContent='✗ '+(d.message||'Connection failed'); }
+    }
+    setTimeout(function(){if(st)st.textContent='';},4000);
+  } catch(e){
+    if(st){ st.style.color='#FF453A'; st.textContent='Network error — check if device is on same WiFi'; }
+    setTimeout(function(){if(st)st.textContent='';},4000);
+  }
+  btn.textContent=orig; btn.disabled=false;
 }
 
 /* ── POPULATE STAFF UI ── */
