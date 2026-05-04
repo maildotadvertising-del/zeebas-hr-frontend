@@ -1881,18 +1881,24 @@ function psCalcTimeDiff(startId, endId){
 }
 function psFtCalcTime(){
   var t=psCalcTimeDiff('ps-start-time','ps-end-time');
-  var el=document.getElementById('ps-ft-daytime');
-  if(el&&t) el.textContent=t.h+'h '+(t.m?t.m+'m':'0m');
+  var badge=document.getElementById('ps-ft-daytime');
+  if(badge&&t){ badge.textContent=t.h+'h '+(t.m?t.m+'m':'0m'); }
+  var hrs=document.getElementById('ps-hours-day');
+  if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
 function psPtCalcTime(){
   var t=psCalcTimeDiff('ps-pt-start-time','ps-pt-end-time');
-  var el=document.getElementById('ps-pt-daytime');
-  if(el&&t) el.textContent=t.h+'h '+(t.m?t.m+'m':'0m');
+  var badge=document.getElementById('ps-pt-daytime');
+  if(badge&&t){ badge.textContent=t.h+'h '+(t.m?t.m+'m':'0m'); }
+  var hrs=document.getElementById('ps-parttime-hrs');
+  if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
 function psDtCalcTime(){
   var t=psCalcTimeDiff('ps-dt-start-time','ps-dt-end-time');
-  var el=document.getElementById('ps-dt-daytime');
-  if(el&&t) el.textContent=t.h+'h '+(t.m?t.m+'m':'0m');
+  var badge=document.getElementById('ps-dt-daytime');
+  if(badge&&t){ badge.textContent=t.h+'h '+(t.m?t.m+'m':'0m'); }
+  var hrs=document.getElementById('ps-daytime-hrs');
+  if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
 
 // Holiday-adjusted working days display
