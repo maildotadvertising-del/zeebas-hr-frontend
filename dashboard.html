@@ -1904,14 +1904,16 @@ function psFtCalcTime(){
   var t=psCalcTimeDiff('ps-start-time','ps-end-time');
   var badge=document.getElementById('ps-ft-daytime');
   var breakMins=parseInt((document.getElementById('ps-ft-break-mins')||{}).value)||0;
-  if(badge&&t){
+  if(t){
     var totalMins=t.h*60+t.m;
     var effMins=Math.max(0,totalMins-breakMins);
     var effH=Math.floor(effMins/60), effM=effMins%60;
-    badge.textContent=effH+'h '+(effM?effM+'m':'0m');
+    // Badge = effective working hours
+    if(badge) badge.textContent=effH+'h '+(effM?effM+'m':'0m');
+    // Hours/Day field = effective hours (total minus break)
+    var hrs=document.getElementById('ps-hours-day');
+    if(hrs){ hrs.value=Math.round(effMins/60*10)/10; }
   }
-  var hrs=document.getElementById('ps-hours-day');
-  if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
 function psPtCalcTime(){
   var t=psCalcTimeDiff('ps-pt-start-time','ps-pt-end-time');
@@ -1924,14 +1926,16 @@ function psDtCalcTime(){
   var t=psCalcTimeDiff('ps-dt-start-time','ps-dt-end-time');
   var badge=document.getElementById('ps-dt-daytime');
   var breakMins=parseInt((document.getElementById('ps-dt-break-mins')||{}).value)||0;
-  if(badge&&t){
+  if(t){
     var totalMins=t.h*60+t.m;
     var effMins=Math.max(0,totalMins-breakMins);
     var effH=Math.floor(effMins/60), effM=effMins%60;
-    badge.textContent=effH+'h '+(effM?effM+'m':'0m');
+    // Badge = effective working hours
+    if(badge) badge.textContent=effH+'h '+(effM?effM+'m':'0m');
+    // Hours/Day field = effective hours (total minus break)
+    var hrs=document.getElementById('ps-daytime-hrs');
+    if(hrs){ hrs.value=Math.round(effMins/60*10)/10; }
   }
-  var hrs=document.getElementById('ps-daytime-hrs');
-  if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
 
 // Holiday-adjusted working days display
