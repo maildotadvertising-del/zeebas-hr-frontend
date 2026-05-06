@@ -1639,7 +1639,19 @@ async function markAttendance(){
     if(!d.success){
       btn.disabled=false;
       btn.textContent=isOnsite?'Submit Onsite Attendance':'Mark Office Attendance';
-      alert(d.message||'Check-in failed. Please try again.');
+      if(d.code==='PAST_END_TIME'){
+        var ov=document.createElement('div');
+        ov.style.cssText='position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);';
+        ov.innerHTML='<div style="background:linear-gradient(145deg,rgba(18,12,36,0.98),rgba(10,10,22,0.98));border:0.5px solid rgba(255,255,255,0.12);border-radius:24px;padding:28px 24px;text-align:center;max-width:280px;width:90%;">'
+          +'<div style="font-size:36px;margin-bottom:12px;">🕐</div>'
+          +'<div style="color:#fff;font-size:16px;font-weight:500;margin-bottom:8px;">Work Hours Ended</div>'
+          +'<div style="color:rgba(245,245,247,0.5);font-size:12px;line-height:1.6;margin-bottom:20px;">'+d.message+'</div>'
+          +'<button onclick="this.parentNode.parentNode.remove()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 28px;color:rgba(245,245,247,0.7);font-size:13px;cursor:pointer;font-family:inherit;">OK</button>'
+          +'</div>';
+        document.body.appendChild(ov);
+      } else {
+        alert(d.message||'Check-in failed. Please try again.');
+      }
       return;
     }
 
@@ -3734,10 +3746,9 @@ function wifiBanner(show, color, iconColor, title, sub, showCheckoutBtn){
 }
 
 async function triggerPtAutoCheckout(){
-  var s={}; try{s=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
-  if(s.employment_type!=='part_time') return;
+  // Handles all employment types (full_time, day_time, part_time)
   try{
-    await fetch(API_URL+'/api/attendance/pt-auto-checkout',{method:'POST',headers:zHead()});
+    await fetch(API_URL+'/api/attendance/auto-checkout',{method:'POST',headers:zHead()});
   } catch(e){}
 }
 
