@@ -1492,7 +1492,8 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); }
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); }
+  else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
@@ -3854,6 +3855,17 @@ function listenBreakApproval(){
   }
 }
 
+var _wifiOffSince = null;   // tracks when WiFi was first lost (ms timestamp)
+var _wifiPollTimer = null;  // setInterval handle for home-screen poller
+
+function startWifiPoller(){
+  stopWifiPoller();
+  _wifiPollTimer = setInterval(wifiCheckAndAct, 30000); // every 30s
+}
+function stopWifiPoller(){
+  if(_wifiPollTimer){ clearInterval(_wifiPollTimer); _wifiPollTimer = null; }
+}
+
 async function wifiCheckAndAct(){
   try{
     var r=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
@@ -3868,7 +3880,8 @@ async function wifiCheckAndAct(){
     var bw=d.breakWindowMinutes||40;
 
     if(d.isOffice){
-      // ── ON OFFICE WIFI ──
+      // ── ON OFFICE WIFI ── reset grace timer
+      _wifiOffSince = null;
       if(!d.alreadyCheckedIn){
         // Not checked in → auto check-in
         wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Office WiFi Detected — Checking in…','Please wait…',false);
@@ -3934,10 +3947,19 @@ async function wifiCheckAndAct(){
     } else {
       // ── NOT ON OFFICE WIFI ──
       if(d.alreadyCheckedIn && !d.checkedOut){
-        // Checked in but not on office WiFi — prompt checkout
-        wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You left office — ready to check out?',true);
+        // Start grace timer if not already running
+        if(!_wifiOffSince) _wifiOffSince = Date.now();
+        var offMs = Date.now() - _wifiOffSince;
+        var GRACE = 5 * 60 * 1000; // 5 minutes
+        if(offMs >= GRACE){
+          // 5+ min off WiFi → prompt checkout / break
+          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You\'ve been off WiFi for 5+ min — ready to check out?',true);
+        } else {
+          // Still within grace → subtle countdown
+          var minsLeft = Math.ceil((GRACE - offMs) / 60000);
+          wifiBanner(true,'rgba(255,255,255,0.05)','rgba(235,235,245,0.4)','📶 WiFi Disconnected','Reconnect within '+minsLeft+' min to resume',false);
+        }
       } else if(!d.alreadyCheckedIn){
-        // Not checked in and not on office WiFi — subtle note
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
