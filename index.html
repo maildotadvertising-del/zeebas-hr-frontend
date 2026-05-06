@@ -3854,7 +3854,12 @@ async function wifiCheckAndAct(){
             var ts=h+':'+(mn<10?'0':'')+mn+' '+ap;
             var ciEl=document.getElementById('s1-checkin');
             if(ciEl) ciEl.textContent=ts;
-            if(cd.status==='late'){
+            if(cd.break_excess_mins>0){
+              wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+cd.break_excess_mins+' min','₹'+cd.break_excess_deduction+' deducted from salary',false);
+              setTimeout(function(){ wifiBanner(false); },6000);
+            } else if(cd.status==='break_return_pending'){
+              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','⏳ Break Return — Pending Approval','Admin will approve your check-in shortly',false);
+            } else if(cd.status==='late'){
               wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 WiFi Auto Check-in — Late',cd.message,false);
             } else {
               wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 WiFi Auto Check-in ✓','Checked in at '+ts+' via Office WiFi',false);
@@ -3909,16 +3914,31 @@ async function wifiCheckAndAct(){
       if(d.alreadyCheckedIn && !d.checkedOut){
         // Start grace timer if not already running
         if(!_wifiOffSince) _wifiOffSince = Date.now();
-        var offMs = Date.now() - _wifiOffSince;
-        var GRACE = 5 * 60 * 1000; // 5 minutes
-        if(offMs >= GRACE){
-          // 5+ min off WiFi → prompt checkout / break
-          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You\'ve been off WiFi for 5+ min — ready to check out?',true);
-        } else {
-          // Still within grace → subtle countdown
+        var offMs    = Date.now() - _wifiOffSince;
+        var GRACE    = 5 * 60 * 1000; // 5-min reconnect grace
+        var breakLimitMins = (_breakSettings && _breakSettings.break_duration_mins) || 0;
+        var breakLimitMs   = breakLimitMins * 60 * 1000;
+
+        if(offMs < GRACE){
+          // Within 5-min grace → subtle countdown
           var minsLeft = Math.ceil((GRACE - offMs) / 60000);
           wifiBanner(true,'rgba(255,255,255,0.05)','rgba(235,235,245,0.4)','📶 WiFi Disconnected','Reconnect within '+minsLeft+' min to resume',false);
+
+        } else if(breakLimitMins > 0 && offMs < breakLimitMs){
+          // Grace expired, within break limit → show break countdown
+          var breakLeft = Math.ceil((breakLimitMs - offMs) / 60000);
+          wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)','☕ On Break','Back in '+breakLeft+' min to avoid deduction',false);
+
+        } else if(breakLimitMins > 0 && offMs >= breakLimitMs){
+          // Over break limit → show overtime warning
+          var overMins = Math.floor((offMs - breakLimitMs) / 60000);
+          wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+overMins+' min extra','Salary deduction will apply on return',true);
+
+        } else {
+          // No break settings (or part-time) → standard checkout prompt
+          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You\'ve been off WiFi for 5+ min — ready to check out?',true);
         }
+
       } else if(!d.alreadyCheckedIn){
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
