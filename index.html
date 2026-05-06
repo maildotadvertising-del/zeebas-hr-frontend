@@ -3766,15 +3766,13 @@ async function triggerPtAutoCheckout(){
    BREAK TIME NOTIFICATIONS
    ══════════════════════════════════════ */
 var _breakSettings = null;
-var _breakNotified5 = false;
-var _breakNotifiedHit = false;
 var _breakPollerInterval = null;
 
 async function loadBreakSettings(){
   try{
     var r = await fetch(API_URL+'/api/attendance/break-settings',{headers:zHead()});
     var d = await r.json();
-    if(d.success && d.hasBreak) _breakSettings = d.data;
+    if(d.success && d.hasBreak) _breakSettings = d.data; // { break_duration_mins, break_approval_required }
     else _breakSettings = null; // Part Time — no break
   } catch(e){}
 }
@@ -3791,51 +3789,13 @@ function sendNotif(title, body){
   }
 }
 
-function showBreakBanner(type){
-  var b = document.getElementById('wifi-banner');
-  if(!b) return;
-  if(type==='warn'){
-    wifiBanner(true,'rgba(255,159,10,0.12)','rgba(255,159,10,1)','☕ Break in 5 minutes',
-      'Your break starts at '+(_breakSettings&&_breakSettings.break_start_time||'13:00'),false);
-    sendNotif('☕ Break in 5 minutes', 'Your lunch break starts soon!');
-  } else if(type==='hit'){
-    wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','☕ Break Time!',
-      'Lunch break started — see you back at '+(_breakSettings&&_breakSettings.break_end_time||'14:00'),false);
-    sendNotif('☕ Break Time!', 'Lunch break has started. Back by '+(_breakSettings&&_breakSettings.break_end_time||'14:00'));
-  }
-}
-
-function checkBreakTime(){
-  if(!_breakSettings || !_breakSettings.break_start_time) return;
-  var now = new Date();
-  var [bh, bm] = (_breakSettings.break_start_time||'13:00').split(':').map(Number);
-  var breakStart = new Date(); breakStart.setHours(bh, bm, 0, 0);
-  var diff = (breakStart - now) / 60000; // minutes until break
-
-  if(diff <= 5 && diff > 0 && !_breakNotified5){
-    _breakNotified5 = true;
-    showBreakBanner('warn');
-    setTimeout(function(){ wifiBanner(false); }, 8000);
-  }
-  if(diff <= 0 && !_breakNotifiedHit){
-    _breakNotifiedHit = true;
-    showBreakBanner('hit');
-    setTimeout(function(){ wifiBanner(false); }, 8000);
-  }
-  // Reset flags next day
-  var [eh, em] = (_breakSettings.break_end_time||'14:00').split(':').map(Number);
-  var breakEnd = new Date(); breakEnd.setHours(eh, em, 0, 0);
-  if(now > breakEnd){ _breakNotified5 = false; _breakNotifiedHit = false; }
-}
+// No fixed break time — notifications are not time-based anymore.
+// Break is whenever staff chooses; duration is stored for reference only.
+function checkBreakTime(){ /* no fixed break time — staff takes break anytime */ }
 
 function startBreakPoller(){
   if(_breakPollerInterval) clearInterval(_breakPollerInterval);
-  loadBreakSettings().then(function(){
-    // Reset flags for today
-    _breakNotified5 = false; _breakNotifiedHit = false;
-    checkBreakTime(); // immediate check
-    _breakPollerInterval = setInterval(checkBreakTime, 30000); // every 30s
-  });
+  loadBreakSettings(); // just load settings for reference
 }
 
 // Show break-return pending state on home screen
