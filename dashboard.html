@@ -429,8 +429,17 @@ textarea.inp{resize:none;}
             </div>
             <div>
               <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Office Public IP Address</div>
-              <input class="inp" type="text" id="gps-office-ip" placeholder="e.g. 103.xx.xx.xx" style="font-family:monospace;font-size:13px;">
-              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Your office internet's static IP. Team must be on this WiFi to auto check-in.</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input class="inp" type="text" id="gps-office-ip" placeholder="e.g. 103.xx.xx.xx" style="font-family:monospace;font-size:13px;flex:1;">
+                <button onclick="detectMyIp()" id="detect-ip-btn" style="padding:10px 14px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:11px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Detect IP</button>
+              </div>
+              <div id="detected-ip-note" style="display:none;margin-top:8px;padding:9px 12px;background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;">
+                <div style="font-size:11px;color:#30D158;font-weight:500;">📡 Your current public IP detected</div>
+                <div id="detected-ip-val" style="font-family:monospace;font-size:13px;color:#fff;margin-top:3px;"></div>
+                <div style="font-size:10px;color:var(--muted);margin-top:3px;">Make sure you're on office WiFi before clicking Detect IP. Click "Use This IP" to apply.</div>
+                <button onclick="useDetectedIp()" style="margin-top:7px;padding:5px 12px;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;color:#30D158;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">Use This IP</button>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Your office internet's public IP. Click <b style="color:rgba(255,255,255,0.5)">Detect IP</b> while on office WiFi to auto-fill.</div>
             </div>
             <div>
               <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Break Window (minutes)</div>
@@ -2332,6 +2341,39 @@ async function loadGPSSettings(){
     updateGPSRadiusDisplay(s.radius||300);
     updateGracePreview();
   } catch(e){ console.error('GPS load error:', e); }
+}
+
+/* ── Detect office IP ── */
+var _detectedIp = null;
+async function detectMyIp(){
+  var btn = document.getElementById('detect-ip-btn');
+  var note = document.getElementById('detected-ip-note');
+  var val = document.getElementById('detected-ip-val');
+  if(btn){ btn.textContent='Detecting…'; btn.disabled=true; }
+  try{
+    var tok = localStorage.getItem('zhr_token')||'';
+    var r = await fetch(API+'/api/attendance/my-ip', {headers:{'Authorization':'Bearer '+tok}});
+    var d = await r.json();
+    if(d.success && d.ip){
+      _detectedIp = d.ip;
+      if(val) val.textContent = d.ip;
+      if(note) note.style.display='block';
+    } else {
+      alert('Could not detect IP. Try again.');
+    }
+  } catch(e){
+    alert('Error detecting IP: '+e.message);
+  } finally {
+    if(btn){ btn.textContent='Detect IP'; btn.disabled=false; }
+  }
+}
+function useDetectedIp(){
+  if(!_detectedIp) return;
+  var inp = document.getElementById('gps-office-ip');
+  if(inp){ inp.value = _detectedIp; }
+  var note = document.getElementById('detected-ip-note');
+  if(note) note.style.display='none';
+  _detectedIp = null;
 }
 
 function gpsSetToggle(key, on){

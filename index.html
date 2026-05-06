@@ -134,6 +134,52 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
   /* Bottom nav safe area */
   .bnav { padding-bottom: env(safe-area-inset-bottom, 8px); }
 }
+
+/* ══════════════════════════════════
+   DESKTOP MODE (PC browser)
+   ══════════════════════════════════ */
+body.desktop-mode {
+  display:block;
+  padding:0;
+  background:#040408;
+  overflow:hidden;
+  height:100dvh;
+}
+body.desktop-mode > div > h3 { display:none; }
+body.desktop-mode #app2,
+body.desktop-mode ~ * { display:none !important; }
+body.desktop-mode > div:has(#app2) { display:none !important; }
+body.desktop-mode .phone {
+  width:100vw;
+  height:100dvh;
+  border-radius:0;
+  border:none;
+  box-shadow:none;
+  background:#040408;
+  display:flex;
+  flex-direction:row;
+}
+body.desktop-mode .pstatus { display:none; }
+body.desktop-mode .bnav { display:none !important; }
+body.desktop-mode .pwrap {
+  flex:1;
+  height:100dvh;
+  min-width:0;
+}
+body.desktop-mode .scr { height:100dvh; }
+body.desktop-mode #s1-sidebar {
+  width:240px;
+  height:100dvh;
+  background:rgba(8,8,14,0.97);
+  border-right:0.5px solid rgba(255,255,255,0.07);
+  display:flex !important;
+  flex-direction:column;
+  flex-shrink:0;
+  position:relative;
+  z-index:20;
+  overflow:hidden;
+}
+#s1-sidebar { display:none; }
 </style>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 </head><body>
@@ -151,6 +197,33 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
       <svg width="22" height="11" viewBox="0 0 26 12" fill="none"><rect x="0.6" y="0.6" width="21.8" height="10.8" rx="2.4" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/><rect x="2" y="2" width="14" height="8" rx="1.5" fill="white"/><rect x="23.5" y="3.5" width="2" height="5" rx="1" fill="rgba(255,255,255,0.3)"/></svg>
     </div>
   </div>
+  <!-- ── DESKTOP SIDEBAR ── -->
+  <div id="s1-sidebar">
+    <!-- Logo -->
+    <div style="padding:24px 20px 16px;flex-shrink:0;">
+      <img src="dot-logo.png" alt="DOT Advertising" style="width:110px;height:auto;opacity:0.88;">
+    </div>
+    <!-- User card -->
+    <div style="padding:0 12px 16px;flex-shrink:0;">
+      <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.09);border-radius:14px;padding:11px 12px;display:flex;align-items:center;gap:10px;">
+        <div id="sb1-avatar" style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#0A84FF,#0A60CC);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:600;flex-shrink:0;">S</div>
+        <div style="min-width:0;flex:1;">
+          <div id="sb1-name" style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+          <div id="sb1-desig" style="color:rgba(245,245,247,0.4);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">Staff</div>
+        </div>
+      </div>
+    </div>
+    <!-- Nav items -->
+    <div id="sb1-nav" style="flex:1;overflow-y:auto;padding:0 10px;"></div>
+    <!-- Logout -->
+    <div style="padding:10px 10px 24px;flex-shrink:0;">
+      <button onclick="zLogout()" style="width:100%;padding:10px 14px;background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.18);border-radius:12px;color:#FF453A;font-size:13px;font-weight:400;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:9px;">
+        <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><path d="M7 3H4C3.4 3 3 3.4 3 4v10c0 .6.4 1 1 1h3M12 13l3.5-4L12 5M15.5 9H7" stroke="#FF453A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+
   <div class="pwrap">
     <div class="pbg"></div><div class="orb1"></div><div class="orb2"></div>
 
@@ -1413,6 +1486,12 @@ function go1(id){
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
+  if(document.body.classList.contains('desktop-mode')){
+    var _sb=document.getElementById('s1-sidebar');
+    var _preLogin=['s1-splash','s1-roleselect','s1-login'];
+    if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
+    else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
+  }
   if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
@@ -3697,9 +3776,10 @@ async function wifiCheckAndAct(){
             var sub=document.getElementById('s1-att-sub');
             if(sub) sub.textContent='Checked in via WiFi ✓';
           } else {
-            wifiBanner(false);
+            wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','📶 WiFi Check-in Failed',cd.message||'Please try GPS attendance',false);
+            setTimeout(function(){ wifiBanner(false); }, 5000);
           }
-        } catch(e2){ wifiBanner(false); }
+        } catch(e2){ wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','📶 Connection Error','Check your internet and try again',false); setTimeout(function(){ wifiBanner(false); },4000); }
 
       } else if(d.checkedOut && d.minutesSinceCheckout!==null){
         // Checked out — check break window
@@ -3743,6 +3823,10 @@ async function wifiCheckAndAct(){
       if(d.alreadyCheckedIn && !d.checkedOut){
         // Checked in but not on office WiFi — prompt checkout
         wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You left office — ready to check out?',true);
+      } else if(!d.alreadyCheckedIn){
+        // Not checked in and not on office WiFi — subtle note
+        wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
+        setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
         wifiBanner(false);
       }
@@ -3978,6 +4062,7 @@ function populateStaff(s){
   set('s1-home-netpay', s.base_salary?'\u20b9'+Number(s.base_salary).toLocaleString('en-IN'):'\u2014');
   var av=document.getElementById('s1-avatar');
   if(av) av.textContent=(s.name||'S').charAt(0).toUpperCase();
+  updateSidebarUser(s);
 }
 
 /* ── POPULATE ADMIN UI ── */
@@ -4012,8 +4097,74 @@ function zLogout(){
   location.reload();
 }
 
+/* ══════════════════════════════════════
+   DESKTOP MODE — sidebar nav
+   ══════════════════════════════════════ */
+var _deskNavItems = [
+  {id:'s1-home',    label:'Home',       p:'M5.5 13V8L9 5L12.5 8V13H10.5V10.5H7.5V13Z M4 8.5L9 4L14 8.5'},
+  {id:'s1-gps',     label:'Attendance', p:'M9 3A6 6 0 1 0 9 15A6 6 0 0 0 9 3Z M9 6v3.5l2.5 2.5'},
+  {id:'s1-chat',    label:'Chat',       p:'M3 4.5C3 3.7 3.7 3 4.5 3H13.5C14.3 3 15 3.7 15 4.5V10C15 10.8 14.3 11.5 13.5 11.5H9.5L7 14V11.5H4.5C3.7 11.5 3 10.8 3 10V4.5Z'},
+  {id:'s1-tasks',   label:'Tasks',      p:'M5 5H13V14H5V5Z M7 8H11 M7 10.5H9.5'},
+  {id:'s1-leave',   label:'Leaves',     p:'M3 5h12M3 9h8M3 13h6'},
+  {id:'s1-salary',  label:'Payslip',    p:'M9 3.5V15.5 M6.5 6H11.5 M6.5 13H11.5'},
+  {id:'s1-profile', label:'Profile',    p:'M9 8.5A2.5 2.5 0 1 0 9 3.5A2.5 2.5 0 0 0 9 8.5Z M3.5 15.5C3.5 12.5 6 10 9 10C12 10 14.5 12.5 14.5 15.5'},
+];
+var _deskActive = 's1-home';
+
+function buildSidebarNav(activeId) {
+  if (activeId) _deskActive = activeId;
+  var nav = document.getElementById('sb1-nav');
+  if (!nav) return;
+  nav.innerHTML = _deskNavItems.map(function(item) {
+    var isOn = item.id === _deskActive;
+    var col = isOn ? '#0A84FF' : 'rgba(235,235,245,0.5)';
+    var bg = isOn
+      ? 'background:rgba(10,132,255,0.13);border-color:rgba(10,132,255,0.22);'
+      : 'background:transparent;border-color:transparent;';
+    return '<button onclick="go1(\''+item.id+'\')" style="width:100%;padding:9px 13px;'+bg+'border:0.5px solid;border-radius:12px;color:'+col+';font-size:13px;font-weight:'+(isOn?'500':'400')+';cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:10px;margin-bottom:3px;text-align:left;transition:background 0.15s,border-color 0.15s;">'
+      +'<svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="'+item.p+'" stroke="'+col+'" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      +item.label+'</button>';
+  }).join('');
+}
+
+function updateSidebarUser(s) {
+  var av = document.getElementById('sb1-avatar');
+  var nm = document.getElementById('sb1-name');
+  var dg = document.getElementById('sb1-desig');
+  if (av) av.textContent = (s.name||'S').charAt(0).toUpperCase();
+  if (nm) nm.textContent = s.name || 'Staff';
+  if (dg) dg.textContent = (s.designation||'Staff') + (s.brand&&s.brand.name ? ' · '+s.brand.name : '');
+}
+
+function checkDeviceMode() {
+  var isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(navigator.userAgent);
+  var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  var isNarrow = window.innerWidth < 768;
+  if (!isMobile && !isPWA && !isNarrow) {
+    document.body.classList.add('desktop-mode');
+    var s = zStaff();
+    var sb = document.getElementById('s1-sidebar');
+    if (zToken() && s && s.role !== 'admin') {
+      // Logged-in staff on desktop — show sidebar
+      if (sb) sb.style.display = '';
+      buildSidebarNav(_deskActive);
+      updateSidebarUser(s);
+    } else {
+      // Not logged in — hide sidebar (pre-login screens)
+      if (sb) sb.style.display = 'none';
+    }
+  } else {
+    document.body.classList.remove('desktop-mode');
+  }
+}
+
+// Detect on load + on resize
+document.addEventListener('DOMContentLoaded', checkDeviceMode);
+window.addEventListener('resize', checkDeviceMode);
+
 /* ── AUTO SESSION RESTORE ── */
 window.addEventListener('load',function(){
+  checkDeviceMode();
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
