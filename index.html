@@ -3773,7 +3773,8 @@ async function loadBreakSettings(){
   try{
     var r = await fetch(API_URL+'/api/attendance/break-settings',{headers:zHead()});
     var d = await r.json();
-    if(d.success) _breakSettings = d.data;
+    if(d.success && d.hasBreak) _breakSettings = d.data;
+    else _breakSettings = null; // Part Time — no break
   } catch(e){}
 }
 

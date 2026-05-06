@@ -862,6 +862,24 @@ textarea.inp{resize:none;}
                 <input class="inp" type="number" id="ps-hours-day" value="9" min="4" max="12" step="0.5">
               </div>
               <input type="hidden" id="ps-halfday-hrs" value="4">
+              <!-- FT Break Time -->
+              <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(10,132,255,0.15);">
+                <div style="font-size:10px;font-weight:600;color:#0A84FF;margin-bottom:8px;">☕ Break Time</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                  <div>
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Break Start</div>
+                    <input class="inp" type="time" id="ps-ft-break-start" value="13:00">
+                  </div>
+                  <div>
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Break End</div>
+                    <input class="inp" type="time" id="ps-ft-break-end" value="14:00">
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;padding:8px 10px;">
+                  <div style="font-size:11px;">Require Admin Approval on return</div>
+                  <div class="tg" id="tg-ft-break-approval" onclick="gpsToggle('ft-break-approval')"><div class="tg-th"></div></div>
+                </div>
+              </div>
             </div>
 
             <!-- Day Time -->
@@ -888,6 +906,24 @@ textarea.inp{resize:none;}
                 <input class="inp" type="number" id="ps-daytime-hrs" value="8" min="1" max="12" step="0.5">
               </div>
               <input type="hidden" id="ps-dt-work-days" value="26">
+              <!-- DT Break Time -->
+              <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,159,10,0.15);">
+                <div style="font-size:10px;font-weight:600;color:#FF9F0A;margin-bottom:8px;">☕ Break Time</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                  <div>
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Break Start</div>
+                    <input class="inp" type="time" id="ps-dt-break-start" value="13:00">
+                  </div>
+                  <div>
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Break End</div>
+                    <input class="inp" type="time" id="ps-dt-break-end" value="14:00">
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;padding:8px 10px;">
+                  <div style="font-size:11px;">Require Admin Approval on return</div>
+                  <div class="tg" id="tg-dt-break-approval" onclick="gpsToggle('dt-break-approval')"><div class="tg-th"></div></div>
+                </div>
+              </div>
             </div>
 
             <!-- Part Time -->
@@ -914,29 +950,6 @@ textarea.inp{resize:none;}
                 <input class="inp" type="number" id="ps-parttime-hrs" value="4" min="1" max="8" step="0.5">
               </div>
               <input type="hidden" id="ps-pt-work-days" value="26">
-            </div>
-
-            <!-- Break Time -->
-            <div style="background:rgba(255,69,58,0.06);border:0.5px solid rgba(255,69,58,0.2);border-radius:11px;padding:13px 14px;">
-              <div style="font-size:11px;font-weight:600;color:#FF453A;letter-spacing:0.3px;margin-bottom:10px;">☕ Break Time</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Break Start</div>
-                  <input class="inp" type="time" id="ps-break-start" value="13:00">
-                </div>
-                <div>
-                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Break End</div>
-                  <input class="inp" type="time" id="ps-break-end" value="14:00">
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;">
-                <div>
-                  <div style="font-size:12px;font-weight:500;">Require Admin Approval</div>
-                  <div style="font-size:10px;color:var(--muted);margin-top:2px;">Check-in after break start needs admin approval</div>
-                </div>
-                <div class="tg" id="tg-break-approval" onclick="gpsToggle('break-approval')"><div class="tg-th"></div></div>
-              </div>
-              <div style="font-size:10px;color:var(--muted);margin-top:8px;">5 min before break → staff notified. At break time → admin notified.</div>
             </div>
 
             <!-- Common -->
@@ -1970,14 +1983,17 @@ async function loadPayrollSettings(){
     set('ps-travel',      s.travel_allowance||1000);
     set('ps-medical',     s.medical_allowance||1250);
     set('ps-other-allow', s.other_allowance||0);
-    set('ps-break-start', s.break_start_time||'13:00');
-    set('ps-break-end',   s.break_end_time||'14:00');
+    set('ps-ft-break-start', s.ft_break_start||'13:00');
+    set('ps-ft-break-end',   s.ft_break_end||'14:00');
+    set('ps-dt-break-start', s.dt_break_start||'13:00');
+    set('ps-dt-break-end',   s.dt_break_end||'14:00');
     // Toggles
     var tgSet = function(id, on){ var el=document.getElementById(id); if(!el) return; if(on) el.classList.add('on'); else el.classList.remove('on'); };
-    tgSet('tg-ot',             s.ot_enabled!==0);
-    tgSet('tg-pf',             s.pf_enabled===1);
-    tgSet('tg-esi',            s.esi_enabled===1);
-    tgSet('tg-break-approval', s.break_approval_required!==0);
+    tgSet('tg-ot',              s.ot_enabled!==0);
+    tgSet('tg-pf',              s.pf_enabled===1);
+    tgSet('tg-esi',             s.esi_enabled===1);
+    tgSet('tg-ft-break-approval', s.ft_break_approval===1);
+    tgSet('tg-dt-break-approval', s.dt_break_approval===1);
     // Work week days
     var days = (s.work_week||'Mon,Tue,Wed,Thu,Fri,Sat').split(',');
     document.querySelectorAll('.ps-day-btn').forEach(function(el){
@@ -2033,9 +2049,12 @@ async function savePayrollSettings(){
     travel_allowance:      parseFloat(get('ps-travel'))||0,
     medical_allowance:     parseFloat(get('ps-medical'))||0,
     other_allowance:       parseFloat(get('ps-other-allow'))||0,
-    break_start_time:      get('ps-break-start')||'13:00',
-    break_end_time:        get('ps-break-end')||'14:00',
-    break_approval_required: document.getElementById('tg-break-approval')&&document.getElementById('tg-break-approval').classList.contains('on') ? 1 : 0
+    ft_break_start:   get('ps-ft-break-start')||'13:00',
+    ft_break_end:     get('ps-ft-break-end')||'14:00',
+    ft_break_approval: (document.getElementById('tg-ft-break-approval')||{classList:{contains:function(){return false;}}}).classList.contains('on') ? 1 : 0,
+    dt_break_start:   get('ps-dt-break-start')||'13:00',
+    dt_break_end:     get('ps-dt-break-end')||'14:00',
+    dt_break_approval: (document.getElementById('tg-dt-break-approval')||{classList:{contains:function(){return false;}}}).classList.contains('on') ? 1 : 0
   };
   try{
     var res = await fetch(API+'/api/settings/payroll', {
