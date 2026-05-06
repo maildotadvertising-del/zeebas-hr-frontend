@@ -1413,7 +1413,7 @@ function go1(id){
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); }
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
@@ -1809,6 +1809,10 @@ async function doCheckout(){
         +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:16px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:14px;padding:12px 32px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">Back to Home</button>';
       document.body.appendChild(overlay);
       setTimeout(function(){ overlay.querySelector('button').click(); }, 3000);
+    } else if(d.code==='EARLY_EXIT_PT'){
+      if(btn){ btn.disabled=false; btn.textContent='✅ Log Complete — Check Out Now'; }
+      showEarlyExitDialog(d.endTime);
+      return;
     } else if(d.code==='NO_DAILY_TASKS'){
       alert('Please log your daily tasks before checking out.');
       await loadDailyLogs();
@@ -1819,6 +1823,57 @@ async function doCheckout(){
     alert('Network error. Check connection and try again.');
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='✅ Log Complete — Check Out Now'; }
+  }
+}
+
+function showEarlyExitDialog(endTime){
+  var h=parseInt((endTime||'13:00').split(':')[0]),m=(endTime||'13:00').split(':')[1],a=h>=12?'PM':'AM';
+  h=h%12||12;
+  var timeStr=h+':'+m+' '+a;
+  var ov=document.createElement('div');
+  ov.id='early-exit-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;padding:28px;';
+  ov.innerHTML=
+    '<div style="font-size:44px;">⏰</div>'
+    +'<div style="color:#FF9F0A;font-size:20px;font-weight:600;">Early Exit</div>'
+    +'<div style="color:rgba(245,245,247,0.6);font-size:13px;text-align:center;line-height:1.6;">Your shift ends at <b style="color:#fff;">'+timeStr+'</b>.<br>Please provide a reason for leaving early.</div>'
+    +'<textarea id="early-exit-reason" style="width:100%;max-width:320px;height:90px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,159,10,0.3);border-radius:12px;padding:12px;color:#fff;font-size:13px;font-family:inherit;resize:none;outline:none;" placeholder="Reason for leaving early…"></textarea>'
+    +'<button onclick="submitEarlyExit(this)" style="width:100%;max-width:320px;background:linear-gradient(135deg,rgba(255,159,10,0.85),rgba(200,110,0,0.9));border:none;border-radius:14px;padding:13px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Submit & Check Out</button>'
+    +'<button onclick="document.getElementById(\'early-exit-overlay\').remove()" style="background:transparent;border:none;color:rgba(245,245,247,0.35);font-size:12px;cursor:pointer;font-family:inherit;padding:4px;">Cancel</button>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ var t=document.getElementById('early-exit-reason'); if(t) t.focus(); },300);
+}
+
+async function submitEarlyExit(btn){
+  var reason=(document.getElementById('early-exit-reason')||{}).value||'';
+  if(!reason.trim()){ alert('Please provide a reason.'); return; }
+  btn.disabled=true; btn.textContent='Submitting…';
+  var token=localStorage.getItem('zhr_token')||'';
+  try{
+    var r=await fetch(API_URL+'/api/attendance/early-exit',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({reason:reason.trim()})
+    });
+    var d=await r.json();
+    if(d.success){
+      var ov=document.getElementById('early-exit-overlay');
+      if(ov) ov.remove();
+      var overlay=document.createElement('div');
+      overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px;padding:24px;';
+      overlay.innerHTML='<div style="font-size:52px;">👋</div>'
+        +'<div style="color:#FF9F0A;font-size:20px;font-weight:600;">Early Exit Noted</div>'
+        +'<div style="color:rgba(245,245,247,0.55);font-size:13px;text-align:center;line-height:1.6;">Your early exit has been recorded.<br>Admin has been notified.</div>'
+        +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:12px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:14px;padding:12px 32px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">Back to Home</button>';
+      document.body.appendChild(overlay);
+      setTimeout(function(){ overlay.querySelector('button').click(); },3000);
+    } else {
+      alert(d.message||'Failed. Try again.');
+      btn.disabled=false; btn.textContent='Submit & Check Out';
+    }
+  } catch(e){
+    alert('Network error. Try again.');
+    btn.disabled=false; btn.textContent='Submit & Check Out';
   }
 }
 
@@ -3597,6 +3652,14 @@ function wifiBanner(show, color, iconColor, title, sub, showCheckoutBtn){
     btn.style.color=iconColor;
     btn.style.border='0.5px solid '+iconColor.replace('1)','0.35)');
   }
+}
+
+async function triggerPtAutoCheckout(){
+  var s={}; try{s=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+  if(s.employment_type!=='part_time') return;
+  try{
+    await fetch(API_URL+'/api/attendance/pt-auto-checkout',{method:'POST',headers:zHead()});
+  } catch(e){}
 }
 
 async function wifiCheckAndAct(){

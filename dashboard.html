@@ -507,6 +507,16 @@ textarea.inp{resize:none;}
         <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No pending late return alerts</div>
       </div>
     </div>
+    <!-- PT Early Exit Notifications -->
+    <div class="sec g" style="margin-bottom:14px;">
+      <div class="sh">
+        <span class="st">⏰ PT Early Exits</span>
+        <span id="early-exits-count" class="po" style="font-size:11px;padding:3px 9px;background:rgba(255,159,10,0.15);color:#FF9F0A;border-color:rgba(255,159,10,0.3);"></span>
+      </div>
+      <div id="early-exits-list">
+        <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No early exit requests</div>
+      </div>
+    </div>
     <!-- Leave Requests -->
     <div class="sec g">
       <div class="sh">
@@ -4807,6 +4817,7 @@ async function loadApprovals(){
     var lateRows   = attRows.filter(function(r){ return r.status==='late_pending'; });
     var onsiteRows = attRows.filter(function(r){ return r.status==='onsite_pending'; });
     var lateReturnRows = (attD.late_returns||[]);
+    var earlyExitRows = (attD.early_exits||[]);
 
     // Late
     var lateCnt = document.getElementById('late-approval-count');
@@ -4842,6 +4853,33 @@ async function loadApprovals(){
       }).join('') : empty;
     }
 
+    // PT Early Exits
+    var eeEl = document.getElementById('early-exits-list');
+    var eeCnt = document.getElementById('early-exits-count');
+    if(eeCnt) eeCnt.textContent = earlyExitRows.length ? earlyExitRows.length+' pending' : '0';
+    if(eeEl){
+      var eeHtml = earlyExitRows.length
+        ? earlyExitRows.map(function(e){
+            var init=(e.staff_name||'?').charAt(0).toUpperCase();
+            var av=e.photo_data||(e.photo_url?API+e.photo_url:null);
+            var avEl=av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;">'
+              :'<div style="width:32px;height:32px;border-radius:9px;background:rgba(255,159,10,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
+            var exitTime=e.early_exit_at?new Date(e.early_exit_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—';
+            return '<div style="background:rgba(255,159,10,0.06);border:0.5px solid rgba(255,159,10,0.18);border-radius:11px;padding:11px 13px;margin-bottom:8px;">'
+              +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'+avEl
+              +'<div style="flex:1;"><div style="font-size:13px;font-weight:500;">'+e.staff_name+'</div>'
+              +'<div style="font-size:10px;color:var(--muted);">'+(e.designation||'')+(e.brand_name?' · '+e.brand_name:'')+'</div></div>'
+              +'<div style="font-size:10px;color:#FF9F0A;font-weight:500;">'+exitTime+'</div>'
+              +'</div>'
+              +'<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;margin-bottom:9px;font-size:12px;color:rgba(245,245,247,0.7);font-style:italic;">"'+e.early_exit_reason+'"</div>'
+              +'<div style="display:flex;justify-content:flex-end;">'
+              +'<button onclick="dismissEarlyExit('+e.id+',this)" style="background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.25);border-radius:8px;color:#FF9F0A;font-size:11px;padding:5px 14px;cursor:pointer;">✓ Acknowledge</button>'
+              +'</div></div>';
+          }).join('')
+        : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:14px;opacity:0.5;">No early exit requests</div>';
+      eeEl.innerHTML = eeHtml;
+    }
+
     // Leave
     var leaveRes = await fetch(API+'/api/leave/pending', {headers:zHdr()});
     var leaveD   = await leaveRes.json();
@@ -4850,7 +4888,7 @@ async function loadApprovals(){
     if(leaveCnt) leaveCnt.textContent = leaveRows.length ? leaveRows.length+' pending' : '0 pending';
 
     // Total badge
-    var total = lateRows.length + onsiteRows.length + leaveRows.length + lateReturnRows.length;
+    var total = lateRows.length + onsiteRows.length + leaveRows.length + lateReturnRows.length + earlyExitRows.length;
     if(badge){ if(total){ badge.textContent=total; badge.style.display=''; } else { badge.style.display='none'; } }
 
     if(leaveEl){
@@ -4892,6 +4930,14 @@ async function dismissLateReturn(id, btn){
     if(d.success){ showToast('✅ Late return acknowledged'); loadApprovals(); }
     else { showToast('❌ '+(d.message||'Failed')); btn.textContent='✓ OK'; btn.disabled=false; }
   } catch(e){ showToast('❌ Network error'); btn.textContent='✓ OK'; btn.disabled=false; }
+}
+
+async function dismissEarlyExit(id, btn){
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  try{
+    await fetch(API+'/api/attendance/early-exit/'+id+'/dismiss',{method:'PUT',headers:zHdr()});
+    showToast('✅ Acknowledged'); loadApprovals();
+  } catch(e){ showToast('❌ Error'); }
 }
 
 async function approveLate(id, action){
