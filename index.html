@@ -3815,8 +3815,9 @@ function listenBreakApproval(){
   }
 }
 
-var _wifiOffSince = null;   // tracks when WiFi was first lost (ms timestamp)
-var _wifiPollTimer = null;  // setInterval handle for home-screen poller
+var _wifiOffSince = null;       // tracks when WiFi was first lost (ms timestamp)
+var _wifiPollTimer = null;      // setInterval handle for home-screen poller
+var _breakCheckoutCalled = false; // true after break-checkout API call made
 
 function startWifiPoller(){
   stopWifiPoller();
@@ -3840,7 +3841,7 @@ async function wifiCheckAndAct(){
     var bw=d.breakWindowMinutes||40;
 
     if(d.isOffice){
-      // ── ON OFFICE WIFI ── reset grace timer
+      // ── ON OFFICE WIFI ── reset timers
       _wifiOffSince = null;
       if(!d.alreadyCheckedIn){
         // Not checked in → auto check-in
@@ -3873,17 +3874,34 @@ async function wifiCheckAndAct(){
         } catch(e2){ wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','📶 Connection Error','Check your internet and try again',false); setTimeout(function(){ wifiBanner(false); },4000); }
 
       } else if(d.checkedOut && d.minutesSinceCheckout!==null){
-        // Checked out — check break window
-        if(d.minutesSinceCheckout < bw){
-          // Within break window → auto resume
-          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Back in Office — Resuming…','Break: '+d.minutesSinceCheckout+' min',false);
+        // Checked out — break return or manual checkout return
+        if(d.isBreakCheckout){
+          // ── Break return via new /break-return endpoint ──
+          _breakCheckoutCalled = false; // reset flag
+          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','☕ Back from Break — Checking in…','Please wait…',false);
+          try{
+            var br2=await fetch(API_URL+'/api/attendance/break-return',{method:'POST',headers:zHead()});
+            var bd2=await br2.json();
+            if(bd2.success){
+              if(bd2.break_excess_mins>0){
+                wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+bd2.break_excess_mins+' min','₹'+bd2.break_excess_deduction+' deducted from salary',false);
+                setTimeout(function(){ wifiBanner(false); },7000);
+              } else {
+                wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','☕ Break Ended ✓','You\'re back on time — no deduction',false);
+                setTimeout(function(){ wifiBanner(false); },5000);
+              }
+            } else { wifiBanner(false); }
+          } catch(e3){ wifiBanner(false); }
+        } else if(d.minutesSinceCheckout < bw){
+          // Manual checkout within break window → auto resume
+          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Back in Office — Resuming…','Out for '+d.minutesSinceCheckout+' min',false);
           try{
             var br=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'break'})});
             var bd=await br.json();
             if(bd.success){
               wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Break Ended — Back at Work ✓','You were out for '+d.minutesSinceCheckout+' min',false);
             } else { wifiBanner(false); }
-          } catch(e3){ wifiBanner(false); }
+          } catch(e3b){ wifiBanner(false); }
         } else {
           // Beyond break window → late return → notify admin
           wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Late Return — Notifying Admin…','Out for '+d.minutesSinceCheckout+' min',false);
@@ -3925,12 +3943,20 @@ async function wifiCheckAndAct(){
           wifiBanner(true,'rgba(255,255,255,0.05)','rgba(235,235,245,0.4)','📶 WiFi Disconnected','Reconnect within '+minsLeft+' min to resume',false);
 
         } else if(breakLimitMins > 0 && offMs < breakLimitMs){
-          // Grace expired, within break limit → show break countdown
+          // Grace expired, within break limit → trigger break-checkout (once) + show countdown
+          if(!_breakCheckoutCalled){
+            _breakCheckoutCalled = true;
+            fetch(API_URL+'/api/attendance/break-checkout',{method:'POST',headers:zHead()}).catch(function(){});
+          }
           var breakLeft = Math.ceil((breakLimitMs - offMs) / 60000);
           wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)','☕ On Break','Back in '+breakLeft+' min to avoid deduction',false);
 
         } else if(breakLimitMins > 0 && offMs >= breakLimitMs){
-          // Over break limit → show overtime warning
+          // Over break limit → trigger break-checkout (once) + show overtime warning
+          if(!_breakCheckoutCalled){
+            _breakCheckoutCalled = true;
+            fetch(API_URL+'/api/attendance/break-checkout',{method:'POST',headers:zHead()}).catch(function(){});
+          }
           var overMins = Math.floor((offMs - breakLimitMs) / 60000);
           wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+overMins+' min extra','Salary deduction will apply on return',true);
 
