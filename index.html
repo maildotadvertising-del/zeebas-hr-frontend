@@ -1680,6 +1680,12 @@ async function markAttendance(){
         stEl.style.background='rgba(191,95,255,0.18)';
         stEl.style.color='#BF5FFF';
         stEl.style.borderColor='rgba(191,95,255,0.3)';
+      } else if(st==='break_return_pending'){
+        stEl.textContent='⏳ Break Return — Pending Approval';
+        stEl.style.background='rgba(255,69,58,0.18)';
+        stEl.style.color='#FF453A';
+        stEl.style.borderColor='rgba(255,69,58,0.3)';
+        setTimeout(showBreakPendingBanner, 800);
       } else {
         stEl.textContent='Present ✓';
         stEl.style.background='rgba(48,209,88,0.18)';
@@ -3601,6 +3607,9 @@ async function staffLogin(){
         populateStaff(d.staff);
         go1('s1-home');
         fetchMyTasks(d.staff.id);
+        requestNotifPermission();
+        startBreakPoller();
+        listenBreakApproval();
       }
     } else {
       loginErr(d.message||'Wrong phone or password!');
@@ -3750,6 +3759,98 @@ async function triggerPtAutoCheckout(){
   try{
     await fetch(API_URL+'/api/attendance/auto-checkout',{method:'POST',headers:zHead()});
   } catch(e){}
+}
+
+/* ══════════════════════════════════════
+   BREAK TIME NOTIFICATIONS
+   ══════════════════════════════════════ */
+var _breakSettings = null;
+var _breakNotified5 = false;
+var _breakNotifiedHit = false;
+var _breakPollerInterval = null;
+
+async function loadBreakSettings(){
+  try{
+    var r = await fetch(API_URL+'/api/attendance/break-settings',{headers:zHead()});
+    var d = await r.json();
+    if(d.success) _breakSettings = d.data;
+  } catch(e){}
+}
+
+function requestNotifPermission(){
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+}
+
+function sendNotif(title, body){
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification(title, { body: body, icon: '/icon-192.png', badge: '/icon-192.png' });
+  }
+}
+
+function showBreakBanner(type){
+  var b = document.getElementById('wifi-banner');
+  if(!b) return;
+  if(type==='warn'){
+    wifiBanner(true,'rgba(255,159,10,0.12)','rgba(255,159,10,1)','☕ Break in 5 minutes',
+      'Your break starts at '+(_breakSettings&&_breakSettings.break_start_time||'13:00'),false);
+    sendNotif('☕ Break in 5 minutes', 'Your lunch break starts soon!');
+  } else if(type==='hit'){
+    wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','☕ Break Time!',
+      'Lunch break started — see you back at '+(_breakSettings&&_breakSettings.break_end_time||'14:00'),false);
+    sendNotif('☕ Break Time!', 'Lunch break has started. Back by '+(_breakSettings&&_breakSettings.break_end_time||'14:00'));
+  }
+}
+
+function checkBreakTime(){
+  if(!_breakSettings || !_breakSettings.break_start_time) return;
+  var now = new Date();
+  var [bh, bm] = (_breakSettings.break_start_time||'13:00').split(':').map(Number);
+  var breakStart = new Date(); breakStart.setHours(bh, bm, 0, 0);
+  var diff = (breakStart - now) / 60000; // minutes until break
+
+  if(diff <= 5 && diff > 0 && !_breakNotified5){
+    _breakNotified5 = true;
+    showBreakBanner('warn');
+    setTimeout(function(){ wifiBanner(false); }, 8000);
+  }
+  if(diff <= 0 && !_breakNotifiedHit){
+    _breakNotifiedHit = true;
+    showBreakBanner('hit');
+    setTimeout(function(){ wifiBanner(false); }, 8000);
+  }
+  // Reset flags next day
+  var [eh, em] = (_breakSettings.break_end_time||'14:00').split(':').map(Number);
+  var breakEnd = new Date(); breakEnd.setHours(eh, em, 0, 0);
+  if(now > breakEnd){ _breakNotified5 = false; _breakNotifiedHit = false; }
+}
+
+function startBreakPoller(){
+  if(_breakPollerInterval) clearInterval(_breakPollerInterval);
+  loadBreakSettings().then(function(){
+    // Reset flags for today
+    _breakNotified5 = false; _breakNotifiedHit = false;
+    checkBreakTime(); // immediate check
+    _breakPollerInterval = setInterval(checkBreakTime, 30000); // every 30s
+  });
+}
+
+// Show break-return pending state on home screen
+function showBreakPendingBanner(){
+  wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⏳ Check-in Pending Approval',
+    'Admin will approve your post-break check-in shortly',false);
+}
+
+// Listen for admin approval via socket
+function listenBreakApproval(){
+  if(typeof socket !== 'undefined' && socket){
+    socket.on('break-return-approved', function(data){
+      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Check-in Approved!',
+        'Admin approved your attendance — you\'re all set',false);
+      setTimeout(function(){ wifiBanner(false); }, 5000);
+    });
+  }
 }
 
 async function wifiCheckAndAct(){
@@ -4179,7 +4280,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); }
+    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); }
   }
 });
 </script>
