@@ -867,7 +867,7 @@ textarea.inp{resize:none;}
                 <div style="font-size:10px;font-weight:600;color:#0A84FF;margin-bottom:8px;">☕ Break Duration</div>
                 <div style="margin-bottom:8px;">
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Minutes</div>
-                  <input class="inp" type="number" id="ps-ft-break-mins" value="60" min="10" max="120" step="5" placeholder="60">
+                  <input class="inp" type="number" id="ps-ft-break-mins" value="60" min="10" max="120" step="5" placeholder="60" oninput="psFtCalcTime()">
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;padding:8px 10px;">
                   <div style="font-size:11px;">Require Admin Approval on return</div>
@@ -905,7 +905,7 @@ textarea.inp{resize:none;}
                 <div style="font-size:10px;font-weight:600;color:#FF9F0A;margin-bottom:8px;">☕ Break Duration</div>
                 <div style="margin-bottom:8px;">
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Minutes</div>
-                  <input class="inp" type="number" id="ps-dt-break-mins" value="60" min="10" max="120" step="5" placeholder="60">
+                  <input class="inp" type="number" id="ps-dt-break-mins" value="60" min="10" max="120" step="5" placeholder="60" oninput="psDtCalcTime()">
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;padding:8px 10px;">
                   <div style="font-size:11px;">Require Admin Approval on return</div>
@@ -1903,7 +1903,13 @@ function psCalcTimeDiff(startId, endId){
 function psFtCalcTime(){
   var t=psCalcTimeDiff('ps-start-time','ps-end-time');
   var badge=document.getElementById('ps-ft-daytime');
-  if(badge&&t){ badge.textContent=t.h+'h '+(t.m?t.m+'m':'0m'); }
+  var breakMins=parseInt((document.getElementById('ps-ft-break-mins')||{}).value)||0;
+  if(badge&&t){
+    var totalMins=t.h*60+t.m;
+    var effMins=Math.max(0,totalMins-breakMins);
+    var effH=Math.floor(effMins/60), effM=effMins%60;
+    badge.textContent=effH+'h '+(effM?effM+'m':'0m');
+  }
   var hrs=document.getElementById('ps-hours-day');
   if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
@@ -1917,7 +1923,13 @@ function psPtCalcTime(){
 function psDtCalcTime(){
   var t=psCalcTimeDiff('ps-dt-start-time','ps-dt-end-time');
   var badge=document.getElementById('ps-dt-daytime');
-  if(badge&&t){ badge.textContent=t.h+'h '+(t.m?t.m+'m':'0m'); }
+  var breakMins=parseInt((document.getElementById('ps-dt-break-mins')||{}).value)||0;
+  if(badge&&t){
+    var totalMins=t.h*60+t.m;
+    var effMins=Math.max(0,totalMins-breakMins);
+    var effH=Math.floor(effMins/60), effM=effMins%60;
+    badge.textContent=effH+'h '+(effM?effM+'m':'0m');
+  }
   var hrs=document.getElementById('ps-daytime-hrs');
   if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
 }
