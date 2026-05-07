@@ -1,4 +1,4 @@
-<!-- v20260507 -->
+<!-- v20260507b -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -777,9 +777,9 @@ body.desktop-mode #s1-sidebar {
       <div class="scroll" style="padding:16px 14px 20px;">
 
         <!-- Avatar + basic info -->
-        <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 24px;gap:12px;">
+        <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 20px;gap:10px;">
           <div style="position:relative;cursor:pointer;" onclick="document.getElementById('prof-photo-input').click()">
-            <div id="prof-avatar" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#fff;overflow:hidden;border:2.5px solid rgba(255,255,255,0.12);"></div>
+            <div id="prof-avatar" style="width:82px;height:82px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#fff;overflow:hidden;border:2.5px solid rgba(255,255,255,0.12);"></div>
             <div style="position:absolute;bottom:2px;right:2px;width:24px;height:24px;background:#0A84FF;border-radius:50%;border:2px solid #040408;display:flex;align-items:center;justify-content:center;">
               <svg width="11" height="11" viewBox="0 0 14 13" fill="none"><path d="M5.5 1.5h3l1.5 2H12a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7a1 1 0 011-1h2L5.5 1.5z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/><circle cx="7" cy="7.5" r="2" stroke="#fff" stroke-width="1.1"/></svg>
             </div>
@@ -789,38 +789,70 @@ body.desktop-mode #s1-sidebar {
             <div id="prof-name-display" style="color:#fff;font-size:18px;font-weight:600;"></div>
             <div id="prof-desig-display" style="color:rgba(245,245,247,0.45);font-size:12px;margin-top:3px;"></div>
           </div>
+          <!-- Photo save button (appears after selecting new photo) -->
+          <button id="prof-save-photo-btn" onclick="profSavePhoto()" style="display:none;padding:9px 22px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:20px;color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">📷 Save Photo</button>
         </div>
 
         <!-- Details card -->
         <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;margin-bottom:14px;">
+          <!-- Employee ID — read only -->
           <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Employee ID</div>
-            <div id="prof-empid" style="color:#fff;font-size:13px;font-family:'DM Mono',monospace;font-weight:400;"></div>
+            <div id="prof-empid" style="color:#fff;font-size:13px;font-family:'DM Mono',monospace;font-weight:400;flex:1;"></div>
           </div>
+          <!-- Brand — read only -->
           <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Brand</div>
-            <div id="prof-brand" style="color:#fff;font-size:13px;"></div>
+            <div id="prof-brand" style="color:#fff;font-size:13px;flex:1;"></div>
           </div>
+          <!-- Role — read only -->
           <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Role</div>
-            <div id="prof-role" style="color:#fff;font-size:13px;"></div>
+            <div id="prof-role" style="color:#fff;font-size:13px;flex:1;"></div>
           </div>
-          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+
+          <!-- Phone — editable -->
+          <div id="prof-row-phone" style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;min-height:42px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Phone</div>
-            <div id="prof-phone" style="color:#fff;font-size:13px;"></div>
+            <div id="prof-phone" style="color:#fff;font-size:13px;flex:1;"></div>
+            <div id="prof-phone-edit-area" style="display:none;flex:1;align-items:center;gap:6px;">
+              <input id="prof-phone-input" type="tel" placeholder="Phone number" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:13px;padding:6px 10px;outline:none;font-family:inherit;min-width:0;">
+              <button onclick="profSaveField('phone')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✓</button>
+              <button onclick="profCancelEdit('phone')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;">✕</button>
+            </div>
+            <button id="prof-phone-edit-btn" onclick="profEditField('phone')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            </button>
           </div>
-          <div style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;">
+
+          <!-- Email — editable -->
+          <div id="prof-row-email" style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;min-height:42px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Email</div>
-            <div id="prof-email" style="color:#fff;font-size:13px;word-break:break-all;"></div>
+            <div id="prof-email" style="color:#fff;font-size:13px;flex:1;word-break:break-all;"></div>
+            <div id="prof-email-edit-area" style="display:none;flex:1;align-items:center;gap:6px;">
+              <input id="prof-email-input" type="email" placeholder="Email address" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:13px;padding:6px 10px;outline:none;font-family:inherit;min-width:0;">
+              <button onclick="profSaveField('email')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✓</button>
+              <button onclick="profCancelEdit('email')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;">✕</button>
+            </div>
+            <button id="prof-email-edit-btn" onclick="profEditField('email')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            </button>
           </div>
-          <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+
+          <!-- Date of Birth — editable -->
+          <div id="prof-row-dob" style="padding:10px 14px;display:flex;align-items:center;gap:10px;min-height:42px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Date of Birth</div>
-            <div id="prof-dob" style="color:#fff;font-size:13px;"></div>
+            <div id="prof-dob" style="color:#fff;font-size:13px;flex:1;"></div>
+            <div id="prof-dob-edit-area" style="display:none;flex:1;align-items:center;gap:6px;">
+              <input id="prof-dob-input" type="date" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:12px;padding:6px 8px;outline:none;font-family:inherit;min-width:0;color-scheme:dark;">
+              <button onclick="profSaveField('dob')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✓</button>
+              <button onclick="profCancelEdit('dob')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;">✕</button>
+            </div>
+            <button id="prof-dob-edit-btn" onclick="profEditField('dob')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            </button>
           </div>
         </div>
-
-        <!-- Photo save button (hidden until photo selected) -->
-        <button id="prof-save-photo-btn" onclick="profSavePhoto()" style="display:none;width:100%;padding:13px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:14px;">📷 Save Profile Photo</button>
 
         <!-- Logout -->
         <button onclick="staffLogout()" style="width:100%;padding:13px;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.25);border-radius:14px;color:#FF453A;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -1804,6 +1836,109 @@ async function profSavePhoto(){
     } else { showToast1('❌ '+(d.message||'Failed')); }
   }catch(e){ showToast1('❌ Network error'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='📷 Save Profile Photo'; } }
+}
+
+// ── Inline profile field edit ──
+var _profFieldConfig = {
+  phone: { inputId:'prof-phone-input', displayId:'prof-phone', areaId:'prof-phone-edit-area', btnId:'prof-phone-edit-btn', apiKey:'phone' },
+  email: { inputId:'prof-email-input', displayId:'prof-email', areaId:'prof-email-edit-area', btnId:'prof-email-edit-btn', apiKey:'email' },
+  dob:   { inputId:'prof-dob-input',   displayId:'prof-dob',   areaId:'prof-dob-edit-area',   btnId:'prof-dob-edit-btn',   apiKey:'dob' }
+};
+
+function profEditField(field){
+  var cfg = _profFieldConfig[field]; if(!cfg) return;
+  var s = zStaff() || {};
+  // Pre-fill input with current value
+  var inp = document.getElementById(cfg.inputId);
+  if(inp){
+    if(field==='dob' && s.dob){
+      // Convert to YYYY-MM-DD for date input
+      var dobRaw = s.dob;
+      if(dobRaw.length > 10) dobRaw = dobRaw.substring(0,10);
+      inp.value = dobRaw;
+    } else {
+      inp.value = s[cfg.apiKey] || s.mobile || '';
+      if(field==='phone') inp.value = s.phone || s.mobile || '';
+    }
+  }
+  // Show edit area, hide display + pencil
+  var area = document.getElementById(cfg.areaId);
+  var display = document.getElementById(cfg.displayId);
+  var btn = document.getElementById(cfg.btnId);
+  if(area){ area.style.display='flex'; }
+  if(display){ display.style.display='none'; }
+  if(btn){ btn.style.display='none'; }
+  if(inp) setTimeout(function(){ inp.focus(); }, 50);
+}
+
+function profCancelEdit(field){
+  var cfg = _profFieldConfig[field]; if(!cfg) return;
+  var area = document.getElementById(cfg.areaId);
+  var display = document.getElementById(cfg.displayId);
+  var btn = document.getElementById(cfg.btnId);
+  if(area){ area.style.display='none'; }
+  if(display){ display.style.display=''; }
+  if(btn){ btn.style.display=''; }
+}
+
+async function profSaveField(field){
+  var cfg = _profFieldConfig[field]; if(!cfg) return;
+  var s = zStaff() || {};
+  var inp = document.getElementById(cfg.inputId);
+  var val = (inp ? inp.value : '').trim();
+  if(!val){ inp.style.borderColor='rgba(255,69,58,0.6)'; return; }
+  inp.style.borderColor='rgba(10,132,255,0.45)';
+  // Disable buttons during save
+  var area = document.getElementById(cfg.areaId);
+  var btns = area ? area.querySelectorAll('button') : [];
+  btns.forEach(function(b){ b.disabled=true; });
+  try{
+    // Send full staff payload so existing PUT endpoint doesn't null other fields
+    var body = {
+      name: s.name, emp_id: s.emp_id||s.employee_id,
+      designation: s.designation, brand_id: s.brand_id,
+      employment_type: s.employment_type||'full_time',
+      phone: s.phone||s.mobile, email: s.email, dob: s.dob,
+      joining_date: s.joining_date, address: s.address,
+      base_salary: s.base_salary||0, salary_type: s.salary_type||'monthly',
+      daily_rate: s.daily_rate||0, allowance_enabled: s.allowance_enabled||0
+    };
+    // Override the edited field
+    body[cfg.apiKey] = val;
+    if(field==='phone') body.phone = val;
+
+    var r = await fetch(API_URL+'/api/staff/'+s.id, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json', Authorization:'Bearer '+zToken()},
+      body: JSON.stringify(body)
+    });
+    var d = await r.json();
+    if(d.success){
+      // Update localStorage
+      var updated = Object.assign({}, s);
+      updated[cfg.apiKey] = val;
+      if(field==='phone') updated.mobile = val;
+      localStorage.setItem('zhr_staff', JSON.stringify(updated));
+      // Refresh display
+      var display = document.getElementById(cfg.displayId);
+      if(display){
+        if(field==='dob'){
+          var dDate = new Date(val);
+          display.textContent = isNaN(dDate) ? val : dDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+        } else {
+          display.textContent = val || '—';
+        }
+      }
+      profCancelEdit(field);
+      showToast1('✅ '+(field==='dob'?'Date of Birth':field.charAt(0).toUpperCase()+field.slice(1))+' updated!');
+    } else {
+      showToast1('❌ '+(d.message||'Update failed'));
+      btns.forEach(function(b){ b.disabled=false; });
+    }
+  } catch(e){
+    showToast1('❌ Network error');
+    btns.forEach(function(b){ b.disabled=false; });
+  }
 }
 
 function showToast1(msg){
