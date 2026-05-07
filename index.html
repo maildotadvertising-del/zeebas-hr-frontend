@@ -1,4 +1,4 @@
-<!-- v20260507b -->
+<!-- v20260507c -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -551,6 +551,10 @@ body.desktop-mode #s1-sidebar {
         <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
         <span id="m-ctx-pin" onclick="pinMsg1()" style="display:none;font-size:20px;cursor:pointer;white-space:nowrap;" title="Pin">📌</span>
         <span id="m-ctx-vreply" onclick="voiceReply1()" style="display:none;font-size:20px;cursor:pointer;white-space:nowrap;" title="Voice Reply">🎤</span>
+        <div id="m-ctx-delete-wrap" style="display:none;">
+          <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
+          <span onclick="deleteMsg1()" style="font-size:19px;cursor:pointer;padding:2px 3px;" title="Delete">🗑️</span>
+        </div>
       </div>
 
       <div id="n1-chat" class="bnav"></div>
@@ -2171,6 +2175,7 @@ function connectStaffSocket(){
     if(sub) sub.textContent = 'Zeebas Cluster · ' + n + ' online';
   });
   staffSocket.on('message-pinned', function(){ loadStaff1Pinned(); });
+  staffSocket.on('message-deleted', function(data){ removeChatMsg1(data.message_id); });
   staffSocket.on('reaction-update', function(data){
     var row = document.getElementById('rrow-'+data.message_id); if(!row) return;
     row.innerHTML = '';
@@ -2322,8 +2327,13 @@ function appendStaffMsg1(msg, doScroll){
         // Show/hide context-sensitive options
         var pinOpt = document.getElementById('m-ctx-pin');
         var vrOpt  = document.getElementById('m-ctx-vreply');
+        var delWrap = document.getElementById('m-ctx-delete-wrap');
         if(pinOpt) pinOpt.style.display = 'inline';
         if(vrOpt)  vrOpt.style.display  = !isMe ? 'inline' : 'none';
+        // Show delete for own messages or admin/editor
+        var myRole = (zStaff()||{}).role||'';
+        var canDel = isMe || myRole==='admin' || myRole==='editor';
+        if(delWrap) delWrap.style.display = canDel ? 'contents' : 'none';
         var rp = document.getElementById('react-picker'); if(!rp) return;
         var rect = bubble.getBoundingClientRect();
         var top = rect.top - 68; if(top < 10) top = rect.bottom + 8;
@@ -3416,6 +3426,35 @@ function voiceReply1(){
   setReply1(_reactMsgId1, _reactMsgName1||'', _reactMsgText1||'');
   // Start recording — user taps mic button to stop
   grpMicStart(null);
+}
+
+async function deleteMsg1(){
+  var rp = document.getElementById('react-picker'); if(rp) rp.style.display='none';
+  if(!_reactMsgId1 || String(_reactMsgId1).indexOf('loc-')===0){
+    showToast1('⚠️ Cannot delete this message'); return;
+  }
+  if(!confirm('This message delete ஆகும். Sure?')) return;
+  try{
+    var r = await fetch(API_URL+'/api/chat/messages/'+_reactMsgId1, {
+      method:'DELETE', headers:zHead()
+    });
+    var d = await r.json();
+    if(d.success){
+      removeChatMsg1(_reactMsgId1);
+      showToast1('🗑️ Message deleted');
+    } else {
+      showToast1('❌ '+(d.message||'Delete failed'));
+    }
+  } catch(e){ showToast1('❌ Network error'); }
+}
+
+function removeChatMsg1(msgId){
+  var wrap = document.querySelector('.msg-wrap[data-msgid="'+msgId+'"]');
+  if(wrap){
+    wrap.style.transition='opacity 0.25s';
+    wrap.style.opacity='0';
+    setTimeout(function(){ wrap.remove(); }, 250);
+  }
 }
 
 function toggleReact1(chip, emoji, msgId){
