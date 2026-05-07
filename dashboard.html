@@ -860,7 +860,8 @@ textarea.inp{resize:none;}
               </div>
               <div>
                 <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                <input class="inp" type="number" id="ps-hours-day" value="9" min="4" max="12" step="0.5">
+                <div class="inp" id="ps-hours-day-display" style="color:#0A84FF;font-weight:600;font-size:13px;cursor:default;">9h 0m</div>
+                <input type="hidden" id="ps-hours-day" value="9">
               </div>
               <input type="hidden" id="ps-halfday-hrs" value="4">
               <!-- FT Break Time -->
@@ -898,7 +899,8 @@ textarea.inp{resize:none;}
               </div>
               <div>
                 <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                <input class="inp" type="number" id="ps-daytime-hrs" value="8" min="1" max="12" step="0.5">
+                <div class="inp" id="ps-daytime-hrs-display" style="color:#FF9F0A;font-weight:600;font-size:13px;cursor:default;">8h 0m</div>
+                <input type="hidden" id="ps-daytime-hrs" value="8">
               </div>
               <input type="hidden" id="ps-dt-work-days" value="26">
               <!-- DT Break Time -->
@@ -1909,11 +1911,14 @@ function psFtCalcTime(){
     var totalMins=t.h*60+t.m;
     var effMins=Math.max(0,totalMins-breakMins);
     var effH=Math.floor(effMins/60), effM=effMins%60;
-    // Badge = effective working hours
-    if(badge) badge.textContent=effH+'h '+(effM?effM+'m':'0m');
-    // Hours/Day field = effective hours (total minus break)
+    var label=effH+'h '+(effM?effM+'m':'0m');
+    if(badge) badge.textContent=label;
+    // Display div shows formatted "Xh Ym"
+    var disp=document.getElementById('ps-hours-day-display');
+    if(disp) disp.textContent=label;
+    // Hidden input stores decimal for save
     var hrs=document.getElementById('ps-hours-day');
-    if(hrs){ hrs.value=Math.round(effMins/60*10)/10; }
+    if(hrs) hrs.value=(effH + effM/60).toFixed(2);
   }
 }
 function psPtCalcTime(){
@@ -1921,7 +1926,7 @@ function psPtCalcTime(){
   var badge=document.getElementById('ps-pt-daytime');
   if(badge&&t){ badge.textContent=t.h+'h '+(t.m?t.m+'m':'0m'); }
   var hrs=document.getElementById('ps-parttime-hrs');
-  if(hrs&&t){ var dec=Math.round((t.h*60+t.m)/60*10)/10; hrs.value=dec; }
+  if(hrs&&t){ hrs.value=(t.h+t.m/60).toFixed(2); }
 }
 function psDtCalcTime(){
   var t=psCalcTimeDiff('ps-dt-start-time','ps-dt-end-time');
@@ -1931,11 +1936,14 @@ function psDtCalcTime(){
     var totalMins=t.h*60+t.m;
     var effMins=Math.max(0,totalMins-breakMins);
     var effH=Math.floor(effMins/60), effM=effMins%60;
-    // Badge = effective working hours
-    if(badge) badge.textContent=effH+'h '+(effM?effM+'m':'0m');
-    // Hours/Day field = effective hours (total minus break)
+    var label=effH+'h '+(effM?effM+'m':'0m');
+    if(badge) badge.textContent=label;
+    // Display div shows formatted "Xh Ym"
+    var disp=document.getElementById('ps-daytime-hrs-display');
+    if(disp) disp.textContent=label;
+    // Hidden input stores decimal for save
     var hrs=document.getElementById('ps-daytime-hrs');
-    if(hrs){ hrs.value=Math.round(effMins/60*10)/10; }
+    if(hrs) hrs.value=(effH + effM/60).toFixed(2);
   }
 }
 
@@ -1969,7 +1977,7 @@ async function loadPayrollSettings(){
     set('ps-work-days',     s.working_days_month||26);
     set('ps-pt-work-days',  s.working_days_month||26);
     set('ps-dt-work-days',  s.working_days_month||26);
-    set('ps-hours-day',     s.hours_per_day||9);
+    set('ps-hours-day', s.hours_per_day||9); // hidden input — overwritten by psFtCalcTime below
     set('ps-grace',         s.late_grace_minutes||15);
     set('ps-late-per-min',  s.late_deduction_per_min||2);
     set('ps-late-max',      s.late_max_per_day||200);
