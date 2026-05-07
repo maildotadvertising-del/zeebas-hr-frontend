@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507j -->
+<!-- v20260507k -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -4006,6 +4006,15 @@ async function wifiCheckAndCheckout(){
 
 /* ── LOAD ATTENDANCE PAGE ── */
 async function loadAttendancePage(){
+  // Load expected work hours from payroll settings (cache it)
+  if(!window._attExpHours){
+    try{
+      var pr=await fetch(API+'/api/settings/payroll',{headers:zHdr()});
+      var pd=await pr.json();
+      window._attExpHours = parseFloat((pd.settings||pd).hours_per_day) || 9;
+    } catch(e){ window._attExpHours = 9; }
+  }
+
   var dateEl=document.getElementById('att-filter-date');
   var today=_localDateStr(new Date());
   if(!dateEl.value){ dateEl.value=today; ucalSetDisplay('att-filter-date','att-filter-date-label',today); }
@@ -5951,6 +5960,36 @@ function _localTimeToUTC(dateStr, hmm){
   return (h<10?'0':'')+h + ':' + (m<10?'0':'')+m;
 }
 
+// Build the Late Mins / Under-hours cell content
+function attLateMinsCell(r){
+  var parts = [];
+
+  // 1. Late arrival (existing)
+  if(r.late_minutes > 0){
+    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+r.late_minutes+' min late</span>');
+  }
+
+  // 2. Under-hours — only if staff has both check_in AND check_out
+  if(r.check_in && r.check_out){
+    var expHrs  = window._attExpHours || 9;
+    var expMins = expHrs * 60;
+    var workedMs   = new Date(r.check_out).getTime() - new Date(r.check_in).getTime();
+    var workedMins = Math.floor(workedMs / 60000);
+    var shortMins  = expMins - workedMins;
+
+    if(shortMins > 5){ // ignore < 5 min rounding
+      var dispHrs = Math.floor(shortMins / 60);
+      var dispMin = shortMins % 60;
+      var shortStr = dispHrs > 0
+        ? (dispHrs + 'h ' + (dispMin > 0 ? dispMin + 'm' : '') + ' short')
+        : (shortMins + ' min short');
+      parts.push('<span style="color:#FF453A;font-weight:500;">'+shortStr+'</span>');
+    }
+  }
+
+  return parts.length ? parts.join('<br>') : '<span style="color:var(--muted);">—</span>';
+}
+
 function attViewRow(r,i){
   var st=(r.status||'absent').toLowerCase();
   var stColors={'present':'#30D158','late':'#FF9F0A','absent':'#FF453A','on_leave':'#0A84FF','onsite_approved':'#BF5FFF','late_pending':'#FF9F0A','onsite_pending':'#BF5FFF'};
@@ -5972,7 +6011,7 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:var(--muted);">'+fmtTime(r.check_out)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
-    +'<td style="'+td+'text-align:center;font-size:12px;color:'+(r.late_minutes>0?'#FF9F0A':'var(--muted)')+';">'+(r.late_minutes>0?r.late_minutes+' min':'—')+'</td>'
+    +'<td style="'+td+'text-align:center;font-size:11px;">'+attLateMinsCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
