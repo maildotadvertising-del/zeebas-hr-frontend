@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507 -->
+<!-- v20260507b -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -3854,7 +3854,10 @@ async function loadDashStats(){
           var stCol=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='onsite_approved'?'#BF5FFF':st==='late_pending'?'#FF9F0A':st==='onsite_pending'?'#BF5FFF':st==='on_leave'?'#0A84FF':'#FF453A';
           var stLabel={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'}[st]||(st.charAt(0).toUpperCase()+st.slice(1));
           var init=(r.name||'?').charAt(0).toUpperCase();
-          var avatar=r.photo_url?'<img src="'+API+r.photo_url+'" style="width:26px;height:26px;border-radius:7px;object-fit:cover;">':'<div class="av" style="width:26px;height:26px;background:rgba(10,30,60,0.7);font-size:10px;">'+init+'</div>';
+          var avSrcM = r.photo_data||(r.photo_url?API+r.photo_url:null);
+          var avatar = avSrcM
+            ? '<img src="'+avSrcM+'" style="width:26px;height:26px;border-radius:7px;object-fit:cover;" onerror="this.outerHTML=\'<div class=\\\"av\\\" style=\\\"width:26px;height:26px;font-size:10px;\\\">'+init+'</div>\'">'
+            : '<div class="av" style="width:26px;height:26px;background:rgba(10,30,60,0.7);font-size:10px;">'+init+'</div>';
           var ci=fmtTime(r.check_in);
           var type=r.type==='onsite'?'Onsite':r.type==='office'?'Office':'—';
           return '<tr><td><div style="display:flex;align-items:center;gap:7px;">'+avatar+(r.name||'—')+'</div></td>'
@@ -5817,8 +5820,11 @@ function attViewRow(r,i){
   var col=stColors[st]||'#FF453A';
   var lbl=stLabels[st]||(st.charAt(0).toUpperCase()+st.slice(1));
   var init=(r.name||'?').charAt(0).toUpperCase();
-  var avatar=r.photo_url?'<img src="'+API+r.photo_url+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
-    :'<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#0A84FF22,#5E5CE622);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--muted);flex-shrink:0;">'+init+'</div>';
+  var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+  var avatar = avSrc
+    ? '<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'
+      +'<div style="display:none;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>'
+    : '<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>';
   var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
   return '<tr id="att-row-'+i+'" style="background:'+(i%2===0?'transparent':'rgba(255,255,255,0.015)')+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
