@@ -1,4 +1,4 @@
-<!-- v20260507e -->
+<!-- v20260507f -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -3814,6 +3814,8 @@ async function staffLogin(){
         requestNotifPermission();
         startBreakPoller();
         listenBreakApproval();
+        // Option 1: store auth for background SW + register SW
+        setTimeout(function(){ swStoreAuth(); registerSW(); }, 500);
       }
     } else {
       loginErr(d.message||'Wrong phone or password!');
@@ -4548,6 +4550,7 @@ async function fetchMyTasks(staffId){
 
 /* ── LOGOUT ── */
 function zLogout(){
+  swClearAuth(); // clear token from SW IndexedDB before logout
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   location.reload();
@@ -4624,7 +4627,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); }
+    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); }
   }
 });
 
@@ -4668,6 +4671,121 @@ window.addEventListener('focus', function(){
       _wifiOffSince = null;
       _breakCheckoutCalled = false;
       setTimeout(wifiCheckAndAct, 800);
+    }
+  }
+});
+
+/* ══════════════════════════════════════════
+   OPTION 1 — Service Worker Background Sync
+   Works even when app is NOT open.
+   Android Chrome: fires every ~15 min via
+   Periodic Background Sync.
+   All browsers: fires when device comes online
+   after being offline (Background Sync API).
+   ══════════════════════════════════════════ */
+
+// Store auth token in IndexedDB so the SW can
+// read it when it wakes up in the background.
+async function swStoreAuth(){
+  if(!('indexedDB' in window)) return;
+  var token = zToken();
+  var staff = zStaff();
+  if(!token || !staff || staff.role === 'admin') return;
+  try{
+    var db = await new Promise(function(res,rej){
+      var req = indexedDB.open('zeebas-sw-store', 1);
+      req.onupgradeneeded = function(e){ e.target.result.createObjectStore('kv'); };
+      req.onsuccess = function(e){ res(e.target.result); };
+      req.onerror   = rej;
+    });
+    var tx = db.transaction('kv','readwrite');
+    var st = tx.objectStore('kv');
+    st.put(token, 'token');
+    st.put(API_URL, 'apiUrl');
+  } catch(e){ console.log('swStoreAuth error', e); }
+}
+
+// Clear stored auth on logout
+async function swClearAuth(){
+  if(!('indexedDB' in window)) return;
+  try{
+    var db = await new Promise(function(res,rej){
+      var req = indexedDB.open('zeebas-sw-store', 1);
+      req.onupgradeneeded = function(e){ e.target.result.createObjectStore('kv'); };
+      req.onsuccess = function(e){ res(e.target.result); };
+      req.onerror   = rej;
+    });
+    var tx = db.transaction('kv','readwrite');
+    var st = tx.objectStore('kv');
+    st.put(null, 'token');
+    st.put(null, 'apiUrl');
+  } catch(e){}
+  // Also tell SW via postMessage if active
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_AUTH' });
+  }
+}
+
+var _swRegistration = null;
+
+async function registerSW(){
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    _swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    console.log('✅ SW registered');
+
+    // Wait for SW to be active then send current auth token
+    var sw = _swRegistration.active || _swRegistration.installing || _swRegistration.waiting;
+    if(sw){
+      sw.postMessage({ type: 'SET_AUTH', token: zToken(), apiUrl: API_URL });
+    }
+    // Also store in IndexedDB (persists across SW restarts)
+    await swStoreAuth();
+
+    // ── Periodic Background Sync (Chrome Android) ──
+    // Fires ~every 15 min even when app is closed.
+    if('periodicSync' in _swRegistration){
+      try{
+        var perm = await navigator.permissions.query({ name: 'periodic-background-sync' });
+        if(perm.state === 'granted'){
+          await _swRegistration.periodicSync.register('wifi-check', {
+            minInterval: 15 * 60 * 1000 // 15 minutes
+          });
+          console.log('✅ Periodic Background Sync registered');
+        }
+      } catch(pe){ console.log('periodicSync register failed:', pe); }
+    }
+
+    // ── Background Sync (all browsers) ──
+    // Fires when device comes back online after being offline.
+    if('sync' in _swRegistration){
+      try{
+        await _swRegistration.sync.register('wifi-online');
+        console.log('✅ Background Sync registered');
+      } catch(se){ console.log('sync register failed:', se); }
+    }
+
+  } catch(e){ console.log('SW registration error:', e); }
+}
+
+// Register SW on load (staff only — not admin)
+window.addEventListener('load', function(){
+  var s = zStaff();
+  if(s && s.role !== 'admin'){
+    registerSW();
+  }
+});
+
+// Keep token fresh — update IndexedDB + SW whenever auth state changes
+// (called after login and on each visibility show)
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    swStoreAuth(); // refresh token in IndexedDB
+    // Also ping SW controller directly
+    if(navigator.serviceWorker && navigator.serviceWorker.controller && zToken()){
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SET_AUTH', token: zToken(), apiUrl: API_URL
+      });
     }
   }
 });
