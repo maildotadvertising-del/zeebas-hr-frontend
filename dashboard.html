@@ -3933,7 +3933,9 @@ async function wifiCheckAndCheckout(){
     var res = await fetch(API+'/api/attendance/wifi-check-and-checkout', {
       method:'POST', headers: zHdr()
     });
-    var d = await res.json();
+    var text = await res.text(); // read as text first to avoid JSON parse errors
+    var d;
+    try { d = JSON.parse(text); } catch(pe){ showToast('❌ Server error ('+res.status+')'); return; }
     if(d.success){
       if(d.checkedOut.length === 0 && d.onWifi.length === 0){
         showToast('ℹ️ No staff currently checked in');
@@ -3948,13 +3950,13 @@ async function wifiCheckAndCheckout(){
           msg += (msg ? ' | ' : '') + '📶 On WiFi: ' + wNames;
         }
         showToast(msg, 5000);
-        loadAttendancePage(); // refresh table
+        loadAttendancePage();
       }
     } else {
       showToast('❌ ' + (d.message || 'WiFi check failed'));
     }
   } catch(e){
-    showToast('❌ Connection error');
+    showToast('❌ Network error — check connection');
   } finally {
     if(btn){ btn.disabled=false; btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3C5.5 3 3.3 4.2 2 6.1M8 3c2.5 0 4.7 1.2 6 3.1M4.5 7.5C5.3 6.6 6.6 6 8 6s2.7.6 3.5 1.5M6.5 10c.4-.6 1-.9 1.5-.9s1.1.3 1.5.9M8 13h.01" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg> 📶 WiFi Check'; }
   }
