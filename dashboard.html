@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507h -->
+<!-- v20260507i -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -3931,16 +3931,24 @@ async function exportDashboard(){
 }
 
 /* ── ATTENDANCE DAY NAVIGATION ── */
+// Use local date parts — avoids UTC timezone offset shifting the date
+function _localDateStr(d){
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  return y + '-' + (m<10?'0':'') + m + '-' + (day<10?'0':'') + day;
+}
 function attShiftDay(delta){
   var el  = document.getElementById('att-filter-date');
   var lbl = document.getElementById('att-filter-date-label');
-  var today = new Date().toISOString().slice(0,10);
+  var today = _localDateStr(new Date());
   var cur = el.value || today;
-  var d = new Date(cur + 'T00:00:00');
+  // Parse as local noon (12:00) to avoid any DST edge case
+  var parts = cur.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), 12, 0, 0);
   d.setDate(d.getDate() + delta);
-  var newDate = d.toISOString().slice(0,10);
+  var newDate = _localDateStr(d);
   el.value = newDate;
-  // Show "Today" label when on today's date
   if(newDate === today){
     if(lbl){ lbl.textContent = 'Today'; lbl.style.color = '#0A84FF'; }
   } else {
@@ -3990,7 +3998,7 @@ async function wifiCheckAndCheckout(){
 /* ── LOAD ATTENDANCE PAGE ── */
 async function loadAttendancePage(){
   var dateEl=document.getElementById('att-filter-date');
-  var today=new Date().toISOString().slice(0,10);
+  var today=_localDateStr(new Date());
   if(!dateEl.value){ dateEl.value=today; ucalSetDisplay('att-filter-date','att-filter-date-label',today); }
   var isToday=(dateEl.value===today);
 
