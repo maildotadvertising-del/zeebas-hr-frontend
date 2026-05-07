@@ -5639,11 +5639,10 @@ async function loadPayrollPage(){
     var setEl = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
     setEl('pr-total-staff', rows.length);
     setEl('pr-working-days', d.working_days||'—');
-    // Summary: use earned_so_far for current month unprocessed, net_salary otherwise
+    // Summary: use earned_so_far for current month, net_salary for past months
     var totalNet=0, totalDed=0;
     rows.forEach(function(r){
-      var useEarned = window._prIsCurrMonth && !r.payroll_id;
-      totalNet += useEarned ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
+      totalNet += window._prIsCurrMonth ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
       totalDed += parseFloat(r.late_deduction||0) + parseFloat(r.absent_deduction||0) + parseFloat(r.advance_deduction||0);
     });
     setEl('pr-total-net', '₹'+Math.round(totalNet).toLocaleString('en-IN'));
@@ -5677,8 +5676,9 @@ function prViewRow(r,i){
   var otherDed = parseFloat(r.other_deduction||0);
   var advDed   = parseFloat(r.advance_deduction||0);
 
-  // Current month + not yet processed → show earned-so-far, else show full net_salary
-  var isLive = window._prIsCurrMonth && !r.payroll_id;
+  // Current month → always show earned-so-far (live days × daily rate)
+  // Past months → show saved net_salary from processed payroll
+  var isLive = !!window._prIsCurrMonth;
   var net = isLive ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
 
   var statusBadge = r.payroll_status==='paid'
