@@ -1,4 +1,4 @@
-<!-- v20260507d -->
+<!-- v20260507e -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -4113,6 +4113,7 @@ async function bcoSubmit(type){
 var _wifiOffSince = null;       // tracks when WiFi was first lost (ms timestamp)
 var _wifiPollTimer = null;      // setInterval handle for home-screen poller
 var _breakCheckoutCalled = false; // true after break-checkout API call made
+var _appJustOpened = false;      // true when app becomes visible after being hidden/backgrounded
 
 function startWifiPoller(){
   stopWifiPoller();
@@ -4137,6 +4138,7 @@ async function wifiCheckAndAct(){
 
     if(d.isOffice){
       // ── ON OFFICE WIFI ── reset timers
+      _appJustOpened = false; // consume flag — they're in office, all good
       _wifiOffSince = null;
       if(!d.alreadyCheckedIn){
         // Not checked in → auto check-in
@@ -4213,6 +4215,34 @@ async function wifiCheckAndAct(){
     } else {
       // ── NOT ON OFFICE WIFI ──
       if(d.alreadyCheckedIn && !d.checkedOut){
+
+        // ── OPTION 2 STRONG: App just opened / came back from background ──
+        // If the user was checked-in and we just detected they're off-office-WiFi
+        // when the app became visible → skip 5-min grace, act immediately.
+        if(_appJustOpened){
+          _appJustOpened = false; // consume the flag
+          var awayMins = (typeof d.minutesSinceCheckIn === 'number') ? d.minutesSinceCheckIn : 0;
+          if(awayMins >= 5){
+            // They've been checked in for 5+ minutes — likely they left office with WiFi off
+            // Set _wifiOffSince to simulate grace already expired
+            _wifiOffSince = Date.now() - (6 * 60 * 1000); // mark as 6 min ago → grace expired
+            var breakLimitMins2 = (_breakSettings && _breakSettings.break_duration_mins) || 0;
+            if(!_breakCheckoutCalled){
+              _breakCheckoutCalled = true;
+              fetch(API_URL+'/api/attendance/break-checkout',{method:'POST',headers:zHead()}).catch(function(){});
+            }
+            if(breakLimitMins2 > 0){
+              var breakLeft2 = breakLimitMins2; // full break still available
+              wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)','📶 Off Office WiFi — Break Started','You have '+breakLeft2+' min break time',false);
+            } else {
+              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','Off WiFi — ready to check out?',true);
+            }
+            return; // handled
+          }
+          // awayMins < 5 → just stepped out briefly, fall through to normal grace
+          _appJustOpened = false;
+        }
+
         // Start grace timer if not already running
         if(!_wifiOffSince) _wifiOffSince = Date.now();
         var offMs    = Date.now() - _wifiOffSince;
@@ -4249,9 +4279,11 @@ async function wifiCheckAndAct(){
         }
 
       } else if(!d.alreadyCheckedIn){
+        _appJustOpened = false; // consume flag even if not checked in
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
+        _appJustOpened = false;
         wifiBanner(false);
       }
     }
@@ -4593,6 +4625,50 @@ window.addEventListener('load',function(){
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
     else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); }
+  }
+});
+
+/* ── OPTION 2 STRONG — App Visibility / Wake Events ──
+   When the app comes back from background (phone screen on, tab switch, etc.)
+   immediately run a WiFi check. If staff was checked in and is now off office
+   WiFi → skip grace, act right away. */
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    var s = zStaff();
+    if(s && s.role !== 'admin'){
+      _appJustOpened = true;
+      // Reset grace timer so the "just opened" path handles it cleanly
+      _wifiOffSince = null;
+      _breakCheckoutCalled = false;
+      setTimeout(wifiCheckAndAct, 600); // slight delay so network reconnects first
+    }
+  }
+});
+
+// pageshow fires when page is restored from bfcache (iOS Safari back/forward)
+window.addEventListener('pageshow', function(e){
+  if(e.persisted){
+    var s = zStaff();
+    if(s && s.role !== 'admin'){
+      _appJustOpened = true;
+      _wifiOffSince = null;
+      _breakCheckoutCalled = false;
+      setTimeout(wifiCheckAndAct, 600);
+    }
+  }
+});
+
+// focus fires when user switches back to this tab on desktop / browser comes to foreground
+window.addEventListener('focus', function(){
+  var s = zStaff();
+  if(s && s.role !== 'admin'){
+    // Only act if it's been a while since last check (avoid double-fire with visibilitychange)
+    if(!_appJustOpened){
+      _appJustOpened = true;
+      _wifiOffSince = null;
+      _breakCheckoutCalled = false;
+      setTimeout(wifiCheckAndAct, 800);
+    }
   }
 });
 </script>
