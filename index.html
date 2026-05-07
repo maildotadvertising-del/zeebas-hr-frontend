@@ -1,4 +1,4 @@
-<!-- v20260507f -->
+<!-- v20260507g -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -4041,6 +4041,7 @@ function listenBreakApproval(){
 function showBreakChoiceOverlay(awayMins){
   var ov = document.getElementById('break-choice-overlay');
   if(!ov) return;
+  _bcoAwayMins = awayMins || 0; // store for bcoSubmit
   var minsTxt = document.getElementById('bco-away-mins');
   if(minsTxt) minsTxt.textContent = 'You were away for '+(awayMins||'a few')+' min';
   document.getElementById('bco-reason-wrap').style.display = 'none';
@@ -4079,8 +4080,9 @@ async function bcoSubmit(type){
     hideBreakChoiceOverlay();
     wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)',
       type==='office_work'?'💼 Sending Request…':'☕ Processing Break…','Please wait…',false);
-    var body = JSON.stringify({type:type, reason:reason});
-    var res = await fetch(API_URL+'/api/attendance/break-return',{
+    // Use break-acknowledge (new flow: staff stays checked-in, no checkout needed)
+    var body = JSON.stringify({type:type, reason:reason, away_mins: _bcoAwayMins||0});
+    var res = await fetch(API_URL+'/api/attendance/break-acknowledge',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},zHead()),
       body:body
@@ -4089,7 +4091,7 @@ async function bcoSubmit(type){
     if(d.success){
       if(type==='office_work'){
         wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','💼 Request Sent — Awaiting Approval',
-          'Admin will review your outside work request',false);
+          'Admin will review your outside work — you\'re still clocked in',false);
       } else {
         if(d.break_excess_mins>0){
           wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)',
@@ -4098,7 +4100,7 @@ async function bcoSubmit(type){
           setTimeout(function(){ wifiBanner(false); },7000);
         } else {
           wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)',
-            '☕ Break Ended ✓','You\'re back on time — no deduction',false);
+            '☕ Break Noted ✓','Welcome back — no deduction',false);
           setTimeout(function(){ wifiBanner(false); },5000);
         }
       }
@@ -4110,12 +4112,14 @@ async function bcoSubmit(type){
     wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⚠️ Network Error','Please check your connection',false);
     setTimeout(function(){ wifiBanner(false); },4000);
   }
+  btn.innerHTML=origText; btn.disabled=false;
 }
 
 var _wifiOffSince = null;       // tracks when WiFi was first lost (ms timestamp)
 var _wifiPollTimer = null;      // setInterval handle for home-screen poller
-var _breakCheckoutCalled = false; // true after break-checkout API call made
+var _breakCheckoutCalled = false; // legacy — no longer used for break-checkout trigger
 var _appJustOpened = false;      // true when app becomes visible after being hidden/backgrounded
+var _bcoAwayMins = 0;           // away minutes passed to break-acknowledge endpoint
 
 function startWifiPoller(){
   stopWifiPoller();
@@ -4131,7 +4135,6 @@ async function wifiCheckAndAct(){
     var d=await r.json();
 
     if(!d.wifiEnabled){
-      // WiFi attendance not configured — hide banner silently
       wifiBanner(false);
       return;
     }
@@ -4139,11 +4142,13 @@ async function wifiCheckAndAct(){
     var bw=d.breakWindowMinutes||40;
 
     if(d.isOffice){
-      // ── ON OFFICE WIFI ── reset timers
-      _appJustOpened = false; // consume flag — they're in office, all good
-      _wifiOffSince = null;
+      // ── ON OFFICE WIFI ──
+      var wasJustOpened = _appJustOpened;
+      _appJustOpened = false;
+
       if(!d.alreadyCheckedIn){
-        // Not checked in → auto check-in
+        // ── Not checked in → auto check-in ──
+        _wifiOffSince = null;
         wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Office WiFi Detected — Checking in…','Please wait…',false);
         try{
           var cr=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
@@ -4154,11 +4159,8 @@ async function wifiCheckAndAct(){
             var ts=h+':'+(mn<10?'0':'')+mn+' '+ap;
             var ciEl=document.getElementById('s1-checkin');
             if(ciEl) ciEl.textContent=ts;
-            if(cd.break_excess_mins>0){
-              wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+cd.break_excess_mins+' min','₹'+cd.break_excess_deduction+' deducted from salary',false);
-              setTimeout(function(){ wifiBanner(false); },6000);
-            } else if(cd.status==='break_return_pending'){
-              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','⏳ Break Return — Pending Approval','Admin will approve your check-in shortly',false);
+            if(cd.status==='late_pending'){
+              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','⏳ Late — Pending Admin Approval',cd.message,false);
             } else if(cd.status==='late'){
               wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 WiFi Auto Check-in — Late',cd.message,false);
             } else {
@@ -4173,43 +4175,62 @@ async function wifiCheckAndAct(){
         } catch(e2){ wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','📶 Connection Error','Check your internet and try again',false); setTimeout(function(){ wifiBanner(false); },4000); }
 
       } else if(d.checkedOut && d.minutesSinceCheckout!==null){
-        // Checked out — break return or manual checkout return
+        // ── Old break-checkout flow (backward compat) ──
         if(d.isBreakCheckout){
-          // ── Show Break vs Office Work choice ──
-          _breakCheckoutCalled = false; // reset flag
-          wifiBanner(false); // hide any existing banner
+          _wifiOffSince = null;
+          wifiBanner(false);
           showBreakChoiceOverlay(d.minutesSinceCheckout);
         } else if(d.minutesSinceCheckout < bw){
-          // Manual checkout within break window → auto resume
+          _wifiOffSince = null;
           wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Back in Office — Resuming…','Out for '+d.minutesSinceCheckout+' min',false);
           try{
-            var br=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'break'})});
-            var bd=await br.json();
-            if(bd.success){
-              wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Break Ended — Back at Work ✓','You were out for '+d.minutesSinceCheckout+' min',false);
-            } else { wifiBanner(false); }
+            var br2=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'break'})});
+            var bd2=await br2.json();
+            if(bd2.success) wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Break Ended — Back at Work ✓','You were out for '+d.minutesSinceCheckout+' min',false);
+            else wifiBanner(false);
           } catch(e3b){ wifiBanner(false); }
         } else {
-          // Beyond break window → late return → notify admin
+          _wifiOffSince = null;
           wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Late Return — Notifying Admin…','Out for '+d.minutesSinceCheckout+' min',false);
           try{
-            var lr=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'late'})});
-            var ld=await lr.json();
-            if(ld.success){
-              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Late Return — Admin Notified','Out for '+d.minutesSinceCheckout+' min · Request sent',false);
-            } else { wifiBanner(false); }
+            var lr2=await fetch(API_URL+'/api/attendance/wifi-return',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({type:'late'})});
+            var ld2=await lr2.json();
+            if(ld2.success) wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Late Return — Admin Notified','Out for '+d.minutesSinceCheckout+' min · Request sent',false);
+            else wifiBanner(false);
           } catch(e4){ wifiBanner(false); }
         }
+
       } else if(!d.checkedOut && d.alreadyCheckedIn){
-        // Currently in office and checked in — show status
-        var now=new Date(),h=now.getHours(),mn=now.getMinutes(),ap=h>=12?'PM':'AM';
-        h=h%12||12;
-        var ts=h+':'+(mn<10?'0':'')+mn+' '+ap;
-        var ciEl=document.getElementById('s1-checkin');
-        if(ciEl && d.checkInTime){
-          var ci=new Date(d.checkInTime),ch=ci.getHours(),cm=ci.getMinutes(),ca=ch>=12?'PM':'AM';
-          ch=ch%12||12;
-          ciEl.textContent=ch+':'+(cm<10?'0':'')+cm+' '+ca;
+        // ── In office and checked in ──
+        // Detect if they were recently away using _wifiOffSince (primary) or server's minutesSinceLastPing (fallback)
+        var awayMins = 0;
+        if(_wifiOffSince !== null){
+          awayMins = Math.floor((Date.now() - _wifiOffSince) / 60000);
+          // Use server's ping gap if it captures a longer absence (e.g. app was backgrounded)
+          if((d.minutesSinceLastPing||0) > awayMins) awayMins = d.minutesSinceLastPing;
+        } else if(wasJustOpened && (d.minutesSinceLastPing||0) >= 5){
+          // App just opened and server shows 5+ min since last ping → they were away
+          awayMins = d.minutesSinceLastPing;
+        }
+
+        if(awayMins >= 2){
+          // Staff was away — show Break / Office Work choice modal
+          _bcoAwayMins = awayMins;
+          _wifiOffSince = null;
+          wifiBanner(false);
+          showBreakChoiceOverlay(awayMins);
+          return;
+        }
+
+        // Normal in-office state
+        _wifiOffSince = null;
+        var now2=new Date(),h2=now2.getHours(),mn2=now2.getMinutes(),ap2=h2>=12?'PM':'AM';
+        h2=h2%12||12;
+        var ciEl2=document.getElementById('s1-checkin');
+        if(ciEl2 && d.checkInTime){
+          var ci2=new Date(d.checkInTime),ch2=ci2.getHours(),cm2=ci2.getMinutes(),ca2=ch2>=12?'PM':'AM';
+          ch2=ch2%12||12;
+          ciEl2.textContent=ch2+':'+(cm2<10?'0':'')+cm2+' '+ca2;
         }
         wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
       }
@@ -4218,31 +4239,18 @@ async function wifiCheckAndAct(){
       // ── NOT ON OFFICE WIFI ──
       if(d.alreadyCheckedIn && !d.checkedOut){
 
-        // ── OPTION 2 STRONG: App just opened / came back from background ──
-        // If the user was checked-in and we just detected they're off-office-WiFi
-        // when the app became visible → skip 5-min grace, act immediately.
+        // ── App just opened / came back from background ──
         if(_appJustOpened){
-          _appJustOpened = false; // consume the flag
-          var awayMins = (typeof d.minutesSinceCheckIn === 'number') ? d.minutesSinceCheckIn : 0;
-          if(awayMins >= 5){
-            // They've been checked in for 5+ minutes — likely they left office with WiFi off
-            // Set _wifiOffSince to simulate grace already expired
-            _wifiOffSince = Date.now() - (6 * 60 * 1000); // mark as 6 min ago → grace expired
-            var breakLimitMins2 = (_breakSettings && _breakSettings.break_duration_mins) || 0;
-            if(!_breakCheckoutCalled){
-              _breakCheckoutCalled = true;
-              fetch(API_URL+'/api/attendance/break-checkout',{method:'POST',headers:zHead()}).catch(function(){});
-            }
-            if(breakLimitMins2 > 0){
-              var breakLeft2 = breakLimitMins2; // full break still available
-              wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)','📶 Off Office WiFi — Break Started','You have '+breakLeft2+' min break time',false);
-            } else {
-              wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','Off WiFi — ready to check out?',true);
-            }
-            return; // handled
-          }
-          // awayMins < 5 → just stepped out briefly, fall through to normal grace
           _appJustOpened = false;
+          var minsAway = d.minutesSinceLastPing || 0;
+          if(minsAway >= 3){
+            // Server shows 3+ min since last ping — set _wifiOffSince to estimated departure time
+            if(!_wifiOffSince) _wifiOffSince = Date.now() - (minsAway * 60 * 1000);
+            // Fall through to grace/break logic below
+          } else {
+            // Just stepped out briefly — start grace from now
+            if(!_wifiOffSince) _wifiOffSince = Date.now();
+          }
         }
 
         // Start grace timer if not already running
@@ -4253,35 +4261,27 @@ async function wifiCheckAndAct(){
         var breakLimitMs   = breakLimitMins * 60 * 1000;
 
         if(offMs < GRACE){
-          // Within 5-min grace → subtle countdown
+          // Within 5-min grace → subtle countdown banner
           var minsLeft = Math.ceil((GRACE - offMs) / 60000);
           wifiBanner(true,'rgba(255,255,255,0.05)','rgba(235,235,245,0.4)','📶 WiFi Disconnected','Reconnect within '+minsLeft+' min to resume',false);
 
         } else if(breakLimitMins > 0 && offMs < breakLimitMs){
-          // Grace expired, within break limit → trigger break-checkout (once) + show countdown
-          if(!_breakCheckoutCalled){
-            _breakCheckoutCalled = true;
-            fetch(API_URL+'/api/attendance/break-checkout',{method:'POST',headers:zHead()}).catch(function(){});
-          }
+          // Within break window — show countdown (NO auto-checkout; staff stays clocked in)
           var breakLeft = Math.ceil((breakLimitMs - offMs) / 60000);
-          wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)','☕ On Break','Back in '+breakLeft+' min to avoid deduction',false);
+          wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)','☕ On Break','Return within '+breakLeft+' min to avoid deduction',false);
 
         } else if(breakLimitMins > 0 && offMs >= breakLimitMs){
-          // Over break limit → trigger break-checkout (once) + show overtime warning
-          if(!_breakCheckoutCalled){
-            _breakCheckoutCalled = true;
-            fetch(API_URL+'/api/attendance/break-checkout',{method:'POST',headers:zHead()}).catch(function(){});
-          }
+          // Over break window — show overtime warning (staff still clocked in)
           var overMins = Math.floor((offMs - breakLimitMs) / 60000);
-          wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+overMins+' min extra','Salary deduction will apply on return',true);
+          wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+overMins+' min extra','Return to office — deduction based on time away',false);
 
         } else {
-          // No break settings (or part-time) → standard checkout prompt
-          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','You\'ve been off WiFi for 5+ min — ready to check out?',true);
+          // No break settings (part-time or unset) — just inform
+          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','📶 Outside Office WiFi','Off office WiFi for 5+ min',false);
         }
 
       } else if(!d.alreadyCheckedIn){
-        _appJustOpened = false; // consume flag even if not checked in
+        _appJustOpened = false;
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
@@ -4640,9 +4640,7 @@ document.addEventListener('visibilitychange', function(){
     var s = zStaff();
     if(s && s.role !== 'admin'){
       _appJustOpened = true;
-      // Reset grace timer so the "just opened" path handles it cleanly
-      _wifiOffSince = null;
-      _breakCheckoutCalled = false;
+      // NOTE: Do NOT clear _wifiOffSince here — wifiCheckAndAct uses it to detect break return
       setTimeout(wifiCheckAndAct, 600); // slight delay so network reconnects first
     }
   }
@@ -4654,8 +4652,7 @@ window.addEventListener('pageshow', function(e){
     var s = zStaff();
     if(s && s.role !== 'admin'){
       _appJustOpened = true;
-      _wifiOffSince = null;
-      _breakCheckoutCalled = false;
+      // NOTE: Do NOT clear _wifiOffSince — preserves break tracking across app restores
       setTimeout(wifiCheckAndAct, 600);
     }
   }
@@ -4668,8 +4665,7 @@ window.addEventListener('focus', function(){
     // Only act if it's been a while since last check (avoid double-fire with visibilitychange)
     if(!_appJustOpened){
       _appJustOpened = true;
-      _wifiOffSince = null;
-      _breakCheckoutCalled = false;
+      // NOTE: Do NOT clear _wifiOffSince — preserves break tracking on tab focus
       setTimeout(wifiCheckAndAct, 800);
     }
   }
@@ -4775,6 +4771,43 @@ window.addEventListener('load', function(){
     registerSW();
   }
 });
+
+// ── Instant WiFi check on network connect ──────────────────────────
+// Fires when phone connects to ANY network (offline → online).
+// Most common case: staff arrive at office, phone was on airplane/sleep.
+window.addEventListener('online', function(){
+  var s = zStaff();
+  if(!s || s.role === 'admin') return;
+  console.log('[WiFi] online event — checking WiFi');
+  _appJustOpened = true;
+  // NOTE: Do NOT clear _wifiOffSince — wifiCheckAndAct uses it to detect break return on reconnect
+  setTimeout(wifiCheckAndAct, 1500); // slight delay for network to stabilize
+  // Re-register Background Sync so SW also fires
+  if(_swRegistration && 'sync' in _swRegistration){
+    _swRegistration.sync.register('wifi-online').catch(function(){});
+  }
+});
+
+// Fires when network TYPE changes (mobile data → WiFi switch).
+// Most common case: staff walk into office while already having mobile data.
+if(navigator.connection){
+  navigator.connection.addEventListener('change', function(){
+    var s = zStaff();
+    if(!s || s.role === 'admin') return;
+    var type = (navigator.connection.type || navigator.connection.effectiveType || '');
+    console.log('[WiFi] connection changed → type:', type);
+    // Only trigger on WiFi connect (not on data degradation)
+    if(type === 'wifi' || type === '4g' || type === '5g' || type === 'ethernet'){
+      _appJustOpened = true;
+      // NOTE: Do NOT clear _wifiOffSince — preserves break tracking on network switch
+      setTimeout(wifiCheckAndAct, 1500);
+      if(_swRegistration && 'sync' in _swRegistration){
+        _swRegistration.sync.register('wifi-online').catch(function(){});
+      }
+    }
+  });
+}
+// ──────────────────────────────────────────────────────────────────
 
 // Keep token fresh — update IndexedDB + SW whenever auth state changes
 // (called after login and on each visibility show)

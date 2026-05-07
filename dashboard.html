@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507k -->
+<!-- v20260508b -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -140,7 +140,8 @@ textarea.inp{resize:none;}
 .cele-overlay.show{display:flex;}
 .cele-card{background:linear-gradient(145deg,rgba(18,12,36,0.98),rgba(10,10,22,0.98));border:0.5px solid rgba(255,255,255,0.14);border-radius:28px;padding:32px 28px 28px;text-align:center;max-width:300px;width:90%;position:relative;animation:celeIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
 @keyframes celeIn{from{opacity:0;transform:scale(0.8) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
-.cele-av{width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;border:2px solid rgba(255,255,255,0.15);margin:0 auto 12px;box-shadow:0 6px 24px rgba(0,0,0,0.4);}
+.cele-av{width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;border:2px solid rgba(255,255,255,0.15);margin:0 auto 12px;box-shadow:0 6px 24px rgba(0,0,0,0.4);overflow:hidden;}
+.cele-av img{width:100%;height:100%;object-fit:cover;border-radius:18px;display:block;}
 .cele-badge{font-size:40px;display:block;margin-bottom:10px;animation:badgePop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;}
 @keyframes badgePop{from{transform:scale(0)rotate(-20deg);}to{transform:scale(1)rotate(0);}}
 .cele-nm{color:#fff;font-size:18px;font-weight:500;margin-bottom:6px;letter-spacing:-0.2px;}
@@ -214,7 +215,12 @@ textarea.inp{resize:none;}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="sec g">
         <div class="sh"><span class="st">Today's Attendance</span><span style="color:#0A84FF;font-size:12px;cursor:pointer;" onclick="showPage('attendance',null)">See all →</span></div>
-        <table class="tbl"><thead><tr><th>Team</th><th>Check-in</th><th>Type</th><th>Status</th></tr></thead><tbody id="att-table-body">
+        <table class="tbl" style="table-layout:fixed;width:100%;"><thead><tr>
+          <th style="width:45%;padding-left:4px;">Team</th>
+          <th style="width:22%;">Check-in</th>
+          <th style="width:16%;">Type</th>
+          <th style="width:17%;">Status</th>
+        </tr></thead><tbody id="att-table-body">
           <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">Loading attendance…</td></tr>
         </tbody></table>
       </div>
@@ -856,22 +862,22 @@ textarea.inp{resize:none;}
                 <div style="font-size:11px;font-weight:600;color:#0A84FF;letter-spacing:0.3px;">🧑‍💼 Full Time</div>
                 <div style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#0A84FF" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#0A84FF" stroke-width="1.1" stroke-linecap="round"/></svg>
-                  <span id="ps-ft-daytime" style="font-size:11px;color:#0A84FF;font-weight:600;">9h 0m</span>
+                  <span id="ps-ft-daytime" style="font-size:11px;color:#0A84FF;font-weight:600;">—</span>
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
-                  <input class="inp" type="time" id="ps-start-time" value="09:00" oninput="psFtCalcTime()">
+                  <input class="inp" type="time" id="ps-start-time" oninput="psFtCalcTime()">
                 </div>
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
-                  <input class="inp" type="time" id="ps-end-time" value="18:00" oninput="psFtCalcTime()">
+                  <input class="inp" type="time" id="ps-end-time" oninput="psFtCalcTime()">
                 </div>
               </div>
               <div>
                 <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                <div class="inp" id="ps-hours-day-display" style="color:#0A84FF;font-weight:600;font-size:13px;cursor:default;">9h 0m</div>
+                <div class="inp" id="ps-hours-day-display" style="color:#0A84FF;font-weight:600;font-size:13px;cursor:default;">—</div>
                 <input type="hidden" id="ps-hours-day" value="9">
               </div>
               <input type="hidden" id="ps-halfday-hrs" value="4">
@@ -895,22 +901,22 @@ textarea.inp{resize:none;}
                 <div style="font-size:11px;font-weight:600;color:#FF9F0A;letter-spacing:0.3px;">🌤️ Day Time</div>
                 <div style="background:rgba(255,159,10,0.14);border:0.5px solid rgba(255,159,10,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#FF9F0A" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#FF9F0A" stroke-width="1.1" stroke-linecap="round"/></svg>
-                  <span id="ps-dt-daytime" style="font-size:11px;color:#FF9F0A;font-weight:600;">8h 0m</span>
+                  <span id="ps-dt-daytime" style="font-size:11px;color:#FF9F0A;font-weight:600;">—</span>
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
-                  <input class="inp" type="time" id="ps-dt-start-time" value="10:00" oninput="psDtCalcTime()">
+                  <input class="inp" type="time" id="ps-dt-start-time" oninput="psDtCalcTime()">
                 </div>
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
-                  <input class="inp" type="time" id="ps-dt-end-time" value="18:00" oninput="psDtCalcTime()">
+                  <input class="inp" type="time" id="ps-dt-end-time" oninput="psDtCalcTime()">
                 </div>
               </div>
               <div>
                 <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hours/Day</div>
-                <div class="inp" id="ps-daytime-hrs-display" style="color:#FF9F0A;font-weight:600;font-size:13px;cursor:default;">8h 0m</div>
+                <div class="inp" id="ps-daytime-hrs-display" style="color:#FF9F0A;font-weight:600;font-size:13px;cursor:default;">—</div>
                 <input type="hidden" id="ps-daytime-hrs" value="8">
               </div>
               <input type="hidden" id="ps-dt-work-days" value="26">
@@ -934,17 +940,17 @@ textarea.inp{resize:none;}
                 <div style="font-size:11px;font-weight:600;color:#30D158;letter-spacing:0.3px;">👤 Part Time</div>
                 <div style="background:rgba(48,209,88,0.14);border:0.5px solid rgba(48,209,88,0.3);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:5px;">
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#30D158" stroke-width="1.1"/><path d="M6 3.5v2.8l1.8 1.8" stroke="#30D158" stroke-width="1.1" stroke-linecap="round"/></svg>
-                  <span id="ps-pt-daytime" style="font-size:11px;color:#30D158;font-weight:600;">4h 0m</span>
+                  <span id="ps-pt-daytime" style="font-size:11px;color:#30D158;font-weight:600;">—</span>
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Start Time</div>
-                  <input class="inp" type="time" id="ps-pt-start-time" value="09:00" oninput="psPtCalcTime()">
+                  <input class="inp" type="time" id="ps-pt-start-time" oninput="psPtCalcTime()">
                 </div>
                 <div>
                   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">End Time</div>
-                  <input class="inp" type="time" id="ps-pt-end-time" value="13:00" oninput="psPtCalcTime()">
+                  <input class="inp" type="time" id="ps-pt-end-time" oninput="psPtCalcTime()">
                 </div>
               </div>
               <div>
@@ -1191,10 +1197,6 @@ textarea.inp{resize:none;}
         </div>
         <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
-        <button id="wifi-co-btn" onclick="wifiCheckAndCheckout()" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:10px;padding:8px 13px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;" title="Check who is off office WiFi and clock them out">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3C5.5 3 3.3 4.2 2 6.1M8 3c2.5 0 4.7 1.2 6 3.1M4.5 7.5C5.3 6.6 6.6 6 8 6s2.7.6 3.5 1.5M6.5 10c.4-.6 1-.9 1.5-.9s1.1.3 1.5.9M8 13h.01" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-          📶 WiFi Check
-        </button>
       </div>
     </div>
 
@@ -1227,12 +1229,13 @@ textarea.inp{resize:none;}
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check Out</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Type</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Late Mins</th>
+            <th style="padding:11px 10px;text-align:center;color:#30D158;font-weight:500;font-size:11px;">OT Mins</th>
             <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
             <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Action</th>
           </tr>
         </thead>
         <tbody id="att-page-tbody">
-          <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);">Loading…</td></tr>
+          <tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted);">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1878,6 +1881,16 @@ function showPage(name, el){
     document.querySelectorAll('.ni').forEach(function(n){
       if(n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'"+name+"'")!==-1) n.classList.add('active');
     });
+  }
+  // Auto WiFi check — start when on attendance page, stop when leaving
+  if(name === 'attendance'){
+    var today = _localDateStr(new Date());
+    var dateEl = document.getElementById('att-filter-date');
+    if(!dateEl || !dateEl.value || dateEl.value === today){
+      _startWifiAutoCheck(); // auto-check only for today's view
+    }
+  } else {
+    _stopWifiAutoCheck();
   }
   // Save current page — both hash and sessionStorage for reliable restore
   location.hash = name;
@@ -3471,12 +3484,25 @@ function launchConfetti(){
   })();
   setTimeout(function(){_cRun=false;},5500);
 }
-function showCelebration(type,name,initials,bg,col,extra){
+function showCelebration(type,name,initials,bg,col,extra,photo,brand){
   var isBd=type==='birthday';
   document.getElementById('cele-badge').textContent=isBd?'🎂':'🎉';
-  var av=document.getElementById('cele-av');if(av){av.style.background=bg;av.style.color=col;av.textContent=initials;}
+  var av=document.getElementById('cele-av');
+  if(av){
+    if(photo){
+      // Show actual profile photo
+      av.style.background='transparent';
+      av.style.color=col;
+      av.innerHTML='<img src="'+photo+'" alt="'+name+'" onerror="this.parentNode.innerHTML=\''+initials+'\';this.parentNode.style.background=\''+bg+'\';this.parentNode.style.color=\''+col+'\';">';
+    } else {
+      av.style.background=bg;
+      av.style.color=col;
+      av.textContent=initials;
+    }
+  }
   document.getElementById('cele-nm').textContent=isBd?'Happy Birthday, '+name+'! 🎈':'Happy Anniversary, '+name+'! 🎊';
-  document.getElementById('cele-msg').textContent=isBd?'Wishing you a wonderful day full of joy and happiness!':'Thank you for '+extra+' incredible year'+(extra!==1?'s':'')+' with the Zeebas family!';
+  var brandName=brand||'DOT Advertising';
+  document.getElementById('cele-msg').textContent=isBd?'Wishing you a wonderful day full of joy and happiness!':'Thank you for '+extra+' incredible year'+(extra!==1?'s':'')+' with the '+brandName+' family!';
   document.getElementById('cele-yr').textContent=isBd?'🎁 With love from the team':'⭐ '+extra+' Year'+(extra!==1?'s':'')+' of Excellence';
   var ov=document.getElementById('cele-overlay');if(ov)ov.classList.add('show');
   launchConfetti();
@@ -3496,11 +3522,13 @@ function checkCelebrations(){
         var nm=s.name||'';
         var init=nm.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'?';
         var bg='linear-gradient(145deg,rgba(10,40,80,0.95),rgba(5,10,30,0.95))';
+        var photo=s.photo_data||(s.photo_url?API+s.photo_url:null);
+        var brand=s.brand_name||'DOT Advertising';
         if(s.dob){
           var dob=new Date(s.dob);
           if(dob.getMonth()+1===m&&dob.getDate()===d){
             found=true;
-            (function(name,ini){setTimeout(function(){showCelebration('birthday',name,ini,bg,'#5AABF0',0);},1800);})(nm,init);
+            (function(name,ini,ph,br){setTimeout(function(){showCelebration('birthday',name,ini,bg,'#5AABF0',0,ph,br);},1800);})(nm,init,photo,brand);
             return;
           }
         }
@@ -3510,7 +3538,7 @@ function checkCelebrations(){
             var yrs=y-jd.getFullYear();
             if(yrs>0){
               found=true;
-              (function(name,ini,yr){setTimeout(function(){showCelebration('anniversary',name,ini,bg,'#BF5FFF',yr);},1800);})(nm,init,yrs);
+              (function(name,ini,yr,ph,br){setTimeout(function(){showCelebration('anniversary',name,ini,bg,'#BF5FFF',yr,ph,br);},1800);})(nm,init,yrs,photo,brand);
             }
           }
         }
@@ -3893,15 +3921,20 @@ async function loadDashStats(){
           var stLabel={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'}[st]||(st.charAt(0).toUpperCase()+st.slice(1));
           var init=(r.name||'?').charAt(0).toUpperCase();
           var avSrcM = r.photo_data||(r.photo_url?API+r.photo_url:null);
+          // Use id-based img to avoid quote-escaping issues in onerror
+          var avId='dav'+Math.random().toString(36).slice(2,7);
           var avatar = avSrcM
-            ? '<img src="'+avSrcM+'" style="width:26px;height:26px;border-radius:7px;object-fit:cover;" onerror="this.outerHTML=\'<div class=\\\"av\\\" style=\\\"width:26px;height:26px;font-size:10px;\\\">'+init+'</div>\'">'
-            : '<div class="av" style="width:26px;height:26px;background:rgba(10,30,60,0.7);font-size:10px;">'+init+'</div>';
+            ? '<img id="'+avId+'" src="'+avSrcM+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" onload="this.style.display=\'block\'" onerror="var d=document.getElementById(\''+avId+'\');if(d){var r=document.createElement(\'div\');r.className=\'av\';r.style=\'width:30px;height:30px;font-size:11px;background:rgba(10,30,60,0.7);flex-shrink:0;\';r.textContent=\''+init+'\';d.parentNode.replaceChild(r,d);}">'
+            : '<div class="av" style="width:30px;height:30px;font-size:11px;background:rgba(10,30,60,0.7);flex-shrink:0;">'+init+'</div>';
           var ci=fmtTime(r.check_in);
           var type=r.type==='onsite'?'Onsite':r.type==='office'?'Office':'—';
-          return '<tr><td><div style="display:flex;align-items:center;gap:7px;">'+avatar+(r.name||'—')+'</div></td>'
-            +'<td class="mono">'+ci+'</td>'
-            +'<td style="color:var(--muted);">'+type+'</td>'
-            +'<td><span style="background:'+stCol+'22;color:'+stCol+';border:0.5px solid '+stCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;">'+stLabel+'</span></td></tr>';
+          var nameHtml='<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:400;">'+(r.name||'—')+'</div>'
+            +(r.designation?'<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.designation+'</div>':'');
+          return '<tr>'
+            +'<td style="min-width:130px;max-width:160px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex-shrink:0;">'+avatar+'</div><div style="overflow:hidden;">'+nameHtml+'</div></div></td>'
+            +'<td style="white-space:nowrap;" class="mono">'+ci+'</td>'
+            +'<td style="color:var(--muted);white-space:nowrap;">'+type+'</td>'
+            +'<td style="white-space:nowrap;"><span style="background:'+stCol+'22;color:'+stCol+';border:0.5px solid '+stCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;">'+stLabel+'</span></td></tr>';
         }).join('');
       }
     }
@@ -3960,59 +3993,99 @@ function attShiftDay(delta){
   el.value = newDate;
   if(newDate === today){
     if(lbl){ lbl.textContent = 'Today'; lbl.style.color = '#0A84FF'; }
+    _startWifiAutoCheck(); // resume auto-check when back on today
   } else {
     ucalSetDisplay('att-filter-date','att-filter-date-label', newDate);
     if(lbl) lbl.style.color = 'rgba(245,245,247,0.85)';
+    _stopWifiAutoCheck(); // stop auto-check for past/future dates
   }
   loadAttendancePage();
 }
 
-/* ── WIFI CHECK & CHECKOUT (Admin) ── */
-async function wifiCheckAndCheckout(){
-  var btn = document.getElementById('wifi-co-btn');
-  if(btn){ btn.disabled=true; btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#0A84FF" stroke-width="1.5" stroke-dasharray="4 2"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="0.8s" repeatCount="indefinite"/></circle></svg> Checking…'; }
+/* ── WIFI CHECK & CHECKOUT (Admin — auto-runs every 5 min on attendance page) ── */
+var _wifiAutoTimer = null;
+
+async function wifiCheckAndCheckout(silent){
   try{
     var res = await fetch(API+'/api/attendance/wifi-check-and-checkout', {
       method:'POST', headers: zHdr()
     });
-    var text = await res.text(); // read as text first to avoid JSON parse errors
+    var text = await res.text();
     var d;
-    try { d = JSON.parse(text); } catch(pe){ showToast('❌ Server error ('+res.status+')'); return; }
+    try { d = JSON.parse(text); } catch(pe){ if(!silent) showToast('❌ Server error ('+res.status+')'); return; }
     if(d.success){
-      if(d.checkedOut.length === 0 && d.onWifi.length === 0){
-        showToast('ℹ️ No staff currently checked in');
-      } else {
-        var msg = '';
-        if(d.checkedOut.length > 0){
-          var names = d.checkedOut.map(function(s){ return s.name.split(' ')[0]; }).join(', ');
-          msg += '✅ Checked out: ' + names;
-        }
-        if(d.onWifi.length > 0){
-          var wNames = d.onWifi.map(function(s){ return s.name.split(' ')[0]; }).join(', ');
-          msg += (msg ? ' | ' : '') + '📶 On WiFi: ' + wNames;
-        }
-        showToast(msg, 5000);
+      // Always reload table if anyone was checked out
+      if(d.checkedOut && d.checkedOut.length > 0){
+        var names = d.checkedOut.map(function(s){ return s.name.split(' ')[0]; }).join(', ');
+        showToast('✅ Auto checked-out: ' + names, 5000);
         loadAttendancePage();
       }
+      // Silent mode: no toast for "on wifi / no data / nothing changed"
+      if(!silent){
+        var parts = [];
+        if(d.onWifi && d.onWifi.length > 0){
+          parts.push('📶 On WiFi: ' + d.onWifi.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
+        }
+        if(d.noData && d.noData.length > 0){
+          parts.push('📵 App not open: ' + d.noData.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
+        }
+        if(parts.length) showToast(parts.join('  |  '), 5000);
+        if(!d.checkedOut || !d.checkedOut.length) showToast('ℹ️ All staff status up to date');
+      }
     } else {
-      showToast('❌ ' + (d.message || 'WiFi check failed'));
+      if(!silent) showToast('❌ ' + (d.message || 'WiFi check failed'));
     }
   } catch(e){
-    showToast('❌ Network error — check connection');
-  } finally {
-    if(btn){ btn.disabled=false; btn.innerHTML='<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3C5.5 3 3.3 4.2 2 6.1M8 3c2.5 0 4.7 1.2 6 3.1M4.5 7.5C5.3 6.6 6.6 6 8 6s2.7.6 3.5 1.5M6.5 10c.4-.6 1-.9 1.5-.9s1.1.3 1.5.9M8 13h.01" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg> 📶 WiFi Check'; }
+    if(!silent) showToast('❌ Network error — check connection');
   }
+}
+
+function _startWifiAutoCheck(){
+  _stopWifiAutoCheck();
+  // Run immediately on page open, then every 5 minutes
+  wifiCheckAndCheckout(true);
+  _wifiAutoTimer = setInterval(function(){ wifiCheckAndCheckout(true); }, 5 * 60 * 1000);
+}
+function _stopWifiAutoCheck(){
+  if(_wifiAutoTimer){ clearInterval(_wifiAutoTimer); _wifiAutoTimer = null; }
 }
 
 /* ── LOAD ATTENDANCE PAGE ── */
 async function loadAttendancePage(){
-  // Load expected work hours from payroll settings (cache it)
-  if(!window._attExpHours){
-    try{
-      var pr=await fetch(API+'/api/settings/payroll',{headers:zHdr()});
-      var pd=await pr.json();
-      window._attExpHours = parseFloat((pd.settings||pd).hours_per_day) || 9;
-    } catch(e){ window._attExpHours = 9; }
+  // Show Loading FIRST — clears old rows immediately so no wrong-data flash during payroll fetch
+  var tbody=document.getElementById('att-page-tbody');
+  if(tbody) tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
+
+  // Load payroll settings fresh every attendance page load
+  try{
+    var pr=await fetch(API+'/api/settings/payroll',{headers:zHdr()});
+    var pd=await pr.json();
+    var ps = pd.data || pd.settings || {};
+    // Store per-employment-type end times so attLateMinsCell can use correct one
+    window._attPayroll = {
+      ft_end:   ps.work_end_time   || '18:00',
+      dt_end:   ps.dt_end_time     || ps.work_end_time || '18:00',
+      pt_end:   ps.pt_end_time     || ps.work_end_time || '18:00',
+      ft_start: ps.work_start_time || '09:00',
+      dt_start: ps.dt_start_time   || ps.work_start_time || '09:00',
+      pt_start: ps.pt_start_time   || ps.work_start_time || '09:00',
+      // hours_per_day has break already deducted (psFtCalcTime subtracts break on save)
+      ft_mins: Math.round((parseFloat(ps.hours_per_day) || 8) * 60),
+      dt_mins: Math.round((parseFloat(ps.day_time_hours) || 8) * 60), // never fallback to FT hours_per_day
+      pt_mins: Math.round((parseFloat(ps.part_time_hours) || 4) * 60),
+      grace:   parseInt(ps.late_grace_minutes) || 15
+    };
+    // Defaults used elsewhere
+    window._attOfficeStart = ps.work_start_time || '09:00';
+    window._attOfficeEnd   = ps.work_end_time   || '18:00';
+    window._attGrace       = window._attPayroll.grace;
+    window._attExpMins     = window._attPayroll.ft_mins;
+  } catch(e){
+    window._attPayroll     = window._attPayroll || { ft_end:'18:00', dt_end:'17:00', pt_end:'13:00', ft_mins:480, dt_mins:480, pt_mins:240, grace:15 };
+    window._attOfficeStart = window._attOfficeStart || '09:00';
+    window._attOfficeEnd   = window._attOfficeEnd   || '18:00';
+    window._attGrace       = window._attGrace || 15;
+    window._attExpMins     = window._attExpMins || 480;
   }
 
   var dateEl=document.getElementById('att-filter-date');
@@ -4031,9 +4104,6 @@ async function loadAttendancePage(){
 
   var subEl=document.getElementById('att-page-sub');
   if(subEl) subEl.textContent = isToday ? "Today's full log" : isSunday ? 'Sunday — Day Off' : 'Attendance for '+dateEl.value;
-
-  var tbody=document.getElementById('att-page-tbody');
-  if(tbody) tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
 
   try{
     // Today uses /today endpoint (all staff with LEFT JOIN), other dates use /my pattern per staff
@@ -4066,13 +4136,13 @@ async function loadAttendancePage(){
     if(!rows.length){
       // Sunday with no one clocked in — show holiday screen
       if(isSunday){
-        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:48px 24px;">'
+        tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:48px 24px;">'
           +'<div style="font-size:40px;margin-bottom:12px;">☀️</div>'
           +'<div style="font-size:15px;font-weight:500;color:rgba(245,245,247,0.7);margin-bottom:6px;">Sunday — Day Off</div>'
           +'<div style="font-size:12px;color:var(--muted);">No attendance recorded · If someone worked, they will appear here once checked in</div>'
           +'</td></tr>';
       } else {
-        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
+        tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
       }
       return;
     }
@@ -4087,7 +4157,7 @@ async function loadAttendancePage(){
       return attViewRow(r,i);
     }).join('');
   } catch(e){
-    if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#FF453A;">Error loading attendance</td></tr>';
+    if(tbody) tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:#FF453A;">Error loading attendance</td></tr>';
     console.error('loadAttendancePage:',e);
   }
 }
@@ -5960,30 +6030,104 @@ function _localTimeToUTC(dateStr, hmm){
   return (h<10?'0':'')+h + ':' + (m<10?'0':'')+m;
 }
 
+// Compute OT minutes: how many minutes past THIS staff member's end time they worked
+function _calcOTMins(checkOut, empType){
+  if(!checkOut) return 0;
+  var co = new Date(checkOut);
+  if(isNaN(co.getTime())) return 0;
+  var pr = window._attPayroll || {};
+  var et = (empType || 'full_time').toLowerCase();
+  var toM = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
+  // Each staff's OT starts after THEIR OWN employment-type end time (not the min of all types)
+  var endStr;
+  if(et === 'day_time')       endStr = pr.dt_end || pr.ft_end || '18:00';
+  else if(et === 'part_time') endStr = pr.pt_end || '13:00';
+  else                        endStr = pr.ft_end || '18:00'; // full_time + daily_wage + default
+  var officeCloseMins = toM(endStr);
+  var coMins = co.getHours()*60 + co.getMinutes();
+  return Math.max(0, coMins - officeCloseMins);
+}
+
+// Build OT cell HTML — styled like Late Mins for visual consistency
+function _otCell(r){
+  var otMins = _calcOTMins(r.check_out, r.employment_type);
+  if(otMins < 5) return '<span style="color:var(--muted);">—</span>';
+  var h = Math.floor(otMins/60), m = otMins%60;
+  var label = h > 0 ? (h+'h'+(m?' '+m+'m':'')) : (m+'m');
+  return '<span style="color:#30D158;font-weight:700;font-size:12px;">+'+label+'</span>';
+}
+
+// Compute late minutes from check_in time vs office start + grace (client-side)
+// empType: 'full_time' | 'day_time' | 'part_time' (optional, defaults to full_time)
+function _calcLateFromCheckIn(checkIn, empType){
+  if(!checkIn) return 0;
+  var ci = new Date(checkIn);
+  if(isNaN(ci.getTime())) return 0;
+  var pr = window._attPayroll || {};
+  var grace = pr.grace || window._attGrace || 15;
+  var startStr;
+  var et = (empType || 'full_time').toLowerCase();
+  if(et === 'day_time')       startStr = pr.dt_start || window._attOfficeStart || '09:00';
+  else if(et === 'part_time') startStr = pr.pt_start || window._attOfficeStart || '09:00';
+  else                        startStr = pr.ft_start || window._attOfficeStart || '09:00';
+  var parts = startStr.split(':').map(Number);
+  var cutoff = new Date(ci);
+  cutoff.setHours(parts[0], parts[1] + grace, 0, 0);
+  return ci > cutoff ? Math.floor((ci - cutoff) / 60000) : 0;
+}
+
 // Build the Late Mins / Under-hours cell content
 function attLateMinsCell(r){
   var parts = [];
 
-  // 1. Late arrival (existing)
-  if(r.late_minutes > 0){
-    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+r.late_minutes+' min late</span>');
+  // 1. Late arrival — use DB value or compute on-the-fly if DB is 0
+  var dbLate = parseInt(r.late_minutes) || 0;
+  var lateMins = dbLate > 0 ? dbLate : _calcLateFromCheckIn(r.check_in, r.employment_type);
+  if(lateMins > 0){
+    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+lateMins+' min late</span>');
   }
 
   // 2. Under-hours — only if staff has both check_in AND check_out
   if(r.check_in && r.check_out){
-    var expHrs  = window._attExpHours || 9;
-    var expMins = expHrs * 60;
-    var workedMs   = new Date(r.check_out).getTime() - new Date(r.check_in).getTime();
-    var workedMins = Math.floor(workedMs / 60000);
-    var shortMins  = expMins - workedMins;
+    var co = new Date(r.check_out);
+    var pr = window._attPayroll || {};
 
-    if(shortMins > 5){ // ignore < 5 min rounding
-      var dispHrs = Math.floor(shortMins / 60);
-      var dispMin = shortMins % 60;
-      var shortStr = dispHrs > 0
-        ? (dispHrs + 'h ' + (dispMin > 0 ? dispMin + 'm' : '') + ' short')
-        : (shortMins + ' min short');
-      parts.push('<span style="color:#FF453A;font-weight:500;">'+shortStr+'</span>');
+    // Pick expected mins for THIS staff's employment type
+    var empType = (r.employment_type || 'full_time').toLowerCase();
+    var expMins;
+    if(empType === 'day_time')       expMins = pr.dt_mins || 480; // never fallback to FT hours
+    else if(empType === 'part_time') expMins = pr.pt_mins || 240;
+    else                             expMins = pr.ft_mins || 480;
+
+    // "No short" if checkout >= THIS staff's own employment-type end time
+    var toMins = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
+    var coMins  = co.getHours()*60 + co.getMinutes();
+    var endStr, startStr;
+    if(empType === 'day_time')       { endStr = pr.dt_end || '17:00'; startStr = pr.dt_start || '09:00'; }
+    else if(empType === 'part_time') { endStr = pr.pt_end || '13:00'; startStr = pr.pt_start || '09:00'; }
+    else                             { endStr = pr.ft_end || '18:00'; startStr = pr.ft_start || '09:00'; }
+    var officeCloseMins = toMins(endStr);
+    var workedMins = Math.floor((co.getTime() - new Date(r.check_in).getTime()) / 60000);
+    // Triple-safety: never show "short" if any of these hold:
+    // 1. Checked out at/after their own end time
+    // 2. Worked >= stored expected hours (from day_time_hours / hours_per_day)
+    // 3. Worked >= (schedule duration - 75 min buffer) — guards against wrong DB end-time/hours
+    var schedDurMins = Math.max(0, officeCloseMins - toMins(startStr));
+    var noShort = (coMins >= officeCloseMins)
+               || (workedMins >= expMins)
+               || (workedMins >= schedDurMins - 75);
+
+    if(!noShort){
+      var shortMins  = expMins - workedMins;
+
+      if(shortMins > 5){ // ignore < 5 min rounding
+        var dispHrs = Math.floor(shortMins / 60);
+        var dispMin = shortMins % 60;
+        var shortStr = dispHrs > 0
+          ? (dispHrs + 'h ' + (dispMin > 0 ? dispMin + 'm' : '') + ' short')
+          : (shortMins + ' min short');
+        parts.push('<span style="color:#FF453A;font-weight:500;">'+shortStr+'</span>');
+      }
     }
   }
 
@@ -5992,6 +6136,10 @@ function attLateMinsCell(r){
 
 function attViewRow(r,i){
   var st=(r.status||'absent').toLowerCase();
+  // Auto-upgrade 'present' → 'late' if check_in is past grace window
+  if(st === 'present' && r.check_in && _calcLateFromCheckIn(r.check_in, r.employment_type) > 0){
+    st = 'late';
+  }
   var stColors={'present':'#30D158','late':'#FF9F0A','absent':'#FF453A','on_leave':'#0A84FF','onsite_approved':'#BF5FFF','late_pending':'#FF9F0A','onsite_pending':'#BF5FFF'};
   var stLabels={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite ✓','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'};
   var col=stColors[st]||'#FF453A';
@@ -6012,6 +6160,7 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:var(--muted);">'+fmtTime(r.check_out)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+attLateMinsCell(r)+'</td>'
+    +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
@@ -6039,6 +6188,8 @@ function attEditRow(r,i){
     +'</td>'
     // Late mins
     +'<td style="'+td+'"><input type="number" id="ae-lm-'+i+'" value="'+(r.late_minutes||0)+'" min="0" max="999" style="'+inp+'width:60px;text-align:center;"></td>'
+    // OT (read-only in edit mode)
+    +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     // Status
     +'<td style="'+td+'">'
       +'<select id="ae-st-'+i+'" style="'+inp+'width:110px;cursor:pointer;">'
