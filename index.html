@@ -1,3 +1,4 @@
+<!-- v20260507 -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -294,6 +295,32 @@ body.desktop-mode #s1-sidebar {
 
     <!-- HOME (STAFF) -->
     <div id="s1-home" class="scr">
+
+      <!-- Break vs Office Work Choice Overlay — positioned over entire screen -->
+      <div id="break-choice-overlay" style="display:none;opacity:0;transition:opacity 0.25s;position:absolute;inset:0;z-index:100;background:rgba(4,4,8,0.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;">
+        <div style="width:100%;max-width:280px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.14);border-radius:22px;padding:22px 20px;">
+          <div style="text-align:center;font-size:26px;margin-bottom:6px;">📶</div>
+          <div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:4px;">Back on Office WiFi</div>
+          <div id="bco-away-mins" style="text-align:center;font-size:11px;color:rgba(245,245,247,0.42);margin-bottom:20px;">You were away for a few min</div>
+          <div style="font-size:11px;color:rgba(245,245,247,0.5);text-align:center;margin-bottom:12px;">Where were you?</div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;">
+            <button id="bco-btn-break" onclick="bcoSubmit('break')" style="flex:1;background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.35);border-radius:14px;padding:14px 8px;font-size:13px;font-weight:600;color:#FF9F0A;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:5px;">
+              <span style="font-size:22px;">☕</span>
+              <span>Break</span>
+            </button>
+            <button onclick="bcoSelectOfficeWork()" style="flex:1;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.35);border-radius:14px;padding:14px 8px;font-size:13px;font-weight:600;color:#0A84FF;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:5px;">
+              <span style="font-size:22px;">💼</span>
+              <span>Office Work</span>
+            </button>
+          </div>
+          <div id="bco-reason-wrap" style="display:none;">
+            <div style="font-size:10px;color:rgba(245,245,247,0.42);margin-bottom:5px;">Reason for outside work</div>
+            <textarea id="bco-reason-input" placeholder="e.g. Client visit, site inspection…" rows="3" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#fff;font-size:12px;padding:9px 11px;font-family:inherit;resize:none;outline:none;margin-bottom:10px;box-sizing:border-box;"></textarea>
+            <button id="bco-btn-officework" onclick="bcoSubmit('office_work')" style="width:100%;background:rgba(10,132,255,0.18);border:0.5px solid rgba(10,132,255,0.4);border-radius:11px;color:#0A84FF;font-size:12px;font-weight:600;padding:10px;cursor:pointer;font-family:inherit;">Send Request to Admin →</button>
+          </div>
+        </div>
+      </div>
+
       <div class="scroll" style="padding:12px 13px 8px;">
         <!-- Profile banner -->
         <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));">
@@ -3815,6 +3842,95 @@ function listenBreakApproval(){
         'Admin approved your attendance — you\'re all set',false);
       setTimeout(function(){ wifiBanner(false); }, 5000);
     });
+    socket.on('office-work-approved', function(data){
+      hideBreakChoiceOverlay();
+      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Office Work Approved!',
+        'Admin confirmed your outside work — no deduction',false);
+      setTimeout(function(){ wifiBanner(false); }, 6000);
+    });
+    socket.on('office-work-rejected', function(data){
+      hideBreakChoiceOverlay();
+      var msg = data.excess_mins > 0
+        ? 'Break deduction applied — '+data.excess_mins+' min over limit (₹'+data.deduction+')'
+        : 'Request rejected — no salary impact';
+      wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','❌ Office Work Rejected',msg,false);
+      setTimeout(function(){ wifiBanner(false); }, 7000);
+    });
+  }
+}
+
+// ── Break vs Office Work Choice Overlay ──
+function showBreakChoiceOverlay(awayMins){
+  var ov = document.getElementById('break-choice-overlay');
+  if(!ov) return;
+  var minsTxt = document.getElementById('bco-away-mins');
+  if(minsTxt) minsTxt.textContent = 'You were away for '+(awayMins||'a few')+' min';
+  document.getElementById('bco-reason-wrap').style.display = 'none';
+  document.getElementById('bco-reason-input').value = '';
+  ov.style.display = 'flex';
+  setTimeout(function(){ ov.style.opacity='1'; },10);
+}
+
+function hideBreakChoiceOverlay(){
+  var ov = document.getElementById('break-choice-overlay');
+  if(!ov) return;
+  ov.style.opacity='0';
+  setTimeout(function(){ ov.style.display='none'; },250);
+}
+
+function bcoSelectOfficeWork(){
+  document.getElementById('bco-reason-wrap').style.display = 'block';
+  document.getElementById('bco-reason-input').focus();
+}
+
+async function bcoSubmit(type){
+  var btn = type==='break'
+    ? document.getElementById('bco-btn-break')
+    : document.getElementById('bco-btn-officework');
+  var origText = btn.innerHTML;
+  btn.innerHTML='…'; btn.disabled=true;
+  var reason = '';
+  if(type==='office_work'){
+    reason = (document.getElementById('bco-reason-input').value||'').trim();
+    if(!reason){
+      document.getElementById('bco-reason-input').style.borderColor='rgba(255,69,58,0.6)';
+      btn.innerHTML=origText; btn.disabled=false; return;
+    }
+  }
+  try{
+    hideBreakChoiceOverlay();
+    wifiBanner(true,'rgba(10,132,255,0.1)','rgba(10,132,255,1)',
+      type==='office_work'?'💼 Sending Request…':'☕ Processing Break…','Please wait…',false);
+    var body = JSON.stringify({type:type, reason:reason});
+    var res = await fetch(API_URL+'/api/attendance/break-return',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},zHead()),
+      body:body
+    });
+    var d = await res.json();
+    if(d.success){
+      if(type==='office_work'){
+        wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','💼 Request Sent — Awaiting Approval',
+          'Admin will review your outside work request',false);
+      } else {
+        if(d.break_excess_mins>0){
+          wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)',
+            '⚠️ Break Overtime — '+d.break_excess_mins+' min',
+            '₹'+d.break_excess_deduction+' deducted from salary',false);
+          setTimeout(function(){ wifiBanner(false); },7000);
+        } else {
+          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)',
+            '☕ Break Ended ✓','You\'re back on time — no deduction',false);
+          setTimeout(function(){ wifiBanner(false); },5000);
+        }
+      }
+    } else {
+      wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⚠️ Error',d.message||'Please try again',false);
+      setTimeout(function(){ wifiBanner(false); },5000);
+    }
+  } catch(e){
+    wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⚠️ Network Error','Please check your connection',false);
+    setTimeout(function(){ wifiBanner(false); },4000);
   }
 }
 
@@ -3879,22 +3995,10 @@ async function wifiCheckAndAct(){
       } else if(d.checkedOut && d.minutesSinceCheckout!==null){
         // Checked out — break return or manual checkout return
         if(d.isBreakCheckout){
-          // ── Break return via new /break-return endpoint ──
+          // ── Show Break vs Office Work choice ──
           _breakCheckoutCalled = false; // reset flag
-          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','☕ Back from Break — Checking in…','Please wait…',false);
-          try{
-            var br2=await fetch(API_URL+'/api/attendance/break-return',{method:'POST',headers:zHead()});
-            var bd2=await br2.json();
-            if(bd2.success){
-              if(bd2.break_excess_mins>0){
-                wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)','⚠️ Break Overtime — '+bd2.break_excess_mins+' min','₹'+bd2.break_excess_deduction+' deducted from salary',false);
-                setTimeout(function(){ wifiBanner(false); },7000);
-              } else {
-                wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','☕ Break Ended ✓','You\'re back on time — no deduction',false);
-                setTimeout(function(){ wifiBanner(false); },5000);
-              }
-            } else { wifiBanner(false); }
-          } catch(e3){ wifiBanner(false); }
+          wifiBanner(false); // hide any existing banner
+          showBreakChoiceOverlay(d.minutesSinceCheckout);
         } else if(d.minutesSinceCheckout < bw){
           // Manual checkout within break window → auto resume
           wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Back in Office — Resuming…','Out for '+d.minutesSinceCheckout+' min',false);

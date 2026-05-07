@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n *)",
+      "Bash(grep -rn *)",
+      "Bash(find /Users/dotadvertising/Desktop/zeebas_backend *)",
+      "Bash(find \"/Volumes/DOT*)",
+      "Bash(ls /Users/dotadvertising/Desktop/zeebas_backend*)",
+      "Bash(ls \"/Volumes/DOT*)",
+      "Bash(ls -la *)",
+      "Bash(sed -n *)",
+      "Bash(wc -l *)"
+    ]
+  }
+}
