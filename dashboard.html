@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507g -->
+<!-- v20260507h -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1182,8 +1182,13 @@ textarea.inp{resize:none;}
   <div id="page-attendance" class="page">
     <div class="topbar">
       <div><div class="ptitle">Attendance</div><div class="psub" id="att-page-sub">Today's full log</div></div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <div id="att-filter-date-trigger" onclick="openUCal('att-filter-date','att-filter-date-label',loadAttendancePage)" style="width:148px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;"><span id="att-filter-date-label" style="color:var(--muted);">Select date</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <!-- Day navigation -->
+        <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;">
+          <button onclick="attShiftDay(-1)" title="Previous day" style="background:none;border:none;border-right:0.5px solid rgba(255,255,255,0.1);padding:8px 11px;cursor:pointer;color:rgba(245,245,247,0.7);font-size:15px;line-height:1;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">‹</button>
+          <div id="att-filter-date-trigger" onclick="openUCal('att-filter-date','att-filter-date-label',loadAttendancePage)" style="padding:8px 12px;font-size:12px;cursor:pointer;min-width:110px;text-align:center;white-space:nowrap;"><span id="att-filter-date-label" style="color:rgba(245,245,247,0.85);">Today</span></div>
+          <button onclick="attShiftDay(1)" title="Next day" style="background:none;border:none;border-left:0.5px solid rgba(255,255,255,0.1);padding:8px 11px;cursor:pointer;color:rgba(245,245,247,0.7);font-size:15px;line-height:1;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">›</button>
+        </div>
         <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
         <button id="wifi-co-btn" onclick="wifiCheckAndCheckout()" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:10px;padding:8px 13px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;" title="Check who is off office WiFi and clock them out">
@@ -3923,6 +3928,26 @@ async function exportDashboard(){
     a.click(); URL.revokeObjectURL(a.href);
     showToast('✓ Exported attendance_'+today+'.csv');
   }catch(e){ showToast('❌ Export failed'); }
+}
+
+/* ── ATTENDANCE DAY NAVIGATION ── */
+function attShiftDay(delta){
+  var el  = document.getElementById('att-filter-date');
+  var lbl = document.getElementById('att-filter-date-label');
+  var today = new Date().toISOString().slice(0,10);
+  var cur = el.value || today;
+  var d = new Date(cur + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  var newDate = d.toISOString().slice(0,10);
+  el.value = newDate;
+  // Show "Today" label when on today's date
+  if(newDate === today){
+    if(lbl){ lbl.textContent = 'Today'; lbl.style.color = '#0A84FF'; }
+  } else {
+    ucalSetDisplay('att-filter-date','att-filter-date-label', newDate);
+    if(lbl) lbl.style.color = 'rgba(245,245,247,0.85)';
+  }
+  loadAttendancePage();
 }
 
 /* ── WIFI CHECK & CHECKOUT (Admin) ── */
