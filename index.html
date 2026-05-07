@@ -1,4 +1,4 @@
-<!-- v20260507c -->
+<!-- v20260507d -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -2336,9 +2336,11 @@ function appendStaffMsg1(msg, doScroll){
         if(delWrap) delWrap.style.display = canDel ? 'contents' : 'none';
         var rp = document.getElementById('react-picker'); if(!rp) return;
         var rect = bubble.getBoundingClientRect();
+        rp.style.visibility='hidden'; rp.style.display='flex';
+        var rpW=rp.offsetWidth||300;
         var top = rect.top - 68; if(top < 10) top = rect.bottom + 8;
-        var left = Math.max(8, Math.min(rect.left, window.innerWidth - 310));
-        rp.style.top = top+'px'; rp.style.left = left+'px'; rp.style.display = 'flex';
+        var left = Math.max(4, Math.min(rect.left, window.innerWidth - rpW - 8));
+        rp.style.top = top+'px'; rp.style.left = left+'px'; rp.style.visibility='visible';
       }, 450);
     },{passive:true});
     bubble.addEventListener('touchend',  function(){ clearTimeout(_pt); },{passive:true});

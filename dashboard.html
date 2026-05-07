@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507b -->
+<!-- v20260507c -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -3147,9 +3147,13 @@ function appendDashMsg(msg, doScroll){
       if(pinOpt) pinOpt.style.display='flex';
       if(vrOpt)  vrOpt.style.display=!isMe?'flex':'none';
       var rp=document.getElementById('dash-react-picker'); if(!rp) return;
+      // Measure actual picker width before positioning
+      rp.style.visibility='hidden'; rp.style.display='flex';
+      var rpW=rp.offsetWidth||360;
       var top=e.clientY-70; if(top<10) top=e.clientY+8;
-      var left=Math.max(8,Math.min(e.clientX-160,window.innerWidth-320));
-      rp.style.top=top+'px'; rp.style.left=left+'px'; rp.style.display='flex';
+      if(top+60>window.innerHeight) top=e.clientY-rpW-8;
+      var left=Math.max(8, Math.min(e.clientX - Math.round(rpW/2), window.innerWidth - rpW - 12));
+      rp.style.top=top+'px'; rp.style.left=left+'px'; rp.style.visibility='visible';
     });
   }
 
