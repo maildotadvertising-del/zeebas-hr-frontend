@@ -5624,31 +5624,40 @@ async function loadPayrollPage(){
   if(lbl) lbl.textContent = _prMonths[_pr.month-1]+' '+_pr.year;
   var tbody = document.getElementById('payroll-tbody');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
+
+  // Is this the current month? (affects Net Pay display — earned so far vs full month)
+  var _now = new Date();
+  window._prIsCurrMonth = (_pr.month === _now.getMonth()+1 && _pr.year === _now.getFullYear());
 
   try{
     var res = await fetch(API+'/api/payroll/salary-preview?month='+_pr.month+'&year='+_pr.year, { headers: zHdr() });
     var d = await res.json();
-    if(!d.success){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#FF453A;">Error: '+escHtml(d.message||'Failed')+'</td></tr>'; return; }
+    if(!d.success){ tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:#FF453A;">Error: '+escHtml(d.message||'Failed')+'</td></tr>'; return; }
 
     var rows = d.data || [];
     var setEl = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
     setEl('pr-total-staff', rows.length);
     setEl('pr-working-days', d.working_days||'—');
+    // Summary: use earned_so_far for current month unprocessed, net_salary otherwise
     var totalNet=0, totalDed=0;
-    rows.forEach(function(r){ totalNet+=parseFloat(r.net_salary||0); totalDed+=parseFloat(r.late_deduction||0)+parseFloat(r.absent_deduction||0); });
+    rows.forEach(function(r){
+      var useEarned = window._prIsCurrMonth && !r.payroll_id;
+      totalNet += useEarned ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
+      totalDed += parseFloat(r.late_deduction||0) + parseFloat(r.absent_deduction||0) + parseFloat(r.advance_deduction||0);
+    });
     setEl('pr-total-net', '₹'+Math.round(totalNet).toLocaleString('en-IN'));
     setEl('pr-total-ded', '₹'+Math.round(totalDed).toLocaleString('en-IN'));
 
     if(!rows.length){
-      tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">No staff found</td></tr>';
+      tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);">No staff found</td></tr>';
       return;
     }
 
     window._prRows = rows;
     tbody.innerHTML = rows.map(function(r,i){ return prViewRow(r,i); }).join('');
   } catch(e){
-    if(tbody) tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
+    if(tbody) tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
     console.error('loadPayrollPage:',e);
   }
 }
@@ -5662,14 +5671,20 @@ function prViewRow(r,i){
     : '<div style="width:30px;height:30px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
   var td = 'padding:9px 8px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
   var bg = i%2===0?'transparent':'rgba(255,255,255,0.015)';
-  var net = parseFloat(r.net_salary||0);
   var inc = parseFloat(r.other_incentive||0);
   var alw = parseFloat(r.allowance_amount||0);
+  var lateDed  = parseFloat(r.late_deduction||0);
+  var otherDed = parseFloat(r.other_deduction||0);
+  var advDed   = parseFloat(r.advance_deduction||0);
+
+  // Current month + not yet processed → show earned-so-far, else show full net_salary
+  var isLive = window._prIsCurrMonth && !r.payroll_id;
+  var net = isLive ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
+
   var statusBadge = r.payroll_status==='paid'
     ? '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
     : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;" onclick="markPayrollPaid('+r.payroll_id+',\''+escHtml(r.name)+'\')">Pending</span>';
-  var lateDed  = parseFloat(r.late_deduction||0);
-  var otherDed = parseFloat(r.other_deduction||0);
+
   return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
       +'<div><div style="font-size:12px;font-weight:500;">'+escHtml(r.name)+'</div>'
@@ -5680,9 +5695,10 @@ function prViewRow(r,i){
     +'<td style="'+td+'text-align:center;color:#30D158;">'+(r.days_present||0)+'d</td>'
     +'<td style="'+td+'text-align:center;color:'+(r.days_absent>0?'#FF453A':'var(--muted)')+';">'+(r.days_absent||0)+'d</td>'
     +'<td style="'+td+'text-align:center;">'
-      +(lateDed>0?'<div style="color:#FF9F0A;font-size:11px;" title="Late deduction">₹'+lateDed.toLocaleString('en-IN')+'</div>':'')
-      +(otherDed>0?'<div style="color:#FF453A;font-size:11px;" title="Other deduction">₹'+otherDed.toLocaleString('en-IN')+'</div>':'')
-      +(lateDed===0&&otherDed===0?'<span style="color:var(--muted);">—</span>':'')
+      +(lateDed>0?'<div style="color:#FF9F0A;font-size:11px;" title="Late deduction">-₹'+lateDed.toLocaleString('en-IN')+'</div>':'')
+      +(otherDed>0?'<div style="color:#FF453A;font-size:11px;" title="Other deduction">-₹'+otherDed.toLocaleString('en-IN')+'</div>':'')
+      +(advDed>0?'<div style="color:#FF6B6B;font-size:11px;" title="Salary advance recovery">💳 -₹'+advDed.toLocaleString('en-IN')+'</div>':'')
+      +(lateDed===0&&otherDed===0&&advDed===0?'<span style="color:var(--muted);">—</span>':'')
     +'</td>'
     +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
     +'<td style="'+td+'text-align:center;color:'+(inc>0?'#30D158':'var(--muted)')+';">'
@@ -5696,7 +5712,10 @@ function prViewRow(r,i){
           :'<span style="color:rgba(245,245,247,0.25);font-size:10px;">—</span>')
         :'<span style="color:rgba(245,245,247,0.12);font-size:9px;">N/A</span>')
     +'</td>'
-    +'<td style="'+td+'text-align:center;font-weight:600;color:'+(net>0?'#30D158':'#FF453A')+';">₹'+Math.round(net).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;">'
+      +'<div style="font-weight:600;color:'+(net>0?'#30D158':'#FF453A')+';">₹'+Math.round(net).toLocaleString('en-IN')+'</div>'
+      +(isLive?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:2px;">so far ↗</div>':'')
+    +'</td>'
     +'<td style="'+td+'text-align:center;">'+statusBadge+'</td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +(r.payroll_id
