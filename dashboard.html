@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507e -->
+<!-- v20260507f -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1223,18 +1223,18 @@ textarea.inp{resize:none;}
   <!-- ── TEAM CHAT ── -->
   <div id="page-team-chat" class="page">
     <div class="topbar">
-      <div><div class="ptitle">Team Chat</div></div>
+      <div>
+        <div class="ptitle">DOT Advertising — Team Chat</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+          <div style="width:7px;height:7px;background:#30D158;border-radius:50%;box-shadow:0 0 6px rgba(48,209,88,0.7);flex-shrink:0;"></div>
+          <span id="dash-online-count" style="font-size:11px;color:rgba(48,209,88,0.85);font-weight:400;">0 online</span>
+        </div>
+      </div>
       <div></div>
     </div>
-    <div id="chat-layout" style="display:grid;grid-template-columns:1fr;gap:16px;height:calc(100vh - 120px);">
+    <div id="chat-layout" style="display:grid;grid-template-columns:1fr;gap:16px;height:calc(100vh - 130px);">
       <!-- Chat area -->
       <div class="g" style="display:flex;flex-direction:column;overflow:hidden;padding:0;">
-        <!-- Pinned message -->
-        <div style="background:rgba(10,132,255,0.1);border-bottom:0.5px solid rgba(10,132,255,0.15);padding:10px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v8M7 9.5L4 6.5M7 9.5L10 6.5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M3 12.5h8" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
-          <div style="flex:1;"><span style="color:#0A84FF;font-size:10px;font-weight:500;margin-right:6px;">📌 Pinned</span><span id="dash-pinned-text" style="color:rgba(245,245,247,0.5);font-size:12px;">No pinned message</span></div>
-          <button style="background:none;border:none;cursor:pointer;color:rgba(245,245,247,0.3);font-size:13px;">✕</button>
-        </div>
         <!-- Messages -->
         <div style="flex:1;overflow-y:auto;padding:18px 18px 10px;display:flex;flex-direction:column;gap:14px;" id="dash-msgs">
           <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;opacity:0.4;">
@@ -1339,15 +1339,16 @@ textarea.inp{resize:none;}
 
           <!-- Input row -->
           <div style="display:flex;align-items:center;gap:10px;">
-            <!-- Attach -->
-            <button type="button" onclick="toggleDashAttach()" style="width:38px;height:38px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Attach file">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8.5a6 6 0 01-12 0V5a4 4 0 018 0v4a2.5 2.5 0 01-5 0V6" stroke="rgba(245,245,247,0.55)" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <!-- + Attach button -->
+            <button type="button" onclick="toggleDashAttach()" title="Attach file" style="width:38px;height:38px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.13);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.11)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+              <svg width="15" height="15" viewBox="0 0 14 14" fill="none"><line x1="7" y1="2" x2="7" y2="12" stroke="rgba(245,245,247,0.6)" stroke-width="1.6" stroke-linecap="round"/><line x1="2" y1="7" x2="12" y2="7" stroke="rgba(245,245,247,0.6)" stroke-width="1.6" stroke-linecap="round"/></svg>
             </button>
-            <!-- Emoji -->
-            <button type="button" id="dash-emoji-btn" onclick="toggleDashEmoji()" title="Emoji" style="width:38px;height:38px;background:rgba(255,200,0,0.08);border:0.5px solid rgba(255,200,0,0.18);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;line-height:1;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,200,0,0.16)'" onmouseout="this.style.background='rgba(255,200,0,0.08)'">😊</button>
-            <!-- Text input -->
-            <input type="text" id="dash-ci" placeholder="Message all staff…" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:24px;color:var(--text);padding:10px 18px;font-size:13px;font-weight:300;flex:1;outline:none;font-family:'DM Sans',sans-serif;letter-spacing:0.1px;">
-            <!-- Mic (hold to record — separate, always visible) -->
+            <!-- Input with emoji inside -->
+            <div style="position:relative;flex:1;display:flex;align-items:center;">
+              <button type="button" id="dash-emoji-btn" onclick="toggleDashEmoji()" title="Emoji" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1;padding:2px;z-index:2;transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-50%) scale(1.25)'" onmouseout="this.style.transform='translateY(-50%) scale(1)'">😊</button>
+              <input type="text" id="dash-ci" placeholder="Message all staff…" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:24px;color:var(--text);padding:10px 18px 10px 40px;font-size:13px;font-weight:300;width:100%;outline:none;font-family:'DM Sans',sans-serif;letter-spacing:0.1px;">
+            </div>
+            <!-- Mic (hold to record) -->
             <button type="button" id="dash-mic-btn" onmousedown="dashStartVoice()" onmouseup="dashStopVoice()" onmouseleave="dashStopVoice()" title="Hold to record voice" style="width:40px;height:40px;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;">
               <svg width="15" height="15" viewBox="0 0 14 14" fill="none"><rect x="4.5" y="1" width="5" height="7.5" rx="2.5" stroke="#0A84FF" stroke-width="1.3"/><path d="M2 7.5a5 5 0 0010 0" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><line x1="7" y1="12.5" x2="7" y2="14" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
             </button>
@@ -2956,7 +2957,10 @@ function connectDashSocket(){
       if(dot) dot.style.display = 'block';
     }
   });
-  dashSocket.on('online-count', function(n){});
+  dashSocket.on('online-count', function(n){
+    var el = document.getElementById('dash-online-count');
+    if(el) el.textContent = n + (n===1?' online':' online');
+  });
   dashSocket.on('message-pinned', function(){ loadDashPinned(); });
   dashSocket.on('message-deleted', function(data){
     var wrap=document.querySelector('#dash-msgs [data-msgid="'+data.message_id+'"]');
