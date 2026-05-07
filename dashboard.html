@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260507d -->
+<!-- v20260507e -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -5829,6 +5829,18 @@ document.addEventListener('click',function(e){
 /* ── ATTENDANCE INLINE EDIT ── */
 function _toHHMM(dt){ if(!dt) return ''; var d=new Date(dt); if(isNaN(d.getTime())) return ''; var h=d.getHours(),m=d.getMinutes(); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m; }
 
+// Convert HH:MM entered by admin (LOCAL time) → HH:MM UTC for storage in MySQL.
+// MySQL has no timezone — it stores bare datetimes. The server (Render) is UTC,
+// so mysql2 treats them as UTC on read. Admin enters IST → we must save UTC.
+function _localTimeToUTC(dateStr, hmm){
+  if(!hmm) return null;
+  // new Date("YYYY-MM-DDTHH:MM:00") is parsed as LOCAL time in browsers ✓
+  var d = new Date(dateStr + 'T' + hmm + ':00');
+  if(isNaN(d.getTime())) return hmm; // fallback — send as-is
+  var h = d.getUTCHours(), m = d.getUTCMinutes();
+  return (h<10?'0':'')+h + ':' + (m<10?'0':'')+m;
+}
+
 function attViewRow(r,i){
   var st=(r.status||'absent').toLowerCase();
   var stColors={'present':'#30D158','late':'#FF9F0A','absent':'#FF453A','on_leave':'#0A84FF','onsite_approved':'#BF5FFF','late_pending':'#FF9F0A','onsite_pending':'#BF5FFF'};
@@ -5914,11 +5926,19 @@ async function attSaveEdit(i){
   var saveBtn = document.querySelector('#att-row-'+i+' button');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='…'; }
 
+  // Read raw local-time values from the time inputs (e.g. "09:30" IST)
+  var ciRaw = document.getElementById('ae-ci-'+i).value || null;
+  var coRaw = document.getElementById('ae-co-'+i).value || null;
+
+  // Convert to UTC before sending — MySQL/server are UTC, admin is in local time
+  var ciUTC = _localTimeToUTC(window._attDate, ciRaw);
+  var coUTC = _localTimeToUTC(window._attDate, coRaw);
+
   var payload = {
     staff_id:     r.id,
     date:         window._attDate,
-    check_in:     document.getElementById('ae-ci-'+i).value || null,
-    check_out:    document.getElementById('ae-co-'+i).value || null,
+    check_in:     ciUTC,
+    check_out:    coUTC,
     type:         document.getElementById('ae-type-'+i).value,
     late_minutes: parseInt(document.getElementById('ae-lm-'+i).value) || 0,
     status:       document.getElementById('ae-st-'+i).value
@@ -5931,10 +5951,10 @@ async function attSaveEdit(i){
     });
     var d = await res.json();
     if(d.success){
-      // Update cached row data so cancel shows updated values
+      // Cache uses local-time string so _toHHMM shows correct value before page reload
       window._attRows[i] = Object.assign({}, r, {
-        check_in: payload.check_in ? window._attDate+'T'+payload.check_in : r.check_in,
-        check_out: payload.check_out ? window._attDate+'T'+payload.check_out : null,
+        check_in: ciRaw ? window._attDate+'T'+ciRaw+':00' : r.check_in,
+        check_out: coRaw ? window._attDate+'T'+coRaw+':00' : null,
         type: payload.type, late_minutes: payload.late_minutes, status: payload.status
       });
       var row = document.getElementById('att-row-'+i);
