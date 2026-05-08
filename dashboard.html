@@ -6186,14 +6186,43 @@ function attViewRow(r,i){
     +'</td></tr>';
 }
 
+// Auto-recalculate late_mins + status when check-in time is changed by admin
+function attRecalcLate(i){
+  var r = window._attRows[i];
+  var ciVal = document.getElementById('ae-ci-'+i);
+  var lmEl  = document.getElementById('ae-lm-'+i);
+  var stEl  = document.getElementById('ae-st-'+i);
+  if(!ciVal || !lmEl || !stEl) return;
+
+  var hhmm = ciVal.value; // e.g. "09:45"
+  if(!hhmm) return;
+
+  var pr   = window._attPayroll || {};
+  var emp  = (r.employment_type||'full_time');
+  var startStr = emp==='day_time' ? (pr.dt_start||'09:00') : emp==='part_time' ? (pr.pt_start||'09:00') : (pr.ft_start||'09:00');
+  var grace = parseInt(pr.grace||15);
+
+  var toM = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+(p[1]||0); };
+  var ciMins  = toM(hhmm);
+  var lateMins = Math.max(0, ciMins - toM(startStr) - grace);
+
+  lmEl.value = lateMins;
+  // Auto-set status: present if no late, late if late
+  // Only change status if it's currently present/late (don't touch absent/leave etc.)
+  var curStatus = stEl.value;
+  if(curStatus==='present'||curStatus==='late'||curStatus==='late_pending'){
+    stEl.value = lateMins > 0 ? 'late' : 'present';
+  }
+}
+
 function attEditRow(r,i){
   var inp='background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:7px;color:#fff;padding:5px 7px;font-size:11px;font-family:inherit;outline:none;width:100%;color-scheme:dark;';
   var td='padding:6px 6px;border-bottom:0.5px solid rgba(10,132,255,0.15);background:rgba(10,132,255,0.05);';
   return '<tr id="att-row-'+i+'">'
     +'<td style="'+td+'padding-left:14px;"><div style="font-size:12px;font-weight:500;">'+r.name+'</div><div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></td>'
     +'<td style="'+td+'font-size:11px;color:var(--muted);">'+(r.brand_name||'—')+'</td>'
-    // Check In
-    +'<td style="'+td+'"><input type="time" id="ae-ci-'+i+'" value="'+_toHHMM(r.check_in)+'" style="'+inp+'width:90px;"></td>'
+    // Check In — auto-recalculates late mins + status on change
+    +'<td style="'+td+'"><input type="time" id="ae-ci-'+i+'" value="'+_toHHMM(r.check_in)+'" oninput="attRecalcLate('+i+')" style="'+inp+'width:90px;"></td>'
     // Check Out
     +'<td style="'+td+'">'
       +'<div style="display:flex;align-items:center;gap:4px;">'
