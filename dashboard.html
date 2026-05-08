@@ -5125,7 +5125,7 @@ function approvalCard(r, type){
       +'<div style="margin-top:5px;display:flex;align-items:center;gap:8px;">'
       +'<span style="font-size:11px;background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:6px;padding:2px 8px;">⏰ '+dateStr+'</span>'
       +'<span style="font-size:11px;color:var(--muted);">Checked in: '+timeStr+'</span>'
-      +(r.late_minutes?'<span style="font-size:11px;background:rgba(255,69,58,0.1);color:#FF453A;border-radius:6px;padding:2px 8px;">'+r.late_minutes+' min late</span>':'')
++(r.late_minutes && r.status!=='present'?'<span style="font-size:11px;background:rgba(255,69,58,0.1);color:#FF453A;border-radius:6px;padding:2px 8px;">'+(_calcActualLateMinutes(r.check_in,r.employment_type)||r.late_minutes)+' min late</span>':'')
       +'</div>'
       +'</div>'
       +'<div style="display:flex;gap:6px;flex-shrink:0;">'
@@ -6095,15 +6095,37 @@ function _calcLateFromCheckIn(checkIn, empType){
   return ci > cutoff ? Math.floor((ci - cutoff) / 60000) : 0;
 }
 
+// Compute ACTUAL minutes late from start time (no grace subtraction) — for display only
+function _calcActualLateMinutes(checkIn, empType){
+  if(!checkIn) return 0;
+  var ci = new Date(checkIn);
+  if(isNaN(ci.getTime())) return 0;
+  var pr = window._attPayroll || {};
+  var et = (empType || 'full_time').toLowerCase();
+  var startStr;
+  if(et === 'day_time')       startStr = pr.dt_start || window._attOfficeStart || '09:00';
+  else if(et === 'part_time') startStr = pr.pt_start || window._attOfficeStart || '09:00';
+  else                        startStr = pr.ft_start || window._attOfficeStart || '09:00';
+  var sp = startStr.split(':').map(Number);
+  var start = new Date(ci);
+  start.setHours(sp[0], sp[1], 0, 0);
+  return ci > start ? Math.floor((ci - start) / 60000) : 0;
+}
+
 // Build the Late Mins / Under-hours cell content
 function attLateMinsCell(r){
   var parts = [];
 
-  // 1. Late arrival — use DB value or compute on-the-fly if DB is 0
-  var dbLate = parseInt(r.late_minutes) || 0;
-  var lateMins = dbLate > 0 ? dbLate : _calcLateFromCheckIn(r.check_in, r.employment_type);
-  if(lateMins > 0){
-    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+lateMins+' min late</span>');
+  // 1. Late arrival — only show if DB confirms they're late (grace-adjusted > 0)
+  //    Display ACTUAL minutes from start time (not grace-adjusted) for clarity
+  var dbLate   = parseInt(r.late_minutes) || 0;
+  var rowStatus = (r.status || '').toLowerCase();
+  // Don't show "late" text if status is present/on_leave (handles stale DB late_minutes)
+  var isActuallyLate = dbLate > 0 && rowStatus !== 'present' && rowStatus !== 'on_leave';
+  if(isActuallyLate){
+    // Show actual minutes from start (e.g. 36 min if arrived 10:36 with 10:00 start)
+    var displayMins = _calcActualLateMinutes(r.check_in, r.employment_type) || dbLate;
+    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+displayMins+' min late</span>');
   }
 
   // 2. Under-hours — only if staff has both check_in AND check_out
