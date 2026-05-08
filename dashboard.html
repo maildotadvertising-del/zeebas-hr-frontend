@@ -6140,7 +6140,9 @@ function attLateMinsCell(r){
     && rowStatus !== 'on_leave' && rowStatus !== 'absent'
     && (graceAdjustedMin > 0 || dbLate > 0);
   if(isActuallyLate){
-    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+actualMins+' min late</span>');
+    var lh=Math.floor(actualMins/60), lm=actualMins%60;
+    var lateStr = lh>0 ? (lh+'h '+(lm>0?lm+'m ':'')+'late') : (actualMins+' min late');
+    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+lateStr+'</span>');
   }
 
   // 2. Under-hours — only if staff has both check_in AND check_out
