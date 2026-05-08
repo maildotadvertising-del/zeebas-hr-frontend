@@ -6195,7 +6195,12 @@ function attEditRow(r,i){
     // Check In
     +'<td style="'+td+'"><input type="time" id="ae-ci-'+i+'" value="'+_toHHMM(r.check_in)+'" style="'+inp+'width:90px;"></td>'
     // Check Out
-    +'<td style="'+td+'"><input type="time" id="ae-co-'+i+'" value="'+_toHHMM(r.check_out)+'" style="'+inp+'width:90px;"></td>'
+    +'<td style="'+td+'">'
+      +'<div style="display:flex;align-items:center;gap:4px;">'
+        +'<input type="time" id="ae-co-'+i+'" value="'+_toHHMM(r.check_out)+'" style="'+inp+'width:90px;">'
+        +'<button onclick="document.getElementById(\'ae-co-'+i+'\').value=\'\'" title="Clear checkout" style="background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:6px;padding:4px 7px;font-size:11px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>'
+      +'</div>'
+    +'</td>'
     // Type
     +'<td style="'+td+'">'
       +'<select id="ae-type-'+i+'" style="'+inp+'width:90px;cursor:pointer;">'
