@@ -4545,7 +4545,7 @@ function populateStaff(s){
   set('s1-name', s.name||'Staff');
   set('s1-desig', s.designation||'Staff');
   set('s1-brand', (s.brand&&s.brand.name)||'Zeebas Cluster');
-  set('s1-home-netpay', s.base_salary?'\u20b9'+Number(s.base_salary).toLocaleString('en-IN'):'\u2014');
+  set('s1-home-netpay', '\u2026'); // will be updated by loadMySalary
   var av=document.getElementById('s1-avatar');
   if(av) av.textContent=(s.name||'S').charAt(0).toUpperCase();
   updateSidebarUser(s);
@@ -4655,7 +4655,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); }
+    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); }
   }
 });
 
