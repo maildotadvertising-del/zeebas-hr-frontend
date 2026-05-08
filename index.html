@@ -3679,12 +3679,22 @@ function launchConfetti(){
   })();
   setTimeout(function(){_cRun=false;},5500);
 }
-function showCelebration(type,name,initials,bg,col,extra){
+function showCelebration(type,name,initials,bg,col,extra,photo,brand){
   var isBd=type==='birthday';
   document.getElementById('cele-badge').textContent=isBd?'🎂':'🎉';
-  var av=document.getElementById('cele-av');if(av){av.style.background=bg;av.style.color=col;av.textContent=initials;}
+  var av=document.getElementById('cele-av');
+  if(av){
+    if(photo){
+      av.style.background='transparent';
+      av.style.color='';
+      av.innerHTML='<img src="'+photo+'" alt="'+name+'" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" onerror="this.parentNode.textContent=\''+initials+'\';this.parentNode.style.background=\''+bg+'\';this.parentNode.style.color=\''+col+'\';">';
+    } else {
+      av.style.background=bg; av.style.color=col; av.textContent=initials;
+    }
+  }
   document.getElementById('cele-nm').textContent=isBd?'Happy Birthday, '+name+'! 🎈':'Happy Anniversary, '+name+'! 🎊';
-  document.getElementById('cele-msg').textContent=isBd?'Wishing you a wonderful day full of joy and happiness!':'Thank you for '+extra+' incredible year'+(extra!==1?'s':'')+' with the Zeebas family!';
+  var brandName=brand||'DOT Advertising';
+  document.getElementById('cele-msg').textContent=isBd?'Wishing you a wonderful day full of joy and happiness!':'Thank you for '+extra+' incredible year'+(extra!==1?'s':'')+' with the '+brandName+' family!';
   document.getElementById('cele-yr').textContent=isBd?'🎁 With love from the team':'⭐ '+extra+' Year'+(extra!==1?'s':'')+' of Excellence';
   var ov=document.getElementById('cele-overlay');if(ov)ov.classList.add('show');
   launchConfetti();
@@ -3705,11 +3715,13 @@ function checkCelebrations(){
         var init=nm.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'?';
         var bg='linear-gradient(145deg,rgba(10,40,80,0.95),rgba(5,10,30,0.95))';
         var col='#5AABF0';
+        var photo=s.photo_data||(s.photo_url?API_URL+s.photo_url:null);
+        var brand=s.brand_name||'DOT Advertising';
         if(s.dob){
           var dob=new Date(s.dob);
           if(dob.getMonth()+1===m&&dob.getDate()===d){
             found=true;
-            (function(name,ini){setTimeout(function(){showCelebration('birthday',name,ini,bg,col,0);},1800);})(nm,init);
+            (function(name,ini,ph,bn){setTimeout(function(){showCelebration('birthday',name,ini,bg,col,0,ph,bn);},1800);})(nm,init,photo,brand);
             return;
           }
         }
@@ -3719,7 +3731,7 @@ function checkCelebrations(){
             var yrs=y-jd.getFullYear();
             if(yrs>0){
               found=true;
-              (function(name,ini,yr){setTimeout(function(){showCelebration('anniversary',name,ini,bg,'#BF5FFF',yr);},1800);})(nm,init,yrs);
+              (function(name,ini,yr,ph,bn){setTimeout(function(){showCelebration('anniversary',name,ini,bg,'#BF5FFF',yr,ph,bn);},1800);})(nm,init,yrs,photo,brand);
             }
           }
         }
