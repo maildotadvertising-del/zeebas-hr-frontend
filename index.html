@@ -4111,11 +4111,27 @@ async function bcoSubmit(type){
     });
     var d = await res.json();
     if(d.success){
+      // After any break return — refresh check-in time on home screen
+      try{
+        var rd=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
+        var rs=await rd.json();
+        if(rs.checkInTime){
+          var ci=new Date(rs.checkInTime),h=ci.getHours(),m=ci.getMinutes(),ap=h>=12?'PM':'AM';
+          h=h%12||12;
+          var el=document.getElementById('s1-checkin');
+          if(el) el.textContent=h+':'+(m<10?'0':'')+m+' '+ap;
+        }
+      }catch(e){}
       if(type==='office_work'){
         wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','💼 Request Sent — Awaiting Approval',
           'Admin will review your outside work — you\'re still clocked in',false);
       } else {
-        if(d.break_excess_mins>0){
+        if(d.pending){
+          // Break overtime — sent to admin, NOT auto-deducted
+          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)',
+            '⏳ Break Overtime — Pending Approval',
+            d.break_excess_mins+' min over · ₹'+parseFloat(d.break_excess_deduction||0).toFixed(2)+' deduction pending admin approval',false);
+        } else if(d.break_excess_mins>0){
           wifiBanner(true,'rgba(255,69,58,0.12)','rgba(255,69,58,1)',
             '⚠️ Break Overtime — '+d.break_excess_mins+' min',
             '₹'+d.break_excess_deduction+' deducted from salary',false);
