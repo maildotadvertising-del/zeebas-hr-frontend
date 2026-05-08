@@ -4057,19 +4057,26 @@ async function loadAttendancePage(){
   var tbody=document.getElementById('att-page-tbody');
   if(tbody) tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
 
-  // Load payroll settings fresh every attendance page load
+  // Load payroll + GPS settings fresh every attendance page load
   try{
-    var pr=await fetch(API+'/api/settings/payroll',{headers:zHdr()});
-    var pd=await pr.json();
+    var [pr, gr] = await Promise.all([
+      fetch(API+'/api/settings/payroll',{headers:zHdr()}),
+      fetch(API+'/api/settings/gps',{headers:zHdr()})
+    ]);
+    var pd=await pr.json(); var gd=await gr.json();
     var ps = pd.data || pd.settings || {};
+    var gps = gd.data || gd.settings || {};
+    // GPS office_start_time takes priority (matches backend getLateMinutes logic)
+    var ftStart = gps.office_start_time || ps.work_start_time || '09:00';
+    var ftEnd   = gps.office_end_time   || ps.work_end_time   || '18:00';
     // Store per-employment-type end times so attLateMinsCell can use correct one
     window._attPayroll = {
-      ft_end:   ps.work_end_time   || '18:00',
-      dt_end:   ps.dt_end_time     || ps.work_end_time || '18:00',
-      pt_end:   ps.pt_end_time     || ps.work_end_time || '18:00',
-      ft_start: ps.work_start_time || '09:00',
-      dt_start: ps.dt_start_time   || ps.work_start_time || '09:00',
-      pt_start: ps.pt_start_time   || ps.work_start_time || '09:00',
+      ft_end:   ftEnd,
+      dt_end:   ps.dt_end_time     || ftEnd,
+      pt_end:   ps.pt_end_time     || ftEnd,
+      ft_start: ftStart,
+      dt_start: ps.dt_start_time   || ftStart,
+      pt_start: ps.pt_start_time   || ftStart,
       // hours_per_day has break already deducted (psFtCalcTime subtracts break on save)
       ft_mins: Math.round((parseFloat(ps.hours_per_day) || 8) * 60),
       dt_mins: Math.round((parseFloat(ps.day_time_hours) || 8) * 60), // never fallback to FT hours_per_day
@@ -4077,8 +4084,8 @@ async function loadAttendancePage(){
       grace:   parseInt(ps.late_grace_minutes) || 15
     };
     // Defaults used elsewhere
-    window._attOfficeStart = ps.work_start_time || '09:00';
-    window._attOfficeEnd   = ps.work_end_time   || '18:00';
+    window._attOfficeStart = ftStart;
+    window._attOfficeEnd   = ftEnd;
     window._attGrace       = window._attPayroll.grace;
     window._attExpMins     = window._attPayroll.ft_mins;
   } catch(e){
