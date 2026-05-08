@@ -4062,7 +4062,38 @@ function listenBreakApproval(){
       wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','❌ Office Work Rejected',msg,false);
       setTimeout(function(){ wifiBanner(false); }, 7000);
     });
+
+    // ── Break Overtime Admin Response ──
+    socket.on('break-ot-waived', function(data){
+      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)',
+        '✅ Break Approved — No Deduction',
+        'Admin cleared your break overtime ✓', false);
+      setTimeout(function(){ wifiBanner(false); }, 6000);
+      // Refresh check-in time on home screen
+      _refreshCheckInDisplay();
+    });
+    socket.on('break-ot-applied', function(data){
+      wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)',
+        '⚠️ Break Overtime Deducted',
+        '₹'+parseFloat(data.deduction||0).toFixed(2)+' deducted from your salary', false);
+      setTimeout(function(){ wifiBanner(false); }, 7000);
+      _refreshCheckInDisplay();
+    });
   }
+}
+
+// Refresh check-in time on home screen from server
+async function _refreshCheckInDisplay(){
+  try{
+    var rd=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
+    var rs=await rd.json();
+    if(rs.checkInTime){
+      var ci=new Date(rs.checkInTime),h=ci.getHours(),m=ci.getMinutes(),ap=h>=12?'PM':'AM';
+      h=h%12||12;
+      var el=document.getElementById('s1-checkin');
+      if(el) el.textContent=h+':'+(m<10?'0':'')+m+' '+ap;
+    }
+  }catch(e){}
 }
 
 // ── Break vs Office Work Choice Overlay ──
@@ -4118,16 +4149,7 @@ async function bcoSubmit(type){
     var d = await res.json();
     if(d.success){
       // After any break return — refresh check-in time on home screen
-      try{
-        var rd=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
-        var rs=await rd.json();
-        if(rs.checkInTime){
-          var ci=new Date(rs.checkInTime),h=ci.getHours(),m=ci.getMinutes(),ap=h>=12?'PM':'AM';
-          h=h%12||12;
-          var el=document.getElementById('s1-checkin');
-          if(el) el.textContent=h+':'+(m<10?'0':'')+m+' '+ap;
-        }
-      }catch(e){}
+      _refreshCheckInDisplay();
       if(type==='office_work'){
         wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','💼 Request Sent — Awaiting Approval',
           'Admin will review your outside work — you\'re still clocked in',false);
