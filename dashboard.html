@@ -4030,10 +4030,10 @@ async function wifiCheckAndCheckout(silent){
           parts.push('📶 On WiFi: ' + d.onWifi.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
         }
         if(d.noData && d.noData.length > 0){
-          parts.push('📵 App not open: ' + d.noData.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
+          parts.push('📵 No WiFi data — manual checkout needed: ' + d.noData.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
         }
-        if(parts.length) showToast(parts.join('  |  '), 5000);
-        if(!d.checkedOut || !d.checkedOut.length) showToast('ℹ️ All staff status up to date');
+        if(parts.length) showToast(parts.join('  |  '), 7000);
+        if(!d.checkedOut || !d.checkedOut.length && !d.noData?.length) showToast('ℹ️ All staff status up to date');
       }
     } else {
       if(!silent) showToast('❌ ' + (d.message || 'WiFi check failed'));
