@@ -6123,10 +6123,14 @@ function attLateMinsCell(r){
   // Compute actual late (from start, no grace) and grace-adjusted (determines IF they're late)
   var actualMins       = _calcActualLateMinutes(r.check_in, r.employment_type);
   var graceAdjustedMin = _calcLateFromCheckIn(r.check_in, r.employment_type);
-  // Show late text only if: arrived after grace cutoff OR DB says late AND status confirms it
-  // AND actual minutes > 0 (never show "late" if they arrived on/before start time)
+  // Mirror attViewRow: auto-upgrade 'present' → 'late' if check-in is past grace cutoff
+  if(rowStatus === 'present' && graceAdjustedMin > 0) rowStatus = 'late';
+  // Show late text only if:
+  //   - actualMins > 0 (never show if arrived on/before start time — handles stale DB values)
+  //   - status is late (not on_leave/absent)
+  //   - grace-adjusted OR DB confirms they're late
   var isActuallyLate = actualMins > 0
-    && rowStatus !== 'present' && rowStatus !== 'on_leave'
+    && rowStatus !== 'on_leave' && rowStatus !== 'absent'
     && (graceAdjustedMin > 0 || dbLate > 0);
   if(isActuallyLate){
     parts.push('<span style="color:#FF9F0A;font-weight:500;">'+actualMins+' min late</span>');
