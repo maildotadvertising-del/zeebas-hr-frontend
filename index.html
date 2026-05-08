@@ -3884,13 +3884,20 @@ async function loadMySalary(){
     var lateDeduction  = parseFloat(payroll ? payroll.late_deduction : (att.total_late_deduction||0));
     var otHours        = parseFloat(payroll ? payroll.ot_hours : (att.total_ot_hours||0));
     var otAmount       = parseFloat(payroll ? payroll.ot_amount : (att.total_ot_amount||0));
-    var absentDeduction= parseFloat(payroll ? payroll.absent_deduction : 0);
     var advDeduction   = parseFloat(payroll ? payroll.advance_deduction : advances.reduce(function(s,a){ return s+parseFloat(a.monthly_recovery||0); }, 0));
     var allowanceAmt   = parseFloat((payroll && payroll.allowance_enabled) ? (payroll.allowance_amount||0) : 0);
     var allowanceNote  = (payroll && payroll.allowance_note) || '';
-    var netSalary      = parseFloat(payroll ? payroll.net_salary : Math.max(0, baseSalary + otAmount - lateDeduction - absentDeduction - advDeduction));
-    var isProcessed    = !!payroll;
-    var status         = payroll ? payroll.status : 'preview';
+
+    // For unprocessed months: earned_so_far = days_present × daily_rate − late − advance
+    // For processed: use saved net_salary
+    var wdFull    = pData.working_days || settings.working_days_per_month || 26;
+    var wdSoFar   = pData.working_days_so_far || wdFull;
+    var dailyRate = baseSalary / wdFull;
+    var absentDeduction = payroll ? parseFloat(payroll.absent_deduction||0) : (absentDays * dailyRate);
+    var earnedSoFar = Math.max(0, daysWorked * dailyRate - lateDeduction - advDeduction);
+    var netSalary  = parseFloat(payroll ? payroll.net_salary : earnedSoFar);
+    var isProcessed = !!payroll;
+    var status      = payroll ? payroll.status : 'preview';
 
     var periodLabel = myPayMonthNames[myPayMonth-1]+' '+myPayYear;
     var fmt = function(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0}); };
@@ -3907,7 +3914,7 @@ async function loadMySalary(){
       +'<div style="background:linear-gradient(135deg,rgba(10,80,180,0.55),rgba(80,10,140,0.45));border:0.5px solid rgba(255,255,255,0.12);border-radius:18px;padding:16px;margin-bottom:10px;">'
         +'<div style="color:rgba(245,245,247,0.42);font-size:9px;text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px;">Net Pay · '+periodLabel+statusBadge+'</div>'
         +'<div style="color:#fff;font-size:28px;font-weight:500;letter-spacing:-0.5px;margin-bottom:3px;">₹'+fmt(netSalary)+'</div>'
-        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+' · After deductions</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isProcessed?'':' · '+daysWorked+' days worked so far')+'</div>'
         +'<div style="height:0.5px;background:rgba(255,255,255,0.09);margin:12px 0;"></div>'
         +'<div style="display:flex;justify-content:space-between;">'
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">Present</div><div style="color:#30D158;font-size:14px;font-weight:500;">'+daysWorked+'</div></div>'
