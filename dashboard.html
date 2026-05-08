@@ -4128,10 +4128,14 @@ async function loadAttendancePage(){
       rows = rows.filter(function(r){ return r.check_in; });
     }
 
-    // Summary counts
+    // Summary counts — mirror attViewRow auto-upgrade: 'present' → 'late' if past grace
     var cnt={present:0,absent:0,late:0,pending:0,leave:0};
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
+      // Auto-upgrade: same logic as attViewRow so count matches what's displayed
+      if(st==='present' && r.check_in && _calcLateFromCheckIn(r.check_in, r.employment_type) > 0){
+        st = 'late';
+      }
       if(st==='present'||st==='onsite_approved') cnt.present++;
       else if(st==='late'){ cnt.present++; cnt.late++; }
       else if(st==='absent') cnt.absent++;
