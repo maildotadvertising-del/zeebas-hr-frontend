@@ -6116,16 +6116,20 @@ function _calcActualLateMinutes(checkIn, empType){
 function attLateMinsCell(r){
   var parts = [];
 
-  // 1. Late arrival — only show if DB confirms they're late (grace-adjusted > 0)
-  //    Display ACTUAL minutes from start time (not grace-adjusted) for clarity
-  var dbLate   = parseInt(r.late_minutes) || 0;
+  // 1. Late arrival — show actual minutes from start time
+  //    Use live calculation (not DB value) to avoid stale data showing wrong late mins
+  var dbLate    = parseInt(r.late_minutes) || 0;
   var rowStatus = (r.status || '').toLowerCase();
-  // Don't show "late" text if status is present/on_leave (handles stale DB late_minutes)
-  var isActuallyLate = dbLate > 0 && rowStatus !== 'present' && rowStatus !== 'on_leave';
+  // Compute actual late (from start, no grace) and grace-adjusted (determines IF they're late)
+  var actualMins       = _calcActualLateMinutes(r.check_in, r.employment_type);
+  var graceAdjustedMin = _calcLateFromCheckIn(r.check_in, r.employment_type);
+  // Show late text only if: arrived after grace cutoff OR DB says late AND status confirms it
+  // AND actual minutes > 0 (never show "late" if they arrived on/before start time)
+  var isActuallyLate = actualMins > 0
+    && rowStatus !== 'present' && rowStatus !== 'on_leave'
+    && (graceAdjustedMin > 0 || dbLate > 0);
   if(isActuallyLate){
-    // Show actual minutes from start (e.g. 36 min if arrived 10:36 with 10:00 start)
-    var displayMins = _calcActualLateMinutes(r.check_in, r.employment_type) || dbLate;
-    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+displayMins+' min late</span>');
+    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+actualMins+' min late</span>');
   }
 
   // 2. Under-hours — only if staff has both check_in AND check_out
@@ -6288,6 +6292,9 @@ function attStartEdit(i){
   var r = window._attRows[i];
   var row = document.getElementById('att-row-'+i);
   if(row) row.outerHTML = attEditRow(r,i);
+  // Auto-recalculate late mins + status based on actual check-in time
+  // Fixes stale DB values (e.g. 378 min late when staff arrived on time)
+  attRecalcLate(i);
 }
 
 function attCancelEdit(i){
