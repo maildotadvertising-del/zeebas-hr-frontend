@@ -4270,7 +4270,19 @@ async function wifiCheckAndAct(){
           ch2=ch2%12||12;
           ciEl2.textContent=ch2+':'+(cm2<10?'0':'')+cm2+' '+ca2;
         }
-        wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
+        // Show late compensation info if staff is late
+        if(d.lateMinutes > 0 && d.officeEndTime){
+          var lmBanner = d.lateMinutes+' min late';
+          var oeP = d.officeEndTime.split(':').map(Number);
+          var compT = new Date(); compT.setHours(oeP[0], oeP[1]+d.lateMinutes, 0, 0);
+          var ct_h=compT.getHours(), ct_m=compT.getMinutes(), ct_a=ct_h>=12?'PM':'AM';
+          ct_h=ct_h%12||12;
+          var compStr=ct_h+':'+(ct_m<10?'0':'')+ct_m+' '+ct_a;
+          var subMsg = lmBanner+' · Work until '+compStr+' → deduction cleared';
+          wifiBanner(true,'rgba(255,159,10,0.08)','rgba(255,159,10,1)','⏰ In Office — '+lmBanner, subMsg, false);
+        } else {
+          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
+        }
       }
 
     } else {
