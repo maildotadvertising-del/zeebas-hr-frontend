@@ -1228,14 +1228,15 @@ textarea.inp{resize:none;}
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check In</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Check Out</th>
             <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Type</th>
-            <th style="padding:11px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Late Mins</th>
+            <th style="padding:11px 10px;text-align:center;color:#FF9F0A;font-weight:500;font-size:11px;">Late</th>
+            <th style="padding:11px 10px;text-align:center;color:#FF453A;font-weight:500;font-size:11px;">Short</th>
             <th style="padding:11px 10px;text-align:center;color:#30D158;font-weight:500;font-size:11px;">OT Mins</th>
             <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
             <th style="padding:11px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Action</th>
           </tr>
         </thead>
         <tbody id="att-page-tbody">
-          <tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted);">Loading…</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted);">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -4055,7 +4056,7 @@ function _stopWifiAutoCheck(){
 async function loadAttendancePage(){
   // Show Loading FIRST — clears old rows immediately so no wrong-data flash during payroll fetch
   var tbody=document.getElementById('att-page-tbody');
-  if(tbody) tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
+  if(tbody) tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
 
   // Load payroll + GPS settings fresh every attendance page load
   try{
@@ -4150,13 +4151,13 @@ async function loadAttendancePage(){
     if(!rows.length){
       // Sunday with no one clocked in — show holiday screen
       if(isSunday){
-        tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:48px 24px;">'
+        tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:48px 24px;">'
           +'<div style="font-size:40px;margin-bottom:12px;">☀️</div>'
           +'<div style="font-size:15px;font-weight:500;color:rgba(245,245,247,0.7);margin-bottom:6px;">Sunday — Day Off</div>'
           +'<div style="font-size:12px;color:var(--muted);">No attendance recorded · If someone worked, they will appear here once checked in</div>'
           +'</td></tr>';
       } else {
-        tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
+        tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
       }
       return;
     }
@@ -4171,7 +4172,7 @@ async function loadAttendancePage(){
       return attViewRow(r,i);
     }).join('');
   } catch(e){
-    if(tbody) tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:#FF453A;">Error loading attendance</td></tr>';
+    if(tbody) tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:#FF453A;">Error loading attendance</td></tr>';
     console.error('loadAttendancePage:',e);
   }
 }
@@ -6132,78 +6133,57 @@ function _calcActualLateMinutes(checkIn, empType){
   return ci > start ? Math.floor((ci - start) / 60000) : 0;
 }
 
-// Build the Late Mins / Under-hours cell content
-function attLateMinsCell(r){
-  var parts = [];
-
-  // 1. Late arrival — show actual minutes from start time
-  //    Use live calculation (not DB value) to avoid stale data showing wrong late mins
+// ── Late arrival cell ──
+function attLateCell(r){
   var dbLate    = parseInt(r.late_minutes) || 0;
   var rowStatus = (r.status || '').toLowerCase();
-  // Compute actual late (from start, no grace) and grace-adjusted (determines IF they're late)
   var actualMins       = _calcActualLateMinutes(r.check_in, r.employment_type);
   var graceAdjustedMin = _calcLateFromCheckIn(r.check_in, r.employment_type);
-  // Mirror attViewRow: auto-upgrade 'present' → 'late' if check-in is past grace cutoff
   if(rowStatus === 'present' && graceAdjustedMin > 0) rowStatus = 'late';
-  // Show late text only if:
-  //   - actualMins > 0 (never show if arrived on/before start time — handles stale DB values)
-  //   - status is late (not on_leave/absent)
-  //   - grace-adjusted OR DB confirms they're late
   var isActuallyLate = actualMins > 0
     && rowStatus !== 'on_leave' && rowStatus !== 'absent'
     && (graceAdjustedMin > 0 || dbLate > 0);
   if(isActuallyLate){
     var lh=Math.floor(actualMins/60), lm=actualMins%60;
     var lateStr = lh>0 ? (lh+'h '+(lm>0?lm+'m ':'')+'late') : (actualMins+' min late');
-    parts.push('<span style="color:#FF9F0A;font-weight:500;">'+lateStr+'</span>');
+    return '<span style="color:#FF9F0A;font-weight:500;">'+lateStr+'</span>';
   }
+  return '<span style="color:var(--muted);">—</span>';
+}
 
-  // 2. Under-hours — only if staff has both check_in AND check_out
-  if(r.check_in && r.check_out){
-    var co = new Date(r.check_out);
-    var pr = window._attPayroll || {};
-
-    // Pick expected mins for THIS staff's employment type
-    var empType = (r.employment_type || 'full_time').toLowerCase();
-    var expMins;
-    if(empType === 'day_time')       expMins = pr.dt_mins || 480; // never fallback to FT hours
-    else if(empType === 'part_time') expMins = pr.pt_mins || 240;
-    else                             expMins = pr.ft_mins || 480;
-
-    // "No short" if checkout >= THIS staff's own employment-type end time
-    var toMins = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
-    var coMins  = co.getHours()*60 + co.getMinutes();
-    var endStr, startStr;
-    if(empType === 'day_time')       { endStr = pr.dt_end || '17:00'; startStr = pr.dt_start || '09:00'; }
-    else if(empType === 'part_time') { endStr = pr.pt_end || '13:00'; startStr = pr.pt_start || '09:00'; }
-    else                             { endStr = pr.ft_end || '18:00'; startStr = pr.ft_start || '09:00'; }
-    var officeCloseMins = toMins(endStr);
-    var workedMins = Math.floor((co.getTime() - new Date(r.check_in).getTime()) / 60000);
-    // Triple-safety: never show "short" if any of these hold:
-    // 1. Checked out at/after their own end time
-    // 2. Worked >= stored expected hours (from day_time_hours / hours_per_day)
-    // 3. Worked >= (schedule duration - 75 min buffer) — guards against wrong DB end-time/hours
-    var schedDurMins = Math.max(0, officeCloseMins - toMins(startStr));
-    var noShort = (coMins >= officeCloseMins)
-               || (workedMins >= expMins)
-               || (workedMins >= schedDurMins - 75);
-
-    if(!noShort){
-      var shortMins  = expMins - workedMins;
-
-      if(shortMins > 5){ // ignore < 5 min rounding
-        var dispHrs = Math.floor(shortMins / 60);
-        var dispMin = shortMins % 60;
-        var shortStr = dispHrs > 0
-          ? (dispHrs + 'h ' + (dispMin > 0 ? dispMin + 'm' : '') + ' short')
-          : (shortMins + ' min short');
-        parts.push('<span style="color:#FF453A;font-weight:500;">'+shortStr+'</span>');
-      }
+// ── Short hours cell ──
+function attShortCell(r){
+  if(!r.check_in || !r.check_out) return '<span style="color:var(--muted);">—</span>';
+  var co  = new Date(r.check_out);
+  var pr  = window._attPayroll || {};
+  var empType = (r.employment_type || 'full_time').toLowerCase();
+  var expMins;
+  if(empType === 'day_time')       expMins = pr.dt_mins || 480;
+  else if(empType === 'part_time') expMins = pr.pt_mins || 240;
+  else                             expMins = pr.ft_mins || 480;
+  var toMins = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
+  var coMins = co.getHours()*60 + co.getMinutes();
+  var endStr, startStr;
+  if(empType === 'day_time')       { endStr = pr.dt_end || '17:00'; startStr = pr.dt_start || '09:00'; }
+  else if(empType === 'part_time') { endStr = pr.pt_end || '13:00'; startStr = pr.pt_start || '09:00'; }
+  else                             { endStr = pr.ft_end || '18:00'; startStr = pr.ft_start || '09:00'; }
+  var officeCloseMins = toMins(endStr);
+  var workedMins = Math.floor((co.getTime() - new Date(r.check_in).getTime()) / 60000);
+  var schedDurMins = Math.max(0, officeCloseMins - toMins(startStr));
+  var noShort = (coMins >= officeCloseMins) || (workedMins >= expMins) || (workedMins >= schedDurMins - 75);
+  if(!noShort){
+    var shortMins = expMins - workedMins;
+    if(shortMins > 5){
+      var sh=Math.floor(shortMins/60), sm2=shortMins%60;
+      var shortStr = sh>0 ? (sh+'h '+(sm2>0?sm2+'m ':'')+' short') : (shortMins+' min short');
+      return '<span style="color:#FF453A;font-weight:500;">'+shortStr+'</span>';
     }
   }
-
-  return parts.length ? parts.join('<br>') : '<span style="color:var(--muted);">—</span>';
+  return '<span style="color:var(--muted);">—</span>';
 }
+
+// Legacy alias
+function attLateMinsCell(r){ return attLateCell(r); }
 
 function attViewRow(r,i){
   var st=(r.status||'absent').toLowerCase();
@@ -6230,7 +6210,8 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:var(--muted);">'+fmtTime(r.check_out)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
-    +'<td style="'+td+'text-align:center;font-size:11px;">'+attLateMinsCell(r)+'</td>'
+    +'<td style="'+td+'text-align:center;font-size:11px;">'+attLateCell(r)+'</td>'
+    +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
@@ -6291,8 +6272,10 @@ function attEditRow(r,i){
         +'<option value="absent"'+(r.type==='absent'?' selected':'')+'>❌ Absent</option>'
       +'</select>'
     +'</td>'
-    // Late mins
+    // Late mins (editable)
     +'<td style="'+td+'"><input type="number" id="ae-lm-'+i+'" value="'+(r.late_minutes||0)+'" min="0" max="999" style="'+inp+'width:60px;text-align:center;"></td>'
+    // Short hours (read-only — calculated from check_in/check_out)
+    +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     // OT (read-only in edit mode)
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     // Status
