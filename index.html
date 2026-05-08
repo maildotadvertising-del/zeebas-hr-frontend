@@ -3638,6 +3638,9 @@ setTimeout(function(){
           if(d.success && d.staff){
             // Refresh stored staff data (latest from server)
             localStorage.setItem('zhr_staff', JSON.stringify(d.staff));
+            // ── BETA FEATURES FLAG ──
+            // if(window._betaFeatures){ /* new logic for beta testers */ } else { /* stable */ }
+            window._betaFeatures = d.staff.beta_tester === 1 || d.staff.beta_tester === '1';
             go1('s1-home');
             setTimeout(function(){ checkCelebrations(); }, 500);
           } else {
@@ -3650,6 +3653,8 @@ setTimeout(function(){
         })
         .catch(function(){
           // Network error — still go home with cached data (offline friendly)
+          var _cs={}; try{_cs=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+          window._betaFeatures = _cs.beta_tester === 1 || _cs.beta_tester === '1';
           go1('s1-home');
         });
     } else {
@@ -3816,6 +3821,7 @@ async function staffLogin(){
     if(d.success){
       localStorage.setItem('zhr_token',d.token);
       localStorage.setItem('zhr_staff',JSON.stringify(d.staff));
+      window._betaFeatures = d.staff.beta_tester === 1 || d.staff.beta_tester === '1';
       if(d.staff.role==='admin'){
         // Admin → go to full dashboard page
         window.location.href='/dashboard.html';
