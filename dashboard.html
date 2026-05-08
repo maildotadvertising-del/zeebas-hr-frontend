@@ -1431,6 +1431,7 @@ textarea.inp{resize:none;}
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Present</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Deductions</th>
+            <th style="padding:10px 8px;text-align:center;font-weight:500;font-size:11px;color:#FF9F0A;">Late Ded.</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent Ded.</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;color:#30D158;">Incentive</th>
             <th style="padding:10px 8px;text-align:center;font-weight:500;font-size:11px;color:#BF5FFF;">Allowance</th>
@@ -1440,7 +1441,7 @@ textarea.inp{resize:none;}
           </tr>
         </thead>
         <tbody id="payroll-tbody">
-          <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading payroll…</td></tr>
+          <tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading payroll…</td></tr>
         </tbody>
       </table>
     </div>
@@ -5624,7 +5625,7 @@ async function loadPayrollPage(){
   if(lbl) lbl.textContent = _prMonths[_pr.month-1]+' '+_pr.year;
   var tbody = document.getElementById('payroll-tbody');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
 
   // Is this the current month? (affects Net Pay display — earned so far vs full month)
   var _now = new Date();
@@ -5633,7 +5634,7 @@ async function loadPayrollPage(){
   try{
     var res = await fetch(API+'/api/payroll/salary-preview?month='+_pr.month+'&year='+_pr.year, { headers: zHdr() });
     var d = await res.json();
-    if(!d.success){ tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:#FF453A;">Error: '+escHtml(d.message||'Failed')+'</td></tr>'; return; }
+    if(!d.success){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#FF453A;">Error: '+escHtml(d.message||'Failed')+'</td></tr>'; return; }
 
     var rows = d.data || [];
     var setEl = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
@@ -5649,14 +5650,14 @@ async function loadPayrollPage(){
     setEl('pr-total-ded', '₹'+Math.round(totalDed).toLocaleString('en-IN'));
 
     if(!rows.length){
-      tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);">No staff found</td></tr>';
+      tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted);">No staff found</td></tr>';
       return;
     }
 
     window._prRows = rows;
     tbody.innerHTML = rows.map(function(r,i){ return prViewRow(r,i); }).join('');
   } catch(e){
-    if(tbody) tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
+    if(tbody) tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
     console.error('loadPayrollPage:',e);
   }
 }
@@ -5695,10 +5696,12 @@ function prViewRow(r,i){
     +'<td style="'+td+'text-align:center;color:#30D158;">'+(r.days_present||0)+'d</td>'
     +'<td style="'+td+'text-align:center;color:'+(r.days_absent>0?'#FF453A':'var(--muted)')+';">'+(r.days_absent||0)+'d</td>'
     +'<td style="'+td+'text-align:center;">'
-      +(lateDed>0?'<div style="color:#FF9F0A;font-size:11px;" title="Late deduction">-₹'+lateDed.toLocaleString('en-IN')+'</div>':'')
       +(otherDed>0?'<div style="color:#FF453A;font-size:11px;" title="Other deduction">-₹'+otherDed.toLocaleString('en-IN')+'</div>':'')
       +(advDed>0?'<div style="color:#FF6B6B;font-size:11px;" title="Salary advance recovery">💳 -₹'+advDed.toLocaleString('en-IN')+'</div>':'')
-      +(lateDed===0&&otherDed===0&&advDed===0?'<span style="color:var(--muted);">—</span>':'')
+      +(otherDed===0&&advDed===0?'<span style="color:var(--muted);">—</span>':'')
+    +'</td>'
+    +'<td style="'+td+'text-align:center;color:'+(lateDed>0?'#FF9F0A':'var(--muted)')+';">'
+      +(lateDed>0?'-₹'+lateDed.toLocaleString('en-IN'):'—')
     +'</td>'
     +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
     +'<td style="'+td+'text-align:center;color:'+(inc>0?'#30D158':'var(--muted)')+';">'
@@ -5733,10 +5736,14 @@ function prEditRow(r,i){
     +'<td style="'+td+'text-align:center;color:rgba(245,245,247,0.5);font-size:11px;">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
     +'<td style="'+td+'text-align:center;color:#30D158;font-size:11px;">'+(r.days_present||0)+'d</td>'
     +'<td style="'+td+'text-align:center;color:#FF453A;font-size:11px;">'+(r.days_absent||0)+'d</td>'
-    // Late ded — editable
+    // Other deductions — editable
     +'<td style="'+td+'text-align:center;">'
       +'<div style="font-size:9px;color:var(--muted);margin-bottom:2px;">Other Ded.</div>'
       +'<input type="number" id="pe-od-'+i+'" value="'+parseFloat(r.other_deduction||0)+'" min="0" style="'+inp+'">'
+    +'</td>'
+    // Late deduction — read-only (auto-calculated from attendance)
+    +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.late_deduction||0)>0?'#FF9F0A':'var(--muted)')+';font-size:11px;">'
+      +(parseFloat(r.late_deduction||0)>0?'-₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN'):'—')
     +'</td>'
     +'<td style="'+td+'text-align:center;color:#FF453A;font-size:11px;">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
     // Incentive — editable (amount + reason)
