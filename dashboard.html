@@ -4066,17 +4066,19 @@ async function loadAttendancePage(){
     var pd=await pr.json(); var gd=await gr.json();
     var ps = pd.data || pd.settings || {};
     var gps = gd.data || gd.settings || {};
-    // GPS office_start_time takes priority (matches backend getLateMinutes logic)
+    // Each employment type uses its own configured start/end time
+    // Full Time: GPS office_start_time takes priority (matches backend getLateMinutes)
+    // Day Time / Part Time: use their own payroll settings times independently
     var ftStart = gps.office_start_time || ps.work_start_time || '09:00';
     var ftEnd   = gps.office_end_time   || ps.work_end_time   || '18:00';
-    // Store per-employment-type end times so attLateMinsCell can use correct one
+    // Store per-employment-type times — DT/PT use their own settings, NOT FT as fallback
     window._attPayroll = {
       ft_end:   ftEnd,
-      dt_end:   ps.dt_end_time     || ftEnd,
-      pt_end:   ps.pt_end_time     || ftEnd,
+      dt_end:   ps.dt_end_time   || '18:00',
+      pt_end:   ps.pt_end_time   || '13:00',
       ft_start: ftStart,
-      dt_start: ps.dt_start_time   || ftStart,
-      pt_start: ps.pt_start_time   || ftStart,
+      dt_start: ps.dt_start_time || '09:00',
+      pt_start: ps.pt_start_time || '09:00',
       // hours_per_day has break already deducted (psFtCalcTime subtracts break on save)
       ft_mins: Math.round((parseFloat(ps.hours_per_day) || 8) * 60),
       dt_mins: Math.round((parseFloat(ps.day_time_hours) || 8) * 60), // never fallback to FT hours_per_day
