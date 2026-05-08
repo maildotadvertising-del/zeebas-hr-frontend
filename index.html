@@ -4202,6 +4202,22 @@ async function wifiCheckAndAct(){
 
       } else if(!d.checkedOut && d.alreadyCheckedIn){
         // ── In office and checked in ──
+
+        // SAFETY: If staff just checked in (within last 5 min), this is a fresh arrival.
+        // Reset _wifiOffSince so stale away-time from previous session doesn't trigger break popup.
+        var minsCheckedIn = (d.minutesSinceCheckIn != null) ? d.minutesSinceCheckIn : 999;
+        if(minsCheckedIn < 5){
+          _wifiOffSince = null;
+          var ciEl2f=document.getElementById('s1-checkin');
+          if(ciEl2f && d.checkInTime){
+            var ci2f=new Date(d.checkInTime),ch2f=ci2f.getHours(),cm2f=ci2f.getMinutes(),ca2f=ch2f>=12?'PM':'AM';
+            ch2f=ch2f%12||12;
+            ciEl2f.textContent=ch2f+':'+(cm2f<10?'0':'')+cm2f+' '+ca2f;
+          }
+          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
+          return;
+        }
+
         // Detect if they were recently away using _wifiOffSince (primary) or server's minutesSinceLastPing (fallback)
         var awayMins = 0;
         if(_wifiOffSince !== null){
