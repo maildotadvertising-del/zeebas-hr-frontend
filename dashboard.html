@@ -3894,10 +3894,10 @@ async function adminLogin(){
 /* ── ROLE-BASED NAV ACCESS ── */
 // Pages each role can access
 var NAV_ACCESS = {
-  owner:       ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
-  admin:       ['dashboard','attendance','tasks','team-chat'],
+  owner:       ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
+  admin:       ['dashboard','attendance','announcements','tasks','team-chat'],
   team_leader: ['tasks','team-chat'],
-  editor:      ['dashboard','attendance','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
+  editor:      ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
 };
 
 function applyNavAccess(staff){
