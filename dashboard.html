@@ -657,6 +657,15 @@ textarea.inp{resize:none;}
       </select>
     </div>
 
+    <!-- Extra Time Requests Panel -->
+    <div id="extra-time-panel" style="display:none;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="color:#FF9F0A;font-size:13px;font-weight:500;">⏱ Extra Time Requests</div>
+        <span id="et-req-count" style="background:rgba(255,69,58,0.15);color:#FF453A;border-radius:8px;padding:1px 7px;font-size:10px;font-weight:600;">0</span>
+      </div>
+      <div id="extra-time-list"></div>
+    </div>
+
     <!-- Task list -->
     <div id="tasks-grid" style="display:flex;flex-direction:column;gap:10px;">
       <div style="text-align:center;padding:60px;color:var(--muted);">
@@ -761,6 +770,12 @@ textarea.inp{resize:none;}
             <option value="low">🟢 Low</option>
           </select>
         </div>
+      </div>
+
+      <!-- Due Time (Deadline time for countdown reminder) -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Deadline Time <span style="color:rgba(255,255,255,0.2);font-size:10px;text-transform:none;letter-spacing:0;">(optional — enables countdown timer on staff app)</span></div>
+        <input type="time" id="task-due-time" class="inp" style="width:100%;box-sizing:border-box;" placeholder="e.g. 17:00">
       </div>
 
       <!-- Due Date + End Date -->
@@ -3097,6 +3112,15 @@ function connectDashSocket(){
     row.style.display=row.children.length?'flex':'none';
   });
   dashSocket.on('disconnect', function(){});
+
+  // ── Task Extra Time Request from staff ──
+  dashSocket.on('task-extra-time-request', function(data){
+    showToast('⏱ '+escHtml(data.staffName)+' requested +'+data.minutes+'m for "'+escHtml(data.taskTitle)+'"');
+    loadExtraTimeRequests();
+    // flash tasks badge
+    var badge=document.getElementById('tasks-badge');
+    if(badge){ badge.style.display=''; badge.textContent='!'; setTimeout(function(){ if(badge) badge.textContent=''; }, 8000); }
+  });
 }
 
 var _dashMsgRetryTimer = null;
@@ -4384,7 +4408,7 @@ window.showPage = function(page, el){
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
   if(page==='daily-logs')    setTimeout(loadDailyLogs, 100);
-  if(page==='tasks')          setTimeout(loadTasks, 100);
+  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); }
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
@@ -4412,6 +4436,66 @@ var STATUS_LABEL   = { pending:'Pending', in_progress:'In Progress', done:'Done 
 var STATUS_COLOR   = { pending:'#FF9F0A', in_progress:'#0A84FF', done:'#30D158' };
 
 /* ── Load Tasks ── */
+/* ── Extra Time Requests ── */
+async function loadExtraTimeRequests(){
+  try{
+    var res=await fetch(API+'/api/tasks/extra-time-requests',{headers:zHdr()});
+    var d=await res.json();
+    var data=d.data||[];
+    var panel=document.getElementById('extra-time-panel');
+    var listEl=document.getElementById('extra-time-list');
+    var cntEl=document.getElementById('et-req-count');
+    if(!panel||!listEl) return;
+    if(!data.length){ panel.style.display='none'; return; }
+    panel.style.display='block';
+    if(cntEl) cntEl.textContent=data.length;
+    listEl.innerHTML=data.map(function(r){
+      var avSrc=r.photo_data||(r.photo_url?API+r.photo_url:null);
+      var init=(r.staff_name||'?').charAt(0).toUpperCase();
+      var av=avSrc
+        ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:34px;height:34px;border-radius:10px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
+      var dueLbl=r.due_date?r.due_date.slice(0,10)+(r.due_time?' at '+r.due_time.slice(0,5):''):'—';
+      var reqMins=parseInt(r.extra_time_minutes)||30;
+      var reqLabel=reqMins>=60?(Math.floor(reqMins/60)+'h '+(reqMins%60?reqMins%60+'m':'')).trim():reqMins+'m';
+      return '<div style="background:rgba(255,159,10,0.05);border:0.5px solid rgba(255,159,10,0.2);border-radius:14px;padding:14px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +av
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.title)+'</div>'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+escHtml(r.staff_name)+' · was due: '+dueLbl+'</div>'
+        +'</div>'
+        +'<div style="text-align:center;flex-shrink:0;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.25);border-radius:10px;padding:6px 10px;">'
+        +'<div style="color:#FF9F0A;font-size:18px;font-weight:700;">+'+reqLabel+'</div>'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:9px;margin-top:1px;">requested</div>'
+        +'</div>'
+        +'</div>'
+        +(r.extra_time_reason?'<div style="color:rgba(245,245,247,0.55);font-size:12px;font-style:italic;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;">"'+escHtml(r.extra_time_reason)+'"</div>':'')
+        +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="approveExtraTime('+r.id+',\'reject\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'<button onclick="approveExtraTime('+r.id+',\'approve\')" style="flex:2;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Approve +'+reqLabel+'</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){ console.error('loadExtraTimeRequests:',e); }
+}
+
+async function approveExtraTime(taskId, action){
+  try{
+    var r=await fetch(API+'/api/tasks/'+taskId+'/approve-extra-time',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({action:action})
+    });
+    var d=await r.json();
+    if(d.success){
+      showToast(action==='approve'?'✅ Extra time approved':'✕ Request rejected');
+      loadExtraTimeRequests();
+      loadTasks();
+    } else showToast(d.message||'Failed');
+  }catch(e){ showToast('Server error'); }
+}
+
 async function loadTasks(){
   var grid = document.getElementById('tasks-grid');
   var sub  = document.getElementById('tasks-sub');
@@ -4672,6 +4756,7 @@ async function openAddTask(){
   document.getElementById('task-brand').value    = '';
   document.getElementById('task-category').value = '';
   taskCalSetValue('', 'due');
+  document.getElementById('task-due-time').value = '';
   taskCalSetValue('', 'end');
   document.getElementById('task-priority').value = 'medium';
   document.getElementById('task-status').value   = 'pending';
@@ -4705,6 +4790,7 @@ async function openEditTask(id){
     document.getElementById('task-brand').value    = t.brand_id || '';
     document.getElementById('task-category').value = t.category || '';
     taskCalSetValue(t.due_date ? t.due_date.slice(0,10) : '', 'due');
+    document.getElementById('task-due-time').value = t.due_time ? t.due_time.slice(0,5) : '';
     taskCalSetValue(t.end_date ? t.end_date.slice(0,10) : '', 'end');
     document.getElementById('task-priority').value = t.priority || 'medium';
     document.getElementById('task-status').value   = t.status || 'pending';
@@ -5052,6 +5138,7 @@ async function saveTask(){
     brand_id:       document.getElementById('task-brand').value,
     category:       category,
     due_date:       document.getElementById('task-due').value,
+    due_time:       document.getElementById('task-due-time').value || '',
     end_date:       document.getElementById('task-end').value,
     team_leader_id: document.getElementById('task-team-leader').value,
     priority:       document.getElementById('task-priority').value,

@@ -422,28 +422,45 @@ body.desktop-mode #s1-sidebar {
 
     <!-- TASKS -->
     <div id="s1-tasks" class="scr">
-      <div style="padding:13px 13px 0;flex-shrink:0;">
+      <div style="padding:13px 13px 8px;flex-shrink:0;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <div style="color:#fff;font-size:18px;font-weight:500;">Work Tasks</div>
-          <span class="po">3 open</span>
+          <span id="s1-tasks-open-lbl" style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:2px 9px;font-size:10px;">0 open</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button id="s1-ttab-active" onclick="s1TaskTab('active')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.28);color:#0A84FF;border-radius:14px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;">Active</button>
+          <button id="s1-ttab-done"   onclick="s1TaskTab('done')"   style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);border-radius:14px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;">Done</button>
+          <button id="s1-ttab-all"    onclick="s1TaskTab('all')"    style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);border-radius:14px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;">All</button>
         </div>
       </div>
-      <div class="scroll" style="padding:6px 13px 8px;">
-        <div class="g" style="padding:12px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div style="color:#fff;font-size:12px;font-weight:400;flex:1;padding-right:8px;">Banner Design – March Campaign</div><span class="po">65%</span></div>
-          <div style="color:rgba(245,245,247,0.3);font-size:10px;margin-bottom:8px;">DOT Advertising · Due today</div>
-          <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:3px;overflow:hidden;"><div style="background:linear-gradient(90deg,#FF9F0A,#FFCC02);width:65%;height:100%;border-radius:4px;"></div></div>
-        </div>
-        <div class="g" style="padding:12px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div style="color:#fff;font-size:12px;font-weight:400;flex:1;padding-right:8px;">Client Proposal – Ahmed Constructions</div><span class="pb">Pending</span></div>
-          <div style="color:rgba(245,245,247,0.3);font-size:10px;">DOT Advertising · Due 25 Apr</div>
-        </div>
-        <div class="g" style="padding:12px;background:rgba(48,209,88,0.05);border-color:rgba(48,209,88,0.12);">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div style="color:rgba(245,245,247,0.45);font-size:12px;font-weight:400;flex:1;text-decoration:line-through;">Wedding Highlight Reel Edit</div><span class="pg">Done</span></div>
-          <div style="color:rgba(245,245,247,0.22);font-size:10px;">Completed 17 Apr</div>
-        </div>
-      </div>
+      <div id="s1-tasks-list" class="scroll" style="padding:4px 13px 8px;"></div>
       <div id="n1-tasks" class="bnav"></div>
+    </div>
+
+    <!-- EXTRA TIME REQUEST MODAL -->
+    <div id="ov-extra-time" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.65);backdrop-filter:blur(12px);align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeExtraTime()">
+      <div class="g" style="width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:20px 16px 32px;">
+        <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>
+        <div style="color:#fff;font-size:16px;font-weight:600;margin-bottom:4px;">Request Extra Time</div>
+        <div id="ov-et-task-title" style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;"></div>
+
+        <div style="color:rgba(245,245,247,0.45);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">How much extra time do you need?</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <button class="et-min-btn" data-min="30"  onclick="setExtraTimeMins(30)"  style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;">30 min</button>
+          <button class="et-min-btn" data-min="60"  onclick="setExtraTimeMins(60)"  style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;">1 hour</button>
+          <button class="et-min-btn" data-min="120" onclick="setExtraTimeMins(120)" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;">2 hours</button>
+          <button class="et-min-btn" data-min="0"   onclick="setExtraTimeMins(0)"   style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;">Custom</button>
+        </div>
+        <input id="et-custom-mins" type="number" min="5" max="480" placeholder="Enter minutes…" style="display:none;width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;color:#fff;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;">
+
+        <div style="color:rgba(245,245,247,0.45);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Reason *</div>
+        <textarea id="et-reason" placeholder="What's taking longer than expected? (e.g. client changes, complex revisions)" rows="3" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:none;box-sizing:border-box;margin-bottom:16px;"></textarea>
+
+        <div style="display:flex;gap:10px;">
+          <button onclick="closeExtraTime()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:rgba(245,245,247,0.6);font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>
+          <button onclick="submitExtraTime()" style="flex:2;background:linear-gradient(135deg,#FF9F0A,#FF6B00);border:none;border-radius:12px;padding:12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">📤 Send Request</button>
+        </div>
+      </div>
     </div>
 
     <!-- CHAT — TAB 3 -->
@@ -1575,6 +1592,7 @@ function go1(id){
     selAtt(0);
     setTimeout(initGPSScreen, 200);
   }
+  if(id==='s1-tasks'){   setTimeout(loadStaffTasks, 100); }
   if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
   if(id==='s1-profile'){ setTimeout(loadProfile, 100); }
 }
@@ -4157,6 +4175,25 @@ function listenBreakApproval(){
     setTimeout(function(){ wifiBanner(false); }, 7000);
     _refreshCheckInDisplay();
   });
+
+  // ── Task Extra Time Response ──
+  staffSocket.on('task-extra-time-response', function(data){
+    if(data.action==='approve'){
+      showToast1('✅ Extra time approved for "'+data.taskTitle+'"!');
+      var task=_s1Tasks.find(function(t){return String(t.id)===String(data.taskId);});
+      if(task){
+        task.extra_time_status='approved';
+        if(data.newDueDate) task.due_date=data.newDueDate;
+        if(data.newDueTime) task.due_time=data.newDueTime;
+      }
+      s1TaskTab(_s1TaskTab);
+    } else {
+      showToast1('❌ Extra time request rejected for "'+data.taskTitle+'"');
+      var task=_s1Tasks.find(function(t){return String(t.id)===String(data.taskId);});
+      if(task) task.extra_time_status='rejected';
+      s1TaskTab(_s1TaskTab);
+    }
+  });
 }
 
 // Refresh check-in time on home screen from server
@@ -4820,6 +4857,223 @@ async function fetchMyTasks(staffId){
     var el=document.getElementById('s1-tasks-count');
     if(el) el.textContent=mine.length;
   } catch(e){ console.log('Tasks error',e); }
+}
+
+/* ══════════════════════════════════════
+   STAFF TASKS — Full task list with countdown timers
+   ══════════════════════════════════════ */
+var _s1Tasks=[], _s1TaskTab='active', _s1CountdownTimer=null;
+var _etTaskId=null, _etMins=30;
+
+async function loadStaffTasks(){
+  var listEl=document.getElementById('s1-tasks-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
+    var d=await res.json();
+    _s1Tasks=Array.isArray(d)?d:(d.data||[]);
+    var open=_s1Tasks.filter(function(t){return t.status!=='done';}).length;
+    var openEl=document.getElementById('s1-tasks-open-lbl');
+    if(openEl) openEl.textContent=open+' open';
+    var cntEl=document.getElementById('s1-tasks-count');
+    if(cntEl) cntEl.textContent=open;
+    s1TaskTab(_s1TaskTab);
+  }catch(e){
+    if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
+  }
+}
+
+function s1TaskTab(tab){
+  _s1TaskTab=tab;
+  ['active','done','all'].forEach(function(t){
+    var b=document.getElementById('s1-ttab-'+t);
+    if(b) b.style.cssText=(t===tab
+      ?'background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.28);color:#0A84FF;'
+      :'background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);')
+      +'border-radius:14px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;';
+  });
+  var filtered=_s1Tasks.filter(function(t){
+    if(tab==='active') return t.status!=='done';
+    if(tab==='done')   return t.status==='done';
+    return true;
+  });
+  renderS1Tasks(filtered);
+}
+
+function s1TaskDueMs(t){
+  if(!t.due_date||!t.due_time) return null;
+  return new Date(t.due_date.slice(0,10)+'T'+t.due_time.slice(0,5)+':00').getTime();
+}
+
+function s1CountdownHtml(t){
+  var dueMs=s1TaskDueMs(t);
+  if(!dueMs) return '';
+  var now=Date.now(), diff=dueMs-now, diffMins=Math.floor(Math.abs(diff)/60000);
+
+  if(t.extra_time_status==='pending'){
+    return '<div style="display:flex;align-items:center;gap:5px;margin-top:7px;padding:6px 9px;background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:8px;font-size:10px;color:#FF9F0A;">⏳ Extra time requested — awaiting approval</div>';
+  }
+
+  if(diff>0){
+    var hrs=Math.floor(diffMins/60),mins=diffMins%60;
+    var label=hrs>0?hrs+'h '+mins+'m remaining':mins+'m remaining';
+    var col=diffMins>120?'#0A84FF':diffMins>30?'#FF9F0A':'#FF453A';
+    var icon=diffMins>120?'⏰':diffMins>30?'⚠️':'🔴';
+    return '<div class="s1-countdown" data-due="'+dueMs+'" data-tid="'+t.id+'" data-title="'+escHtml(t.title)+'" style="display:flex;align-items:center;gap:5px;margin-top:7px;padding:6px 9px;background:'+col+'18;border:0.5px solid '+col+'44;border-radius:8px;font-size:10px;color:'+col+';">'+icon+' '+label+'</div>';
+  }
+
+  // Overdue
+  var hrs=Math.floor(diffMins/60),mins=diffMins%60;
+  var agoLabel=hrs>0?hrs+'h '+mins+'m ago':mins+'m ago';
+  return '<div style="margin-top:7px;">'
+    +'<div style="padding:5px 9px;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);border-radius:8px;font-size:10px;color:#FF453A;margin-bottom:5px;">🔴 Time\'s up! '+agoLabel+'</div>'
+    +'<button onclick="openExtraTimeModal('+t.id+',\''+escHtml(t.title)+'\')" style="width:100%;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);border-radius:9px;padding:7px;color:#FF9F0A;font-size:10px;font-weight:500;cursor:pointer;font-family:inherit;">⏱ Request Extra Time →</button>'
+    +'</div>';
+}
+
+function renderS1Tasks(tasks){
+  var listEl=document.getElementById('s1-tasks-list');
+  if(!listEl) return;
+  if(!tasks.length){
+    listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:28px;margin-bottom:8px;opacity:0.3;">📋</div>No tasks here</div>';
+    return;
+  }
+  var prC={high:'#FF453A',medium:'#FF9F0A',low:'#30D158'};
+  listEl.innerHTML=tasks.map(function(t){
+    var done=t.status==='done';
+    var pr=t.priority||'medium';
+    var pct=parseInt(t.progress_percent)||(done?100:0);
+    var dueHtml='';
+    if(t.due_date){
+      var ds=t.due_date.slice(0,10);
+      var ts=t.due_time?' at '+t.due_time.slice(0,5):'';
+      var today=new Date().toISOString().slice(0,10);
+      var dl=ds===today?'Today':ds;
+      dueHtml='<div style="color:rgba(245,245,247,0.3);font-size:9px;margin-top:2px;">📅 '+dl+ts+'</div>';
+    }
+    return '<div class="gs" style="padding:12px;margin-bottom:8px;border-left:2px solid '+(prC[pr]||'#0A84FF')+';'+(done?'opacity:0.55;':'')+';">'
+      +'<div style="display:flex;align-items:flex-start;gap:8px;">'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="color:'+(done?'rgba(245,245,247,0.5)':'#fff')+';font-size:12px;font-weight:500;'+(done?'text-decoration:line-through;':'')+'">'+escHtml(t.title||'Task')+'</div>'
+      +(t.brand_name?'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+escHtml(t.brand_name)+(t.category?' · '+t.category:'')+'</div>':'')
+      +dueHtml
+      +'</div>'
+      +'<span style="background:'+prC[pr]+'18;color:'+prC[pr]+';border:0.5px solid '+prC[pr]+'44;border-radius:5px;padding:1px 7px;font-size:9px;white-space:nowrap;flex-shrink:0;">'+(pr.charAt(0).toUpperCase()+pr.slice(1))+'</span>'
+      +'</div>'
+      +(pct>0||t.status==='in_progress'?'<div style="background:rgba(255,255,255,0.07);border-radius:3px;height:3px;overflow:hidden;margin-top:8px;"><div style="background:linear-gradient(90deg,#0A84FF,#5E5CE6);width:'+pct+'%;height:100%;border-radius:3px;"></div></div>':'')
+      +(done?'':s1CountdownHtml(t))
+      +(done?''
+        :'<div style="display:flex;gap:6px;margin-top:9px;">'
+        +(t.status==='pending'?'<button onclick="s1UpdateTask('+t.id+',\'in_progress\')" style="flex:1;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.2);border-radius:9px;padding:7px;color:#FF9F0A;font-size:10px;cursor:pointer;font-family:inherit;">▶ Start</button>':'')
+        +(t.status==='in_progress'?'<button onclick="s1UpdateTask('+t.id+',\'done\')" style="flex:1;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:9px;padding:7px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">✓ Mark Done</button>':'')
+        +'</div>')
+      +'</div>';
+  }).join('');
+  startS1Countdowns();
+}
+
+function startS1Countdowns(){
+  if(_s1CountdownTimer) clearInterval(_s1CountdownTimer);
+  if(!document.querySelector('.s1-countdown')) return;
+  _s1CountdownTimer=setInterval(function(){
+    document.querySelectorAll('.s1-countdown').forEach(function(el){
+      var dueMs=parseInt(el.dataset.due);
+      var tid=el.dataset.tid;
+      var title=el.dataset.title||'';
+      var diff=dueMs-Date.now(), diffMins=Math.floor(Math.abs(diff)/60000);
+      if(diff<=0){
+        var hrs=Math.floor(diffMins/60),mins=diffMins%60;
+        var agoLabel=hrs>0?hrs+'h '+mins+'m ago':mins+'m ago';
+        var parent=el.parentNode;
+        if(parent){
+          var rep=document.createElement('div');
+          rep.style.marginTop='7px';
+          rep.innerHTML='<div style="padding:5px 9px;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);border-radius:8px;font-size:10px;color:#FF453A;margin-bottom:5px;">🔴 Time\'s up! '+agoLabel+'</div>'
+            +'<button onclick="openExtraTimeModal('+tid+',\''+title+'\')" style="width:100%;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);border-radius:9px;padding:7px;color:#FF9F0A;font-size:10px;font-weight:500;cursor:pointer;font-family:inherit;">⏱ Request Extra Time →</button>';
+          parent.replaceChild(rep,el);
+        }
+        return;
+      }
+      var hrs=Math.floor(diffMins/60),mins=diffMins%60;
+      var label=hrs>0?hrs+'h '+mins+'m remaining':mins+'m remaining';
+      var col=diffMins>120?'#0A84FF':diffMins>30?'#FF9F0A':'#FF453A';
+      var icon=diffMins>120?'⏰':diffMins>30?'⚠️':'🔴';
+      el.style.background=col+'18';
+      el.style.border='0.5px solid '+col+'44';
+      el.style.color=col;
+      el.innerHTML=icon+' '+label;
+    });
+  },30000);
+}
+
+async function s1UpdateTask(id,status){
+  try{
+    var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
+    var d=await r.json();
+    if(d.success){ showToast1(status==='done'?'✅ Task done!':'▶ Task started'); loadStaffTasks(); }
+    else showToast1('❌ '+(d.message||'Failed'));
+  }catch(e){ showToast1('❌ Network error'); }
+}
+
+/* ── Extra Time Request Modal ── */
+function openExtraTimeModal(taskId,title){
+  _etTaskId=taskId; _etMins=30;
+  var el=document.getElementById('ov-extra-time');
+  var titleEl=document.getElementById('ov-et-task-title');
+  if(titleEl) titleEl.textContent=title;
+  var cEl=document.getElementById('et-custom-mins');
+  if(cEl){cEl.style.display='none';cEl.value='';}
+  var ta=document.getElementById('et-reason');
+  if(ta) ta.value='';
+  document.querySelectorAll('.et-min-btn').forEach(function(b){
+    b.style.cssText=(b.dataset.min==='30'
+      ?'background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;'
+      :'background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);')
+      +'border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;';
+  });
+  if(el) el.style.display='flex';
+}
+
+function closeExtraTime(){
+  var el=document.getElementById('ov-extra-time');
+  if(el) el.style.display='none';
+  _etTaskId=null;
+}
+
+function setExtraTimeMins(n){
+  _etMins=n;
+  var cEl=document.getElementById('et-custom-mins');
+  document.querySelectorAll('.et-min-btn').forEach(function(b){
+    var active=parseInt(b.dataset.min)===n;
+    b.style.cssText=(active
+      ?'background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;'
+      :'background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);')
+      +'border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;';
+  });
+  if(cEl) cEl.style.display=(n===0?'block':'none');
+}
+
+async function submitExtraTime(){
+  if(!_etTaskId){closeExtraTime();return;}
+  var cEl=document.getElementById('et-custom-mins');
+  var mins=(_etMins===0?(parseInt(cEl.value)||30):_etMins);
+  var reason=(document.getElementById('et-reason').value||'').trim();
+  if(!reason){showToast1('⚠️ Please explain why you need more time');return;}
+  try{
+    var r=await fetch(API_URL+'/api/tasks/'+_etTaskId+'/request-extra-time',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},zHead()),
+      body:JSON.stringify({minutes:mins,reason:reason})
+    });
+    var d=await r.json();
+    if(d.success){
+      showToast1('📤 Request sent to admin!');
+      closeExtraTime();
+      var task=_s1Tasks.find(function(t){return String(t.id)===String(_etTaskId);});
+      if(task) task.extra_time_status='pending';
+      s1TaskTab(_s1TaskTab);
+    } else showToast1('❌ '+(d.message||'Failed'));
+  }catch(e){showToast1('❌ Network error');}
 }
 
 /* ── LOGOUT ── */
