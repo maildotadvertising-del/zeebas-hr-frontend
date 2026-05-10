@@ -731,12 +731,18 @@ textarea.inp{resize:none;}
         </div>
       </div>
 
-      <!-- Assign To -->
-      <div style="margin-bottom:14px;">
+      <!-- Assign To — Multi Select -->
+      <div style="margin-bottom:14px;position:relative;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Assign To *</div>
-        <select class="inp" id="task-assigned" required>
-          <option value="">Select Team Member</option>
-        </select>
+        <div id="task-assign-box" onclick="toggleAssignDropdown(event)" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 10px;cursor:pointer;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div id="task-assign-pills" style="display:flex;flex-wrap:wrap;gap:5px;flex:1;">
+            <span id="task-assign-placeholder" style="color:rgba(245,245,247,0.3);font-size:12px;">Select team members…</span>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;opacity:0.4;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div id="task-assign-dropdown" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#1c1c28;border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+          <div id="task-assign-list" style="padding:4px;"></div>
+        </div>
       </div>
 
       <!-- Team Leader + Priority -->
@@ -4674,6 +4680,8 @@ async function openAddTask(){
   document.getElementById('task-file').value     = '';
   document.getElementById('task-status-row').style.display = 'none';
   resetSubTasks();
+  _assignedStaff = [];
+  renderAssignPills();
 
   await loadStaffDropdown();
   await loadTeamLeaderDropdown();
@@ -4717,25 +4725,96 @@ async function openEditTask(id){
 }
 
 /* ── Load staff into dropdown ── */
-async function loadStaffDropdown(selectedId){
-  var sel = document.getElementById('task-assigned');
-  if(_staffCache.length){
-    renderStaffDropdown(sel, _staffCache, selectedId);
+// ── Multi-assign state ──
+var _assignedStaff = []; // [{id, name}]
+
+function toggleAssignDropdown(e){
+  if(e) e.stopPropagation();
+  var dd = document.getElementById('task-assign-dropdown');
+  if(!dd) return;
+  var isOpen = dd.style.display !== 'none';
+  if(isOpen){ dd.style.display='none'; return; }
+  renderAssignList();
+  dd.style.display = 'block';
+  // Close on outside click
+  setTimeout(function(){
+    document.addEventListener('click', function _closeAssign(ev){
+      var box = document.getElementById('task-assign-box');
+      var drop = document.getElementById('task-assign-dropdown');
+      if(drop && !drop.contains(ev.target) && box && !box.contains(ev.target)){
+        drop.style.display='none';
+        document.removeEventListener('click', _closeAssign);
+      }
+    });
+  }, 10);
+}
+
+function renderAssignList(){
+  var list = document.getElementById('task-assign-list');
+  if(!list) return;
+  var staff = _staffCache;
+  if(!staff.length){ list.innerHTML='<div style="padding:10px;color:var(--muted);font-size:12px;">No staff loaded</div>'; return; }
+  list.innerHTML = staff.map(function(s){
+    var sel = _assignedStaff.some(function(a){ return String(a.id)===String(s.id); });
+    var init = (s.name||'?').charAt(0).toUpperCase();
+    var avSrc = s.photo_data || (s.photo_url ? API+s.photo_url : null);
+    var avHtml = avSrc
+      ? '<img src="'+avSrc+'" style="width:22px;height:22px;border-radius:6px;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:22px;height:22px;border-radius:6px;background:rgba(10,132,255,0.25);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+    return '<div onclick="toggleAssignStaff(\''+s.id+'\',\''+escHtml(s.name)+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;background:'+(sel?'rgba(10,132,255,0.12)':'transparent')+';margin:2px 0;">'
+      +avHtml
+      +'<span style="font-size:12px;flex:1;">'+escHtml(s.name)+(s.brand_name?'<span style="color:var(--muted);font-size:10px;"> · '+s.brand_name+'</span>':'')+'</span>'
+      +(sel?'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#0A84FF"/><path d="M4 7l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')
+      +'</div>';
+  }).join('');
+}
+
+function toggleAssignStaff(id, name){
+  var idx = _assignedStaff.findIndex(function(a){ return String(a.id)===String(id); });
+  if(idx >= 0) _assignedStaff.splice(idx, 1);
+  else _assignedStaff.push({id: id, name: name});
+  renderAssignList();
+  renderAssignPills();
+}
+
+function renderAssignPills(){
+  var pillBox = document.getElementById('task-assign-pills');
+  var placeholder = document.getElementById('task-assign-placeholder');
+  if(!pillBox) return;
+  if(!_assignedStaff.length){
+    if(placeholder) placeholder.style.display='block';
+    // Remove any existing pills
+    Array.from(pillBox.children).forEach(function(c){ if(c !== placeholder) c.remove(); });
     return;
   }
-  try{
-    var res  = await fetch(API+'/api/staff', { headers: zHdr() });
-    var data = await res.json();
-    _staffCache = data.data || [];
-    renderStaffDropdown(sel, _staffCache, selectedId);
-  } catch(e){ sel.innerHTML='<option>Failed to load staff</option>'; }
+  if(placeholder) placeholder.style.display='none';
+  var existing = Array.from(pillBox.children).filter(function(c){ return c !== placeholder; });
+  existing.forEach(function(c){ c.remove(); });
+  _assignedStaff.forEach(function(a){
+    var pill = document.createElement('div');
+    pill.style.cssText='display:flex;align-items:center;gap:4px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:7px;padding:3px 8px;font-size:11px;color:#0A84FF;';
+    pill.innerHTML=escHtml(a.name)+'<span onclick="event.stopPropagation();toggleAssignStaff(\''+a.id+'\',\''+escHtml(a.name)+'\')" style="cursor:pointer;opacity:0.6;font-size:13px;line-height:1;margin-left:2px;">×</span>';
+    pillBox.insertBefore(pill, placeholder);
+  });
 }
-function renderStaffDropdown(sel, staff, selectedId){
-  sel.innerHTML = '<option value="">Select Staff Member</option>'
-    + staff.map(function(s){
-        return '<option value="'+s.id+'"'+(String(s.id)===String(selectedId)?' selected':'')+'>'+escHtml(s.name)+(s.brand_name?' · '+s.brand_name:'')+'</option>';
-      }).join('');
+
+async function loadStaffDropdown(selectedId){
+  if(!_staffCache.length){
+    try{
+      var res = await fetch(API+'/api/staff', { headers: zHdr() });
+      var data = await res.json();
+      _staffCache = data.data || [];
+    } catch(e){}
+  }
+  // Pre-select if editing
+  _assignedStaff = [];
+  if(selectedId){
+    var found = _staffCache.find(function(s){ return String(s.id)===String(selectedId); });
+    if(found) _assignedStaff = [{id: found.id, name: found.name}];
+  }
+  renderAssignPills();
 }
+function renderStaffDropdown(){ /* legacy stub — no longer used */ }
 
 async function loadTeamLeaderDropdown(selectedId){
   var sel = document.getElementById('task-team-leader'); if(!sel) return;
@@ -4944,58 +5023,79 @@ document.addEventListener('click', function(e){
 async function saveTask(){
   var id       = document.getElementById('task-edit-id').value;
   var title    = document.getElementById('task-title').value.trim();
-  var assigned = document.getElementById('task-assigned').value;
   var category = document.getElementById('task-category').value;
 
   if(!title)    { showToast('Task title is required'); return; }
-  if(!assigned) { showToast('Please select a staff member'); return; }
+  if(!_assignedStaff.length) { showToast('Please select at least one team member'); return; }
   if(!category) { showToast('Please select a task type'); return; }
 
   var btn = document.getElementById('task-save-btn');
   btn.textContent = id ? 'Saving…' : 'Assigning…';
   btn.disabled    = true;
 
-  var fd = new FormData();
-  fd.append('title',       title);
-  fd.append('description', document.getElementById('task-desc').value.trim());
-  fd.append('brand_id',    document.getElementById('task-brand').value);
-  fd.append('category',       category);
-  fd.append('assigned_to',    assigned);
-  fd.append('due_date',       document.getElementById('task-due').value);
-  fd.append('end_date',       document.getElementById('task-end').value);
-  fd.append('team_leader_id', document.getElementById('task-team-leader').value);
-  fd.append('priority',    document.getElementById('task-priority').value);
-  if(id) fd.append('status', document.getElementById('task-status').value);
-  var file = document.getElementById('task-file').files[0];
-  if(file) fd.append('attachment', file);
-
-  // ── Sub tasks ──
   var stClean = _subTasks.map(function(s){
     return { id:s.id, title:s.title||'', done:!!s.done, desc:s.desc||'', file_url:s.file_url||null, file_name:s.file_name||null };
   });
-  fd.append('subtasks', JSON.stringify(stClean));
-  // Attach per-subtask files with fieldname st_file_{id}
-  _subTasks.forEach(function(s){
-    if(s._file) fd.append('st_file_'+s.id, s._file);
-  });
 
-  try{
-    var method = id ? 'PUT' : 'POST';
-    var url    = API+'/api/tasks'+(id?'/'+id:'');
-    var res    = await fetch(url, { method:method, headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
-    var data   = await res.json();
-    if(data.success){
-      showToast(id ? '✓ Task updated' : '✓ Task assigned successfully');
-      closeTaskPanel();
-      loadTasks();
-    } else {
-      showToast(data.message || 'Failed to save task');
-    }
-  } catch(e){
-    showToast('Server error. Try again.');
-  } finally {
-    btn.textContent = id ? 'Save Changes' : 'Assign Task';
-    btn.disabled    = false;
+  var commonFields = {
+    title:          title,
+    description:    document.getElementById('task-desc').value.trim(),
+    brand_id:       document.getElementById('task-brand').value,
+    category:       category,
+    due_date:       document.getElementById('task-due').value,
+    end_date:       document.getElementById('task-end').value,
+    team_leader_id: document.getElementById('task-team-leader').value,
+    priority:       document.getElementById('task-priority').value,
+    subtasks:       JSON.stringify(stClean)
+  };
+  if(id) commonFields.status = document.getElementById('task-status').value;
+
+  // For edit: update single task (keep existing assignee or use first selected)
+  if(id){
+    var fd = new FormData();
+    Object.keys(commonFields).forEach(function(k){ fd.append(k, commonFields[k]); });
+    fd.append('assigned_to', _assignedStaff[0].id);
+    var file = document.getElementById('task-file').files[0];
+    if(file) fd.append('attachment', file);
+    _subTasks.forEach(function(s){ if(s._file) fd.append('st_file_'+s.id, s._file); });
+    try{
+      var res  = await fetch(API+'/api/tasks/'+id, { method:'PUT', headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
+      var data = await res.json();
+      if(data.success){ showToast('✓ Task updated'); closeTaskPanel(); loadTasks(); }
+      else showToast(data.message||'Failed to save task');
+    } catch(e){ showToast('Server error. Try again.'); }
+    finally { btn.textContent='Save Changes'; btn.disabled=false; }
+    return;
+  }
+
+  // For new task: create one task per selected staff member
+  var file = document.getElementById('task-file').files[0];
+  var successCount = 0, failCount = 0;
+  for(var i=0; i<_assignedStaff.length; i++){
+    var fd = new FormData();
+    Object.keys(commonFields).forEach(function(k){ fd.append(k, commonFields[k]); });
+    fd.append('assigned_to', _assignedStaff[i].id);
+    if(file) fd.append('attachment', file);
+    _subTasks.forEach(function(s){ if(s._file) fd.append('st_file_'+s.id, s._file); });
+    try{
+      var r = await fetch(API+'/api/tasks', { method:'POST', headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
+      var d = await r.json();
+      if(d.success) successCount++; else failCount++;
+    } catch(e){ failCount++; }
+  }
+
+  btn.textContent = 'Assign Task';
+  btn.disabled = false;
+
+  if(successCount > 0){
+    var msg = successCount === 1
+      ? '✓ Task assigned to '+_assignedStaff[0].name
+      : '✓ '+successCount+' tasks assigned to '+successCount+' members';
+    showToast(msg);
+    closeTaskPanel();
+    loadTasks();
+  } else {
+    showToast('Failed to assign tasks. Try again.');
   }
 }
 
@@ -5015,6 +5115,8 @@ function closeTaskPanel(e){
   if(e && e.target !== document.getElementById('task-overlay')) return;
   document.getElementById('task-overlay').style.display = 'none';
   document.getElementById('task-panel').style.display   = 'none';
+  var dd = document.getElementById('task-assign-dropdown');
+  if(dd) dd.style.display = 'none';
 }
 
 /* ── File input label ── */
