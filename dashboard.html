@@ -166,6 +166,7 @@ textarea.inp{resize:none;}
     <div class="nl">Main</div>
     <div class="ni active" onclick="showPage('dashboard',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>Dashboard</div>
     <div class="ni" onclick="showPage('attendance',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Attendance</div>
+    <div class="ni" onclick="showPage('daily-logs',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="5" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="5" y1="9" x2="9" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Logs</div>
     <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Team</div>
     <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span id="approvals-badge" style="display:none;background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
@@ -564,6 +565,32 @@ textarea.inp{resize:none;}
       <div id="approvals-page-content">
         <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── DAILY LOGS ── -->
+  <div id="page-daily-logs" class="page">
+    <div class="topbar">
+      <div>
+        <div class="ptitle">Daily Work Logs</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px;" id="dl-sub">Staff task entries for today</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="dl-date-trigger" onclick="openUCal('dl-date','dl-date-label',loadDailyLogs)" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;min-width:110px;text-align:center;white-space:nowrap;"><span id="dl-date-label" style="color:rgba(245,245,247,0.85);">Today</span><input type="hidden" id="dl-date"></div>
+        <button class="btn-g" onclick="loadDailyLogs()">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Staff filter -->
+    <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="dl-staff-filter" onchange="loadDailyLogs()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:7px 12px;color:#fff;font-size:12px;font-family:inherit;cursor:pointer;">
+        <option value="">All Staff</option>
+      </select>
+    </div>
+
+    <!-- Logs container -->
+    <div id="dl-container">
+      <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Loading…</div>
     </div>
   </div>
 
@@ -4106,6 +4133,93 @@ function _stopWifiAutoCheck(){
 }
 
 /* ── LOAD ATTENDANCE PAGE ── */
+// ── Daily Logs Page ──
+async function loadDailyLogs(){
+  var container = document.getElementById('dl-container');
+  var subEl     = document.getElementById('dl-sub');
+  var dateEl    = document.getElementById('dl-date');
+  var labelEl   = document.getElementById('dl-date-label');
+  var filterEl  = document.getElementById('dl-staff-filter');
+  if(!container) return;
+
+  var today = new Date().toISOString().split('T')[0];
+  var isToday = !dateEl.value || dateEl.value === today;
+  var date = dateEl.value || today;
+  if(labelEl) labelEl.textContent = isToday ? 'Today' : date;
+  if(subEl) subEl.textContent = 'Work logs for ' + (isToday ? 'today' : date);
+
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">⏳ Loading…</div>';
+
+  try{
+    var staffId = filterEl ? filterEl.value : '';
+    var url = API+'/api/daily-logs/admin?date='+date+(staffId?'&staff_id='+staffId:'');
+    var res = await fetch(url, {headers:zHdr()});
+    var d = await res.json();
+    if(!d.success || !d.data || !d.data.length){
+      container.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted);font-size:13px;opacity:0.6;">No log entries for this date</div>';
+      return;
+    }
+
+    // Group by staff
+    var grouped = {};
+    d.data.forEach(function(row){
+      var key = row.staff_id;
+      if(!grouped[key]) grouped[key] = { name:row.staff_name, designation:row.designation, photo_url:row.photo_url, photo_data:row.photo_data, brand_name:row.brand_name, brand_color:row.brand_color, tasks:[] };
+      grouped[key].tasks.push(row);
+    });
+
+    // Populate staff filter on first load
+    if(filterEl && filterEl.options.length <= 1){
+      Object.values(grouped).forEach(function(g){
+        var opt = document.createElement('option');
+        opt.value = g.tasks[0].staff_id || '';
+        opt.textContent = g.name;
+        filterEl.appendChild(opt);
+      });
+    }
+
+    var html = '';
+    Object.values(grouped).forEach(function(g){
+      var init = (g.name||'?').charAt(0).toUpperCase();
+      var avSrc = g.photo_data || (g.photo_url ? API+g.photo_url : null);
+      var avHtml = avSrc
+        ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
+        : '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.3));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+      var brandDot = g.brand_color
+        ? '<span style="width:7px;height:7px;border-radius:50%;background:'+g.brand_color+';display:inline-block;margin-right:4px;"></span>'
+        : '';
+      var tasksHtml = g.tasks.map(function(t,i){
+        var tStr = new Date(t.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+        return '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;'+(i<g.tasks.length-1?'border-bottom:0.5px solid rgba(255,255,255,0.05);':'')+';">'
+          +'<span style="color:rgba(245,245,247,0.25);font-size:10px;min-width:42px;padding-top:1px;">'+tStr+'</span>'
+          +'<span style="font-size:12px;color:rgba(245,245,247,0.85);line-height:1.5;">'+escHtml(t.task)+'</span>'
+          +'</div>';
+      }).join('');
+
+      html += '<div class="sec g" style="padding:14px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +avHtml
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:13px;font-weight:500;">'+escHtml(g.name)+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+(g.designation||'')+(g.brand_name?(' · '+brandDot+g.brand_name):'')+'</div>'
+        +'</div>'
+        +'<div style="background:rgba(10,132,255,0.12);color:#0A84FF;border:0.5px solid rgba(10,132,255,0.25);border-radius:8px;padding:3px 9px;font-size:10px;font-weight:500;">'+g.tasks.length+' '+(g.tasks.length===1?'entry':'entries')+'</div>'
+        +'</div>'
+        +'<div style="padding-left:4px;">'+tasksHtml+'</div>'
+        +'</div>';
+    });
+    container.innerHTML = html;
+  }catch(e){
+    container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Error loading logs</div>';
+    console.error('loadDailyLogs:', e);
+  }
+}
+
+// Helper: escape HTML to prevent injection in task text
+function escHtml(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 async function loadAttendancePage(){
   // Show Loading FIRST — clears old rows immediately so no wrong-data flash during payroll fetch
   var tbody=document.getElementById('att-page-tbody');
@@ -4263,6 +4377,7 @@ window.showPage = function(page, el){
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
+  if(page==='daily-logs')    setTimeout(loadDailyLogs, 100);
   if(page==='tasks')          setTimeout(loadTasks, 100);
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
