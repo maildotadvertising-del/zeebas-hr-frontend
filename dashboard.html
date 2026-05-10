@@ -4771,8 +4771,13 @@ function renderAssignList(){
 
 function toggleAssignStaff(id, name){
   var idx = _assignedStaff.findIndex(function(a){ return String(a.id)===String(id); });
-  if(idx >= 0) _assignedStaff.splice(idx, 1);
-  else _assignedStaff.push({id: id, name: name});
+  if(idx >= 0){
+    _assignedStaff.splice(idx, 1);
+  } else {
+    // Store full staff object for photo access
+    var staffObj = _staffCache.find(function(s){ return String(s.id)===String(id); });
+    _assignedStaff.push(staffObj || {id: id, name: name});
+  }
   renderAssignList();
   renderAssignPills();
 }
@@ -4783,7 +4788,6 @@ function renderAssignPills(){
   if(!pillBox) return;
   if(!_assignedStaff.length){
     if(placeholder) placeholder.style.display='block';
-    // Remove any existing pills
     Array.from(pillBox.children).forEach(function(c){ if(c !== placeholder) c.remove(); });
     return;
   }
@@ -4791,9 +4795,14 @@ function renderAssignPills(){
   var existing = Array.from(pillBox.children).filter(function(c){ return c !== placeholder; });
   existing.forEach(function(c){ c.remove(); });
   _assignedStaff.forEach(function(a){
+    var init = (a.name||'?').charAt(0).toUpperCase();
+    var avSrc = a.photo_data || (a.photo_url ? API+a.photo_url : null);
+    var avHtml = avSrc
+      ? '<img src="'+avSrc+'" style="width:18px;height:18px;border-radius:5px;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:18px;height:18px;border-radius:5px;background:rgba(10,132,255,0.35);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
     var pill = document.createElement('div');
-    pill.style.cssText='display:flex;align-items:center;gap:4px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:7px;padding:3px 8px;font-size:11px;color:#0A84FF;';
-    pill.innerHTML=escHtml(a.name)+'<span onclick="event.stopPropagation();toggleAssignStaff(\''+a.id+'\',\''+escHtml(a.name)+'\')" style="cursor:pointer;opacity:0.6;font-size:13px;line-height:1;margin-left:2px;">×</span>';
+    pill.style.cssText='display:flex;align-items:center;gap:5px;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);border-radius:8px;padding:3px 7px 3px 4px;font-size:11px;color:#0A84FF;';
+    pill.innerHTML=avHtml+escHtml(a.name)+'<span onclick="event.stopPropagation();toggleAssignStaff(\''+a.id+'\',\''+escHtml(a.name)+'\')" style="cursor:pointer;opacity:0.5;font-size:13px;line-height:1;margin-left:1px;">×</span>';
     pillBox.insertBefore(pill, placeholder);
   });
 }
