@@ -624,6 +624,7 @@ textarea.inp{resize:none;}
         <button class="task-tab" data-status="pending" onclick="setTaskFilter('status','pending',this)">Pending</button>
         <button class="task-tab" data-status="in_progress" onclick="setTaskFilter('status','in_progress',this)">In Progress</button>
         <button class="task-tab" data-status="done" onclick="setTaskFilter('status','done',this)">Done</button>
+        <button class="task-tab" data-status="today_done" onclick="setTaskFilter('status','today_done',this)" style="display:flex;align-items:center;gap:4px;">✅ Today Done</button>
       </div>
       <div style="flex:1;"></div>
       <!-- Dropdowns -->
@@ -4503,8 +4504,10 @@ async function loadTasks(){
   grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">Loading tasks…</div>';
 
   try{
+    var isTodayDone = (_taskFilters.status === 'today_done');
     var qs = [];
-    if(_taskFilters.status)   qs.push('status='+_taskFilters.status);
+    if(_taskFilters.status && !isTodayDone) qs.push('status='+_taskFilters.status);
+    if(isTodayDone) qs.push('status=done'); // fetch done, filter client-side
     if(_taskFilters.brand)    qs.push('brand_id='+_taskFilters.brand);
     if(_taskFilters.category) qs.push('category='+_taskFilters.category);
     if(_taskFilters.priority) qs.push('priority='+_taskFilters.priority);
@@ -4514,11 +4517,23 @@ async function loadTasks(){
     var data = await res.json();
     var tasks = data.data || [];
 
-    // Update badge
-    var pending = tasks.filter(function(t){ return t.status!=='done'; }).length;
+    // Client-side "Today Done" filter
+    if(isTodayDone){
+      var todayStr = new Date().toISOString().slice(0,10);
+      tasks = tasks.filter(function(t){
+        if(t.status !== 'done' || !t.completed_at) return false;
+        return new Date(t.completed_at).toISOString().slice(0,10) === todayStr;
+      });
+    }
+
+    // Update badge (always use non-filtered pending count)
+    var pending = (data.data||[]).filter(function(t){ return t.status!=='done'; }).length;
     var badge = document.getElementById('tasks-badge');
     if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
-    if(sub) sub.textContent = tasks.length+' task'+(tasks.length!==1?'s':'')+' · '+pending+' pending';
+    var subLabel = isTodayDone
+      ? tasks.length+' completed today'
+      : tasks.length+' task'+(tasks.length!==1?'s':'')+' · '+pending+' pending';
+    if(sub) sub.textContent = subLabel;
 
     // Update dashboard stat
     var dt = document.getElementById('dash-tasks');
@@ -4526,9 +4541,10 @@ async function loadTasks(){
 
     if(!tasks.length){
       grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">'
-        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📌</div>'
-        +'<div style="font-size:14px;margin-bottom:6px;">No tasks found</div>'
-        +'<div style="font-size:12px;opacity:0.6;">Click "+ Assign Task" to create one</div></div>';
+        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">'+(isTodayDone?'🎉':'📌')+'</div>'
+        +'<div style="font-size:14px;margin-bottom:6px;">'+(isTodayDone?'No tasks completed today yet':'No tasks found')+'</div>'
+        +(isTodayDone?'':'<div style="font-size:12px;opacity:0.6;">Click "+ Assign Task" to create one</div>')
+        +'</div>';
       return;
     }
 
@@ -4547,6 +4563,10 @@ function buildTaskCard(t){
   var catLbl  = CATEGORY_LABELS[t.category]|| '📦 Other';
   var init    = (t.assigned_to_name||'?').charAt(0).toUpperCase();
   var bColor  = t.brand_color || '#0A84FF';
+  var staffAvSrc = t.photo_data || (t.photo_url ? API+t.photo_url : null);
+  var staffAv = staffAvSrc
+    ? '<img src="'+staffAvSrc+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"><div style="display:none;width:22px;height:22px;border-radius:50%;background:'+bColor+'22;border:0.5px solid '+bColor+'44;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:'+bColor+';flex-shrink:0;">'+init+'</div>'
+    : '<div style="width:22px;height:22px;border-radius:50%;background:'+bColor+'22;border:0.5px solid '+bColor+'44;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:'+bColor+';flex-shrink:0;">'+init+'</div>';
 
   // Due date
   var dueStr = '';
@@ -4578,7 +4598,7 @@ function buildTaskCard(t){
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
         // Assigned to
         +'<div style="display:flex;align-items:center;gap:6px;">'
-          +'<div style="width:22px;height:22px;border-radius:50%;background:'+bColor+'22;border:0.5px solid '+bColor+'44;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:'+bColor+';">'+init+'</div>'
+          +staffAv
           +'<span style="font-size:11px;color:var(--muted);">'+escHtml(t.assigned_to_name||'—')+'</span>'
         +'</div>'
         // Due date
@@ -5148,17 +5168,36 @@ async function saveTask(){
 
   // For edit: update single task (keep existing assignee or use first selected)
   if(id){
+    var file = document.getElementById('task-file').files[0];
+    // Update existing task with first selected staff
     var fd = new FormData();
     Object.keys(commonFields).forEach(function(k){ fd.append(k, commonFields[k]); });
     fd.append('assigned_to', _assignedStaff[0].id);
-    var file = document.getElementById('task-file').files[0];
     if(file) fd.append('attachment', file);
     _subTasks.forEach(function(s){ if(s._file) fd.append('st_file_'+s.id, s._file); });
     try{
       var res  = await fetch(API+'/api/tasks/'+id, { method:'PUT', headers:{ 'Authorization':'Bearer '+zTok() }, body:fd });
       var data = await res.json();
-      if(data.success){ showToast('✓ Task updated'); closeTaskPanel(); loadTasks(); }
-      else showToast(data.message||'Failed to save task');
+      if(!data.success){ showToast(data.message||'Failed to save task'); return; }
+      // If additional staff selected in edit mode, create new tasks for them
+      var extraStaff = _assignedStaff.slice(1);
+      var extraCount = 0;
+      for(var ei=0; ei<extraStaff.length; ei++){
+        var efd = new FormData();
+        Object.keys(commonFields).forEach(function(k){ efd.append(k, commonFields[k]); });
+        efd.append('assigned_to', extraStaff[ei].id);
+        if(file) efd.append('attachment', file);
+        _subTasks.forEach(function(s){ if(s._file) efd.append('st_file_'+s.id, s._file); });
+        try{
+          var er = await fetch(API+'/api/tasks', { method:'POST', headers:{ 'Authorization':'Bearer '+zTok() }, body:efd });
+          var ed = await er.json();
+          if(ed.success) extraCount++;
+        } catch(e2){}
+      }
+      var msg = '✓ Task updated for '+_assignedStaff[0].name;
+      if(extraCount > 0) msg += ' + assigned to '+extraCount+' more';
+      showToast(msg);
+      closeTaskPanel(); loadTasks();
     } catch(e){ showToast('Server error. Try again.'); }
     finally { btn.textContent='Save Changes'; btn.disabled=false; }
     return;

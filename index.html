@@ -89,6 +89,7 @@ label input[type=checkbox]:checked+span::after{transform:translateX(16px);}
 .cele-av{width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;border:2px solid rgba(255,255,255,0.15);margin:0 auto 12px;box-shadow:0 6px 24px rgba(0,0,0,0.4);}
 .cele-badge{font-size:40px;display:block;margin-bottom:10px;animation:badgePop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;}
 @keyframes badgePop{from{transform:scale(0)rotate(-20deg);}to{transform:scale(1)rotate(0);}}
+@keyframes slideUpFade{from{opacity:0;transform:translateX(-50%) translateY(24px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 .cele-nm{color:#fff;font-size:18px;font-weight:500;margin-bottom:6px;letter-spacing:-0.2px;}
 .cele-msg{font-size:12px;font-weight:300;color:rgba(245,245,247,0.55);line-height:1.6;margin-bottom:8px;}
 .cele-yr{display:inline-block;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:999px;padding:4px 14px;font-size:11px;color:rgba(245,245,247,0.5);margin-bottom:18px;}
@@ -4176,6 +4177,11 @@ function listenBreakApproval(){
     _refreshCheckInDisplay();
   });
 
+  // ── New Task Assigned ──
+  staffSocket.on('task-assigned', function(data){
+    showTaskAssignedPopup(data);
+  });
+
   // ── Task Extra Time Response ──
   staffSocket.on('task-extra-time-response', function(data){
     if(data.action==='approve'){
@@ -5013,6 +5019,52 @@ async function s1UpdateTask(id,status){
     if(d.success){ showToast1(status==='done'?'✅ Task done!':'▶ Task started'); loadStaffTasks(); }
     else showToast1('❌ '+(d.message||'Failed'));
   }catch(e){ showToast1('❌ Network error'); }
+}
+
+/* ── New Task Assigned Popup ── */
+function showTaskAssignedPopup(data){
+  // Remove any existing popup
+  var old=document.getElementById('task-assigned-popup');
+  if(old) old.remove();
+
+  var prColors={high:'#FF453A',medium:'#FF9F0A',low:'#30D158'};
+  var pr=data.priority||'medium';
+  var prCol=prColors[pr]||'#FF9F0A';
+  var dueText='';
+  if(data.due_date){
+    var ds=data.due_date.slice(0,10);
+    var ts=data.due_time?' at '+data.due_time.slice(0,5):'';
+    var today=new Date().toISOString().slice(0,10);
+    dueText='📅 Due '+(ds===today?'Today':ds)+ts;
+  }
+
+  var popup=document.createElement('div');
+  popup.id='task-assigned-popup';
+  popup.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);width:calc(100% - 26px);max-width:390px;z-index:700;animation:slideUpFade 0.35s cubic-bezier(0.34,1.56,0.64,1);';
+  popup.innerHTML='<div style="background:rgba(10,10,22,0.97);border:0.5px solid rgba(10,132,255,0.3);border-left:3px solid '+prCol+';border-radius:16px;padding:14px 14px 12px;box-shadow:0 12px 40px rgba(0,0,0,0.6),0 0 0 0.5px rgba(10,132,255,0.1);">'
+    +'<div style="display:flex;align-items:flex-start;gap:10px;">'
+    +'<div style="font-size:22px;flex-shrink:0;margin-top:1px;">📋</div>'
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="color:rgba(10,132,255,1);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">New Task Assigned!</div>'
+    +'<div style="color:#fff;font-size:13px;font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(data.title||'Task')+'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+    +'<span style="background:'+prCol+'18;color:'+prCol+';border:0.5px solid '+prCol+'44;border-radius:5px;padding:1px 7px;font-size:9px;font-weight:600;">'+pr.charAt(0).toUpperCase()+pr.slice(1)+'</span>'
+    +(data.assigned_by_name?'<span style="color:rgba(245,245,247,0.4);font-size:10px;">by '+escHtml(data.assigned_by_name)+'</span>':'')
+    +(dueText?'<span style="color:rgba(245,245,247,0.4);font-size:10px;">'+dueText+'</span>':'')
+    +'</div>'
+    +'</div>'
+    +'<button onclick="document.getElementById(\'task-assigned-popup\').remove()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:26px;height:26px;color:rgba(245,245,247,0.5);cursor:pointer;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:inherit;">✕</button>'
+    +'</div>'
+    +'<button onclick="go1(\'s1-tasks\');document.getElementById(\'task-assigned-popup\').remove();" style="width:100%;margin-top:10px;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:10px;padding:8px;color:#0A84FF;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">View Tasks →</button>'
+    +'</div>';
+
+  document.body.appendChild(popup);
+
+  // Auto-dismiss after 8 seconds
+  setTimeout(function(){
+    var p=document.getElementById('task-assigned-popup');
+    if(p){ p.style.transition='opacity 0.4s,transform 0.4s'; p.style.opacity='0'; p.style.transform='translateX(-50%) translateY(20px)'; setTimeout(function(){ if(p.parentNode) p.remove(); },400); }
+  },8000);
 }
 
 /* ── Extra Time Request Modal ── */
