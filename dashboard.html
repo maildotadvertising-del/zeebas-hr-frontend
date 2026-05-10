@@ -4818,20 +4818,27 @@ async function loadTasks(){
       });
     }
 
-    // Update badge (always use non-filtered pending count)
-    var pending = (data.data||[]).filter(function(t){ return t.status!=='done'; }).length;
+    // Group first — counts reflect grouped cards, not raw rows
+    var grouped        = groupTasks(data.data || []);
+    var pending        = grouped.filter(function(t){ return t.status !== 'done'; }).length;
     var badge = document.getElementById('tasks-badge');
     if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
+
+    // For display: use grouped+filtered tasks
+    var displayGroups = isTodayDone
+      ? groupTasks(tasks)   // tasks is already filtered to today-done
+      : grouped;
+
     var subLabel = isTodayDone
-      ? tasks.length+' completed today'
-      : tasks.length+' task'+(tasks.length!==1?'s':'')+' · '+pending+' pending';
+      ? displayGroups.length+' completed today'
+      : displayGroups.length+' task'+(displayGroups.length!==1?'s':'')+' · '+pending+' pending';
     if(sub) sub.textContent = subLabel;
 
     // Update dashboard stat
     var dt = document.getElementById('dash-tasks');
     if(dt) dt.textContent = pending;
 
-    if(!tasks.length){
+    if(!displayGroups.length){
       grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">'
         +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">'+(isTodayDone?'🎉':'📌')+'</div>'
         +'<div style="font-size:14px;margin-bottom:6px;">'+(isTodayDone?'No tasks completed today yet':'No tasks found')+'</div>'
@@ -4840,7 +4847,7 @@ async function loadTasks(){
       return;
     }
 
-    grid.innerHTML = groupTasks(tasks).map(function(t){ return buildTaskCard(t); }).join('');
+    grid.innerHTML = displayGroups.map(function(t){ return buildTaskCard(t); }).join('');
   } catch(e){
     console.error('loadTasks error',e);
     grid.innerHTML = '<div style="text-align:center;padding:40px;color:#FF453A;">Failed to load tasks</div>';
