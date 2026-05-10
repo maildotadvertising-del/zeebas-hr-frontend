@@ -5458,6 +5458,781 @@ document.addEventListener('visibilitychange', function(){
 </script>
 
 
+<!-- ═══════════════════════════════════════════════════════
+     DESKTOP VIEW  (≥900px — hides phone mockup, shows full layout)
+     ═══════════════════════════════════════════════════════ -->
+<style>
+@media(min-width:900px){
+  body{display:block!important;padding:0!important;background:#050508!important;height:100vh;overflow:hidden;}
+  .phone,h3{display:none!important;}
+  #dt-wrap{display:flex!important;}
+}
+/* ── Desktop layout ── */
+#dt-wrap{display:none;flex-direction:column;height:100vh;width:100%;background:#050508;
+  background-image:radial-gradient(ellipse at 15% 10%,rgba(10,40,100,0.45) 0%,transparent 50%),
+  radial-gradient(ellipse at 85% 90%,rgba(80,10,120,0.3) 0%,transparent 50%);
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;color:#F5F5F7;}
+/* Login */
+#dt-login-view{flex:1;display:flex;align-items:center;justify-content:center;}
+#dt-login-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(32px);border:0.5px solid rgba(255,255,255,0.1);border-radius:24px;padding:40px 36px;width:380px;max-width:90vw;}
+/* App */
+#dt-app-view{display:none;flex:1;overflow:hidden;}
+#dt-app-view.on{display:flex;}
+/* Sidebar */
+.dt-sb{width:230px;flex-shrink:0;height:100%;background:rgba(5,5,14,0.75);backdrop-filter:blur(32px);border-right:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;overflow-y:auto;}
+.dt-sb-logo{padding:20px 18px 16px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;}
+.dt-sb-logo-icon{width:36px;height:36px;background:linear-gradient(145deg,rgba(10,132,255,0.85),rgba(10,60,180,0.9));border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 18px rgba(10,132,255,0.3);}
+.dt-sb-logo-text{font-size:13px;font-weight:500;color:#F5F5F7;line-height:1.2;}
+.dt-sb-logo-sub{font-size:10px;color:rgba(245,245,247,0.35);}
+/* Staff card */
+.dt-staff-card{padding:16px 18px;border-bottom:0.5px solid rgba(255,255,255,0.06);}
+.dt-av{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;flex-shrink:0;overflow:hidden;}
+.dt-av img{width:100%;height:100%;object-fit:cover;}
+/* Attendance status */
+.dt-att-card{margin:14px 14px 0;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px;}
+.dt-att-btn{width:100%;border:none;border-radius:11px;padding:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:7px;}
+/* Nav */
+.dt-nav{padding:10px 10px 0;flex:1;}
+.dt-nav-lbl{font-size:9px;font-weight:500;color:rgba(245,245,247,0.25);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 4px;}
+.dt-ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:11px;cursor:pointer;color:rgba(245,245,247,0.45);font-size:13px;margin-bottom:2px;transition:all .15s;border:0.5px solid transparent;}
+.dt-ni:hover{background:rgba(255,255,255,0.06);color:#F5F5F7;}
+.dt-ni.on{background:rgba(10,132,255,0.15);color:#0A84FF;border-color:rgba(10,132,255,0.18);}
+/* Main content */
+.dt-main{flex:1;overflow-y:auto;padding:28px 32px 40px;}
+.dt-panel{display:none;animation:dtFu .2s ease;}
+.dt-panel.on{display:block;}
+@keyframes dtFu{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+/* Glass cards */
+.dt-g{background:rgba(255,255,255,0.05);backdrop-filter:blur(24px);border:0.5px solid rgba(255,255,255,0.1);border-radius:18px;}
+.dt-gs{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;}
+/* Input */
+.dt-inp{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#F5F5F7;padding:10px 14px;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color .15s;}
+.dt-inp:focus{border-color:#0A84FF;}
+.dt-inp::placeholder{color:rgba(245,245,247,0.25);}
+select.dt-inp option{background:#1A1A2E;}
+textarea.dt-inp{resize:none;}
+/* Primary btn */
+.dt-btn{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(10,132,255,0.35);}
+.dt-btn-g{background:rgba(255,255,255,0.06);color:#F5F5F7;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer;font-family:inherit;}
+/* Task card */
+.dt-task-card{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;margin-bottom:8px;transition:border-color .2s;}
+.dt-task-card:hover{border-color:rgba(255,255,255,0.14);}
+.dt-task-card.prio-high{border-left:3px solid #FF453A;}
+.dt-task-card.prio-medium{border-left:3px solid #FF9F0A;}
+.dt-task-card.prio-low{border-left:3px solid #30D158;}
+.dt-task-card.done-card{opacity:.55;}
+</style>
+
+<!-- ─── DESKTOP WRAPPER ─── -->
+<div id="dt-wrap">
+
+  <!-- ── Login ── -->
+  <div id="dt-login-view">
+    <div id="dt-login-card">
+      <!-- Logo -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
+        <div style="width:42px;height:42px;background:linear-gradient(145deg,rgba(10,132,255,0.85),rgba(10,60,180,0.9));border-radius:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(10,132,255,0.35);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2Z" fill="rgba(255,255,255,0.9)"/></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:600;color:#F5F5F7;">DOT Team App</div>
+          <div style="font-size:11px;color:rgba(245,245,247,0.35);">Zeebas Cluster LLP — Staff Portal</div>
+        </div>
+      </div>
+      <div style="font-size:20px;font-weight:500;margin-bottom:4px;">Welcome back 👋</div>
+      <div style="font-size:12px;color:rgba(245,245,247,0.4);margin-bottom:24px;">Sign in to your staff account</div>
+      <div id="dt-login-err" style="display:none;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.3);border-radius:10px;padding:10px 13px;font-size:12px;color:#FF453A;margin-bottom:14px;"></div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">Employee ID</div>
+        <input id="dt-emp-id" class="dt-inp" type="text" placeholder="Enter your Employee ID" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="off">
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">Password</div>
+        <input id="dt-password" class="dt-inp" type="password" placeholder="Enter your password" autocomplete="current-password" spellcheck="false" autocorrect="off">
+      </div>
+      <button id="dt-login-btn" onclick="dtDoLogin()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 5px 18px rgba(10,132,255,0.38);">Sign In</button>
+    </div>
+  </div>
+
+  <!-- ── App ── -->
+  <div id="dt-app-view">
+
+    <!-- SIDEBAR -->
+    <aside class="dt-sb">
+      <!-- Logo -->
+      <div class="dt-sb-logo">
+        <div class="dt-sb-logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2Z" fill="rgba(255,255,255,0.9)"/></svg>
+        </div>
+        <div>
+          <div class="dt-sb-logo-text">DOT Team App</div>
+          <div class="dt-sb-logo-sub">Staff Portal</div>
+        </div>
+      </div>
+
+      <!-- Staff card -->
+      <div class="dt-staff-card">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div id="dt-av" class="dt-av" style="background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.3);color:#5AABF0;font-size:16px;font-weight:600;">—</div>
+          <div style="flex:1;min-width:0;">
+            <div id="dt-name" style="font-size:13px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+            <div id="dt-desig" style="font-size:10px;color:rgba(245,245,247,0.4);margin-top:2px;"></div>
+          </div>
+        </div>
+        <div id="dt-brand-pill" style="margin-top:8px;display:inline-flex;align-items:center;padding:2px 8px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:999px;font-size:10px;color:rgba(245,245,247,0.45);"></div>
+      </div>
+
+      <!-- Attendance status & buttons -->
+      <div class="dt-att-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:10px;color:rgba(245,245,247,0.35);text-transform:uppercase;letter-spacing:0.5px;">Today</span>
+          <span id="dt-att-badge" style="font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.07);color:rgba(245,245,247,0.4);">—</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="rgba(245,245,247,0.3)" stroke-width="1.2"/><path d="M7 4v3.2l1.8 1.8" stroke="rgba(245,245,247,0.3)" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <span style="font-size:11px;color:rgba(245,245,247,0.35);">Check-in:</span>
+          <span id="dt-checkin-time" style="font-size:11px;color:#30D158;font-weight:500;">—</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="8" rx="1.5" stroke="rgba(245,245,247,0.3)" stroke-width="1.2"/><path d="M5 3V2M9 3V2M2 6h10" stroke="rgba(245,245,247,0.3)" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <span style="font-size:11px;color:rgba(245,245,247,0.35);">Worked:</span>
+          <span id="dt-work-timer" style="font-size:11px;color:#FF9F0A;font-weight:500;">—</span>
+        </div>
+        <!-- Action buttons — shown based on state -->
+        <div id="dt-btn-checkin" style="margin-top:10px;">
+          <button class="dt-att-btn" onclick="dtCheckIn()" style="background:linear-gradient(135deg,rgba(48,209,88,0.22),rgba(48,209,88,0.1));border:0.5px solid rgba(48,209,88,0.35);color:#30D158;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#30D158" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="#30D158" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Check In
+          </button>
+        </div>
+        <div id="dt-btn-actions" style="display:none;margin-top:10px;display:none;">
+          <button class="dt-att-btn" onclick="dtBreak()" style="background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;">☕ Take Break</button>
+          <button class="dt-att-btn" onclick="dtGoCheckout()" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;">🚪 Check Out</button>
+        </div>
+        <div id="dt-btn-break-active" style="display:none;margin-top:10px;">
+          <button class="dt-att-btn" onclick="dtReturnFromBreak()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;">▶ Return from Break</button>
+        </div>
+        <div id="dt-btn-checked-out" style="display:none;margin-top:10px;">
+          <div style="text-align:center;font-size:11px;color:rgba(48,209,88,0.7);padding:6px;">✅ Checked out — See you tomorrow!</div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="dt-nav">
+        <div class="dt-nav-lbl">Menu</div>
+        <div class="dt-ni on" onclick="dtNav('home',this)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+          Home
+        </div>
+        <div class="dt-ni" onclick="dtNav('tasks',this)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Tasks <span id="dt-tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;"></span>
+        </div>
+        <div class="dt-ni" onclick="dtNav('attendance',this)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Mark Attendance
+        </div>
+        <div class="dt-ni" onclick="dtNav('leave',this)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 3V1M11 3V1M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Apply Leave
+        </div>
+        <div class="dt-ni" onclick="dtNav('salary',this)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12M6 10.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Salary
+        </div>
+      </nav>
+
+      <!-- Logout -->
+      <div style="padding:12px 14px 18px;border-top:0.5px solid rgba(255,255,255,0.06);margin-top:auto;">
+        <div onclick="dtLogout()" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;cursor:pointer;color:rgba(255,69,58,0.7);font-size:12px;transition:all .15s;" onmouseover="this.style.background='rgba(255,69,58,0.08)'" onmouseout="this.style.background=''">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 2H13a1 1 0 011 1v10a1 1 0 01-1 1H10M7 11l3-3-3-3M10 8H3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Sign Out
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dt-main">
+
+      <!-- ── HOME PANEL ── -->
+      <div id="dtp-home" class="dt-panel on">
+        <div style="margin-bottom:22px;">
+          <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;">Good <span id="dt-greeting">day</span>, <span id="dt-greeting-name">—</span> 👋</div>
+          <div id="dt-today-date" style="font-size:13px;color:rgba(245,245,247,0.4);margin-top:3px;font-weight:300;"></div>
+        </div>
+
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;">
+          <div class="dt-g" style="padding:18px;">
+            <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Status</div>
+            <div id="dt-home-status" style="font-size:22px;font-weight:500;color:#30D158;">—</div>
+            <div id="dt-home-status-sub" style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:4px;">—</div>
+          </div>
+          <div class="dt-g" style="padding:18px;">
+            <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Hours Worked</div>
+            <div id="dt-home-hours" style="font-size:22px;font-weight:500;color:#FF9F0A;">—</div>
+            <div style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:4px;">Today</div>
+          </div>
+          <div class="dt-g" style="padding:18px;">
+            <div style="font-size:10px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Open Tasks</div>
+            <div id="dt-home-tasks" style="font-size:22px;font-weight:500;color:#0A84FF;">—</div>
+            <div id="dt-home-tasks-sub" style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:4px;">Assigned to me</div>
+          </div>
+        </div>
+
+        <!-- WiFi status card -->
+        <div id="dt-wifi-card" style="display:none;margin-bottom:22px;">
+          <div id="dt-wifi-inner" class="dt-g" style="padding:16px 20px;display:flex;align-items:center;gap:14px;">
+            <div id="dt-wifi-icon" style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;background:rgba(48,209,88,0.12);">📶</div>
+            <div style="flex:1;">
+              <div id="dt-wifi-title" style="font-size:13px;font-weight:500;color:#fff;"></div>
+              <div id="dt-wifi-sub" style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:2px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent tasks preview -->
+        <div class="dt-g" style="padding:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-size:14px;font-weight:500;">My Tasks</span>
+            <button onclick="dtNav('tasks',null)" class="dt-btn-g" style="font-size:11px;padding:5px 12px;">View All →</button>
+          </div>
+          <div id="dt-home-tasks-list" style="color:rgba(245,245,247,0.35);font-size:12px;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ── TASKS PANEL ── -->
+      <div id="dtp-tasks" class="dt-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;">My Tasks</div>
+            <div id="dt-tasks-sub" style="font-size:13px;color:rgba(245,245,247,0.4);margin-top:3px;font-weight:300;"></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="dtTaskTab('active',this)" id="dttab-active" class="dt-btn" style="font-size:12px;padding:7px 14px;">Active</button>
+            <button onclick="dtTaskTab('done',this)" id="dttab-done" class="dt-btn-g" style="font-size:12px;padding:7px 14px;">Done</button>
+            <button onclick="dtTaskTab('all',this)" id="dttab-all" class="dt-btn-g" style="font-size:12px;padding:7px 14px;">All</button>
+          </div>
+        </div>
+        <div id="dt-tasks-list"></div>
+      </div>
+
+      <!-- ── ATTENDANCE PANEL ── -->
+      <div id="dtp-attendance" class="dt-panel">
+        <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;margin-bottom:4px;">Mark Attendance</div>
+        <div style="font-size:13px;color:rgba(245,245,247,0.4);margin-bottom:24px;">GPS or onsite attendance for today</div>
+        <div class="dt-g" style="padding:24px;max-width:480px;">
+          <!-- Type select -->
+          <div style="font-size:11px;color:rgba(245,245,247,0.45);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Attendance Type</div>
+          <div id="dt-att-type" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+            <div class="dt-gs" onclick="dtSelAtt(0,this.parentNode)" style="padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-color:rgba(48,209,88,0.3);background:rgba(48,209,88,0.07);">
+              <div id="dt-radio0" style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>
+              <div><div style="color:#fff;font-size:13px;">Office Attendance</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Auto verified via GPS / WiFi</div></div>
+            </div>
+            <div class="dt-gs" onclick="dtSelAtt(1,this.parentNode)" style="padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <div id="dt-radio1" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
+              <div><div style="color:#fff;font-size:13px;">Onsite / Client Location</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Needs admin approval</div></div>
+            </div>
+          </div>
+          <div id="dt-site-row" style="display:none;margin-bottom:16px;">
+            <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">Client / Site Name</div>
+            <input id="dt-site-name" class="dt-inp" type="text" placeholder="e.g. Ahmed Constructions, Chennai">
+          </div>
+          <div id="dt-att-result" style="display:none;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;"></div>
+          <button id="dt-att-btn" onclick="dtMarkAttendance()" style="width:100%;background:linear-gradient(135deg,#30D158,#20A040);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 5px 16px rgba(48,209,88,0.3);">✅ Mark Office Attendance</button>
+        </div>
+      </div>
+
+      <!-- ── LEAVE PANEL ── -->
+      <div id="dtp-leave" class="dt-panel">
+        <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;margin-bottom:4px;">Apply Leave</div>
+        <div style="font-size:13px;color:rgba(245,245,247,0.4);margin-bottom:24px;">Submit a leave request for admin approval</div>
+        <div class="dt-g" style="padding:24px;max-width:520px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div>
+              <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">From Date</div>
+              <input id="dt-leave-from" class="dt-inp" type="date">
+            </div>
+            <div>
+              <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">To Date</div>
+              <input id="dt-leave-to" class="dt-inp" type="date">
+            </div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">Leave Type</div>
+            <select id="dt-leave-type" class="dt-inp">
+              <option value="">Select type…</option>
+              <option value="sick">Sick Leave</option>
+              <option value="casual">Casual Leave</option>
+              <option value="personal">Personal</option>
+              <option value="emergency">Emergency</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">Reason</div>
+            <textarea id="dt-leave-reason" class="dt-inp" rows="3" placeholder="Brief reason for leave…"></textarea>
+          </div>
+          <div id="dt-leave-result" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;"></div>
+          <button onclick="dtSubmitLeave()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 5px 16px rgba(10,132,255,0.35);">Submit Leave Request</button>
+        </div>
+      </div>
+
+      <!-- ── SALARY PANEL ── -->
+      <div id="dtp-salary" class="dt-panel">
+        <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;margin-bottom:4px;">My Salary</div>
+        <div style="font-size:13px;color:rgba(245,245,247,0.4);margin-bottom:24px;">Current month breakdown</div>
+        <div id="dt-salary-content" class="dt-g" style="padding:24px;max-width:480px;">
+          <div style="text-align:center;padding:24px;color:rgba(245,245,247,0.35);font-size:12px;">Loading salary info…</div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /dt-app-view -->
+</div><!-- /dt-wrap -->
+
+<script>
+/* ════════════════════════════════════════
+   DESKTOP CONTROLLER
+════════════════════════════════════════ */
+var _dtAttType = 0; // 0=office, 1=onsite
+
+function dtIsDesktop(){ return window.innerWidth >= 900; }
+
+/* ── Show/hide desktop login/app ── */
+function dtShowLogin(){
+  document.getElementById('dt-login-view').style.display = 'flex';
+  var app = document.getElementById('dt-app-view');
+  app.classList.remove('on'); app.style.display = 'none';
+}
+function dtShowApp(staff){
+  document.getElementById('dt-login-view').style.display = 'none';
+  var app = document.getElementById('dt-app-view');
+  app.style.display = 'flex'; app.classList.add('on');
+  dtPopulate(staff);
+  dtRefreshAttStatus();
+  dtLoadTasks();
+  dtLoadSalary();
+  dtSetGreeting();
+}
+function dtSetGreeting(){
+  var h = new Date().getHours();
+  var g = h<12?'morning':h<17?'afternoon':'evening';
+  var el = document.getElementById('dt-greeting'); if(el) el.textContent = g;
+  var d = new Date();
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dateEl = document.getElementById('dt-today-date');
+  if(dateEl) dateEl.textContent = days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+/* ── Populate sidebar staff info ── */
+function dtPopulate(s){
+  if(!s) return;
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  set('dt-name', s.name||'Staff');
+  set('dt-desig', s.designation||'');
+  set('dt-brand-pill', (s.brand&&s.brand.name)||'Zeebas Cluster');
+  set('dt-greeting-name', (s.name||'').split(' ')[0]);
+  // Avatar
+  var av = document.getElementById('dt-av');
+  if(av){
+    if(s.photo_data){
+      av.innerHTML = '<img src="'+s.photo_data+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else if(s.photo_url){
+      av.innerHTML = '<img src="'+window.API_URL+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent=\''+(s.name||'S').charAt(0).toUpperCase()+'\'">';
+    } else {
+      av.textContent = (s.name||'S').charAt(0).toUpperCase();
+    }
+  }
+}
+
+/* ── Nav panel switch ── */
+function dtNav(panel, el){
+  document.querySelectorAll('.dt-panel').forEach(function(p){ p.classList.remove('on'); });
+  var target = document.getElementById('dtp-'+panel);
+  if(target) target.classList.add('on');
+  document.querySelectorAll('.dt-ni').forEach(function(n){ n.classList.remove('on'); });
+  if(el) el.classList.add('on');
+  else {
+    document.querySelectorAll('.dt-ni').forEach(function(n){
+      if(n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'"+panel+"'")!==-1) n.classList.add('on');
+    });
+  }
+  if(panel==='tasks') dtLoadTasks();
+  if(panel==='salary') dtLoadSalary();
+  if(panel==='attendance') dtRefreshAttStatus();
+}
+
+/* ── LOGIN ── */
+async function dtDoLogin(){
+  var empId = (document.getElementById('dt-emp-id').value||'').trim();
+  var pass  = (document.getElementById('dt-password').value||'').trim();
+  var errEl = document.getElementById('dt-login-err');
+  var btn   = document.getElementById('dt-login-btn');
+  if(!empId||!pass){ errEl.style.display='block'; errEl.textContent='Please enter Employee ID and Password'; return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true; errEl.style.display = 'none';
+  try{
+    var r = await fetch(API_URL+'/api/auth/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({employee_id:empId, password:pass, role:'staff'})
+    });
+    var d = await r.json();
+    if(d.success && d.token){
+      localStorage.setItem('zhr_token', d.token);
+      localStorage.setItem('zhr_staff', JSON.stringify(d.staff));
+      window._betaFeatures = d.staff.beta_tester === 1 || d.staff.beta_tester === '1';
+      // Also trigger mobile populateStaff so shared state is set
+      if(d.staff.role!=='admin') { try{ populateStaff(d.staff); }catch(e){} }
+      dtShowApp(d.staff);
+      try{ swStoreAuth(); registerSW(); }catch(e){}
+    } else {
+      errEl.style.display='block';
+      errEl.textContent = d.message||'Invalid credentials. Please try again.';
+    }
+  } catch(e){
+    errEl.style.display='block'; errEl.textContent='Connection error. Please check your network.';
+  } finally { btn.textContent='Sign In'; btn.disabled=false; }
+}
+
+/* ── LOGOUT ── */
+function dtLogout(){
+  if(!confirm('Sign out of DOT Team App?')) return;
+  localStorage.removeItem('zhr_token'); localStorage.removeItem('zhr_staff');
+  try{ if(navigator.serviceWorker&&navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({type:'CLEAR_AUTH'}); }catch(e){}
+  document.getElementById('dt-login-view').style.display='flex';
+  document.getElementById('dt-app-view').classList.remove('on');
+  document.getElementById('dt-app-view').style.display='none';
+  document.getElementById('dt-emp-id').value='';
+  document.getElementById('dt-password').value='';
+}
+
+/* ── ATTENDANCE STATUS (poll from API) ── */
+async function dtRefreshAttStatus(){
+  try{
+    var r = await fetch(API_URL+'/api/attendance/wifi-detect',{headers:{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}});
+    var d = await r.json();
+    dtSetAttButtons(d);
+  } catch(e){}
+}
+function dtSetAttButtons(d){
+  var btnCI  = document.getElementById('dt-btn-checkin');
+  var btnAct = document.getElementById('dt-btn-actions');
+  var btnBrk = document.getElementById('dt-btn-break-active');
+  var btnOut = document.getElementById('dt-btn-checked-out');
+  var badge  = document.getElementById('dt-att-badge');
+  var ciTime = document.getElementById('dt-checkin-time');
+  [btnCI,btnAct,btnBrk,btnOut].forEach(function(b){ if(b) b.style.display='none'; });
+  if(!d || !d.wifiEnabled){ // no wifi data — use basic check
+    if(d && d.alreadyCheckedIn && !d.checkedOut){
+      if(badge) { badge.textContent='Present'; badge.style.background='rgba(48,209,88,0.15)'; badge.style.color='#30D158'; }
+      if(btnAct) btnAct.style.display='block';
+    } else if(d && d.checkedOut){
+      if(badge) { badge.textContent='Checked Out'; badge.style.background='rgba(255,255,255,0.07)'; badge.style.color='rgba(245,245,247,0.5)'; }
+      if(btnOut) btnOut.style.display='block';
+    } else {
+      if(badge) { badge.textContent='Not Checked In'; badge.style.background='rgba(255,69,58,0.12)'; badge.style.color='#FF453A'; }
+      if(btnCI) btnCI.style.display='block';
+    }
+    return;
+  }
+  if(d.alreadyCheckedIn && !d.checkedOut){
+    if(badge) { badge.textContent='Present'; badge.style.background='rgba(48,209,88,0.15)'; badge.style.color='#30D158'; }
+    if(ciTime && d.checkInTime){ var t=new Date(d.checkInTime); var h=t.getHours(),m=t.getMinutes(),a=h>=12?'PM':'AM'; h=h%12||12; ciTime.textContent=h+':'+(m<10?'0':'')+m+' '+a; }
+    // Check break state
+    if(d.onBreak){ if(btnBrk) btnBrk.style.display='block'; if(badge){ badge.textContent='On Break'; badge.style.background='rgba(255,159,10,0.15)'; badge.style.color='#FF9F0A'; } }
+    else { if(btnAct) btnAct.style.display='block'; }
+    // Update home status
+    var hs = document.getElementById('dt-home-status'); if(hs) hs.textContent='Present';
+    var hss = document.getElementById('dt-home-status-sub'); if(hss) hss.textContent = ciTime ? 'Checked in at '+ciTime.textContent : 'At work';
+  } else if(d.checkedOut){
+    if(badge) { badge.textContent='Checked Out'; badge.style.background='rgba(255,255,255,0.07)'; badge.style.color='rgba(245,245,247,0.5)'; }
+    if(btnOut) btnOut.style.display='block';
+    var hs2 = document.getElementById('dt-home-status'); if(hs2) { hs2.textContent='Done'; hs2.style.color='rgba(245,245,247,0.5)'; }
+  } else {
+    if(badge) { badge.textContent='Not Checked In'; badge.style.background='rgba(255,69,58,0.12)'; badge.style.color='#FF453A'; }
+    if(btnCI) btnCI.style.display='block';
+    var hs3 = document.getElementById('dt-home-status'); if(hs3) { hs3.textContent='Absent'; hs3.style.color='#FF453A'; }
+  }
+}
+
+/* Sync work timer from mobile to desktop */
+function dtSyncWorkTimer(){
+  var mEl = document.getElementById('s1-work-timer');
+  var dEl = document.getElementById('dt-work-timer');
+  var hEl = document.getElementById('dt-home-hours');
+  if(mEl && dEl) dEl.textContent = mEl.textContent||'—';
+  if(mEl && hEl) hEl.textContent = mEl.textContent||'—';
+}
+setInterval(function(){ if(dtIsDesktop()) dtSyncWorkTimer(); }, 10000);
+
+/* ── CHECK IN ── */
+async function dtCheckIn(){
+  // Try WiFi auto check-in first, fallback to nav to attendance panel
+  var btn = document.getElementById('dt-btn-checkin');
+  var b = btn ? btn.querySelector('button') : null;
+  if(b){ b.textContent='⏳ Checking…'; b.disabled=true; }
+  try{
+    var r = await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}});
+    var d = await r.json();
+    if(d.success){
+      var now=new Date(),h=now.getHours(),mn=now.getMinutes(),a=h>=12?'PM':'AM'; h=h%12||12;
+      var ts=h+':'+(mn<10?'0':'')+mn+' '+a;
+      var ciEl=document.getElementById('dt-checkin-time'); if(ciEl) ciEl.textContent=ts;
+      dtShowWifiBanner('📶 Checked In via Office WiFi ✓','At '+ts,'rgba(48,209,88,0.15)','rgba(48,209,88,1)');
+      dtRefreshAttStatus();
+      // Also update mobile element
+      var mci=document.getElementById('s1-checkin'); if(mci) mci.textContent=ts;
+    } else {
+      // Not on office WiFi — navigate to attendance panel
+      dtNav('attendance', null);
+    }
+  } catch(e){ dtNav('attendance', null); }
+  finally{ if(b){ b.textContent='Check In'; b.disabled=false; } }
+}
+
+/* ── BREAK ── */
+function dtBreak(){
+  // Show the existing break choice overlay (works on desktop too)
+  showBreakChoiceOverlay(0);
+}
+
+/* ── RETURN FROM BREAK ── */
+async function dtReturnFromBreak(){
+  try{
+    var r = await fetch(API_URL+'/api/attendance/break-acknowledge',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}),
+      body:JSON.stringify({type:'break', reason:'', away_mins:0})
+    });
+    var d = await r.json();
+    if(d.success){ dtRefreshAttStatus(); dtShowWifiBanner('▶ Break Ended — Back at Work ✓','','rgba(48,209,88,0.15)','rgba(48,209,88,1)'); }
+  } catch(e){}
+}
+
+/* ── CHECK OUT ── */
+function dtGoCheckout(){
+  // Navigate to the daily log checkout screen (reuse mobile flow)
+  go1('s1-salary'); // temp — use actual checkout
+  doCheckout().then(function(){ setTimeout(dtRefreshAttStatus, 1000); });
+}
+
+/* ── ATTENDANCE PANEL ── */
+function dtSelAtt(idx){
+  _dtAttType = idx;
+  var r0=document.getElementById('dt-radio0'), r1=document.getElementById('dt-radio1');
+  var siteRow=document.getElementById('dt-site-row');
+  var btn=document.getElementById('dt-att-btn');
+  if(idx===0){
+    if(r0) r0.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div>';
+    if(r0) r0.style.borderColor='#30D158';
+    if(r1) { r1.innerHTML=''; r1.style.borderColor='rgba(255,255,255,0.2)'; }
+    if(siteRow) siteRow.style.display='none';
+    if(btn){ btn.textContent='✅ Mark Office Attendance'; btn.style.background='linear-gradient(135deg,#30D158,#20A040)'; }
+  } else {
+    if(r1) r1.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:#0A84FF;"></div>';
+    if(r1) r1.style.borderColor='#0A84FF';
+    if(r0) { r0.innerHTML=''; r0.style.borderColor='rgba(255,255,255,0.2)'; }
+    if(siteRow) siteRow.style.display='block';
+    if(btn){ btn.textContent='📍 Submit Onsite Attendance'; btn.style.background='linear-gradient(135deg,#0A84FF,#0A60CC)'; }
+  }
+}
+async function dtMarkAttendance(){
+  var btn=document.getElementById('dt-att-btn');
+  var res=document.getElementById('dt-att-result');
+  var siteName=(_dtAttType===1?(document.getElementById('dt-site-name').value||'').trim():'');
+  if(_dtAttType===1&&!siteName){ if(res){res.style.display='block';res.style.background='rgba(255,69,58,0.12)';res.style.borderColor='rgba(255,69,58,0.3)';res.style.color='#FF453A';res.textContent='Please enter the site/client name.';} return; }
+  btn.disabled=true; btn.textContent='⏳ Marking…';
+  if(res) res.style.display='none';
+  try{
+    var body={type:_dtAttType===0?'office':'onsite'};
+    if(siteName) body.site_name=siteName;
+    var r=await fetch(API_URL+'/api/attendance/checkin',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}),body:JSON.stringify(body)});
+    var d=await r.json();
+    if(d.success){
+      if(res){ res.style.display='block'; res.style.background='rgba(48,209,88,0.12)'; res.style.borderColor='rgba(48,209,88,0.3)'; res.style.color='#30D158'; res.textContent='✅ Attendance marked successfully!'; }
+      setTimeout(function(){ dtRefreshAttStatus(); dtNav('home',null); }, 1200);
+    } else {
+      if(res){ res.style.display='block'; res.style.background='rgba(255,69,58,0.12)'; res.style.borderColor='rgba(255,69,58,0.3)'; res.style.color='#FF453A'; res.textContent=d.message||'Failed. Please try again.'; }
+    }
+  } catch(e){ if(res){ res.style.display='block'; res.style.background='rgba(255,69,58,0.12)'; res.style.color='#FF453A'; res.textContent='Network error. Try again.'; } }
+  finally{ btn.disabled=false; btn.textContent=_dtAttType===0?'✅ Mark Office Attendance':'📍 Submit Onsite Attendance'; }
+}
+
+/* ── WIFI BANNER on desktop ── */
+function dtShowWifiBanner(title,sub,bg,col){
+  var card=document.getElementById('dt-wifi-card');
+  var inner=document.getElementById('dt-wifi-inner');
+  var t=document.getElementById('dt-wifi-title');
+  var s=document.getElementById('dt-wifi-sub');
+  if(!card) return;
+  if(inner) inner.style.borderColor=col+'44';
+  if(t) t.textContent=title;
+  if(s) s.textContent=sub;
+  card.style.display='block';
+  setTimeout(function(){ if(card) card.style.display='none'; }, 8000);
+}
+
+/* ── TASKS ── */
+var _dtTaskTab = 'active';
+function dtTaskTab(tab, btn){
+  _dtTaskTab=tab;
+  document.querySelectorAll('#dttab-active,#dttab-done,#dttab-all').forEach(function(b){
+    b.className='dt-btn-g'; b.style.cssText='font-size:12px;padding:7px 14px;';
+  });
+  var ab=document.getElementById('dttab-'+tab);
+  if(ab){ ab.className='dt-btn'; ab.style.cssText='font-size:12px;padding:7px 14px;'; }
+  dtRenderTasks();
+}
+async function dtLoadTasks(){
+  var listEl=document.getElementById('dt-tasks-list');
+  var homeEl=document.getElementById('dt-home-tasks-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:32px;color:rgba(245,245,247,0.3);font-size:12px;">⏳ Loading tasks…</div>';
+  try{
+    var r=await fetch(API_URL+'/api/tasks',{headers:{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}});
+    var d=await r.json();
+    _s1Tasks=Array.isArray(d)?d:(d.data||[]);
+    var open=_s1Tasks.filter(function(t){return t.status!=='done';}).length;
+    var badge=document.getElementById('dt-tasks-badge'); if(badge){badge.textContent=open;badge.style.display=open>0?'inline':'none';}
+    var sub=document.getElementById('dt-tasks-sub'); if(sub) sub.textContent=_s1Tasks.length+' tasks · '+open+' open';
+    var ht=document.getElementById('dt-home-tasks'); if(ht) ht.textContent=open;
+    dtRenderTasks();
+    // Home preview — top 3 active
+    var active=_s1Tasks.filter(function(t){return t.status!=='done';}).slice(0,3);
+    if(homeEl){
+      if(!active.length){ homeEl.innerHTML='<div style="text-align:center;padding:20px;color:rgba(245,245,247,0.28);font-size:11px;">No active tasks</div>'; }
+      else { homeEl.innerHTML=active.map(dtBuildMiniTask).join(''); }
+    }
+  } catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:32px;color:#FF453A;font-size:12px;">Failed to load tasks</div>'; }
+}
+function dtRenderTasks(){
+  var listEl=document.getElementById('dt-tasks-list');
+  if(!listEl) return;
+  var tasks=_s1Tasks||[];
+  if(_dtTaskTab==='active') tasks=tasks.filter(function(t){return t.status!=='done';});
+  else if(_dtTaskTab==='done') tasks=tasks.filter(function(t){return t.status==='done';});
+  if(!tasks.length){ listEl.innerHTML='<div style="text-align:center;padding:48px;color:rgba(245,245,247,0.28);font-size:12px;">'+((_dtTaskTab==='active')?'🎉 No active tasks!':'No tasks found')+'</div>'; return; }
+  listEl.innerHTML=tasks.map(dtBuildTaskCard).join('');
+}
+function dtBuildMiniTask(t){
+  var pColor={'high':'#FF453A','medium':'#FF9F0A','low':'#30D158'}[t.priority]||'#FF9F0A';
+  var sColor={'pending':'#FF9F0A','in_progress':'#0A84FF','done':'#30D158'}[t.status]||'#FF9F0A';
+  var due=t.due_date?new Date(t.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'';
+  return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:'+sColor+';flex-shrink:0;box-shadow:0 0 5px '+sColor+'66;"></div>'
+    +'<div style="flex:1;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escDt(t.title)+'</div>'
+    +(due?'<div style="font-size:10px;color:rgba(245,245,247,0.35);flex-shrink:0;">'+due+'</div>':'')
+    +'<div style="width:6px;height:6px;border-radius:50%;background:'+pColor+';flex-shrink:0;"></div>'
+    +'</div>';
+}
+function dtBuildTaskCard(t){
+  var pColor={'high':'#FF453A','medium':'#FF9F0A','low':'#30D158'}[t.priority]||'#FF9F0A';
+  var sColor={'pending':'#FF9F0A','in_progress':'#0A84FF','done':'#30D158'}[t.status]||'#FF9F0A';
+  var sLabel={'pending':'Pending','in_progress':'In Progress','done':'Done'}[t.status]||t.status;
+  var due=t.due_date?new Date(t.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'';
+  var doneCls=t.status==='done'?' done-card':'';
+  var sts=[]; try{sts=JSON.parse(t.subtasks||'[]');}catch(e){}
+  var stDone=sts.filter(function(s){return s.done;}).length;
+  return '<div class="dt-task-card prio-'+t.priority+doneCls+'">'
+    +'<div style="display:flex;align-items:flex-start;gap:12px;">'
+    +'<div style="margin-top:4px;width:9px;height:9px;border-radius:50%;background:'+sColor+';flex-shrink:0;box-shadow:0 0 6px '+sColor+'55;"></div>'
+    +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:14px;font-weight:500;color:#fff;margin-bottom:6px;'+(t.status==='done'?'text-decoration:line-through;opacity:.55;':'')+'">'+escDt(t.title)+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">'
+        +(t.brand_name?'<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);color:#0A84FF;">'+escDt(t.brand_name)+'</span>':'')
+        +'<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);">'+escDt(t.category||'Task')+'</span>'
+        +'<span style="font-size:10px;padding:2px 8px;border-radius:999px;background:'+sColor+'14;border:0.5px solid '+sColor+'30;color:'+sColor+';">'+sLabel+'</span>'
+      +'</div>'
+      +(due?'<div style="font-size:10px;color:rgba(245,245,247,0.35);">📅 Due: '+due+'</div>':'')
+      +(t.description?'<div style="font-size:11px;color:rgba(245,245,247,0.3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escDt(t.description)+'</div>':'')
+      +(sts.length?'<div style="margin-top:8px;font-size:10px;color:rgba(245,245,247,0.35);">Subtasks: '+stDone+'/'+sts.length+' done</div>':'')
+    +'</div>'
+    +'</div>'
+    +'</div>';
+}
+function escDt(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── LEAVE ── */
+async function dtSubmitLeave(){
+  var from=(document.getElementById('dt-leave-from').value||'').trim();
+  var to=(document.getElementById('dt-leave-to').value||'').trim();
+  var type=(document.getElementById('dt-leave-type').value||'').trim();
+  var reason=(document.getElementById('dt-leave-reason').value||'').trim();
+  var res=document.getElementById('dt-leave-result');
+  if(!from||!to||!type||!reason){ if(res){res.style.display='block';res.style.background='rgba(255,69,58,0.12)';res.style.color='#FF453A';res.textContent='Please fill in all fields.';} return; }
+  try{
+    var r=await fetch(API_URL+'/api/approvals',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}),body:JSON.stringify({type:'leave',leave_type:type,from_date:from,to_date:to,reason:reason})});
+    var d=await r.json();
+    if(d.success){
+      if(res){res.style.display='block';res.style.background='rgba(48,209,88,0.12)';res.style.color='#30D158';res.textContent='✅ Leave request submitted! Admin will review it shortly.';}
+      document.getElementById('dt-leave-from').value='';
+      document.getElementById('dt-leave-to').value='';
+      document.getElementById('dt-leave-type').value='';
+      document.getElementById('dt-leave-reason').value='';
+    } else { if(res){res.style.display='block';res.style.background='rgba(255,69,58,0.12)';res.style.color='#FF453A';res.textContent=d.message||'Failed to submit.';} }
+  } catch(e){ if(res){res.style.display='block';res.style.background='rgba(255,69,58,0.12)';res.style.color='#FF453A';res.textContent='Network error. Try again.';} }
+}
+
+/* ── SALARY ── */
+async function dtLoadSalary(){
+  var el=document.getElementById('dt-salary-content');
+  if(!el) return;
+  try{
+    var r=await fetch(API_URL+'/api/payroll/my',{headers:{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}});
+    var d=await r.json();
+    var s=d.data||d;
+    if(!s||!s.gross){ el.innerHTML='<div style="text-align:center;padding:24px;color:rgba(245,245,247,0.3);font-size:12px;">Salary info not available yet</div>'; return; }
+    var row=function(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'+'<span style="font-size:12px;color:rgba(245,245,247,0.5);">'+lbl+'</span>'+'<span style="font-size:13px;font-weight:500;color:'+(col||'#F5F5F7')+';">'+val+'</span></div>'; };
+    el.innerHTML=''
+      +row('Gross Salary','₹'+Number(s.gross||0).toLocaleString('en-IN'),'#F5F5F7')
+      +row('Deductions','₹'+Number(s.deductions||0).toLocaleString('en-IN'),'#FF453A')
+      +row('Net Pay','₹'+Number(s.net||s.net_pay||0).toLocaleString('en-IN'),'#30D158')
+      +(s.attendance_days!==undefined?row('Days Present',s.attendance_days+' days'):'')
+      +(s.ot_hours?row('OT Hours',parseFloat(s.ot_hours).toFixed(1)+'h','#FF9F0A'):'');
+  } catch(e){ el.innerHTML='<div style="text-align:center;padding:24px;color:rgba(245,245,247,0.3);font-size:12px;">Could not load salary info</div>'; }
+}
+
+/* ── STARTUP — check if already logged in ── */
+(function dtInit(){
+  if(!dtIsDesktop()) return;
+  var token=localStorage.getItem('zhr_token');
+  var staff=null; try{staff=JSON.parse(localStorage.getItem('zhr_staff')||'null');}catch(e){}
+  if(token && staff && staff.id && staff.role!=='admin'){
+    fetch(API_URL+'/api/auth/me',{headers:{Authorization:'Bearer '+token}})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.success && d.staff && d.staff.role!=='admin'){
+          localStorage.setItem('zhr_staff',JSON.stringify(d.staff));
+          dtShowApp(d.staff);
+          try{populateStaff(d.staff);}catch(e){}
+          try{swStoreAuth();registerSW();}catch(e){}
+        } else { dtShowLogin(); }
+      })
+      .catch(function(){
+        if(staff && staff.role!=='admin') dtShowApp(staff);
+        else dtShowLogin();
+      });
+  } else {
+    dtShowLogin();
+  }
+  // Refresh att status every 2 minutes
+  setInterval(function(){ if(dtIsDesktop()) dtRefreshAttStatus(); }, 120000);
+  // Keyboard: Enter in password field triggers login
+  var pw=document.getElementById('dt-password');
+  if(pw) pw.addEventListener('keydown',function(e){if(e.key==='Enter') dtDoLogin();});
+  var ei=document.getElementById('dt-emp-id');
+  if(ei) ei.addEventListener('keydown',function(e){if(e.key==='Enter') document.getElementById('dt-password').focus();});
+})();
+
+window.addEventListener('resize', function(){
+  if(window.innerWidth < 900){
+    document.getElementById('dt-wrap').style.display='none';
+    document.querySelectorAll('.phone,h3').forEach(function(el){el.style.display='';});
+  }
+});
+</script>
+
 <script>
 /* ── Enable spellcheck + autocorrect on all text inputs & textareas ── */
 (function enableSpellcheck(){
