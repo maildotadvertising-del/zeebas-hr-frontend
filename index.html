@@ -340,6 +340,17 @@ body.desktop-mode #s1-sidebar {
             <div style="text-align:center;"><div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Tasks</div><div id="s1-tasks-count" style="color:#FF9F0A;font-size:13px;font-weight:500;">0</div></div>
             <div style="text-align:center;"><div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Net Pay</div><div id="s1-home-netpay" style="color:#fff;font-size:13px;font-weight:500;">—</div></div>
           </div>
+          <!-- Work Timer Row -->
+          <div id="work-timer-row" style="display:none;margin-top:10px;background:rgba(255,255,255,0.05);border-radius:9px;padding:8px 12px;display:none;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Work Remaining</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div id="s1-work-timer" style="color:#FF9F0A;font-size:13px;font-weight:600;letter-spacing:0.5px;">--:--</div>
+              <div id="s1-work-timer-done" style="display:none;color:#30D158;font-size:9px;font-weight:500;background:rgba(48,209,88,0.12);border-radius:5px;padding:2px 6px;">✓ Done</div>
+            </div>
+          </div>
         </div>
 
         <!-- WiFi Attendance Banner -->
@@ -4083,6 +4094,49 @@ function listenBreakApproval(){
 }
 
 // Refresh check-in time on home screen from server
+// ── Work Remaining Timer ──
+var _workTimerInterval = null;
+
+function startWorkTimer(checkInTime, officeEndTimeStr, lateMinutes){
+  stopWorkTimer();
+  if(!checkInTime || !officeEndTimeStr) return;
+  var timerRow = document.getElementById('work-timer-row');
+  if(!timerRow) return;
+  timerRow.style.display = 'flex';
+
+  // Target = today at officeEndTime + lateMinutes compensation
+  var parts = (officeEndTimeStr||'18:00').split(':').map(Number);
+  var target = new Date();
+  target.setHours(parts[0], parts[1] + (parseInt(lateMinutes)||0), 0, 0);
+
+  function tick(){
+    var now = new Date();
+    var diff = target - now; // ms remaining
+    var timerEl = document.getElementById('s1-work-timer');
+    var doneEl  = document.getElementById('s1-work-timer-done');
+    if(!timerEl) return;
+    if(diff <= 0){
+      timerEl.style.display = 'none';
+      if(doneEl) doneEl.style.display = 'block';
+    } else {
+      timerEl.style.display = 'block';
+      if(doneEl) doneEl.style.display = 'none';
+      var totalMins = Math.ceil(diff / 60000);
+      var hh = Math.floor(totalMins / 60);
+      var mm = totalMins % 60;
+      timerEl.textContent = (hh > 0 ? hh+'h ' : '') + (mm < 10 ? '0' : '') + mm + 'm';
+    }
+  }
+  tick();
+  _workTimerInterval = setInterval(tick, 30000); // update every 30s
+}
+
+function stopWorkTimer(){
+  if(_workTimerInterval){ clearInterval(_workTimerInterval); _workTimerInterval = null; }
+  var timerRow = document.getElementById('work-timer-row');
+  if(timerRow) timerRow.style.display = 'none';
+}
+
 async function _refreshCheckInDisplay(){
   try{
     var rd=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
@@ -4092,6 +4146,12 @@ async function _refreshCheckInDisplay(){
       h=h%12||12;
       var el=document.getElementById('s1-checkin');
       if(el) el.textContent=h+':'+(m<10?'0':'')+m+' '+ap;
+    }
+    // Also refresh timer
+    if(rs.checkInTime && !rs.checkedOut && rs.officeEndTime){
+      startWorkTimer(rs.checkInTime, rs.officeEndTime, rs.lateMinutes||0);
+    } else {
+      stopWorkTimer();
     }
   }catch(e){}
 }
@@ -4202,6 +4262,7 @@ async function wifiCheckAndAct(){
 
     if(!d.wifiEnabled){
       wifiBanner(false);
+      stopWorkTimer();
       return;
     }
 
@@ -4314,6 +4375,8 @@ async function wifiCheckAndAct(){
           ch2=ch2%12||12;
           ciEl2.textContent=ch2+':'+(cm2<10?'0':'')+cm2+' '+ca2;
         }
+        // Start work remaining timer
+        if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
         // Show late compensation info if staff is late
         if(d.lateMinutes > 0 && d.officeEndTime){
           var lmBanner = d.lateMinutes+' min late';
@@ -4354,6 +4417,9 @@ async function wifiCheckAndAct(){
         var breakLimitMins = (_breakSettings && _breakSettings.break_duration_mins) || 0;
         var breakLimitMs   = breakLimitMins * 60 * 1000;
 
+        // Show work remaining timer for GPS/non-wifi staff too
+        if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
+
         if(offMs < GRACE){
           // Within 5-min grace → subtle countdown banner
           var minsLeft = Math.ceil((GRACE - offMs) / 60000);
@@ -4376,10 +4442,13 @@ async function wifiCheckAndAct(){
 
       } else if(!d.alreadyCheckedIn){
         _appJustOpened = false;
+        stopWorkTimer();
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
+        // Checked out
         _appJustOpened = false;
+        stopWorkTimer();
         wifiBanner(false);
       }
     }
