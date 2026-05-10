@@ -166,7 +166,7 @@ textarea.inp{resize:none;}
     <div class="nl">Main</div>
     <div class="ni active" onclick="showPage('dashboard',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>Dashboard</div>
     <div class="ni" onclick="showPage('attendance',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Attendance</div>
-    <div class="ni" onclick="showPage('daily-logs',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="5" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="5" y1="9" x2="9" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Logs</div>
+    <div class="ni" onclick="showPage('announcements',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 12v2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Announcements<div id="ann-nav-dot" style="display:none;width:7px;height:7px;background:#FF9F0A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,159,10,0.6);"></div></div>
     <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Team</div>
     <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span id="approvals-badge" style="display:none;background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
@@ -569,29 +569,80 @@ textarea.inp{resize:none;}
   </div>
 
   <!-- ── DAILY LOGS ── -->
-  <div id="page-daily-logs" class="page">
+  <!-- ── ANNOUNCEMENTS ── -->
+  <div id="page-announcements" class="page">
     <div class="topbar">
-      <div>
-        <div class="ptitle">Daily Work Logs</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px;" id="dl-sub">Staff task entries for today</div>
+      <div><div class="ptitle">Announcements</div><div class="psub" id="ann-sub">Send updates to your team</div></div>
+      <button class="btn" onclick="openAnnCompose()">📢 New Announcement</button>
+    </div>
+    <div id="ann-list" style="display:flex;flex-direction:column;gap:12px;">
+      <div style="text-align:center;padding:60px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📢</div>
+        <div>Loading announcements…</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <div id="dl-date-trigger" onclick="openUCal('dl-date','dl-date-label',loadDailyLogs)" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;min-width:110px;text-align:center;white-space:nowrap;"><span id="dl-date-label" style="color:rgba(245,245,247,0.85);">Today</span><input type="hidden" id="dl-date"></div>
-        <button class="btn-g" onclick="loadDailyLogs()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── ANNOUNCEMENT COMPOSE PANEL ── -->
+  <div id="ann-overlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);" onclick="closeAnnCompose(event)"></div>
+  <div id="ann-panel" style="display:none;position:fixed;top:0;right:0;width:480px;height:100vh;background:rgba(8,8,18,0.98);backdrop-filter:blur(32px);border-left:0.5px solid rgba(255,255,255,0.1);z-index:501;overflow-y:auto;padding:28px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div style="font-size:18px;font-weight:500;color:#fff;">📢 New Announcement</div>
+      <button onclick="closeAnnCompose()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:32px;height:32px;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
+    </div>
+
+    <!-- Title (optional) -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Title <span style="opacity:0.5;text-transform:none;letter-spacing:0;">(optional)</span></div>
+      <input class="inp" type="text" id="ann-title" placeholder="e.g. Office closed tomorrow">
+    </div>
+
+    <!-- Message -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Message</div>
+      <textarea class="inp" id="ann-message" rows="4" placeholder="Type your announcement…" style="resize:vertical;min-height:100px;"></textarea>
+    </div>
+
+    <!-- Image Upload -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Image <span style="opacity:0.5;text-transform:none;letter-spacing:0;">(optional)</span></div>
+      <label style="display:block;background:rgba(255,255,255,0.04);border:0.5px dashed rgba(255,255,255,0.15);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='rgba(10,132,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">
+        <div id="ann-img-preview" style="display:none;margin-bottom:8px;"><img id="ann-img-thumb" style="max-height:140px;border-radius:8px;object-fit:cover;max-width:100%;"></div>
+        <div id="ann-img-label" style="color:rgba(245,245,247,0.4);font-size:12px;">🖼 Click to add image</div>
+        <input type="file" id="ann-image" accept="image/*" style="display:none;" onchange="previewAnnImage(this)">
+      </label>
+      <button id="ann-img-clear" onclick="clearAnnImage()" style="display:none;margin-top:6px;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;padding:5px 12px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">✕ Remove image</button>
+    </div>
+
+    <!-- Audio Upload -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Audio <span style="opacity:0.5;text-transform:none;letter-spacing:0;">(optional — voice note or music)</span></div>
+      <label style="display:block;background:rgba(255,255,255,0.04);border:0.5px dashed rgba(255,255,255,0.15);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='rgba(10,132,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">
+        <div id="ann-aud-preview" style="display:none;margin-bottom:8px;"><audio id="ann-aud-player" controls style="width:100%;border-radius:8px;"></audio></div>
+        <div id="ann-aud-label" style="color:rgba(245,245,247,0.4);font-size:12px;">🎵 Click to add audio</div>
+        <input type="file" id="ann-audio" accept="audio/*" style="display:none;" onchange="previewAnnAudio(this)">
+      </label>
+      <button id="ann-aud-clear" onclick="clearAnnAudio()" style="display:none;margin-top:6px;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;padding:5px 12px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">✕ Remove audio</button>
+    </div>
+
+    <!-- Recipients -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Send To</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="ann-rec-all" onclick="setAnnRecipients('all')" style="flex:1;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;padding:9px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">🌐 All Staff</button>
+        <button id="ann-rec-sel" onclick="setAnnRecipients('selected')" style="flex:1;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px;color:rgba(245,245,247,0.5);font-size:12px;cursor:pointer;font-family:inherit;">👥 Select Staff</button>
+      </div>
+      <!-- Selected staff area -->
+      <div id="ann-staff-picker" style="display:none;">
+        <div id="ann-staff-pills" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;padding:8px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:8px;cursor:pointer;align-items:center;" onclick="toggleAnnStaffDropdown(event)">
+          <span id="ann-staff-placeholder" style="color:rgba(245,245,247,0.3);font-size:12px;">Click to select staff…</span>
+        </div>
+        <div id="ann-staff-dropdown" style="display:none;background:rgba(14,14,28,0.98);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;max-height:200px;overflow-y:auto;"></div>
       </div>
     </div>
 
-    <!-- Staff filter -->
-    <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <select id="dl-staff-filter" onchange="loadDailyLogs()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:7px 12px;color:#fff;font-size:12px;font-family:inherit;cursor:pointer;">
-        <option value="">All Staff</option>
-      </select>
-    </div>
-
-    <!-- Logs container -->
-    <div id="dl-container">
-      <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Loading…</div>
-    </div>
+    <!-- Send Button -->
+    <button id="ann-send-btn" onclick="sendAnnouncement()" style="width:100%;background:linear-gradient(135deg,#FF9F0A,#FF6B00);border:none;border-radius:14px;padding:14px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">📢 Send Announcement</button>
   </div>
 
   <!-- ── STAFF (with Edit) ── -->
@@ -3114,6 +3165,12 @@ function connectDashSocket(){
   });
   dashSocket.on('disconnect', function(){});
 
+  // ── Announcement sent (self-echo confirmation) ──
+  dashSocket.on('announcement', function(data){
+    var dot=document.getElementById('ann-nav-dot');
+    if(dot) dot.style.display='none'; // sent by this admin, no badge needed
+  });
+
   // ── Task Extra Time Request from staff ──
   dashSocket.on('task-extra-time-request', function(data){
     showToast('⏱ '+escHtml(data.staffName)+' requested +'+data.minutes+'m for "'+escHtml(data.taskTitle)+'"');
@@ -4164,6 +4221,241 @@ function _stopWifiAutoCheck(){
 }
 
 /* ── LOAD ATTENDANCE PAGE ── */
+/* ══════════════════════════════════════
+   ANNOUNCEMENTS
+   ══════════════════════════════════════ */
+var _annRecipients = 'all';
+var _annStaff = [];       // selected staff for targeted send
+var _annAllStaff = [];    // full staff list
+
+async function loadAnnouncements(){
+  var listEl = document.getElementById('ann-list');
+  var subEl  = document.getElementById('ann-sub');
+  if(!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:36px;opacity:0.3;margin-bottom:10px;">📢</div>Loading…</div>';
+  try{
+    var res  = await fetch(API+'/api/announcements', {headers:zHdr()});
+    var data = await res.json();
+    var rows = data.data || [];
+    if(subEl) subEl.textContent = rows.length+' announcement'+(rows.length!==1?'s':'');
+    if(!rows.length){
+      listEl.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:40px;opacity:0.3;margin-bottom:12px;">📢</div><div style="font-size:14px;margin-bottom:4px;">No announcements yet</div><div style="font-size:12px;opacity:0.6;">Click "New Announcement" to send one</div></div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function(a){ return buildAnnCard(a); }).join('');
+  }catch(e){ listEl.innerHTML='<div style="text-align:center;padding:40px;color:#FF453A;">Failed to load</div>'; }
+}
+
+function buildAnnCard(a){
+  var avSrc = a.sent_by_photo_data||(a.sent_by_photo?API+a.sent_by_photo:null);
+  var init  = (a.sent_by_name||'?').charAt(0).toUpperCase();
+  var av    = avSrc
+    ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
+    :'<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,159,10,0.18);display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-weight:600;font-size:15px;flex-shrink:0;">'+init+'</div>';
+  var ts = a.created_at ? new Date(a.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+  var recLabel = a.recipients==='selected'?'<span style="background:rgba(10,132,255,0.12);color:#0A84FF;border:0.5px solid rgba(10,132,255,0.2);border-radius:6px;padding:1px 7px;font-size:9px;margin-left:6px;">Selected</span>':'<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.2);border-radius:6px;padding:1px 7px;font-size:9px;margin-left:6px;">All Staff</span>';
+  return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;">'
+    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:'+(a.message||a.image_url||a.audio_url?'12':'0')+'px;">'
+    +av
+    +'<div style="flex:1;min-width:0;">'
+    +(a.title?'<div style="color:#fff;font-size:14px;font-weight:500;margin-bottom:2px;">'+escHtml(a.title)+'</div>':'')
+    +'<div style="color:rgba(245,245,247,0.4);font-size:11px;">'+escHtml(a.sent_by_name||'Admin')+' · '+ts+recLabel+'</div>'
+    +'</div>'
+    +'</div>'
+    +(a.message?'<div style="color:rgba(245,245,247,0.85);font-size:13px;line-height:1.6;margin-bottom:'+(a.image_url||a.audio_url?'12':'0')+'px;white-space:pre-wrap;">'+escHtml(a.message)+'</div>':'')
+    +(a.image_url?'<img src="'+API+a.image_url+'" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;margin-bottom:'+(a.audio_url?'10':'0')+'px;" onerror="this.style.display=\'none\'">':'')
+    +(a.audio_url?'<audio controls src="'+API+a.audio_url+'" style="width:100%;border-radius:8px;margin-top:4px;"></audio>':'')
+    +'</div>';
+}
+
+async function loadAnnStaffList(){
+  if(_annAllStaff.length) return; // already loaded
+  try{
+    var res = await fetch(API+'/api/staff',{headers:zHdr()});
+    var d = await res.json();
+    _annAllStaff = (Array.isArray(d)?d:(d.data||d.staff||[])).filter(function(s){return s.active!==0;});
+  }catch(e){}
+}
+
+function openAnnCompose(){
+  _annRecipients='all'; _annStaff=[];
+  document.getElementById('ann-title').value='';
+  document.getElementById('ann-message').value='';
+  clearAnnImage(); clearAnnAudio();
+  setAnnRecipients('all');
+  document.getElementById('ann-overlay').style.display='block';
+  document.getElementById('ann-panel').style.display='block';
+}
+
+function closeAnnCompose(e){
+  if(e&&e.target!==document.getElementById('ann-overlay')) return;
+  document.getElementById('ann-overlay').style.display='none';
+  document.getElementById('ann-panel').style.display='none';
+}
+
+function setAnnRecipients(mode){
+  _annRecipients=mode;
+  var allBtn=document.getElementById('ann-rec-all');
+  var selBtn=document.getElementById('ann-rec-sel');
+  var picker=document.getElementById('ann-staff-picker');
+  var on='background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:10px;padding:9px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;flex:1;';
+  var off='background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.5);border-radius:10px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;flex:1;';
+  if(allBtn) allBtn.style.cssText=(mode==='all'?on:off);
+  if(selBtn) selBtn.style.cssText=(mode==='selected'?on:off);
+  if(picker) picker.style.display=(mode==='selected'?'block':'none');
+}
+
+function toggleAnnStaffDropdown(e){
+  var dd=document.getElementById('ann-staff-dropdown');
+  if(!dd) return;
+  if(dd.style.display==='block'){ dd.style.display='none'; return; }
+  dd.innerHTML=_annAllStaff.map(function(s){
+    var sel=_annStaff.findIndex(function(a){return String(a.id)===String(s.id);})>=0;
+    var avSrc=s.photo_data||(s.photo_url?API+s.photo_url:null);
+    var init=(s.name||'?').charAt(0).toUpperCase();
+    var av=avSrc?'<img src="'+avSrc+'" style="width:24px;height:24px;border-radius:6px;object-fit:cover;flex-shrink:0;">'
+      :'<div style="width:24px;height:24px;border-radius:6px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+    return '<div onclick="toggleAnnStaff(\''+s.id+'\',\''+escHtml(s.name)+'\')" style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;background:'+(sel?'rgba(10,132,255,0.1)':'transparent')+';margin:2px 0;">'
+      +av+'<span style="font-size:12px;flex:1;">'+escHtml(s.name)+(s.designation?'<span style="color:var(--muted);font-size:10px;"> · '+s.designation+'</span>':'')+'</span>'
+      +(sel?'<span style="color:#0A84FF;font-size:16px;">✓</span>':'')
+      +'</div>';
+  }).join('') || '<div style="padding:10px;color:var(--muted);font-size:12px;">No staff found</div>';
+  dd.style.display='block';
+  e.stopPropagation();
+}
+
+function toggleAnnStaff(id, name){
+  var idx=_annStaff.findIndex(function(a){return String(a.id)===String(id);});
+  if(idx>=0){ _annStaff.splice(idx,1); }
+  else {
+    var s=_annAllStaff.find(function(s){return String(s.id)===String(id);})||{id:id,name:name};
+    _annStaff.push(s);
+  }
+  renderAnnStaffPills();
+  // Re-render dropdown
+  var dd=document.getElementById('ann-staff-dropdown');
+  if(dd&&dd.style.display==='block') toggleAnnStaffDropdown({stopPropagation:function(){}});
+}
+
+function renderAnnStaffPills(){
+  var box=document.getElementById('ann-staff-pills');
+  var ph=document.getElementById('ann-staff-placeholder');
+  if(!box) return;
+  // Remove old pills
+  box.querySelectorAll('.ann-pill').forEach(function(p){p.remove();});
+  if(!_annStaff.length){ if(ph) ph.style.display=''; return; }
+  if(ph) ph.style.display='none';
+  _annStaff.forEach(function(a){
+    var avSrc=a.photo_data||(a.photo_url?API+a.photo_url:null);
+    var init=(a.name||'?').charAt(0).toUpperCase();
+    var avHtml=avSrc?'<img src="'+avSrc+'" style="width:16px;height:16px;border-radius:4px;object-fit:cover;flex-shrink:0;">'
+      :'<div style="width:16px;height:16px;border-radius:4px;background:rgba(10,132,255,0.3);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+    var pill=document.createElement('div');
+    pill.className='ann-pill';
+    pill.style.cssText='display:flex;align-items:center;gap:4px;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:7px;padding:3px 7px 3px 4px;font-size:11px;color:#0A84FF;';
+    pill.innerHTML=avHtml+escHtml(a.name)+'<span onclick="toggleAnnStaff(\''+a.id+'\',\''+escHtml(a.name)+'\')" style="cursor:pointer;opacity:0.5;margin-left:2px;font-size:13px;line-height:1;">×</span>';
+    box.insertBefore(pill, box.firstChild);
+  });
+}
+
+function previewAnnImage(input){
+  var file=input.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var thumb=document.getElementById('ann-img-thumb');
+    var prev=document.getElementById('ann-img-preview');
+    var lbl=document.getElementById('ann-img-label');
+    var clr=document.getElementById('ann-img-clear');
+    if(thumb) thumb.src=e.target.result;
+    if(prev) prev.style.display='block';
+    if(lbl) lbl.textContent='🖼 '+file.name;
+    if(clr) clr.style.display='inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearAnnImage(){
+  var inp=document.getElementById('ann-image');
+  var prev=document.getElementById('ann-img-preview');
+  var lbl=document.getElementById('ann-img-label');
+  var clr=document.getElementById('ann-img-clear');
+  if(inp) inp.value='';
+  if(prev) prev.style.display='none';
+  if(lbl) lbl.textContent='🖼 Click to add image';
+  if(clr) clr.style.display='none';
+}
+
+function previewAnnAudio(input){
+  var file=input.files[0]; if(!file) return;
+  var url=URL.createObjectURL(file);
+  var player=document.getElementById('ann-aud-player');
+  var prev=document.getElementById('ann-aud-preview');
+  var lbl=document.getElementById('ann-aud-label');
+  var clr=document.getElementById('ann-aud-clear');
+  if(player){ player.src=url; }
+  if(prev) prev.style.display='block';
+  if(lbl) lbl.textContent='🎵 '+file.name;
+  if(clr) clr.style.display='inline-block';
+}
+
+function clearAnnAudio(){
+  var inp=document.getElementById('ann-audio');
+  var prev=document.getElementById('ann-aud-preview');
+  var lbl=document.getElementById('ann-aud-label');
+  var clr=document.getElementById('ann-aud-clear');
+  var player=document.getElementById('ann-aud-player');
+  if(inp) inp.value='';
+  if(player) player.src='';
+  if(prev) prev.style.display='none';
+  if(lbl) lbl.textContent='🎵 Click to add audio';
+  if(clr) clr.style.display='none';
+}
+
+async function sendAnnouncement(){
+  var title   = (document.getElementById('ann-title').value||'').trim();
+  var message = (document.getElementById('ann-message').value||'').trim();
+  var imgFile = document.getElementById('ann-image').files[0];
+  var audFile = document.getElementById('ann-audio').files[0];
+
+  if(!message&&!imgFile&&!audFile){ showToast('Add a message or attach media'); return; }
+  if(_annRecipients==='selected'&&!_annStaff.length){ showToast('Select at least one staff member'); return; }
+
+  var btn=document.getElementById('ann-send-btn');
+  btn.textContent='Sending…'; btn.disabled=true;
+
+  var fd=new FormData();
+  fd.append('title', title);
+  fd.append('message', message);
+  fd.append('recipients', _annRecipients);
+  if(_annRecipients==='selected'){
+    fd.append('recipient_ids', JSON.stringify(_annStaff.map(function(s){return parseInt(s.id);})));
+  }
+  if(imgFile) fd.append('image', imgFile);
+  if(audFile) fd.append('audio', audFile);
+
+  try{
+    var res=await fetch(API+'/api/announcements',{method:'POST',headers:{Authorization:'Bearer '+zTok()},body:fd});
+    var d=await res.json();
+    if(d.success){
+      showToast('📢 Announcement sent!');
+      document.getElementById('ann-overlay').style.display='none';
+      document.getElementById('ann-panel').style.display='none';
+      loadAnnouncements();
+      var dot=document.getElementById('ann-nav-dot'); if(dot) dot.style.display='none';
+    } else showToast(d.message||'Failed to send');
+  }catch(e){ showToast('Network error'); }
+  finally{ btn.textContent='📢 Send Announcement'; btn.disabled=false; }
+}
+
+// Close ann staff dropdown on outside click
+document.addEventListener('click', function(e){
+  var dd=document.getElementById('ann-staff-dropdown');
+  var box=document.getElementById('ann-staff-pills');
+  if(dd&&dd.style.display==='block'&&!dd.contains(e.target)&&e.target!==box&&!box.contains(e.target)){
+    dd.style.display='none';
+  }
+});
+
 // ── Daily Logs Page ──
 async function loadDailyLogs(){
   var container = document.getElementById('dl-container');
@@ -4408,7 +4700,7 @@ window.showPage = function(page, el){
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
-  if(page==='daily-logs')    setTimeout(loadDailyLogs, 100);
+  if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
   if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); }
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);

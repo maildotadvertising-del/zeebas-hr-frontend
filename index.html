@@ -4177,6 +4177,11 @@ function listenBreakApproval(){
     _refreshCheckInDisplay();
   });
 
+  // ── Announcement received ──
+  staffSocket.on('announcement', function(data){
+    showAnnouncementPopup(data);
+  });
+
   // ── New Task Assigned ──
   staffSocket.on('task-assigned', function(data){
     showTaskAssignedPopup(data);
@@ -5019,6 +5024,54 @@ async function s1UpdateTask(id,status){
     if(d.success){ showToast1(status==='done'?'✅ Task done!':'▶ Task started'); loadStaffTasks(); }
     else showToast1('❌ '+(d.message||'Failed'));
   }catch(e){ showToast1('❌ Network error'); }
+}
+
+/* ── Announcement Popup ── */
+function showAnnouncementPopup(data){
+  // Remove any existing announcement popup
+  var old=document.getElementById('ann-popup');
+  if(old) old.remove();
+
+  var avSrc=data.sent_by_photo?(API_URL+data.sent_by_photo):null;
+  var init=(data.sent_by_name||'A').charAt(0).toUpperCase();
+  var av=avSrc
+    ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+    :'<div style="width:32px;height:32px;border-radius:9px;background:rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-weight:700;font-size:13px;flex-shrink:0;">'+init+'</div>';
+
+  var popup=document.createElement('div');
+  popup.id='ann-popup';
+  popup.style.cssText='position:fixed;inset:0;z-index:800;display:flex;align-items:flex-end;justify-content:center;padding-bottom:90px;';
+  popup.innerHTML='<div id="ann-popup-card" style="width:calc(100% - 26px);max-width:430px;background:rgba(10,10,22,0.98);border:0.5px solid rgba(255,159,10,0.3);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:slideUpFade 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
+    // Header
+    +'<div style="background:linear-gradient(135deg,rgba(255,159,10,0.15),rgba(255,107,0,0.08));padding:14px 14px 12px;border-bottom:0.5px solid rgba(255,159,10,0.15);">'
+    +'<div style="display:flex;align-items:center;gap:10px;">'
+    +av
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="color:#FF9F0A;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;">📢 Announcement</div>'
+    +'<div style="color:rgba(245,245,247,0.55);font-size:11px;">'+escHtml(data.sent_by_name||'Admin')+'</div>'
+    +'</div>'
+    +'<button onclick="document.getElementById(\'ann-popup\').remove()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:28px;height:28px;color:rgba(245,245,247,0.5);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0;">✕</button>'
+    +'</div>'
+    +'</div>'
+    // Body
+    +'<div style="padding:14px;">'
+    +(data.title?'<div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:8px;">'+escHtml(data.title)+'</div>':'')
+    +(data.message?'<div style="color:rgba(245,245,247,0.85);font-size:13px;line-height:1.6;margin-bottom:'+(data.image_url||data.audio_url?'12':'4')+'px;white-space:pre-wrap;">'+escHtml(data.message)+'</div>':'')
+    +(data.image_url?'<img src="'+API_URL+data.image_url+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:'+(data.audio_url?'10':'4')+'px;" onerror="this.style.display=\'none\'">':'')
+    +(data.audio_url?'<audio controls src="'+API_URL+data.audio_url+'" style="width:100%;border-radius:8px;margin-bottom:4px;"></audio>':'')
+    +'</div>'
+    +'</div>';
+
+  document.body.appendChild(popup);
+
+  // Haptic feedback + vibration if available
+  try{ if(navigator.vibrate) navigator.vibrate([80,40,80]); }catch(e){}
+
+  // Auto-dismiss after 15 seconds (announcements are important — longer than tasks)
+  setTimeout(function(){
+    var p=document.getElementById('ann-popup');
+    if(p){ p.style.transition='opacity 0.5s'; p.style.opacity='0'; setTimeout(function(){ if(p.parentNode) p.remove(); },500); }
+  },15000);
 }
 
 /* ── New Task Assigned Popup ── */
