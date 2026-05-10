@@ -336,12 +336,16 @@ body.desktop-mode #s1-sidebar {
           </div>
           <div style="height:0.5px;background:rgba(255,255,255,0.08);margin:12px 0;"></div>
           <div style="display:flex;justify-content:space-between;">
-            <div style="text-align:center;"><div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Check-in</div><div id="s1-checkin" style="color:#30D158;font-size:13px;font-weight:500;">--:--</div></div>
+            <div style="text-align:center;">
+              <div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Check-in</div>
+              <div id="s1-checkin" style="color:#30D158;font-size:13px;font-weight:500;">--:--</div>
+              <div id="s1-late-badge" style="display:none;margin-top:3px;background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.3);border-radius:5px;padding:1px 5px;font-size:9px;color:#FF453A;font-weight:500;"></div>
+            </div>
             <div style="text-align:center;"><div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Tasks</div><div id="s1-tasks-count" style="color:#FF9F0A;font-size:13px;font-weight:500;">0</div></div>
             <div style="text-align:center;"><div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Net Pay</div><div id="s1-home-netpay" style="color:#fff;font-size:13px;font-weight:500;">—</div></div>
           </div>
           <!-- Work Timer Row -->
-          <div id="work-timer-row" style="display:none;margin-top:10px;background:rgba(255,255,255,0.05);border-radius:9px;padding:8px 12px;display:none;align-items:center;justify-content:space-between;">
+          <div id="work-timer-row" style="display:none;margin-top:10px;background:rgba(255,255,255,0.05);border-radius:9px;padding:8px 12px;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:6px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span style="color:rgba(245,245,247,0.4);font-size:9px;">Work Remaining</span>
@@ -350,6 +354,14 @@ body.desktop-mode #s1-sidebar {
               <div id="s1-work-timer" style="color:#FF9F0A;font-size:13px;font-weight:600;letter-spacing:0.5px;">--:--</div>
               <div id="s1-work-timer-done" style="display:none;color:#30D158;font-size:9px;font-weight:500;background:rgba(48,209,88,0.12);border-radius:5px;padding:2px 6px;">✓ Done</div>
             </div>
+          </div>
+          <!-- Monthly Balance Row -->
+          <div id="s1-balance-row" style="display:none;margin-top:6px;background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 12px;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">This Month Balance</span>
+            </div>
+            <div id="s1-balance-val" style="font-size:12px;font-weight:600;">—</div>
           </div>
         </div>
 
@@ -1566,7 +1578,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); }
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
@@ -4135,6 +4147,49 @@ function stopWorkTimer(){
   if(_workTimerInterval){ clearInterval(_workTimerInterval); _workTimerInterval = null; }
   var timerRow = document.getElementById('work-timer-row');
   if(timerRow) timerRow.style.display = 'none';
+  var lb = document.getElementById('s1-late-badge');
+  if(lb) lb.style.display = 'none';
+}
+
+// ── Late Badge ──
+function showLateBadge(lateMinutes){
+  var el = document.getElementById('s1-late-badge');
+  if(!el) return;
+  if(lateMinutes > 0){
+    var h = Math.floor(lateMinutes/60), m = lateMinutes%60;
+    el.textContent = h > 0 ? (h+'h '+m+'m late') : (lateMinutes+' min late');
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ── Monthly Balance Fetch & Display ──
+async function fetchMonthlyBalance(){
+  try{
+    var r = await fetch(API_URL+'/api/attendance/monthly-balance', {headers: zHead()});
+    var d = await r.json();
+    if(!d.success) return;
+    var balRow = document.getElementById('s1-balance-row');
+    var balVal = document.getElementById('s1-balance-val');
+    if(!balRow || !balVal) return;
+
+    // Only show if there's something to display
+    if(d.total_deficit_mins === 0 && d.total_extra_mins === 0){ balRow.style.display='none'; return; }
+
+    balRow.style.display = 'flex';
+    var bal = d.balance_mins;
+    if(bal >= 0){
+      var bh = Math.floor(bal/60), bm = bal%60;
+      var bStr = bh > 0 ? (bh+'h '+bm+'m') : (bm+'m');
+      balVal.innerHTML = '<span style="color:#30D158;">+'+bStr+' ahead</span>';
+    } else {
+      var def = Math.abs(bal);
+      var dh = Math.floor(def/60), dm = def%60;
+      var dStr = dh > 0 ? (dh+'h '+dm+'m') : (dm+'m');
+      balVal.innerHTML = '<span style="color:#FF453A;">'+dStr+' deficit</span>';
+    }
+  }catch(e){}
 }
 
 async function _refreshCheckInDisplay(){
@@ -4375,8 +4430,9 @@ async function wifiCheckAndAct(){
           ch2=ch2%12||12;
           ciEl2.textContent=ch2+':'+(cm2<10?'0':'')+cm2+' '+ca2;
         }
-        // Start work remaining timer
+        // Start work remaining timer + late badge
         if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
+        showLateBadge(d.lateMinutes||0);
         // Show late compensation info if staff is late
         if(d.lateMinutes > 0 && d.officeEndTime){
           var lmBanner = d.lateMinutes+' min late';
@@ -4417,8 +4473,9 @@ async function wifiCheckAndAct(){
         var breakLimitMins = (_breakSettings && _breakSettings.break_duration_mins) || 0;
         var breakLimitMs   = breakLimitMins * 60 * 1000;
 
-        // Show work remaining timer for GPS/non-wifi staff too
+        // Show work remaining timer + late badge for GPS/non-wifi staff too
         if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
+        showLateBadge(d.lateMinutes||0);
 
         if(offMs < GRACE){
           // Within 5-min grace → subtle countdown banner

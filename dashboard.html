@@ -1241,6 +1241,33 @@ textarea.inp{resize:none;}
         </tbody>
       </table>
     </div>
+
+    <!-- Monthly Balance Section -->
+    <div style="margin-top:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:rgba(245,245,247,0.7);">📊 Monthly Balance — <span id="mb-month-label" style="color:#0A84FF;"></span></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="month" id="mb-month-pick" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:4px 8px;color:#fff;font-size:11px;font-family:inherit;cursor:pointer;" onchange="loadMonthlyBalance()">
+          <button onclick="loadMonthlyBalance()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="sec g" style="padding:0;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.08);">
+              <th style="padding:10px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Staff</th>
+              <th style="padding:10px 10px;text-align:center;color:#FF453A;font-weight:500;font-size:11px;">Deficit</th>
+              <th style="padding:10px 10px;text-align:center;color:#30D158;font-weight:500;font-size:11px;">Extra</th>
+              <th style="padding:10px 10px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Balance</th>
+              <th style="padding:10px 14px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="mb-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">Select a month to view</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- ── TEAM CHAT ── -->
@@ -4235,7 +4262,7 @@ window.showPage = function(page, el){
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
-  if(page==='attendance')     setTimeout(loadAttendancePage, 100);
+  if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
   if(page==='tasks')          setTimeout(loadTasks, 100);
   if(page==='approvals')      setTimeout(loadApprovals, 100);
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
@@ -5192,6 +5219,69 @@ function approvalCard(r, type){
       +'</div></div>';
   }
   return '';
+}
+
+// ── Monthly Balance (FT + DT staff) ──
+async function loadMonthlyBalance(){
+  var pick = document.getElementById('mb-month-pick');
+  var label = document.getElementById('mb-month-label');
+  var tbody = document.getElementById('mb-tbody');
+  if(!tbody) return;
+
+  // Default to current month
+  if(!pick.value){
+    var n=new Date(); pick.value=n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'));
+  }
+  var month = pick.value;
+  if(label) label.textContent = month;
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
+
+  try{
+    var res=await fetch(API+'/api/attendance/monthly-balance-all?month='+month,{headers:zHdr()});
+    var d=await res.json();
+    if(!d.success||!d.data||!d.data.length){
+      tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">No data for this month</td></tr>';
+      return;
+    }
+    var html='';
+    d.data.forEach(function(r,i){
+      var deficit = r.total_deficit_mins;
+      var extra   = r.total_extra_mins;
+      var balance = r.balance_mins;
+      var defStr  = deficit>0 ? (Math.floor(deficit/60)>0?(Math.floor(deficit/60)+'h '+deficit%60+'m'):(deficit+'m')) : '—';
+      var extStr  = extra>0  ? (Math.floor(extra/60)>0?(Math.floor(extra/60)+'h '+extra%60+'m'):(extra+'m')) : '—';
+      var balStr, balCol, statusHtml;
+      if(balance >= 0){
+        var bh=Math.floor(balance/60), bm=balance%60;
+        balStr = balance === 0 ? '±0' : ('+' + (bh>0?bh+'h '+bm+'m':bm+'m'));
+        balCol = '#30D158';
+        statusHtml='<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 8px;font-size:10px;">✓ Balanced</span>';
+      } else {
+        var def2=Math.abs(balance), dh=Math.floor(def2/60), dm=def2%60;
+        balStr = '−'+(dh>0?dh+'h '+dm+'m':dm+'m');
+        balCol = '#FF453A';
+        statusHtml='<span style="background:rgba(255,69,58,0.12);color:#FF453A;border:0.5px solid rgba(255,69,58,0.3);border-radius:6px;padding:3px 8px;font-size:10px;">⚠ Deficit</span>';
+      }
+      var init=(r.name||'?').charAt(0).toUpperCase();
+      var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+      var avHtml = avSrc
+        ? '<img src="'+avSrc+'" style="width:26px;height:26px;border-radius:7px;object-fit:cover;flex-shrink:0;">'
+        : '<div style="width:26px;height:26px;border-radius:7px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+      var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
+      html+='<tr style="background:'+(i%2===0?'transparent':'rgba(255,255,255,0.015)')+';">'
+        +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avHtml
+          +'<div><div style="font-size:12px;font-weight:500;">'+r.name+'</div>'
+          +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+(r.brand_name?' · '+r.brand_name:'')+'</div></div></div></td>'
+        +'<td style="'+td+'text-align:center;color:#FF453A;font-size:12px;">'+defStr+'</td>'
+        +'<td style="'+td+'text-align:center;color:#30D158;font-size:12px;">'+extStr+'</td>'
+        +'<td style="'+td+'text-align:center;color:'+balCol+';font-size:12px;font-weight:600;">'+balStr+'</td>'
+        +'<td style="'+td+'text-align:center;">'+statusHtml+'</td>'
+        +'</tr>';
+    });
+    tbody.innerHTML=html;
+  }catch(e){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">Error loading balance</td></tr>';
+  }
 }
 
 async function loadApprovals(){
