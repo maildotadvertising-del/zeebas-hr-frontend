@@ -5457,4 +5457,33 @@ document.addEventListener('visibilitychange', function(){
 });
 </script>
 
+
+<script>
+/* ── Enable spellcheck + autocorrect on all text inputs & textareas ── */
+(function enableSpellcheck(){
+  function applyToEl(el){
+    var tag = el.tagName;
+    var type = (el.type||'').toLowerCase();
+    var isText = tag==='TEXTAREA' || (tag==='INPUT' && (!type || type==='text' || type==='search'));
+    if(!isText) return;
+    var id = el.id||'';
+    var skipIds = ['otp','pin','time','date'];
+    if(skipIds.some(function(s){ return id.indexOf(s)!==-1 && id.indexOf('title')===-1 && id.indexOf('desc')===-1 && id.indexOf('msg')===-1 && id.indexOf('note')===-1; })) return;
+    el.setAttribute('spellcheck','true');
+    el.setAttribute('autocorrect','on');
+    el.setAttribute('autocapitalize','sentences');
+  }
+  document.querySelectorAll('input, textarea').forEach(applyToEl);
+  var obs = new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      m.addedNodes.forEach(function(n){
+        if(n.nodeType!==1) return;
+        if(n.tagName==='INPUT'||n.tagName==='TEXTAREA') applyToEl(n);
+        n.querySelectorAll && n.querySelectorAll('input, textarea').forEach(applyToEl);
+      });
+    });
+  });
+  obs.observe(document.body, { childList:true, subtree:true });
+})();
+</script>
 </body></html>
