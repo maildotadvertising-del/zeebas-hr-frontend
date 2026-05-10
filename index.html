@@ -4112,8 +4112,79 @@ async function loadBreakSettings(){
 }
 
 function requestNotifPermission(){
-  if('Notification' in window && Notification.permission === 'default'){
-    Notification.requestPermission();
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'granted') return; // already allowed
+  if(Notification.permission === 'denied') return;  // user already blocked
+
+  // Show a friendly banner — browser requires a user tap to request permission
+  // Delay slightly so home screen finishes loading first
+  setTimeout(showNotifBanner, 1800);
+}
+
+function showNotifBanner(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission !== 'default') return;
+  if(document.getElementById('notif-perm-banner')) return; // already shown
+
+  var banner = document.createElement('div');
+  banner.id = 'notif-perm-banner';
+  banner.style.cssText = [
+    'position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);',
+    'width:calc(100% - 32px);max-width:320px;',
+    'background:linear-gradient(135deg,rgba(18,18,36,0.98),rgba(10,10,24,0.98));',
+    'border:0.5px solid rgba(10,132,255,0.35);border-radius:18px;',
+    'padding:16px 18px;z-index:9999;',
+    'box-shadow:0 16px 48px rgba(0,0,0,0.6),0 0 0 1px rgba(10,132,255,0.1);',
+    'opacity:0;transition:opacity 0.3s,transform 0.3s;'
+  ].join('');
+
+  banner.innerHTML = ''
+    + '<div style="display:flex;align-items:flex-start;gap:12px;">'
+    +   '<div style="width:36px;height:36px;border-radius:11px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🔔</div>'
+    +   '<div style="flex:1;">'
+    +     '<div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:3px;">Enable Notifications</div>'
+    +     '<div style="font-size:11px;color:rgba(245,245,247,0.5);line-height:1.5;">Get instant alerts for check-in, task assignments & announcements — even when the app is closed.</div>'
+    +   '</div>'
+    +   '<button onclick="document.getElementById(\'notif-perm-banner\').remove()" style="background:none;border:none;color:rgba(245,245,247,0.3);cursor:pointer;font-size:18px;line-height:1;padding:0;flex-shrink:0;margin-top:-2px;">×</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;margin-top:14px;">'
+    +   '<button id="notif-allow-btn" onclick="doAllowNotif()" style="flex:1;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:11px;padding:10px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(10,132,255,0.4);">🔔 Allow</button>'
+    +   '<button onclick="document.getElementById(\'notif-perm-banner\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:11px;padding:10px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;">Not now</button>'
+    + '</div>';
+
+  document.body.appendChild(banner);
+  // Animate in
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      banner.style.opacity = '1';
+      banner.style.transform = 'translateX(-50%) translateY(0)';
+    });
+  });
+  // Auto-dismiss after 30 seconds
+  setTimeout(function(){
+    var b = document.getElementById('notif-perm-banner');
+    if(b){ b.style.opacity='0'; b.style.transform='translateX(-50%) translateY(20px)'; setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); }, 300); }
+  }, 30000);
+}
+
+async function doAllowNotif(){
+  var btn = document.getElementById('notif-allow-btn');
+  if(btn){ btn.textContent='…'; btn.disabled=true; }
+  try{
+    var result = await Notification.requestPermission();
+    var banner = document.getElementById('notif-perm-banner');
+    if(result === 'granted'){
+      if(banner){ banner.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0;"><div style="font-size:20px;">✅</div><div style="font-size:13px;color:#30D158;font-weight:500;">Notifications enabled!</div></div>'; setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 2000); }
+      // Send a test notification so they know it works
+      setTimeout(function(){
+        try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/icon-192.png', badge:'/icon-192.png' }); }catch(e){}
+      }, 500);
+    } else {
+      if(banner){ banner.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0;"><div style="font-size:20px;">⚠️</div><div style="font-size:12px;color:rgba(245,245,247,0.5);">Notifications blocked. Enable in phone Settings → Apps → Chrome → Notifications.</div></div>'; setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 5000); }
+    }
+  } catch(e){
+    var banner2 = document.getElementById('notif-perm-banner');
+    if(banner2 && banner2.parentNode) banner2.parentNode.removeChild(banner2);
   }
 }
 
