@@ -748,30 +748,23 @@ body.desktop-mode #s1-sidebar {
         <!-- Form -->
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
           <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">Leave Type</div>
-          <select class="inp"><option>Casual Leave</option><option>Sick Leave</option><option>Earned Leave</option><option>Emergency Leave</option></select></div>
+          <select id="leave-type" class="inp"><option value="Casual Leave">Casual Leave</option><option value="Sick Leave">Sick Leave</option><option value="Earned Leave">Earned Leave</option><option value="Emergency Leave">Emergency Leave</option></select></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">From Date</div><input class="inp" type="date" value="2026-04-21"></div>
-            <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">To Date</div><input class="inp" type="date" value="2026-04-22"></div>
+            <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">From Date</div><input id="leave-from" class="inp" type="date"></div>
+            <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">To Date</div><input id="leave-to" class="inp" type="date"></div>
           </div>
           <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">Reason</div>
-          <textarea class="inp" rows="3" placeholder="Briefly describe the reason for leave..." style="resize:none;"></textarea></div>
+          <textarea id="leave-reason" class="inp" rows="3" placeholder="Briefly describe the reason for leave..." style="resize:none;"></textarea></div>
           <div><div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">Handover Note (optional)</div>
-          <input class="inp" type="text" placeholder="Who will handle your tasks?"></div>
+          <input id="leave-handover" class="inp" type="text" placeholder="Who will handle your tasks?"></div>
         </div>
 
-        <button class="btn-p" onclick="submitLeave()">Submit Leave Request</button>
+        <button id="leave-submit-btn" class="btn-p" onclick="submitLeave()">Submit Leave Request</button>
 
         <!-- Past leaves -->
         <div style="margin-top:14px;">
           <div style="color:rgba(245,245,247,0.45);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Past Requests</div>
-          <div class="gs" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <div><div style="color:#fff;font-size:12px;">21–22 Apr · Casual</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Family function</div></div>
-            <span class="po">Pending</span>
-          </div>
-          <div class="gs" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
-            <div><div style="color:#fff;font-size:12px;">10 Apr · Sick</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Fever</div></div>
-            <span class="pg">Approved</span>
-          </div>
+          <div id="leave-past-list"><div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:12px 0;">Loading…</div></div>
         </div>
       </div>
     </div>
@@ -1581,6 +1574,7 @@ function go1(id){
   if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
+  if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); }
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
     var btn=document.getElementById('att-btn');
@@ -1796,9 +1790,78 @@ async function markAttendance(){
 }
 
 // Leave
-function submitLeave(){
-  alert('✓ Leave request submitted! Admin will review shortly.');
-  go1('s1-home');
+async function submitLeave(){
+  var leaveType = (document.getElementById('leave-type')||{}).value||'';
+  var fromDate  = (document.getElementById('leave-from')||{}).value||'';
+  var toDate    = (document.getElementById('leave-to')||{}).value||'';
+  var reason    = ((document.getElementById('leave-reason')||{}).value||'').trim();
+  var handover  = ((document.getElementById('leave-handover')||{}).value||'').trim();
+
+  if(!leaveType||!fromDate||!toDate||!reason){
+    wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⚠️ Missing Fields','Please fill leave type, dates and reason',false);
+    setTimeout(function(){ wifiBanner(false); },3000);
+    return;
+  }
+  if(new Date(toDate)<new Date(fromDate)){
+    wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⚠️ Invalid Dates','To date must be after from date',false);
+    setTimeout(function(){ wifiBanner(false); },3000);
+    return;
+  }
+
+  var btn = document.getElementById('leave-submit-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Submitting…'; }
+  try{
+    var res = await fetch(API_URL+'/api/leave/apply',{
+      method:'POST',
+      headers: Object.assign({'Content-Type':'application/json'}, zHead()),
+      body: JSON.stringify({ leave_type:leaveType, from_date:fromDate, to_date:toDate, reason:reason, handover_note:handover })
+    });
+    var d = await res.json();
+    if(d.success){
+      // Clear form
+      var setV = function(id,v){ var el=document.getElementById(id); if(el) el.value=v; };
+      setV('leave-from',''); setV('leave-to',''); setV('leave-reason',''); setV('leave-handover','');
+      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Leave Requested','Admin will review your request shortly',false);
+      setTimeout(function(){ wifiBanner(false); },4000);
+      loadMyLeaves(); // refresh past list
+    } else {
+      wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','❌ Failed',d.message||'Please try again',false);
+      setTimeout(function(){ wifiBanner(false); },4000);
+    }
+  }catch(e){
+    wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','❌ Error','Network error — please try again',false);
+    setTimeout(function(){ wifiBanner(false); },4000);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Submit Leave Request'; }
+  }
+}
+
+async function loadMyLeaves(){
+  var listEl = document.getElementById('leave-past-list');
+  if(!listEl) return;
+  try{
+    var res = await fetch(API_URL+'/api/leave/my',{headers:zHead()});
+    var d = await res.json();
+    var leaves = d.data||[];
+    if(!leaves.length){
+      listEl.innerHTML='<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:12px 0;">No past requests</div>';
+      return;
+    }
+    var statusMap={'pending':['#FF9F0A','Pending'],'approved':['#30D158','Approved'],'rejected':['#FF453A','Rejected']};
+    listEl.innerHTML = leaves.slice(0,8).map(function(l){
+      var sc = statusMap[l.status]||['#888','—'];
+      var fd = l.from_date ? l.from_date.substring(0,10) : '—';
+      var td = l.to_date   ? l.to_date.substring(0,10)   : '—';
+      var dateStr = fd===td ? fd : fd+' – '+td;
+      return '<div class="gs" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+        +'<div><div style="color:#fff;font-size:12px;">'+dateStr+' · '+(l.leave_type||'Leave')+'</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+escHtml(l.reason||'—')+'</div></div>'
+        +'<span style="background:'+sc[0]+'22;color:'+sc[0]+';border:0.5px solid '+sc[0]+'44;border-radius:6px;padding:2px 8px;font-size:10px;white-space:nowrap;">'+sc[1]+'</span>'
+        +'</div>';
+    }).join('');
+  }catch(e){
+    listEl.innerHTML='<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:12px 0;">Could not load</div>';
+  }
 }
 
 // ── Profile ──
@@ -4065,44 +4128,42 @@ function showBreakPendingBanner(){
 
 // Listen for admin approval via socket
 function listenBreakApproval(){
-  if(typeof socket !== 'undefined' && socket){
-    socket.on('break-return-approved', function(data){
-      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Check-in Approved!',
-        'Admin approved your attendance — you\'re all set',false);
-      setTimeout(function(){ wifiBanner(false); }, 5000);
-    });
-    socket.on('office-work-approved', function(data){
-      hideBreakChoiceOverlay();
-      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Office Work Approved!',
-        'Admin confirmed your outside work — no deduction',false);
-      setTimeout(function(){ wifiBanner(false); }, 6000);
-    });
-    socket.on('office-work-rejected', function(data){
-      hideBreakChoiceOverlay();
-      var msg = data.excess_mins > 0
-        ? 'Break deduction applied — '+data.excess_mins+' min over limit (₹'+data.deduction+')'
-        : 'Request rejected — no salary impact';
-      wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','❌ Office Work Rejected',msg,false);
-      setTimeout(function(){ wifiBanner(false); }, 7000);
-    });
+  if(!staffSocket) return;
+  staffSocket.on('break-return-approved', function(data){
+    wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Check-in Approved!',
+      'Admin approved your attendance — you\'re all set',false);
+    setTimeout(function(){ wifiBanner(false); }, 5000);
+  });
+  staffSocket.on('office-work-approved', function(data){
+    hideBreakChoiceOverlay();
+    wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Office Work Approved!',
+      'Admin confirmed your outside work — no deduction',false);
+    setTimeout(function(){ wifiBanner(false); }, 6000);
+  });
+  staffSocket.on('office-work-rejected', function(data){
+    hideBreakChoiceOverlay();
+    var msg = data.excess_mins > 0
+      ? 'Break deduction applied — '+data.excess_mins+' min over limit (₹'+data.deduction+')'
+      : 'Request rejected — no salary impact';
+    wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','❌ Office Work Rejected',msg,false);
+    setTimeout(function(){ wifiBanner(false); }, 7000);
+  });
 
-    // ── Break Overtime Admin Response ──
-    socket.on('break-ot-waived', function(data){
-      wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)',
-        '✅ Break Approved — No Deduction',
-        'Admin cleared your break overtime ✓', false);
-      setTimeout(function(){ wifiBanner(false); }, 6000);
-      // Refresh check-in time on home screen
-      _refreshCheckInDisplay();
-    });
-    socket.on('break-ot-applied', function(data){
-      wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)',
-        '⚠️ Break Overtime Deducted',
-        '₹'+parseFloat(data.deduction||0).toFixed(2)+' deducted from your salary', false);
-      setTimeout(function(){ wifiBanner(false); }, 7000);
-      _refreshCheckInDisplay();
-    });
-  }
+  // ── Break Overtime Admin Response ──
+  staffSocket.on('break-ot-waived', function(data){
+    wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)',
+      '✅ Break Approved — No Deduction',
+      'Admin cleared your break overtime ✓', false);
+    setTimeout(function(){ wifiBanner(false); }, 6000);
+    _refreshCheckInDisplay();
+  });
+  staffSocket.on('break-ot-applied', function(data){
+    wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)',
+      '⚠️ Break Overtime Deducted',
+      '₹'+parseFloat(data.deduction||0).toFixed(2)+' deducted from your salary', false);
+    setTimeout(function(){ wifiBanner(false); }, 7000);
+    _refreshCheckInDisplay();
+  });
 }
 
 // Refresh check-in time on home screen from server
