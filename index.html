@@ -2088,14 +2088,25 @@ async function loadDailyLogs(){
       } else {
         list.innerHTML = tasks.map(function(t){
           var isDone = t.status === 'complete';
+          var isApproved = t.admin_approved == 1;
           var pillHtml = isDone
             ? '<span style="background:rgba(48,209,88,0.15);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:500;white-space:nowrap;">✅ Complete</span>'
             : '<span style="background:rgba(255,159,10,0.15);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:500;white-space:nowrap;">⏳ Processing</span>';
+          var approvalBadge = isApproved
+            ? '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.25);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:500;white-space:nowrap;">✓ Admin Approved</span>'
+            : '<span style="background:rgba(191,95,255,0.1);color:#BF5FFF;border:0.5px solid rgba(191,95,255,0.25);border-radius:20px;padding:2px 8px;font-size:9px;font-weight:400;white-space:nowrap;">⏳ Pending Review</span>';
           var toggleLabel = isDone ? 'Mark Processing' : 'Mark Complete';
           var toggleColor = isDone ? 'rgba(255,159,10,0.7)' : 'rgba(48,209,88,0.7)';
           var linkHtml = t.link
             ? '<a href="'+escHtml(t.link)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;color:#0A84FF;font-size:11px;text-decoration:none;margin-top:3px;">🔗 Open Link</a>'
             : '';
+          // Once approved, hide toggle/delete so staff can't modify approved entries
+          var actionsHtml = isApproved
+            ? ''
+            : '<button onclick="toggleDlStatus('+t.id+',\''+t.status+'\')" style="background:none;border:0.5px solid '+toggleColor+';border-radius:8px;color:'+toggleColor+';cursor:pointer;padding:2px 8px;font-size:10px;font-family:inherit;white-space:nowrap;">'+toggleLabel+'</button>';
+          var deleteHtml = isApproved
+            ? ''
+            : '<button onclick="deleteDailyLog('+t.id+')" style="background:none;border:none;color:rgba(255,69,58,0.5);cursor:pointer;padding:2px 4px;font-size:16px;flex-shrink:0;line-height:1;" title="Remove">×</button>';
           return '<div style="padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">'
             +'<div style="display:flex;align-items:flex-start;gap:8px;">'
             +'<div style="flex:1;min-width:0;">'
@@ -2104,9 +2115,10 @@ async function loadDailyLogs(){
             +'</div>'
             +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">'
             +pillHtml
-            +'<button onclick="toggleDlStatus('+t.id+',\''+t.status+'\')" style="background:none;border:0.5px solid '+toggleColor+';border-radius:8px;color:'+toggleColor+';cursor:pointer;padding:2px 8px;font-size:10px;font-family:inherit;white-space:nowrap;">'+toggleLabel+'</button>'
+            +approvalBadge
+            +actionsHtml
             +'</div>'
-            +'<button onclick="deleteDailyLog('+t.id+')" style="background:none;border:none;color:rgba(255,69,58,0.5);cursor:pointer;padding:2px 4px;font-size:16px;flex-shrink:0;line-height:1;" title="Remove">×</button>'
+            +deleteHtml
             +'</div>'
             +'</div>';
         }).join('');
@@ -4314,6 +4326,16 @@ function listenBreakApproval(){
   // ── New Task Assigned ──
   staffSocket.on('task-assigned', function(data){
     showTaskAssignedPopup(data);
+  });
+
+  // ── Daily log approved by admin → refresh log list + show toast ──
+  staffSocket.on('daily-log-approved', function(data){
+    showToast1('✅ Admin approved your work log!');
+    // If the daily log screen is currently visible, refresh it
+    var dlScreen = document.getElementById('s1-dailylog');
+    if(dlScreen && dlScreen.classList.contains('on')){
+      loadDailyLogs();
+    }
   });
 
   // ── Task Extra Time Response ──
