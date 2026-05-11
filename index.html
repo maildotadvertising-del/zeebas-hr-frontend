@@ -65,6 +65,10 @@ select.inp option{background:#1A1A2E;color:#fff;}
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.3);}}
 @keyframes pulse-green{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(48,209,88,0.5);}50%{opacity:0.7;box-shadow:0 0 0 4px rgba(48,209,88,0);}}
 @keyframes splashFadeIn{from{opacity:0;transform:scale(0.88);}to{opacity:1;transform:scale(1);}}
+@keyframes annCardEnter{0%{opacity:0;transform:scale(0.82) translateY(40px);}60%{transform:scale(1.03) translateY(-4px);}100%{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes annConfettiFall{0%{transform:translateY(-20px) rotate(0deg) scale(1);opacity:1;}100%{transform:translateY(110vh) rotate(720deg) scale(0.5);opacity:0;}}
+@keyframes annSparkle{0%,100%{opacity:0;transform:scale(0.5);}50%{opacity:1;transform:scale(1.2);}}
+@keyframes annRibbon{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
 /* TOGGLE SWITCH */
 label input[type=checkbox]:checked+span{background:rgba(10,132,255,0.35)!important;border-color:rgba(10,132,255,0.5)!important;}
 label input[type=checkbox]:checked+span::after,
@@ -5487,50 +5491,104 @@ async function loadMissedAnnouncements(){
 }
 
 function showAnnouncementPopup(data){
-  // Remove any existing announcement popup
   var old=document.getElementById('ann-popup');
   if(old) old.remove();
 
-  var avSrc=data.sent_by_photo?(API_URL+data.sent_by_photo):null;
+  // ── Confetti colours & shapes ──
+  var confettiColors=['#FFD60A','#FF9F0A','#FF6B6B','#5AC8FA','#34C759','#BF5FFF','#FF375F','#ffffff'];
+  var confettiHtml='';
+  for(var ci=0;ci<28;ci++){
+    var col=confettiColors[ci%confettiColors.length];
+    var sz=Math.random()*7+5;
+    var left=Math.random()*100;
+    var delay=Math.random()*2.5;
+    var dur=Math.random()*2+2.5;
+    var shape=ci%3===0?'50%':(ci%3===1?'2px':'0');
+    confettiHtml+='<div style="position:absolute;top:-10px;left:'+left+'%;width:'+sz+'px;height:'+sz+'px;background:'+col+';border-radius:'+shape+';animation:annConfettiFall '+dur+'s '+delay+'s ease-in forwards;pointer-events:none;"></div>';
+  }
+
+  // ── Sender avatar ──
+  var avSrc=data.sent_by_photo_data||null;
+  if(!avSrc && data.sent_by_photo) avSrc=API_URL+data.sent_by_photo;
   var init=(data.sent_by_name||'A').charAt(0).toUpperCase();
-  var av=avSrc
-    ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
-    :'<div style="width:32px;height:32px;border-radius:9px;background:rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-weight:700;font-size:13px;flex-shrink:0;">'+init+'</div>';
+  var avHtml=avSrc
+    ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.3);" onerror="this.style.display=\'none\'">'
+    :'<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;border:2px solid rgba(255,255,255,0.3);">'+init+'</div>';
+
+  // ── Sparkle stars ──
+  var sparklePos=[[12,18],[85,22],[6,55],[90,50],[20,80],[78,75],[50,10]];
+  var sparkleHtml=sparklePos.map(function(p,i){
+    return '<div style="position:absolute;left:'+p[0]+'%;top:'+p[1]+'%;font-size:'+(i%2===0?'14':'10')+'px;animation:annSparkle '+(1.2+i*0.3)+'s '+(i*0.2)+'s ease-in-out infinite;pointer-events:none;">✨</div>';
+  }).join('');
 
   var popup=document.createElement('div');
   popup.id='ann-popup';
-  popup.style.cssText='position:fixed;inset:0;z-index:800;display:flex;align-items:flex-end;justify-content:center;padding-bottom:90px;';
-  popup.innerHTML='<div id="ann-popup-card" style="width:calc(100% - 26px);max-width:430px;background:rgba(10,10,22,0.98);border:0.5px solid rgba(255,159,10,0.3);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:slideUpFade 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
-    // Header
-    +'<div style="background:linear-gradient(135deg,rgba(255,159,10,0.15),rgba(255,107,0,0.08));padding:14px 14px 12px;border-bottom:0.5px solid rgba(255,159,10,0.15);">'
-    +'<div style="display:flex;align-items:center;gap:10px;">'
-    +av
-    +'<div style="flex:1;min-width:0;">'
-    +'<div style="color:#FF9F0A;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;">📢 Announcement</div>'
-    +'<div style="color:rgba(245,245,247,0.55);font-size:11px;">'+escHtml(data.sent_by_name||'Admin')+'</div>'
+  popup.style.cssText='position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);';
+
+  popup.innerHTML=
+    // ── Card ──
+    '<div style="width:100%;max-width:390px;border-radius:28px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.8);animation:annCardEnter 0.55s cubic-bezier(0.34,1.56,0.64,1);position:relative;">'
+
+    // ── Festive header ──
+    +'<div style="background:linear-gradient(145deg,#6A0DAD,#C0145E,#FF6B00);padding:24px 20px 20px;position:relative;overflow:hidden;text-align:center;">'
+    +confettiHtml
+    +sparkleHtml
+    // ribbon lines
+    +'<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#FFD60A,#FF9F0A,#FF375F,#BF5FFF,#5AC8FA,#34C759,#FFD60A);animation:annRibbon 0.6s ease-out;"></div>'
+    // big emoji
+    +'<div style="font-size:46px;margin-bottom:8px;position:relative;z-index:1;">📢</div>'
+    +'<div style="color:#FFD60A;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;position:relative;z-index:1;">Announcement</div>'
     +'</div>'
-    +'<button onclick="document.getElementById(\'ann-popup\').remove()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:28px;height:28px;color:rgba(245,245,247,0.5);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0;">✕</button>'
+
+    // ── White card body ──
+    +'<div style="background:#fff;padding:0;">'
+
+    // image (full width, no padding)
+    +(data.image_url?'<img src="'+API_URL+data.image_url+'" style="width:100%;max-height:220px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">':'')
+
+    +'<div style="padding:20px 20px 16px;">'
+
+    // title
+    +(data.title?'<div style="color:#1a1a2e;font-size:18px;font-weight:800;text-align:center;margin-bottom:10px;letter-spacing:-0.3px;">'+escHtml(data.title)+'</div>':'')
+
+    // decorative divider
+    +'<div style="height:2px;background:linear-gradient(90deg,transparent,#FFD60A,#FF9F0A,transparent);border-radius:2px;margin-bottom:14px;"></div>'
+
+    // message
+    +(data.message?'<div style="color:#3a3a4a;font-size:14px;line-height:1.7;text-align:center;white-space:pre-wrap;margin-bottom:14px;">'+escHtml(data.message)+'</div>':'')
+
+    // audio
+    +(data.audio_url?'<audio controls src="'+API_URL+data.audio_url+'" style="width:100%;border-radius:10px;margin-bottom:14px;"></audio>':'')
+
+    // sender row
+    +'<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f5f5f7;border-radius:12px;margin-bottom:16px;">'
+    +avHtml
+    +'<div>'
+    +'<div style="color:#888;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">From</div>'
+    +'<div style="color:#1a1a2e;font-size:13px;font-weight:600;">'+escHtml(data.sent_by_name||'Admin')+'</div>'
     +'</div>'
     +'</div>'
-    // Body
-    +'<div style="padding:14px;">'
-    +(data.title?'<div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:8px;">'+escHtml(data.title)+'</div>':'')
-    +(data.message?'<div style="color:rgba(245,245,247,0.85);font-size:13px;line-height:1.6;margin-bottom:'+(data.image_url||data.audio_url?'12':'4')+'px;white-space:pre-wrap;">'+escHtml(data.message)+'</div>':'')
-    +(data.image_url?'<img src="'+API_URL+data.image_url+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:'+(data.audio_url?'10':'4')+'px;" onerror="this.style.display=\'none\'">':'')
-    +(data.audio_url?'<audio controls src="'+API_URL+data.audio_url+'" style="width:100%;border-radius:8px;margin-bottom:4px;"></audio>':'')
-    +'</div>'
-    +'</div>';
+
+    // dismiss button
+    +'<button onclick="document.getElementById(\'ann-popup\').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg,#6A0DAD,#C0145E);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.3px;">Got it! 🎉</button>'
+
+    +'</div>'  // padding div
+    +'</div>'  // white body
+    +'</div>'; // card
 
   document.body.appendChild(popup);
 
-  // Haptic feedback + vibration if available
-  try{ if(navigator.vibrate) navigator.vibrate([80,40,80]); }catch(e){}
+  // Close on backdrop tap
+  popup.addEventListener('click', function(e){ if(e.target===popup) popup.remove(); });
 
-  // Auto-dismiss after 15 seconds (announcements are important — longer than tasks)
+  // Haptic feedback
+  try{ if(navigator.vibrate) navigator.vibrate([60,30,60,30,80]); }catch(e){}
+
+  // Auto-dismiss after 20s
   setTimeout(function(){
     var p=document.getElementById('ann-popup');
-    if(p){ p.style.transition='opacity 0.5s'; p.style.opacity='0'; setTimeout(function(){ if(p.parentNode) p.remove(); },500); }
-  },15000);
+    if(p){ p.style.transition='opacity 0.5s'; p.style.opacity='0'; setTimeout(function(){ if(p&&p.parentNode) p.remove(); },500); }
+  },20000);
 }
 
 /* ── New Task Assigned Popup ── */
