@@ -4231,6 +4231,8 @@ async function doAllowNotif(){
     var banner = document.getElementById('notif-perm-banner');
     if(result === 'granted'){
       if(banner){ banner.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0;"><div style="font-size:20px;">✅</div><div style="font-size:13px;color:#30D158;font-weight:500;">Notifications enabled!</div></div>'; setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 2000); }
+      // Subscribe to push now that permission is granted
+      if(_swRegistration) subscribeToPush(_swRegistration).catch(function(){});
       // Send a test notification so they know it works
       setTimeout(function(){
         try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/icon-192.png', badge:'/icon-192.png' }); }catch(e){}
@@ -5483,6 +5485,43 @@ async function swClearAuth(){
 }
 
 var _swRegistration = null;
+var _pushSubscription = null;
+// VAPID public key — matches server (safe to be in client JS)
+var VAPID_PUBLIC_KEY = 'BDkOzZQXm96wXFj9DzgAHSsTqlWnK_3WHCq9H2RMHimA-xtux_06BqY9BaaPUhVAvOY-FqMKPEk-50H-GSl8dcg';
+
+function urlBase64ToUint8Array(base64String){
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var rawData = window.atob(base64);
+  var outputArray = new Uint8Array(rawData.length);
+  for(var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function subscribeToPush(reg){
+  if(!reg || !reg.pushManager) return;
+  if(Notification.permission !== 'granted') return;
+  try{
+    // Re-use existing subscription if already active
+    var existing = await reg.pushManager.getSubscription();
+    if(existing){ _pushSubscription = existing; }
+    else {
+      _pushSubscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    // Send/update subscription on server
+    var token = zToken();
+    if(!token) return;
+    await fetch(API_URL+'/api/push/subscribe', {
+      method: 'POST',
+      headers: { Authorization:'Bearer '+token, 'Content-Type':'application/json' },
+      body: JSON.stringify(_pushSubscription)
+    });
+    console.log('✅ Push subscription saved');
+  } catch(e){ console.log('Push subscribe error:', e.message); }
+}
 
 async function registerSW(){
   if(!('serviceWorker' in navigator)) return;
@@ -5490,30 +5529,36 @@ async function registerSW(){
     _swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
     console.log('✅ SW registered');
 
-    // Wait for SW to be active then send current auth token
-    var sw = _swRegistration.active || _swRegistration.installing || _swRegistration.waiting;
-    if(sw){
-      sw.postMessage({ type: 'SET_AUTH', token: zToken(), apiUrl: API_URL });
+    // Wait for active SW
+    if(_swRegistration.installing){
+      await new Promise(function(resolve){
+        _swRegistration.installing.addEventListener('statechange', function(e){
+          if(e.target.state === 'activated') resolve();
+        });
+      });
     }
-    // Also store in IndexedDB (persists across SW restarts)
+
+    // Send auth token to SW
+    var sw = _swRegistration.active || _swRegistration.installing || _swRegistration.waiting;
+    if(sw) sw.postMessage({ type: 'SET_AUTH', token: zToken(), apiUrl: API_URL });
     await swStoreAuth();
 
-    // ── Periodic Background Sync (Chrome Android) ──
-    // Fires ~every 15 min even when app is closed.
+    // ── Web Push — primary background check-in mechanism ──
+    // Server sends silent push Mon–Sat 8:15–10 AM → SW runs doWifiCheck()
+    await subscribeToPush(_swRegistration);
+
+    // ── Periodic Background Sync (backup — works when app has high engagement) ──
     if('periodicSync' in _swRegistration){
       try{
         var perm = await navigator.permissions.query({ name: 'periodic-background-sync' });
         if(perm.state === 'granted'){
-          await _swRegistration.periodicSync.register('wifi-check', {
-            minInterval: 15 * 60 * 1000 // 15 minutes
-          });
+          await _swRegistration.periodicSync.register('wifi-check', { minInterval: 10 * 60 * 1000 });
           console.log('✅ Periodic Background Sync registered');
         }
       } catch(pe){ console.log('periodicSync register failed:', pe); }
     }
 
-    // ── Background Sync (all browsers) ──
-    // Fires when device comes back online after being offline.
+    // ── Background Sync (fires on reconnect after offline) ──
     if('sync' in _swRegistration){
       try{
         await _swRegistration.sync.register('wifi-online');
@@ -5524,11 +5569,18 @@ async function registerSW(){
   } catch(e){ console.log('SW registration error:', e); }
 }
 
-// Register SW on load (staff only — not admin)
+// Register SW on load — always, so push works from first load
 window.addEventListener('load', function(){
   var s = zStaff();
-  if(s && s.role !== 'admin'){
+  if(s && s.role !== 'admin' && s.role !== 'editor'){
     registerSW();
+  } else if(!s) {
+    // Not logged in — still register SW so it's ready, but don't subscribe to push yet
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(reg){
+        _swRegistration = reg;
+      }).catch(function(){});
+    }
   }
 });
 

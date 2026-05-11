@@ -1,10 +1,11 @@
 /* ══════════════════════════════════════════════
-   Zeebas HR — Service Worker  (Option 1)
+   Zeebas HR — Service Worker  (v2)
    Background WiFi check — works even when app
    is not open (Android Chrome / Chromium PWA)
+   Now uses Web Push for reliable background wake.
    ══════════════════════════════════════════════ */
 
-const SW_VERSION = 'zeebas-sw-v1';
+const SW_VERSION = 'zeebas-sw-v2';
 
 // ── IndexedDB helpers ─────────────────────────
 // Auth token + API URL are stored here by the
@@ -122,6 +123,18 @@ async function doWifiCheck() {
 }
 
 // ── Event Listeners ───────────────────────────
+
+// ── Push from server → run WiFi check silently ──
+// This is the reliable path: server sends silent push every 10 min
+// (Mon–Sat, 8:15–10:00 AM). SW wakes up, checks WiFi, auto check-in.
+self.addEventListener('push', function(event) {
+  var data = null;
+  try { data = event.data ? event.data.json() : null; } catch(e) {}
+  if (data && data.type === 'WIFI_CHECK') {
+    // Silent push — no visible notification, just run the check
+    event.waitUntil(doWifiCheck());
+  }
+});
 
 // Message from main thread — store auth details
 self.addEventListener('message', function(event) {
