@@ -707,42 +707,81 @@ body.desktop-mode #s1-sidebar {
         <button onclick="go1('s1-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;">
           <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
-        <div style="color:#fff;font-size:17px;font-weight:500;">Mark Attendance</div>
+        <div style="color:#fff;font-size:17px;font-weight:500;" id="att-screen-title">Attendance</div>
       </div>
-      <div class="scroll" style="padding:12px 13px 8px;">
-        <!-- GPS map mockup -->
-        <div class="g" style="padding:0;overflow:hidden;margin-bottom:10px;height:160px;position:relative;">
+
+      <!-- ══ CHECKED-IN STATE: Action buttons ══ -->
+      <div id="att-actions-section" style="display:none;flex:1;overflow-y:auto;padding:12px 13px 16px;">
+
+        <!-- Status card -->
+        <div id="att-status-card" style="background:linear-gradient(135deg,rgba(48,209,88,0.12),rgba(20,180,60,0.06));border:0.5px solid rgba(48,209,88,0.25);border-radius:18px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;background:rgba(48,209,88,0.18);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M1 7l5 5 11-11" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="color:#30D158;font-size:13px;font-weight:600;" id="att-ci-time-lbl">Checked in</div>
+            <div style="color:rgba(245,245,247,0.45);font-size:10px;margin-top:2px;" id="att-ci-source-lbl">Office · WiFi / GPS verified</div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="color:rgba(245,245,247,0.4);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Actions</div>
+
+        <!-- Break & Work Outside — side by side -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <button onclick="attActionBreak()" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);border-radius:16px;padding:18px 12px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;">
+            <span style="font-size:28px;">☕</span>
+            <div style="color:#FF9F0A;font-size:13px;font-weight:600;">Break</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:9px;text-align:center;line-height:1.4;">Going on a break</div>
+          </button>
+          <button onclick="attActionWorkOutside()" style="background:rgba(191,95,255,0.1);border:0.5px solid rgba(191,95,255,0.3);border-radius:16px;padding:18px 12px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;">
+            <span style="font-size:28px;">🏗</span>
+            <div style="color:#BF5FFF;font-size:13px;font-weight:600;">Work Outside</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:9px;text-align:center;line-height:1.4;">Client / Field work</div>
+          </button>
+        </div>
+
+        <!-- Check Out — full width -->
+        <button onclick="attActionCheckout()" style="width:100%;background:linear-gradient(135deg,rgba(255,69,58,0.15),rgba(200,40,30,0.1));border:0.5px solid rgba(255,69,58,0.35);border-radius:16px;padding:18px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:12px;">
+          <span style="font-size:24px;">✅</span>
+          <div style="text-align:left;">
+            <div style="color:#FF453A;font-size:14px;font-weight:600;">Check Out</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">End your work day</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- ══ NOT CHECKED-IN STATE: Check-in form ══ -->
+      <div id="att-checkin-section" class="scroll" style="padding:12px 13px 8px;">
+        <!-- GPS map -->
+        <div class="g" style="padding:0;overflow:hidden;margin-bottom:10px;height:150px;position:relative;">
           <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0A1628,#0A2040,#050A14);display:flex;align-items:center;justify-content:center;">
-            <!-- Grid lines -->
-            <svg width="100%" height="160" viewBox="0 0 290 160" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:0.15;">
-              <line x1="0" y1="40" x2="290" y2="40" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="0" y1="80" x2="290" y2="80" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="0" y1="120" x2="290" y2="120" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="72" y1="0" x2="72" y2="160" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="145" y1="0" x2="145" y2="160" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="218" y1="0" x2="218" y2="160" stroke="#0A84FF" stroke-width="0.5"/>
+            <svg width="100%" height="150" viewBox="0 0 290 150" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:0.15;">
+              <line x1="0" y1="37" x2="290" y2="37" stroke="#0A84FF" stroke-width="0.5"/>
+              <line x1="0" y1="75" x2="290" y2="75" stroke="#0A84FF" stroke-width="0.5"/>
+              <line x1="0" y1="113" x2="290" y2="113" stroke="#0A84FF" stroke-width="0.5"/>
+              <line x1="72" y1="0" x2="72" y2="150" stroke="#0A84FF" stroke-width="0.5"/>
+              <line x1="145" y1="0" x2="145" y2="150" stroke="#0A84FF" stroke-width="0.5"/>
+              <line x1="218" y1="0" x2="218" y2="150" stroke="#0A84FF" stroke-width="0.5"/>
             </svg>
-            <!-- 300m radius circle -->
-            <div style="position:absolute;width:100px;height:100px;border:1.5px solid rgba(10,132,255,0.4);border-radius:50%;background:rgba(10,132,255,0.07);top:50%;left:50%;transform:translate(-50%,-50%);">
+            <div style="position:absolute;width:90px;height:90px;border:1.5px solid rgba(10,132,255,0.4);border-radius:50%;background:rgba(10,132,255,0.07);top:50%;left:50%;transform:translate(-50%,-50%);">
               <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:rgba(10,132,255,0.7);white-space:nowrap;">300m radius</div>
             </div>
-            <!-- Office pin -->
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);">
-              <div style="width:24px;height:24px;background:linear-gradient(145deg,#0A84FF,#0A60CC);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.3);box-shadow:0 4px 12px rgba(10,132,255,0.5);"></div>
+              <div style="width:22px;height:22px;background:linear-gradient(145deg,#0A84FF,#0A60CC);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.3);box-shadow:0 4px 12px rgba(10,132,255,0.5);"></div>
             </div>
-            <!-- You pin -->
             <div style="position:absolute;top:38%;left:57%;transform:translate(-50%,-100%);">
-              <div style="width:20px;height:20px;background:linear-gradient(145deg,#30D158,#20A040);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.25);box-shadow:0 3px 10px rgba(48,209,88,0.45);"></div>
+              <div style="width:18px;height:18px;background:linear-gradient(145deg,#30D158,#20A040);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.25);box-shadow:0 3px 10px rgba(48,209,88,0.45);"></div>
             </div>
-            <div style="position:absolute;bottom:8px;left:10px;font-size:9px;color:rgba(245,245,247,0.5);">Mayiladuthurai Office</div>
-            <div id="gps-range-badge" style="position:absolute;bottom:8px;right:10px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:2px 8px;font-size:9px;color:rgba(245,245,247,0.5);">⏳ Locating…</div>
+            <div style="position:absolute;bottom:7px;left:10px;font-size:9px;color:rgba(245,245,247,0.5);">Office</div>
+            <div id="gps-range-badge" style="position:absolute;bottom:7px;right:10px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:2px 8px;font-size:9px;color:rgba(245,245,247,0.5);">⏳ Locating…</div>
           </div>
         </div>
 
         <!-- Location info -->
-        <div class="gs" style="padding:11px 13px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+        <div class="gs" style="padding:11px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
           <div style="width:32px;height:32px;background:rgba(48,209,88,0.14);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="#30D158" stroke-width="1.3"/><path d="M8 1v1M8 14v1M1 8h1M14 8h1M3.5 3.5l.7.7M11.8 11.8l.7.7M3.5 12.5l.7-.7M11.8 4.2l.7-.7" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="#30D158" stroke-width="1.3"/><path d="M8 1v1M8 14v1M1 8h1M14 8h1" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
           <div style="flex:1;">
             <div id="gps-status-label" style="color:#30D158;font-size:11px;font-weight:500;">Detecting location…</div>
@@ -751,25 +790,29 @@ body.desktop-mode #s1-sidebar {
         </div>
 
         <!-- Attendance type -->
-        <div style="color:rgba(245,245,247,0.45);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Attendance Type</div>
+        <div style="color:rgba(245,245,247,0.45);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Check-in Type</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;" id="att-type">
           <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;border-color:rgba(48,209,88,0.3);background:rgba(48,209,88,0.07);" onclick="selAtt(0)">
-            <div style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>
-            <div><div style="color:#fff;font-size:13px;">Office Attendance</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Auto verified via GPS · Within 300m</div></div>
+            <div id="att-radio-0" style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>
+            <div><div style="color:#fff;font-size:13px;">📍 Office</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">GPS verified · Within 300m</div></div>
           </div>
           <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selAtt(1)">
-            <div style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
-            <div><div style="color:#fff;font-size:13px;">Onsite Attendance</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">At client location · Needs admin approval</div></div>
+            <div id="att-radio-1" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
+            <div><div style="color:#fff;font-size:13px;">🏗 Onsite</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Client location · Needs admin approval</div></div>
+          </div>
+          <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selAtt(2)">
+            <div id="att-radio-2" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
+            <div><div style="color:#fff;font-size:13px;">✋ Manual</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Direct check-in · WiFi / GPS not required</div></div>
           </div>
         </div>
 
-        <!-- Onsite note (hidden by default) -->
+        <!-- Onsite site name (shown for onsite) -->
         <div id="onsite-note" style="display:none;margin-bottom:12px;">
           <div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:6px;">Client / Site Name</div>
           <input class="inp" type="text" placeholder="e.g. Ahmed Constructions, Chennai" id="site-name">
         </div>
 
-        <button class="btn-p" id="att-btn" onclick="markAttendance()">Mark Office Attendance</button>
+        <button class="btn-p" id="att-btn" onclick="markAttendance()">Check In</button>
       </div>
     </div>
 
@@ -1629,9 +1672,8 @@ function go1(id){
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
     var btn=document.getElementById('att-btn');
-    if(btn){ btn.disabled=false; btn.textContent='Mark Office Attendance'; }
-    selAtt(0);
-    setTimeout(initGPSScreen, 200);
+    if(btn){ btn.disabled=false; btn.textContent='Check In'; }
+    setTimeout(function(){ loadAttGpsScreen(); initGPSScreen(); }, 200);
   }
   if(id==='s1-tasks'){   setTimeout(loadStaffTasks, 100); }
   if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
@@ -1730,22 +1772,91 @@ async function initGPSScreen(){
   );
 }
 
+var _selAttIdx = 0;
 function selAtt(idx){
+  _selAttIdx = idx;
   var opts=document.querySelectorAll('#att-type > div');
+  var activeOn ='rgba(48,209,88,0.3)'; var activeBg='rgba(48,209,88,0.07)';
+  var inactOn  ='rgba(255,255,255,0.09)'; var inactBg='rgba(255,255,255,0.05)';
   opts.forEach(function(o,i){
-    if(i===idx){o.style.borderColor='rgba(48,209,88,0.3)';o.style.background='rgba(48,209,88,0.07)';o.querySelector('.radio-circle')?'':'';o.querySelector('div:first-child').innerHTML='<div style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>';}
-    else{o.style.borderColor='rgba(255,255,255,0.09)';o.style.background='rgba(255,255,255,0.05)';o.querySelector('div:first-child').innerHTML='<div style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>';}
+    var radio = o.querySelector('div:first-child');
+    if(i===idx){
+      o.style.borderColor=activeOn; o.style.background=activeBg;
+      if(radio) radio.innerHTML='<div style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>';
+    } else {
+      o.style.borderColor=inactOn; o.style.background=inactBg;
+      if(radio) radio.innerHTML='<div style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>';
+    }
   });
   var note=document.getElementById('onsite-note');
   var btn=document.getElementById('att-btn');
-  if(idx===1){note.style.display='block';btn.textContent='Submit Onsite Attendance';}
-  else{note.style.display='none';btn.textContent='Mark Office Attendance';}
+  if(idx===0){ if(note) note.style.display='none'; if(btn) btn.textContent='Check In — Office'; }
+  else if(idx===1){ if(note) note.style.display='block'; if(btn) btn.textContent='Check In — Onsite'; }
+  else if(idx===2){ if(note) note.style.display='none'; if(btn) btn.textContent='Check In — Manual'; }
+}
+
+/* Load attendance screen — show action buttons if checked in, check-in form if not */
+async function loadAttGpsScreen(){
+  try{
+    var res = await fetch(API_URL+'/api/attendance/wifi-detect', {headers:zHead()});
+    var d   = await res.json();
+    var checkedIn = !!(d.checkInTime && !d.checkedOut);
+    var sec  = document.getElementById('att-checkin-section');
+    var act  = document.getElementById('att-actions-section');
+    var title= document.getElementById('att-screen-title');
+    if(checkedIn){
+      if(sec)  sec.style.display='none';
+      if(act)  act.style.display='block';
+      if(title) title.textContent='Attendance';
+      // Update status card
+      var ci=new Date(d.checkInTime), h=ci.getHours(), m=ci.getMinutes(), ap=h>=12?'PM':'AM';
+      h=h%12||12;
+      var lbl=document.getElementById('att-ci-time-lbl');
+      if(lbl) lbl.textContent='Checked in at '+h+':'+(m<10?'0':'')+m+' '+ap;
+      var src=document.getElementById('att-ci-source-lbl');
+      if(src){
+        var srcMap={'wifi':'Office · WiFi verified','gps':'Office · GPS verified','manual':'Office · Manual check-in'};
+        src.textContent=srcMap[d.source]||'Office';
+      }
+    } else {
+      if(sec)  sec.style.display='';
+      if(act)  act.style.display='none';
+      if(title) title.textContent='Mark Attendance';
+      selAtt(0);
+    }
+  }catch(e){
+    // Default to check-in form on error
+    var sec=document.getElementById('att-checkin-section');
+    var act=document.getElementById('att-actions-section');
+    if(sec) sec.style.display='';
+    if(act) act.style.display='none';
+  }
+}
+
+/* Action: Break */
+function attActionBreak(){
+  // Trigger break choice (same as WiFi disconnect break flow)
+  showBreakChoiceOverlay(0);
+}
+
+/* Action: Work Outside (onsite request) */
+function attActionWorkOutside(){
+  selAtt(1); // Select onsite
+  var sec=document.getElementById('att-checkin-section');
+  var act=document.getElementById('att-actions-section');
+  if(sec) sec.style.display='';
+  if(act) act.style.display='none';
+}
+
+/* Action: Check Out */
+function attActionCheckout(){
+  go1('s1-dailylog');
 }
 
 async function markAttendance(){
   var btn=document.getElementById('att-btn');
-  var isOnsite=btn.textContent.includes('Onsite');
-  var type=isOnsite?'onsite':'office';
+  var type = _selAttIdx===1 ? 'onsite' : (_selAttIdx===2 ? 'manual' : 'office');
+  var isOnsite = (type==='onsite');
   var siteName=((document.getElementById('site-name')||{}).value||'').trim();
 
   if(isOnsite&&!siteName){
@@ -1771,7 +1882,7 @@ async function markAttendance(){
 
     if(!d.success){
       btn.disabled=false;
-      btn.textContent=isOnsite?'Submit Onsite Attendance':'Mark Office Attendance';
+      btn.textContent=isOnsite?'Check In — Onsite':(type==='manual'?'Check In — Manual':'Check In — Office');
       if(d.code==='PAST_END_TIME'){
         var ov=document.createElement('div');
         ov.style.cssText='position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);';
@@ -1833,10 +1944,20 @@ async function markAttendance(){
     var distEl=document.getElementById('att-dist-line');
     if(distEl) distEl.textContent=d.distance?d.distance+'m from office':(isOnsite?'Onsite location':'—');
 
-    go1('s1-attsuccess');
+    // Update home check-in time & timer
+    _refreshCheckInDisplay();
+
+    if(isOnsite){
+      // Onsite → show success screen
+      go1('s1-attsuccess');
+    } else {
+      // Office / Manual → switch to action buttons on same screen
+      showToast1('✅ Checked in at '+timeStr);
+      setTimeout(loadAttGpsScreen, 300);
+    }
   } catch(e){
     btn.disabled=false;
-    btn.textContent=isOnsite?'Submit Onsite Attendance':'Mark Office Attendance';
+    btn.textContent=isOnsite?'Check In — Onsite':(type==='manual'?'Check In — Manual':'Check In — Office');
     alert('Network error. Check connection and try again.');
   }
 }
