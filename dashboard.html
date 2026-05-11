@@ -673,13 +673,25 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       </div>
     </div>
     <!-- Leave Requests -->
-    <div class="sec g">
+    <div class="sec g" style="margin-bottom:14px;">
       <div class="sh">
         <span class="st">🏖️ Leave Requests</span>
         <span id="leave-approval-count" class="pp" style="font-size:11px;padding:3px 9px;"></span>
       </div>
       <div id="approvals-page-content">
         <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- EOD Work Reports -->
+    <div class="sec g">
+      <div class="sh">
+        <span class="st">📋 EOD Work Reports</span>
+        <span id="eod-approval-count" class="pg" style="font-size:11px;padding:3px 9px;background:rgba(48,209,88,0.12);color:#30D158;border-color:rgba(48,209,88,0.3);display:none;"></span>
+      </div>
+      <!-- EOD Reports section — populated by loadEodAdmin() -->
+      <div id="eod-admin-section" style="margin-top:4px;">
+        <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No pending EOD reports</div>
       </div>
     </div>
   </div>
@@ -4905,7 +4917,7 @@ window.showPage = function(page, el){
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
   if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); }
   if(page==='daily-logs')     setTimeout(loadDailyLogs, 100);
-  if(page==='approvals')      setTimeout(loadApprovals, 100);
+  if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
   if(page==='payroll')           setTimeout(loadPayrollPage, 100);
@@ -6242,6 +6254,7 @@ async function loadMonthlyBalance(){
 }
 
 async function loadApprovals(){
+  loadEodAdmin(); // always refresh EOD section alongside other approvals
   var badge = document.getElementById('approvals-badge');
   var lateEl   = document.getElementById('late-approvals-list');
   var onsiteEl = document.getElementById('onsite-approvals-list');
@@ -6527,6 +6540,100 @@ async function approveLeave(id, action){
     if(d.success){ showToast(action==='approve'?'✅ Leave approved':'✅ Leave rejected'); loadApprovals(); }
     else showToast('❌ '+(d.message||'Failed'));
   }catch(e){ showToast('❌ Server error'); }
+}
+
+// ── EOD Reports (Admin) ──
+async function loadEodAdmin(){
+  var sec = document.getElementById('eod-admin-section');
+  var cnt = document.getElementById('eod-approval-count');
+  if(!sec) return;
+  try{
+    var r = await fetch(API+'/api/eod/admin?status=pending', {headers:zHdr()});
+    var d = await r.json();
+    var reports = d.data||[];
+    if(cnt){ if(reports.length){ cnt.textContent=reports.length+' pending'; cnt.style.display=''; } else { cnt.style.display='none'; } }
+    if(!reports.length){
+      sec.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No pending EOD reports</div>';
+      return;
+    }
+    sec.innerHTML = reports.map(function(rpt){
+      var init = (rpt.staff_name||'?').charAt(0).toUpperCase();
+      var avHtml = rpt.photo_data
+        ? '<img src="'+rpt.photo_data+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+        : (rpt.photo_url
+          ? '<img src="'+API+rpt.photo_url+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+          : '<div style="width:32px;height:32px;border-radius:8px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>');
+      var items = Array.isArray(rpt.items) ? rpt.items : JSON.parse(rpt.items||'[]');
+      var itemsHtml = items.map(function(it,ii){
+        return '<div style="display:flex;align-items:flex-start;gap:6px;padding:6px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+          +'<span style="color:rgba(245,245,247,0.3);font-size:10px;margin-top:1px;min-width:14px;">'+(ii+1)+'.</span>'
+          +'<div style="flex:1;">'
+          +'<input data-rpt="'+rpt.id+'" data-idx="'+ii+'" data-field="text" value="'+escHtml(it.text||'')+'" onchange="eodItemEdit(this)" style="width:100%;background:none;border:none;color:#fff;font-size:12px;font-family:inherit;outline:none;padding:0;">'
+          +(it.link ? '<a href="'+escHtml(it.link)+'" target="_blank" style="color:rgba(10,132,255,0.7);font-size:10px;display:block;margin-top:1px;word-break:break-all;">'+escHtml(it.link)+'</a>' : '')
+          +'</div></div>';
+      }).join('');
+      var dateStr = rpt.date ? rpt.date.substring(0,10) : '—';
+      return '<div class="gs" style="padding:12px 14px;margin-bottom:8px;" data-eod-id="'+rpt.id+'">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +avHtml
+        +'<div style="flex:1;">'
+        +'<div style="font-size:13px;font-weight:500;color:#fff;">'+escHtml(rpt.staff_name)+'</div>'
+        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);">'+escHtml(rpt.designation||'')+(rpt.brand_name?' \xb7 '+escHtml(rpt.brand_name):'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;">'
+        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);">'+dateStr+'</div>'
+        +'<div style="font-size:9px;color:rgba(245,245,247,0.25);margin-top:1px;">'+items.length+' item'+(items.length!==1?'s':'')+'</div>'
+        +'</div></div>'
+        +'<div style="margin-bottom:10px;">'+itemsHtml+'</div>'
+        +'<div style="display:flex;gap:8px;margin-top:4px;">'
+        +'<button onclick="eodReview('+rpt.id+',\'approved\')" style="flex:1;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);border-radius:10px;padding:9px;color:#30D158;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">✅ Approve</button>'
+        +'<button onclick="eodReview('+rpt.id+',\'rejected\')" style="flex:1;background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){ console.log('eod admin load error',e.message); }
+}
+
+var _eodEditCache = {}; // reportId → items array (with edits)
+
+function eodItemEdit(input){
+  var rptId = input.dataset.rpt;
+  var idx   = parseInt(input.dataset.idx);
+  var field = input.dataset.field;
+  if(!_eodEditCache[rptId]){
+    var card = document.querySelector('[data-eod-id="'+rptId+'"]');
+    if(!card) return;
+    var inputs = card.querySelectorAll('[data-rpt="'+rptId+'"]');
+    var items = [];
+    inputs.forEach(function(inp){
+      var i = parseInt(inp.dataset.idx);
+      if(!items[i]) items[i] = {text:'',link:''};
+      items[i][inp.dataset.field] = inp.value;
+    });
+    _eodEditCache[rptId] = items;
+  }
+  if(!_eodEditCache[rptId][idx]) _eodEditCache[rptId][idx] = {text:'',link:''};
+  _eodEditCache[rptId][idx][field] = input.value;
+}
+
+async function eodReview(rptId, status){
+  var items = _eodEditCache[rptId] || null;
+  var note  = status === 'rejected' ? (prompt('Reason for rejection (optional):') || '') : '';
+  try{
+    var r = await fetch(API+'/api/eod/'+rptId+'/review', {
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ status: status, items: items, admin_note: note })
+    });
+    var d = await r.json();
+    if(d.success){
+      showToast(status==='approved' ? '✅ Approved & tasks created' : '✕ Report rejected');
+      delete _eodEditCache[rptId];
+      loadEodAdmin();
+    } else {
+      alert(d.message||'Error');
+    }
+  }catch(e){ alert('Network error'); }
 }
 
 /* ── LOAD ADMIN OVERVIEW (real data) ── */

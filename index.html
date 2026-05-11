@@ -443,6 +443,30 @@ body.desktop-mode #s1-sidebar {
       <div id="n1-tasks" class="bnav"></div>
     </div>
 
+    <!-- EOD WORK REPORT MODAL — shown when work day ends -->
+    <div id="ov-eod" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(4,4,8,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-direction:column;overflow-y:auto;">
+      <div style="flex:1;display:flex;flex-direction:column;padding:28px 18px 32px;max-width:430px;margin:0 auto;width:100%;">
+        <!-- Header -->
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:36px;margin-bottom:8px;">🎉</div>
+          <div style="font-size:18px;font-weight:600;color:#fff;margin-bottom:4px;">Work Day Complete!</div>
+          <div id="eod-date-lbl" style="font-size:12px;color:rgba(245,245,247,0.4);"></div>
+          <div style="margin-top:10px;font-size:13px;color:rgba(245,245,247,0.6);line-height:1.5;">Share what you worked on today.<br>Your report will go to admin for review.</div>
+        </div>
+
+        <!-- Work items list -->
+        <div style="font-size:11px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Today's Work</div>
+        <div id="eod-items-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+
+        <!-- Add item button -->
+        <button onclick="eodAddItem()" style="width:100%;background:rgba(255,255,255,0.05);border:0.5px dashed rgba(255,255,255,0.2);border-radius:12px;padding:11px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:20px;">+ Add Work Item</button>
+
+        <!-- Submit -->
+        <button id="eod-submit-btn" onclick="eodSubmit()" style="width:100%;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);margin-bottom:10px;">Submit &amp; Check Out →</button>
+        <div style="text-align:center;font-size:10px;color:rgba(245,245,247,0.25);">You must submit your work report to check out.</div>
+      </div>
+    </div>
+
     <!-- EXTRA TIME REQUEST MODAL -->
     <div id="ov-extra-time" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.65);backdrop-filter:blur(12px);align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeExtraTime()">
       <div class="g" style="width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:20px 16px 32px;">
@@ -4304,6 +4328,91 @@ async function doAllowNotif(){
   }
 }
 
+// ══════════════════════════════════════════
+// EOD — End of Day Work Report
+// ══════════════════════════════════════════
+var _eodItems = [];
+var _eodTriggered = false;
+
+function eodAddItem(text, link){
+  var id = Date.now();
+  _eodItems.push({ id: id, text: text||'', link: link||'' });
+  renderEodItems();
+}
+
+function eodRemoveItem(id){
+  _eodItems = _eodItems.filter(function(i){ return i.id !== id; });
+  renderEodItems();
+}
+
+function renderEodItems(){
+  var el = document.getElementById('eod-items-list');
+  if(!el) return;
+  if(!_eodItems.length){
+    el.innerHTML = '<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No items yet — tap "+ Add Work Item" below</div>';
+    return;
+  }
+  el.innerHTML = _eodItems.map(function(item, idx){
+    return '<div style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 13px;">'
+      +'<div style="display:flex;align-items:flex-start;gap:8px;">'
+      +'<div style="flex:1;">'
+      +'<input id="eod-text-'+item.id+'" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="What did you work on?" style="width:100%;background:none;border:none;color:#fff;font-size:13px;font-family:inherit;outline:none;margin-bottom:5px;box-sizing:border-box;">'
+      +'<input id="eod-link-'+item.id+'" value="'+escHtml(item.link||'')+'" oninput="_eodItems['+idx+'].link=this.value" placeholder="Link (optional — Drive, Figma…)" style="width:100%;background:none;border:none;color:rgba(245,245,247,0.4);font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;">'
+      +'</div>'
+      +'<button onclick="eodRemoveItem('+item.id+')" style="background:none;border:none;color:rgba(255,69,58,0.6);font-size:16px;cursor:pointer;padding:0;flex-shrink:0;line-height:1;">\xd7</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function showEodPopup(){
+  if(_eodTriggered) return;
+  _eodTriggered = true;
+  _eodItems = [];
+  // Add one empty item to start
+  _eodItems.push({ id: Date.now(), text: '', link: '' });
+  renderEodItems();
+  // Set date label
+  var lbl = document.getElementById('eod-date-lbl');
+  if(lbl){
+    var now = new Date();
+    lbl.textContent = now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  }
+  var ov = document.getElementById('ov-eod');
+  if(ov){ ov.style.display='flex'; }
+}
+
+async function eodSubmit(){
+  var btn = document.getElementById('eod-submit-btn');
+  if(btn){ btn.textContent='Submitting…'; btn.disabled=true; }
+  try{
+    var items = _eodItems.filter(function(i){ return (i.text||'').trim(); });
+    if(!items.length){
+      if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
+      showToast('⚠️ Add at least one work item!');
+      return;
+    }
+    var r = await fetch(API_URL+'/api/eod/submit', {
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'}, zHead()),
+      body: JSON.stringify({ items: items })
+    });
+    var d = await r.json();
+    if(d.success){
+      var ov = document.getElementById('ov-eod');
+      if(ov) ov.style.display='none';
+      showToast('✅ Checked out! Report sent to admin.');
+      // Refresh home to update check-in status
+      setTimeout(function(){ wifiCheckAndAct(); stopWorkTimer(); }, 800);
+    } else {
+      showToast('❌ '+(d.message||'Could not submit'));
+      if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
+    }
+  }catch(e){
+    showToast('❌ Network error');
+    if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
+  }
+}
+
 function sendNotif(title, body){
   if('Notification' in window && Notification.permission === 'granted'){
     new Notification(title, { body: body, icon: '/icon-192.png', badge: '/icon-192.png' });
@@ -4433,6 +4542,12 @@ function startWorkTimer(checkInTime, officeEndTimeStr, lateMinutes){
     if(diff <= 0){
       timerEl.style.display = 'none';
       if(doneEl) doneEl.style.display = 'block';
+      // Show EOD popup when time is up (only if still checked in)
+      if(!_eodTriggered){
+        fetch(API_URL+'/api/eod/today', {headers:zHead()}).then(function(r){ return r.json(); }).then(function(d){
+          if(!d.submitted) showEodPopup();
+        }).catch(function(){ showEodPopup(); });
+      }
     } else {
       timerEl.style.display = 'block';
       if(doneEl) doneEl.style.display = 'none';
