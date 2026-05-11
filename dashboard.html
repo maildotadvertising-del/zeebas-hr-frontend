@@ -7349,10 +7349,8 @@ function attViewRow(r,i){
     coDisplay = '<div style="font-family:monospace;font-size:11px;color:rgba(255,159,10,0.7);">'+fmtTime(r.check_out)+'</div>'
               + '<div style="font-size:9px;color:rgba(255,159,10,0.5);margin-top:1px;">Not in office</div>';
   } else if (!r.check_out && r.check_in) {
-    // Still working (or office_work approved)
-    coDisplay = r.office_work_status === 'approved'
-      ? '<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>'
-      : '<span style="color:var(--muted);font-size:11px;">—</span>';
+    // Checked in, not yet checked out — currently working
+    coDisplay = '<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>';
   } else {
     coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
   }
