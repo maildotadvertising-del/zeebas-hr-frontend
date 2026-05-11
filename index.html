@@ -378,6 +378,16 @@ body.desktop-mode #s1-sidebar {
           <button id="wifi-banner-btn" style="display:none;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;" onclick="wifiCheckoutPrompt()">Check Out</button>
         </div>
 
+        <!-- Notification Permission Card — shown until user allows -->
+        <div id="notif-inline-card" style="display:none;background:linear-gradient(135deg,rgba(10,132,255,0.1),rgba(94,92,230,0.08));border:0.5px solid rgba(10,132,255,0.3);border-radius:14px;padding:13px 14px;margin-bottom:10px;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:11px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🔔</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:500;color:#fff;margin-bottom:2px;">Enable Notifications</div>
+            <div style="font-size:10px;color:rgba(245,245,247,0.45);line-height:1.4;">Get auto check-in alerts & updates even when app is closed.</div>
+          </div>
+          <button onclick="doAllowNotif()" style="flex-shrink:0;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:9px;padding:7px 13px;color:#fff;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(10,132,255,0.35);">🔔 Allow</button>
+        </div>
+
         <!-- Quick Actions -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-gps')">
@@ -1589,7 +1599,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); }
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); }
@@ -3995,6 +4005,7 @@ async function staffLogin(){
         populateStaff(d.staff);
         go1('s1-home');
         fetchMyTasks(d.staff.id);
+        syncNotifCard();
         requestNotifPermission();
         startBreakPoller();
         listenBreakApproval();
@@ -4235,6 +4246,17 @@ function showNotifBanner(){
   }, 30000);
 }
 
+// Show or hide the inline notification card based on current permission state
+function syncNotifCard(){
+  var card = document.getElementById('notif-inline-card');
+  if(!card) return;
+  if(!('Notification' in window) || Notification.permission !== 'default'){
+    card.style.display = 'none';
+  } else {
+    card.style.display = 'flex';
+  }
+}
+
 async function doAllowNotif(){
   var btn = document.getElementById('notif-allow-btn');
   if(btn){ btn.textContent='…'; btn.disabled=true; }
@@ -4243,6 +4265,7 @@ async function doAllowNotif(){
     var banner = document.getElementById('notif-perm-banner');
     if(result === 'granted'){
       if(banner){ banner.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0;"><div style="font-size:20px;">✅</div><div style="font-size:13px;color:#30D158;font-weight:500;">Notifications enabled!</div></div>'; setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 2000); }
+      syncNotifCard(); // hide inline card too
       // Subscribe to push now that permission is granted
       if(_swRegistration) subscribeToPush(_swRegistration).catch(function(){});
       // Send a test notification so they know it works
@@ -4250,6 +4273,7 @@ async function doAllowNotif(){
         try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/icon-192.png', badge:'/icon-192.png' }); }catch(e){}
       }, 500);
     } else {
+      syncNotifCard(); // hide card (denied — no point showing)
       if(banner){ banner.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:4px 0;"><div style="font-size:20px;">⚠️</div><div style="font-size:12px;color:rgba(245,245,247,0.5);">Notifications blocked. Enable in phone Settings → Apps → Chrome → Notifications.</div></div>'; setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 5000); }
     }
   } catch(e){
@@ -5411,7 +5435,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); }
+    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); syncNotifCard(); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); }
   }
 });
 
