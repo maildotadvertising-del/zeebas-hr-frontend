@@ -1,4 +1,4 @@
-<!-- v20260511b -->
+<!-- v20260511c -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -4556,11 +4556,6 @@ function renderEodItems(){
       +'<div style="display:flex;gap:7px;margin-bottom:10px;">'
       +'<button onclick="eodSetStatus('+item.id+',\'done\')" style="flex:1;padding:7px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(doneActive?'rgba(48,209,88,0.6)':'rgba(255,255,255,0.1)')+';background:'+(doneActive?'rgba(48,209,88,0.18)':'rgba(255,255,255,0.04)')+';color:'+(doneActive?'#30D158':'rgba(245,245,247,0.4)')+';">✅ Completed</button>'
       +'<button onclick="eodSetStatus('+item.id+',\'progress\')" style="flex:1;padding:7px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(progActive?'rgba(255,159,10,0.6)':'rgba(255,255,255,0.1)')+';background:'+(progActive?'rgba(255,159,10,0.18)':'rgba(255,255,255,0.04)')+';color:'+(progActive?'#FF9F0A':'rgba(245,245,247,0.4)')+';">⏳ In Progress</button>'
-      +'</div>'
-      // Link row
-      +'<div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 10px;">'
-      +'<span style="color:rgba(245,245,247,0.25);font-size:13px;">🔗</span>'
-      +'<input id="eod-link-'+item.id+'" value="'+escHtml(item.link||'')+'" oninput="_eodItems['+idx+'].link=this.value" placeholder="Link (Drive, Figma, YouTube…) — optional" style="flex:1;background:none;border:none;color:rgba(245,245,247,0.5);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">'
       +'</div>'
       +'</div>';
   }).join('');
