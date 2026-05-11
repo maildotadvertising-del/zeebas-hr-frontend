@@ -7535,7 +7535,7 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
-      +(parseInt(r.early_mins||0)>0?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
+      +(parseInt(r.early_mins||0)>0 && (!r.check_out || _calcOTMins(r.check_out, r.employment_type) > 0)?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
     +'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
