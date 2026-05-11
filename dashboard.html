@@ -1447,7 +1447,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         </div>
         <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
-        <button id="wifi-check-now-btn" class="btn" onclick="adminWifiCheckNow()" style="background:linear-gradient(135deg,rgba(48,209,88,0.85),rgba(20,160,60,0.9));box-shadow:0 4px 14px rgba(48,209,88,0.3);">📶 WiFi Check</button>
       </div>
     </div>
 
@@ -4961,38 +4960,6 @@ async function manualCheckout(staffId, staffName, date){
   }catch(e){ showToast('Server error','error'); }
 }
 
-// ── Admin WiFi Check Now button ──
-async function adminWifiCheckNow(){
-  var btn = document.getElementById('wifi-check-now-btn');
-  if(btn){ btn.textContent='Checking…'; btn.disabled=true; }
-  try{
-    var res = await fetch(API+'/api/attendance/wifi-check-and-checkout', {
-      method:'POST',
-      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
-      body: JSON.stringify({ force: true })
-    });
-    var d = await res.json();
-    if(d.success){
-      var msg = [];
-      if(d.checkedOut && d.checkedOut.length){
-        msg.push('✅ Checked out: ' + d.checkedOut.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
-        loadAttendancePage();
-      }
-      if(d.onWifi && d.onWifi.length){
-        msg.push('📶 Still on WiFi: ' + d.onWifi.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
-      }
-      if(d.noData && d.noData.length){
-        msg.push('📵 No WiFi data: ' + d.noData.map(function(s){ return s.name.split(' ')[0]; }).join(', '));
-      }
-      showToast(msg.length ? msg.join('  ·  ') : '✅ All staff status up to date', 8000);
-    } else {
-      showToast('❌ ' + (d.message || 'WiFi check failed'), 'error');
-    }
-  }catch(e){ showToast('❌ Network error', 'error'); }
-  finally{
-    if(btn){ btn.textContent='📶 WiFi Check'; btn.disabled=false; }
-  }
-}
 
 // ── Admin Force Checkout (from attendance table "Force Out" button) ──
 async function adminForceCheckout(staffId, staffName, date){
