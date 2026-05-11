@@ -96,17 +96,22 @@ async function doWifiCheck() {
     // ── OFF OFFICE WIFI ──
     } else {
       if (d.alreadyCheckedIn && !d.checkedOut) {
-        var awayMins = (typeof d.minutesSinceCheckIn === 'number') ? d.minutesSinceCheckIn : 0;
-        if (awayMins >= 5) {
-          // Been checked in for 5+ min and off office WiFi → start break
+        // Use minutesSinceLastPing = time since last WiFi ping (accurate "away from office" time).
+        // minutesSinceCheckIn = total time since arrival — NOT what we want here.
+        var awayMins = (typeof d.minutesSinceLastPing === 'number' && d.minutesSinceLastPing > 0)
+          ? d.minutesSinceLastPing
+          : (typeof d.minutesSinceCheckIn === 'number' ? d.minutesSinceCheckIn : 0);
+
+        if (awayMins >= 40) {
+          // Away from office WiFi for 40+ minutes → auto checkout
           var br = await fetch(auth.apiUrl + '/api/attendance/break-checkout', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + auth.token }
           });
           var bd = await br.json();
           if (bd.success) {
-            await self.registration.showNotification('☕ Break Started — Zeebas HR', {
-              body: 'You left office WiFi. Break timer started.',
+            await self.registration.showNotification('⚠️ Auto Checked Out — Zeebas HR', {
+              body: 'Away from office WiFi for 40+ min. Open app to return if you\'re back.',
               icon: '/icon-192.png',
               badge: '/icon-192.png',
               tag: 'zeebas-break',
@@ -114,6 +119,8 @@ async function doWifiCheck() {
             });
           }
         }
+        // Under 40 min — do nothing. Staff is still checked in.
+        // The main app shows "Not in office" banner while WiFi is disconnected.
       }
     }
   } catch (e) {

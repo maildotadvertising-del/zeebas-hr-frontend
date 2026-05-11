@@ -4733,7 +4733,7 @@ async function wifiCheckAndAct(){
         if(offMs < GRACE){
           // Within 5-min grace → subtle countdown banner
           var minsLeft = Math.ceil((GRACE - offMs) / 60000);
-          wifiBanner(true,'rgba(255,255,255,0.05)','rgba(235,235,245,0.4)','📶 WiFi Disconnected','Reconnect within '+minsLeft+' min to resume',false);
+          wifiBanner(true,'rgba(255,255,255,0.05)','rgba(235,235,245,0.4)','📶 Not in Office','Off office WiFi — reconnect within '+minsLeft+' min',false);
 
         } else if(breakLimitMins > 0 && offMs < breakLimitMs){
           // Within break window — show countdown (NO auto-checkout; staff stays clocked in)

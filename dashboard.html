@@ -7322,8 +7322,16 @@ function attViewRow(r,i){
   }
   var stColors={'present':'#30D158','late':'#FF9F0A','absent':'#FF453A','on_leave':'#0A84FF','onsite_approved':'#BF5FFF','late_pending':'#FF9F0A','onsite_pending':'#BF5FFF'};
   var stLabels={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite ✓','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'};
-  var col=stColors[st]||'#FF453A';
-  var lbl=stLabels[st]||(st.charAt(0).toUpperCase()+st.slice(1));
+  // Override status display for break_checkout state
+  var col, lbl;
+  if (r.break_checkout && r.office_work_status !== 'approved') {
+    col = '#FF9F0A'; lbl = 'Not in office';
+  } else if (r.office_work_status === 'approved' && !r.check_out) {
+    col = '#30D158'; lbl = 'Present ✓';
+  } else {
+    col = stColors[st] || '#FF453A';
+    lbl = stLabels[st] || (st.charAt(0).toUpperCase()+st.slice(1));
+  }
   var init=(r.name||'?').charAt(0).toUpperCase();
   var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
   var avatar = avSrc
@@ -7331,13 +7339,31 @@ function attViewRow(r,i){
       +'<div style="display:none;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>'
     : '<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>';
   var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
+  // Determine check-out display — break_checkout=1 means temporary WiFi-off state, not real checkout
+  var coDisplay;
+  if (r.break_checkout && !r.check_out) {
+    // This shouldn't happen (check_out set during break-checkout) but be safe
+    coDisplay = '<span style="color:rgba(255,159,10,0.6);font-size:10px;">Not in office</span>';
+  } else if (r.break_checkout && r.check_out && r.office_work_status !== 'approved') {
+    // Still in "not in office" state (break-checkout happened, no return yet)
+    coDisplay = '<div style="font-family:monospace;font-size:11px;color:rgba(255,159,10,0.7);">'+fmtTime(r.check_out)+'</div>'
+              + '<div style="font-size:9px;color:rgba(255,159,10,0.5);margin-top:1px;">Not in office</div>';
+  } else if (!r.check_out && r.check_in) {
+    // Still working (or office_work approved)
+    coDisplay = r.office_work_status === 'approved'
+      ? '<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>'
+      : '<span style="color:var(--muted);font-size:11px;">—</span>';
+  } else {
+    coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
+  }
+
   return '<tr id="att-row-'+i+'" style="background:'+(i%2===0?'transparent':'rgba(255,255,255,0.015)')+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
       +'<div><div style="font-size:12px;font-weight:500;">'+r.name+(r.beta_tester?' 🧪':'')+'</div>'
       +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></div></div></td>'
     +'<td style="'+td+'font-size:11px;color:var(--muted);">'+(r.brand_name||'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
-    +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:var(--muted);">'+fmtTime(r.check_out)+'</td>'
+    +'<td style="'+td+'text-align:center;">'+coDisplay+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
