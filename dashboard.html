@@ -6801,9 +6801,12 @@ function prViewRow(r,i){
   var bg = i%2===0?'transparent':'rgba(255,255,255,0.015)';
   var inc = parseFloat(r.other_incentive||0);
   var alw = parseFloat(r.allowance_amount||0);
-  var lateDed  = parseFloat(r.late_deduction||0);
-  var otherDed = parseFloat(r.other_deduction||0);
-  var advDed   = parseFloat(r.advance_deduction||0);
+  var lateDed      = parseFloat(r.late_deduction||0);
+  var otherDed     = parseFloat(r.other_deduction||0);
+  var advDed       = parseFloat(r.advance_deduction||0);
+  var earlyCredit  = parseInt(r.early_credit_mins||0);
+  var totalLateMins= parseInt(r.total_late_mins||0);
+  var netLateMins  = parseInt(r.net_late_mins||0);
 
   // Current month → always show earned-so-far (live days × daily rate)
   // Past months → show saved net_salary from processed payroll
@@ -6828,8 +6831,16 @@ function prViewRow(r,i){
       +(advDed>0?'<div style="color:#FF6B6B;font-size:11px;" title="Salary advance recovery">💳 -₹'+advDed.toLocaleString('en-IN')+'</div>':'')
       +(otherDed===0&&advDed===0?'<span style="color:var(--muted);">—</span>':'')
     +'</td>'
-    +'<td style="'+td+'text-align:center;color:'+(lateDed>0?'#FF9F0A':'var(--muted)')+';">'
-      +(lateDed>0?'-₹'+lateDed.toLocaleString('en-IN'):'—')
+    +'<td style="'+td+'text-align:center;">'
+      +(lateDed>0
+        ?'<div style="color:#FF9F0A;font-size:12px;">-₹'+lateDed.toLocaleString('en-IN')+'</div>'
+         +(earlyCredit>0?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:1px;">+'+earlyCredit+'m early ✓</div>':'')
+        :(earlyCredit>0&&totalLateMins>0
+          ?'<div style="color:#30D158;font-size:11px;">Balanced ✓</div>'
+           +'<div style="color:rgba(48,209,88,0.5);font-size:9px;margin-top:1px;">'+earlyCredit+'m offset</div>'
+          :(totalLateMins>0
+            ?'<div style="color:rgba(245,245,247,0.3);font-size:10px;">—</div>'
+            :'<span style="color:var(--muted);">—</span>')))
     +'</td>'
     +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">'
       +(parseFloat(r.absent_deduction||0)>0?'-₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN'):'—')
@@ -7328,7 +7339,10 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:var(--muted);">'+fmtTime(r.check_out)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
-    +'<td style="'+td+'text-align:center;font-size:11px;">'+attLateCell(r)+'</td>'
+    +'<td style="'+td+'text-align:center;font-size:11px;">'
+      +attLateCell(r)
+      +(parseInt(r.early_mins||0)>0?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
+    +'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
