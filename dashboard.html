@@ -7581,17 +7581,11 @@ function attViewRow(r,i){
     // Real checkout done — show time only
     coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
   } else if (r.break_checkout) {
-    // WiFi disconnected — not in office + Force Checkout option
-    coDisplay = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
-      +'<span style="color:rgba(255,159,10,0.7);font-size:10px;">Not in office</span>'
-      +'<button onclick="adminForceCheckout('+r.id+',\''+escHtml(r.name)+'\',\''+todayStr+'\')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.3);border-radius:6px;padding:2px 7px;font-size:9px;color:#FF453A;cursor:pointer;font-family:inherit;">Force Out</button>'
-      +'</div>';
+    // WiFi disconnected — not in office
+    coDisplay = '<span style="color:rgba(255,159,10,0.7);font-size:10px;">Not in office</span>';
   } else if (r.check_in) {
-    // Working — show Force Checkout for admin convenience
-    coDisplay = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
-      +'<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>'
-      +'<button onclick="adminForceCheckout('+r.id+',\''+escHtml(r.name)+'\',\''+todayStr+'\')" style="background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:6px;padding:2px 7px;font-size:9px;color:#FF9F0A;cursor:pointer;font-family:inherit;">Force Out</button>'
-      +'</div>';
+    // Still working
+    coDisplay = '<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>';
   } else {
     coDisplay = '<span style="color:var(--muted);">—</span>';
   }
