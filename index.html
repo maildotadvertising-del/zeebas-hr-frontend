@@ -4479,7 +4479,6 @@ function listenBreakApproval(){
 
   // ── Announcement received (real-time) ──
   staffSocket.on('announcement', function(data){
-    markAnnSeen(data.id);
     showAnnouncementPopup(data);
   });
 
@@ -5458,41 +5457,53 @@ async function s1UpdateTask(id,status){
 function markAnnSeen(id){
   if(!id) return;
   try{
-    var seen = JSON.parse(localStorage.getItem('seen_ann_ids')||'[]');
-    if(!seen.includes(id)){ seen.push(id); }
-    // Keep only last 100 IDs to avoid bloat
-    if(seen.length > 100) seen = seen.slice(-100);
+    // Store as string for reliable includes() comparison
+    var key = String(id);
+    var seen = JSON.parse(localStorage.getItem('seen_ann_ids')||'[]').map(String);
+    if(!seen.includes(key)) seen.push(key);
+    if(seen.length > 200) seen = seen.slice(-200);
     localStorage.setItem('seen_ann_ids', JSON.stringify(seen));
   }catch(e){}
+}
+
+function isAnnSeen(id){
+  try{
+    var seen = JSON.parse(localStorage.getItem('seen_ann_ids')||'[]').map(String);
+    return seen.includes(String(id));
+  }catch(e){ return false; }
 }
 
 async function loadMissedAnnouncements(){
   var s = zStaff();
   if(!s || s.role==='admin') return;
   try{
-    var res = await fetch(API_URL+'/api/announcements/my', { headers:{Authorization:'Bearer '+zToken()} });
+    var res = await fetch(API_URL+'/api/announcements/my', {
+      headers:{Authorization:'Bearer '+zToken()}
+    });
     if(!res.ok) return;
     var js = await res.json();
     if(!js.success || !js.data || !js.data.length) return;
-    var seen = [];
-    try{ seen = JSON.parse(localStorage.getItem('seen_ann_ids')||'[]'); }catch(e){}
-    var cutoff = Date.now() - 24*60*60*1000; // Only show last 24 hours
-    // Filter unseen + recent, newest first
-    var unseen = js.data.filter(function(a){
-      return !seen.includes(a.id) && new Date(a.created_at).getTime() > cutoff;
-    });
-    if(!unseen.length) return;
-    // Show most recent one (they're already newest-first from API)
-    var ann = unseen[0];
-    markAnnSeen(ann.id);
-    // Small delay so app UI settles first
-    setTimeout(function(){ showAnnouncementPopup(ann); }, 1200);
+
+    var cutoff = Date.now() - 48*60*60*1000; // last 48 hours
+    // Find most recent unseen announcement
+    var ann = null;
+    for(var i=0; i<js.data.length; i++){
+      var a = js.data[i];
+      var t = new Date(a.created_at).getTime();
+      if(!isAnnSeen(a.id) && t > cutoff){ ann = a; break; }
+    }
+    if(!ann) return;
+
+    // Show popup — markAnnSeen called INSIDE showAnnouncementPopup, not before
+    setTimeout(function(){ showAnnouncementPopup(ann); }, 1000);
   }catch(e){ console.log('loadMissedAnnouncements err:', e); }
 }
 
 function showAnnouncementPopup(data){
   var old=document.getElementById('ann-popup');
   if(old) old.remove();
+  // Mark as seen now that we're actually showing it
+  if(data && data.id) markAnnSeen(data.id);
 
   // ── Confetti colours & shapes ──
   var confettiColors=['#FFD60A','#FF9F0A','#FF6B6B','#5AC8FA','#34C759','#BF5FFF','#FF375F','#ffffff'];
