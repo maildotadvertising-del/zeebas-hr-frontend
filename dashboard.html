@@ -6765,11 +6765,14 @@ async function loadPayrollPage(){
     var setEl = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
     setEl('pr-total-staff', rows.length);
     setEl('pr-working-days', d.working_days||'—');
-    // Summary: use earned_so_far for current month, net_salary for past months
+    // Summary totals
     var totalNet=0, totalDed=0;
     rows.forEach(function(r){
       totalNet += window._prIsCurrMonth ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
-      totalDed += parseFloat(r.late_deduction||0) + parseFloat(r.absent_deduction||0) + parseFloat(r.advance_deduction||0);
+      totalDed += parseFloat(r.late_deduction||0)
+               + parseFloat(r.absent_deduction||0)
+               + parseFloat(r.advance_deduction||0)
+               + parseFloat(r.other_deduction||0);
     });
     setEl('pr-total-net', '₹'+Math.round(totalNet).toLocaleString('en-IN'));
     setEl('pr-total-ded', '₹'+Math.round(totalDed).toLocaleString('en-IN'));
@@ -6828,7 +6831,9 @@ function prViewRow(r,i){
     +'<td style="'+td+'text-align:center;color:'+(lateDed>0?'#FF9F0A':'var(--muted)')+';">'
       +(lateDed>0?'-₹'+lateDed.toLocaleString('en-IN'):'—')
     +'</td>'
-    +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
+    +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">'
+      +(parseFloat(r.absent_deduction||0)>0?'-₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN'):'—')
+    +'</td>'
     +'<td style="'+td+'text-align:center;color:'+(inc>0?'#30D158':'var(--muted)')+';">'
       +(inc>0?'₹'+inc.toLocaleString('en-IN'):'—')
       +(inc>0&&r.incentive_reason?'<div style="font-size:9px;color:rgba(48,209,88,0.6);margin-top:2px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escHtml(r.incentive_reason||'')+'">'+escHtml(r.incentive_reason)+'</div>':'')
@@ -6842,7 +6847,9 @@ function prViewRow(r,i){
     +'</td>'
     +'<td style="'+td+'text-align:center;">'
       +'<div style="font-weight:600;color:'+(net>0?'#30D158':'#FF453A')+';">₹'+Math.round(net).toLocaleString('en-IN')+'</div>'
-      +(isLive?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:2px;">so far ↗</div>':'')
+      +(isLive
+        ?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:1px;">'+r.days_present+'d × ₹'+Math.round(parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</div>'
+        :'')
     +'</td>'
     +'<td style="'+td+'text-align:center;">'+statusBadge+'</td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
