@@ -1,4 +1,4 @@
-<!-- v20260511a -->
+<!-- v20260511b -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -361,7 +361,7 @@ body.desktop-mode #s1-sidebar {
 
       <div class="scroll" style="padding:12px 13px 8px;">
         <!-- Profile banner -->
-        <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));">
+        <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));cursor:pointer;" onclick="go1('s1-profile')">
           <div style="display:flex;align-items:center;gap:11px;">
             <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
             <div style="flex:1;">
@@ -412,7 +412,7 @@ body.desktop-mode #s1-sidebar {
         </div>
 
         <!-- WiFi Attendance Banner -->
-        <div id="wifi-banner" style="display:none;border-radius:13px;padding:11px 13px;margin-bottom:10px;align-items:center;gap:10px;">
+        <div id="wifi-banner" style="display:none;border-radius:13px;padding:11px 13px;margin-bottom:10px;align-items:center;gap:10px;cursor:pointer;" onclick="if(!event.target.closest('button'))go1('s1-gps')">
           <div id="wifi-banner-icon" style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2 7c2.2-2.2 5.2-3.5 8-3.5s5.8 1.3 8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 10.5C6.5 9 8.2 8 10 8s3.5 1 5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7.5 13.5C8.3 12.6 9.1 12 10 12s1.7.6 2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="17" r="1.2" fill="currentColor"/></svg>
           </div>
@@ -450,14 +450,17 @@ body.desktop-mode #s1-sidebar {
 
         <!-- This week attendance — loaded dynamically -->
         <div class="g" style="padding:12px;margin-bottom:10px;">
-          <div style="color:#fff;font-size:12px;font-weight:500;margin-bottom:10px;">This Week</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="color:#fff;font-size:12px;font-weight:500;">This Week</div>
+            <div style="color:rgba(10,132,255,0.7);font-size:10px;cursor:pointer;" onclick="go1('s1-salary')">View History →</div>
+          </div>
           <div id="s1-week-cal" style="display:flex;justify-content:space-between;gap:4px;">
             <div style="color:rgba(245,245,247,0.25);font-size:10px;text-align:center;width:100%;padding:8px 0;">Loading…</div>
           </div>
         </div>
 
         <!-- Leave status — loaded dynamically, hidden if no leaves -->
-        <div id="s1-leave-status-card" style="display:none;padding:11px 13px;" class="gs"></div>
+        <div id="s1-leave-status-card" style="display:none;padding:11px 13px;cursor:pointer;" class="gs" onclick="go1('s1-leave')"></div>
       </div>
       <div id="n1-home" class="bnav"></div>
     </div>
@@ -1987,6 +1990,8 @@ async function markAttendance(){
       showToast1('✅ Checked in at '+timeStr);
       setTimeout(loadAttGpsScreen, 300);
     }
+    // Refresh week calendar on home screen
+    setTimeout(loadHomeWeekAndLeave, 600);
   } catch(e){
     btn.disabled=false;
     btn.textContent=isOnsite?'Check In — Onsite':(type==='manual'?'Check In — Manual':'Check In — Office');
@@ -4490,11 +4495,14 @@ async function doAllowNotif(){
 // ══════════════════════════════════════════
 var _eodItems = [];
 var _eodTriggered = false;
+var _eodCats = ['Design','Video','Content','Social Media','Meeting','Admin','Other'];
 
 function eodAddItem(text, link){
   var id = Date.now();
-  _eodItems.push({ id: id, text: text||'', link: link||'' });
+  _eodItems.push({ id: id, text: text||'', link: link||'', cat:'', status:'done' });
   renderEodItems();
+  // Auto-scroll to new item
+  setTimeout(function(){ var el=document.getElementById('eod-text-'+id); if(el){ el.focus(); el.scrollIntoView({behavior:'smooth',block:'center'}); } },100);
 }
 
 function eodRemoveItem(id){
@@ -4502,22 +4510,59 @@ function eodRemoveItem(id){
   renderEodItems();
 }
 
+function eodSetCat(id, cat){
+  var idx = _eodItems.findIndex(function(i){ return i.id===id; });
+  if(idx<0) return;
+  _eodItems[idx].cat = (_eodItems[idx].cat===cat) ? '' : cat;
+  renderEodItems();
+}
+
+function eodSetStatus(id, st){
+  var idx = _eodItems.findIndex(function(i){ return i.id===id; });
+  if(idx<0) return;
+  _eodItems[idx].status = st;
+  renderEodItems();
+}
+
 function renderEodItems(){
   var el = document.getElementById('eod-items-list');
   if(!el) return;
   if(!_eodItems.length){
-    el.innerHTML = '<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No items yet — tap "+ Add Work Item" below</div>';
+    el.innerHTML = '<div style="color:rgba(245,245,247,0.25);font-size:13px;text-align:center;padding:12px 0;">No items yet — tap "+ Add Work Item" below</div>';
     return;
   }
   el.innerHTML = _eodItems.map(function(item, idx){
-    return '<div style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 13px;">'
-      +'<div style="display:flex;align-items:flex-start;gap:8px;">'
+    var selCat = item.cat||'';
+    var selSt  = item.status||'done';
+    var catHtml = _eodCats.map(function(c){
+      var active = (c===selCat);
+      return '<button onclick="eodSetCat('+item.id+',\''+c+'\')" style="flex-shrink:0;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;border:0.5px solid '+(active?'rgba(10,132,255,0.6)':'rgba(255,255,255,0.1)')+';background:'+(active?'rgba(10,132,255,0.22)':'rgba(255,255,255,0.05)')+';color:'+(active?'#0A84FF':'rgba(245,245,247,0.45)')+';transition:all 0.15s;">'+c+'</button>';
+    }).join('');
+    var doneActive = selSt==='done';
+    var progActive = selSt==='progress';
+    return '<div style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.11);border-radius:14px;padding:13px 14px;margin-bottom:2px;">'
+      // Top row: text + remove
+      +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">'
       +'<div style="flex:1;">'
-      +'<input id="eod-text-'+item.id+'" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="What did you work on?" style="width:100%;background:none;border:none;color:#fff;font-size:13px;font-family:inherit;outline:none;margin-bottom:5px;box-sizing:border-box;">'
-      +'<input id="eod-link-'+item.id+'" value="'+escHtml(item.link||'')+'" oninput="_eodItems['+idx+'].link=this.value" placeholder="Link (optional — Drive, Figma…)" style="width:100%;background:none;border:none;color:rgba(245,245,247,0.4);font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;">'
+      +'<input id="eod-text-'+item.id+'" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="What did you work on today?" style="width:100%;background:none;border:none;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;">'
       +'</div>'
-      +'<button onclick="eodRemoveItem('+item.id+')" style="background:none;border:none;color:rgba(255,69,58,0.6);font-size:16px;cursor:pointer;padding:0;flex-shrink:0;line-height:1;">\xd7</button>'
-      +'</div></div>';
+      +'<button onclick="eodRemoveItem('+item.id+')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:14px;cursor:pointer;padding:3px 8px;flex-shrink:0;font-family:inherit;line-height:1;">✕</button>'
+      +'</div>'
+      // Category row
+      +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">'
+      +catHtml
+      +'</div>'
+      // Status row
+      +'<div style="display:flex;gap:7px;margin-bottom:10px;">'
+      +'<button onclick="eodSetStatus('+item.id+',\'done\')" style="flex:1;padding:7px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(doneActive?'rgba(48,209,88,0.6)':'rgba(255,255,255,0.1)')+';background:'+(doneActive?'rgba(48,209,88,0.18)':'rgba(255,255,255,0.04)')+';color:'+(doneActive?'#30D158':'rgba(245,245,247,0.4)')+';">✅ Completed</button>'
+      +'<button onclick="eodSetStatus('+item.id+',\'progress\')" style="flex:1;padding:7px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(progActive?'rgba(255,159,10,0.6)':'rgba(255,255,255,0.1)')+';background:'+(progActive?'rgba(255,159,10,0.18)':'rgba(255,255,255,0.04)')+';color:'+(progActive?'#FF9F0A':'rgba(245,245,247,0.4)')+';">⏳ In Progress</button>'
+      +'</div>'
+      // Link row
+      +'<div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 10px;">'
+      +'<span style="color:rgba(245,245,247,0.25);font-size:13px;">🔗</span>'
+      +'<input id="eod-link-'+item.id+'" value="'+escHtml(item.link||'')+'" oninput="_eodItems['+idx+'].link=this.value" placeholder="Link (Drive, Figma, YouTube…) — optional" style="flex:1;background:none;border:none;color:rgba(245,245,247,0.5);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">'
+      +'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -4526,7 +4571,7 @@ function showEodPopup(){
   _eodTriggered = true;
   _eodItems = [];
   // Add one empty item to start
-  _eodItems.push({ id: Date.now(), text: '', link: '' });
+  _eodItems.push({ id: Date.now(), text: '', link: '', cat:'', status:'done' });
   renderEodItems();
   // Set date label
   var lbl = document.getElementById('eod-date-lbl');
@@ -4542,7 +4587,9 @@ async function eodSubmit(){
   var btn = document.getElementById('eod-submit-btn');
   if(btn){ btn.textContent='Submitting…'; btn.disabled=true; }
   try{
-    var items = _eodItems.filter(function(i){ return (i.text||'').trim(); });
+    var items = _eodItems.filter(function(i){ return (i.text||'').trim(); }).map(function(i){
+      return { text: (i.text||'').trim(), link: (i.link||'').trim(), category: i.cat||'', status: i.status||'done' };
+    });
     if(!items.length){
       if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
       showToast('⚠️ Add at least one work item!');
@@ -4558,8 +4605,8 @@ async function eodSubmit(){
       var ov = document.getElementById('ov-eod');
       if(ov) ov.style.display='none';
       showToast('✅ Checked out! Report sent to admin.');
-      // Refresh home to update check-in status
-      setTimeout(function(){ wifiCheckAndAct(); stopWorkTimer(); }, 800);
+      // Refresh home to update check-in status + week calendar
+      setTimeout(function(){ wifiCheckAndAct(); stopWorkTimer(); loadHomeWeekAndLeave(); }, 800);
     } else {
       showToast('❌ '+(d.message||'Could not submit'));
       if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
@@ -5376,6 +5423,8 @@ function updateTaskRemaining(count){
 }
 
 // ── Load home screen: This Week calendar + latest leave status ──
+var _weekAttFull = {}; // full attendance objects for day detail popups
+
 async function loadHomeWeekAndLeave(){
   try{
     // ── This Week calendar ──
@@ -5398,11 +5447,17 @@ async function loadHomeWeekAndLeave(){
       var yr = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0');
       var r = await fetch(API_URL+'/api/attendance/my?month='+yr+'-'+mo, {headers:zHead()});
       var attData = {}; // date string → status
+      _weekAttFull = {};
       if(r.ok){
         var d2 = await r.json();
         (d2.data||[]).forEach(function(a){
           var ds = (a.date||'').substring(0,10);
-          if(ds) attData[ds] = a.status||'present';
+          if(!ds) return;
+          _weekAttFull[ds] = a;
+          var st = a.status;
+          // If staff has check_in but status is null/absent, treat as present
+          if(a.check_in && (!st || st==='absent')) st = 'present';
+          attData[ds] = st || (a.check_in ? 'present' : null);
         });
       }
 
@@ -5416,20 +5471,22 @@ async function loadHomeWeekAndLeave(){
 
         var cell, dotStyle='';
         if(isToday) dotStyle='box-shadow:0 0 0 1.5px rgba(10,132,255,0.5);';
+        var clickFn = !isFuture ? 'onclick="showWeekDayDetail(\''+ds+'\')" style="cursor:pointer;"' : '';
+
         if(isFuture){
-          cell = '<div style="height:32px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:10px;">—</span></div>';
+          cell = '<div style="height:34px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:11px;">—</span></div>';
         } else if(!st || st==='absent'){
-          cell = '<div style="height:32px;background:rgba(255,69,58,0.16);border:0.5px solid rgba(255,69,58,0.26);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:11px;font-weight:600;">✕</span></div>';
+          cell = '<div '+clickFn+' style="height:34px;background:rgba(255,69,58,0.16);border:0.5px solid rgba(255,69,58,0.26);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:12px;font-weight:600;">✕</span></div>';
         } else if(st==='late'||st==='late_pending'){
-          cell = '<div style="height:32px;background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.28);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF9F0A;font-size:10px;font-weight:600;">L</span></div>';
+          cell = '<div '+clickFn+' style="height:34px;background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.28);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF9F0A;font-size:11px;font-weight:600;">L</span></div>';
         } else if(st==='on_leave'){
-          cell = '<div style="height:32px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.25);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:10px;font-weight:600;">OL</span></div>';
+          cell = '<div '+clickFn+' style="height:34px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.25);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:11px;font-weight:600;">OL</span></div>';
         } else {
-          // present / onsite_approved etc
-          cell = '<div style="height:32px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg></div>';
+          // present / onsite_approved / manual etc — show tick
+          cell = '<div '+clickFn+' style="height:34px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
         }
         return '<div style="text-align:center;flex:1;">'
-          +'<div style="font-size:9px;color:'+(isToday?'#0A84FF':'rgba(245,245,247,0.3)')+';margin-bottom:4px;font-weight:'+(isToday?'600':'400')+';">'+days[i]+'</div>'
+          +'<div style="font-size:10px;color:'+(isToday?'#0A84FF':'rgba(245,245,247,0.35)')+';margin-bottom:5px;font-weight:'+(isToday?'600':'400')+';">'+days[i]+'</div>'
           +cell+'</div>';
       }).join('');
     }
@@ -5458,6 +5515,38 @@ async function loadHomeWeekAndLeave(){
       +'</div>'
       +'<span style="background:'+sc2[0]+'22;color:'+sc2[0]+';border:0.5px solid '+sc2[0]+'44;border-radius:6px;padding:2px 9px;font-size:10px;white-space:nowrap;">'+sc2[1]+'</span>';
   }catch(e){ console.log('leave status error',e.message); }
+}
+
+// ── Day detail popup (called from week calendar day tap) ──
+function showWeekDayDetail(ds){
+  var a = _weekAttFull[ds] || {};
+  var old = document.getElementById('week-day-popup'); if(old) old.remove();
+  function fmtT(ts){ if(!ts) return '—'; var d=new Date(ts),h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap; }
+  var dateObj = new Date(ds+'T00:00:00');
+  var dateStr = dateObj.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'});
+  var stMap = {present:'✅ Present',late_pending:'⏱ Late (Pending)',late:'⏱ Late',absent:'❌ Absent',on_leave:'🌴 On Leave',onsite_approved:'🏗 Onsite Work',manual:'✅ Manual Check-in'};
+  var clMap = {present:'#30D158',late_pending:'#FF9F0A',late:'#FF9F0A',absent:'#FF453A',on_leave:'#0A84FF',onsite_approved:'#BF5FFF',manual:'#30D158'};
+  var stLabel = stMap[a.status] || (a.check_in ? '✅ Present' : '—');
+  var stColor = clMap[a.status] || (a.check_in ? '#30D158' : 'rgba(245,245,247,0.4)');
+  var popup = document.createElement('div');
+  popup.id = 'week-day-popup';
+  popup.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);';
+  popup.onclick = function(e){ if(e.target===popup) popup.remove(); };
+  popup.innerHTML =
+    '<div style="width:100%;max-width:430px;background:rgba(14,14,22,0.98);border:0.5px solid rgba(255,255,255,0.12);border-radius:22px 22px 0 0;padding:20px 18px 36px;">'
+    +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 18px;"></div>'
+    +'<div style="color:#fff;font-size:17px;font-weight:600;margin-bottom:4px;">'+dateStr+'</div>'
+    +'<div style="color:'+stColor+';font-size:13px;font-weight:500;margin-bottom:18px;">'+stLabel+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+    +'<div style="background:rgba(255,255,255,0.05);border-radius:13px;padding:13px;"><div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:5px;">Check-in</div><div style="color:#30D158;font-size:17px;font-weight:600;font-family:monospace;">'+fmtT(a.check_in)+'</div></div>'
+    +'<div style="background:rgba(255,255,255,0.05);border-radius:13px;padding:13px;"><div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:5px;">Check-out</div><div style="color:'+(a.check_out?'#FF9F0A':'rgba(245,245,247,0.3)')+';font-size:17px;font-weight:600;font-family:monospace;">'+fmtT(a.check_out)+'</div></div>'
+    +'</div>'
+    +(a.late_mins>0?'<div style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.25);border-radius:11px;padding:10px 13px;margin-bottom:10px;font-size:13px;color:#FF9F0A;">⏱ '+a.late_mins+' min late</div>':'')
+    +(a.break_start?'<div style="background:rgba(255,255,255,0.04);border-radius:11px;padding:10px 13px;margin-bottom:10px;"><div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:3px;">Break</div><div style="color:#fff;font-size:14px;">'+fmtT(a.break_start)+' – '+fmtT(a.break_end)+'</div></div>':'')
+    +((!a.check_in && !a.status)?'<div style="background:rgba(255,255,255,0.04);border-radius:11px;padding:12px;text-align:center;color:rgba(245,245,247,0.35);font-size:13px;margin-bottom:10px;">No attendance record for this day.</div>':'')
+    +'<button onclick="document.getElementById(\'week-day-popup\').remove()" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:13px;color:#fff;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;">Close</button>'
+    +'</div>';
+  document.body.appendChild(popup);
 }
 
 /* ── POPULATE ADMIN UI ── */
