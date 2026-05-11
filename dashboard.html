@@ -1444,7 +1444,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
           <button onclick="attShiftDay(1)" title="Next day" style="background:none;border:none;border-left:0.5px solid rgba(255,255,255,0.1);padding:8px 11px;cursor:pointer;color:rgba(245,245,247,0.7);font-size:15px;line-height:1;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">›</button>
         </div>
         <input type="hidden" id="att-filter-date">
-        <button class="btn-g" onclick="wifiCheckAndCheckout(false)" title="Check who left office WiFi and auto-checkout them" style="background:rgba(10,132,255,0.12);border-color:rgba(10,132,255,0.3);color:#0A84FF;">📶 WiFi Sync</button>
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
       </div>
     </div>
@@ -4384,14 +4383,18 @@ async function wifiCheckAndCheckout(silent){
   }
 }
 
+var _attAutoRefreshTimer = null;
 function _startWifiAutoCheck(){
   _stopWifiAutoCheck();
-  // Run immediately on page open, then every 5 minutes
+  // WiFi sync: run immediately then every 5 minutes
   wifiCheckAndCheckout(true);
   _wifiAutoTimer = setInterval(function(){ wifiCheckAndCheckout(true); }, 5 * 60 * 1000);
+  // Table auto-refresh every 2 minutes
+  _attAutoRefreshTimer = setInterval(function(){ loadAttendancePage(); }, 2 * 60 * 1000);
 }
 function _stopWifiAutoCheck(){
   if(_wifiAutoTimer){ clearInterval(_wifiAutoTimer); _wifiAutoTimer = null; }
+  if(_attAutoRefreshTimer){ clearInterval(_attAutoRefreshTimer); _attAutoRefreshTimer = null; }
 }
 
 /* ── LOAD ATTENDANCE PAGE ── */
@@ -7540,7 +7543,6 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +'<div style="display:flex;align-items:center;gap:5px;justify-content:center;flex-wrap:wrap;">'
-      +(r.break_checkout && r.office_work_status !== 'approved' ? '<button onclick="markInOffice('+i+')" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Mark back in office">✅ In Office</button>' : '')
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
       +'<button onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>'
       +'</div>'
