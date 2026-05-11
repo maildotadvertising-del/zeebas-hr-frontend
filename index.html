@@ -63,6 +63,7 @@ select.inp option{background:#1A1A2E;color:#fff;}
 .btn-g{background:rgba(255,255,255,0.07);color:rgba(245,245,247,0.7);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;}
 
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.3);}}
+@keyframes pulse-green{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(48,209,88,0.5);}50%{opacity:0.7;box-shadow:0 0 0 4px rgba(48,209,88,0);}}
 @keyframes splashFadeIn{from{opacity:0;transform:scale(0.88);}to{opacity:1;transform:scale(1);}}
 /* TOGGLE SWITCH */
 label input[type=checkbox]:checked+span{background:rgba(10,132,255,0.35)!important;border-color:rgba(10,132,255,0.5)!important;}
@@ -347,13 +348,21 @@ body.desktop-mode #s1-sidebar {
           </div>
           <!-- Work Timer Row -->
           <div id="work-timer-row" style="display:none;margin-top:10px;background:rgba(255,255,255,0.05);border-radius:9px;padding:8px 12px;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Work Remaining</span>
+            <!-- Left: Time Worked (live elapsed) -->
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;align-items:center;gap:5px;">
+                <span id="s1-elapsed-dot" style="width:6px;height:6px;border-radius:50%;background:#30D158;flex-shrink:0;animation:pulse-green 1.5s infinite;"></span>
+                <span style="color:rgba(245,245,247,0.4);font-size:9px;">Time Worked</span>
+              </div>
+              <div id="s1-elapsed-timer" style="color:#30D158;font-size:14px;font-weight:700;font-family:monospace;letter-spacing:1px;">00:00:00</div>
             </div>
-            <div style="display:flex;align-items:center;gap:5px;">
-              <div id="s1-work-timer" style="color:#FF9F0A;font-size:13px;font-weight:600;letter-spacing:0.5px;">--:--</div>
-              <div id="s1-work-timer-done" style="display:none;color:#30D158;font-size:9px;font-weight:500;background:rgba(48,209,88,0.12);border-radius:5px;padding:2px 6px;">✓ Done</div>
+            <!-- Right: Work Remaining -->
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Remaining</span>
+              <div style="display:flex;align-items:center;gap:5px;">
+                <div id="s1-work-timer" style="color:#FF9F0A;font-size:13px;font-weight:600;font-family:monospace;letter-spacing:0.5px;">--:--:--</div>
+                <div id="s1-work-timer-done" style="display:none;color:#30D158;font-size:9px;font-weight:500;background:rgba(48,209,88,0.12);border-radius:5px;padding:2px 6px;">✓ Done</div>
+              </div>
             </div>
           </div>
           <!-- Monthly Balance Row -->
@@ -4393,14 +4402,31 @@ function startWorkTimer(checkInTime, officeEndTimeStr, lateMinutes){
   if(!timerRow) return;
   timerRow.style.display = 'flex';
 
+  // Check-in moment
+  var ciMs = new Date(checkInTime).getTime();
+
   // Target = today at officeEndTime + lateMinutes compensation
   var parts = (officeEndTimeStr||'18:00').split(':').map(Number);
   var target = new Date();
   target.setHours(parts[0], parts[1] + (parseInt(lateMinutes)||0), 0, 0);
 
+  function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+
   function tick(){
     var now = new Date();
-    var diff = target - now; // ms remaining
+
+    // ── Elapsed (time worked since check-in) ──
+    var elapsedMs = now - ciMs;
+    if(elapsedMs < 0) elapsedMs = 0;
+    var eSec = Math.floor(elapsedMs / 1000);
+    var eH = Math.floor(eSec / 3600);
+    var eM = Math.floor((eSec % 3600) / 60);
+    var eS = eSec % 60;
+    var elEl = document.getElementById('s1-elapsed-timer');
+    if(elEl) elEl.textContent = pad2(eH)+':'+pad2(eM)+':'+pad2(eS);
+
+    // ── Remaining ──
+    var diff = target - now;
     var timerEl = document.getElementById('s1-work-timer');
     var doneEl  = document.getElementById('s1-work-timer-done');
     if(!timerEl) return;
@@ -4410,14 +4436,15 @@ function startWorkTimer(checkInTime, officeEndTimeStr, lateMinutes){
     } else {
       timerEl.style.display = 'block';
       if(doneEl) doneEl.style.display = 'none';
-      var totalMins = Math.ceil(diff / 60000);
-      var hh = Math.floor(totalMins / 60);
-      var mm = totalMins % 60;
-      timerEl.textContent = (hh > 0 ? hh+'h ' : '') + (mm < 10 ? '0' : '') + mm + 'm';
+      var rSec = Math.floor(diff / 1000);
+      var rH = Math.floor(rSec / 3600);
+      var rM = Math.floor((rSec % 3600) / 60);
+      var rS = rSec % 60;
+      timerEl.textContent = (rH > 0 ? rH+'h ' : '') + pad2(rM)+'m '+pad2(rS)+'s';
     }
   }
   tick();
-  _workTimerInterval = setInterval(tick, 30000); // update every 30s
+  _workTimerInterval = setInterval(tick, 1000); // tick every second
 }
 
 function stopWorkTimer(){
