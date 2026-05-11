@@ -1,4 +1,4 @@
-<!-- v20260507g -->
+<!-- v20260511a -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -54,13 +54,31 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .pp{background:rgba(191,95,255,0.15);color:#BF5FFF;border:0.5px solid rgba(191,95,255,0.28);box-shadow:inset 0 0.5px 0 rgba(191,95,255,0.2);}
 
 /* INPUT */
-.inp{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;padding:11px 13px;font-size:13px;font-weight:300;width:100%;outline:none;font-family:inherit;}
+.inp{background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;padding:13px 15px;font-size:16px;font-weight:300;width:100%;outline:none;font-family:inherit;}
 .inp::placeholder{color:rgba(245,245,247,0.28);}
 select.inp option{background:#1A1A2E;color:#fff;}
 
 /* BTN */
-.btn-p{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;width:100%;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(10,132,255,0.38);}
-.btn-g{background:rgba(255,255,255,0.07);color:rgba(245,245,247,0.7);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;}
+.btn-p{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:600;width:100%;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(10,132,255,0.38);}
+.btn-g{background:rgba(255,255,255,0.07);color:rgba(245,245,247,0.7);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;font-size:15px;cursor:pointer;font-family:inherit;width:100%;}
+
+/* Global input/textarea font size (prevents iOS zoom) */
+input,textarea,select{font-size:16px;}
+
+/* ── Global readability boost ── */
+/* Bump up small inline font sizes throughout the app */
+.scr *[style*="font-size:9px"]{font-size:11px!important;}
+.scr *[style*="font-size:10px"]{font-size:12px!important;}
+.scr *[style*="font-size:11px"]{font-size:13px!important;}
+.scr *[style*="font-size:12px"]{font-size:14px!important;}
+.scr *[style*="font-size:13px"]{font-size:15px!important;}
+/* Nav tab labels */
+.ntb span{font-size:11px;font-weight:500;}
+/* Card heading sizes */
+.scr *[style*="font-size:15px"]{font-size:16px!important;}
+.scr *[style*="font-size:16px"]{font-size:17px!important;}
+.scr *[style*="font-size:17px"]{font-size:18px!important;}
+.scr *[style*="font-size:18px"]{font-size:19px!important;}
 
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.3);}}
 @keyframes pulse-green{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(48,209,88,0.5);}50%{opacity:0.7;box-shadow:0 0 0 4px rgba(48,209,88,0);}}
@@ -320,9 +338,23 @@ body.desktop-mode #s1-sidebar {
             </button>
           </div>
           <div id="bco-reason-wrap" style="display:none;">
-            <div style="font-size:10px;color:rgba(245,245,247,0.42);margin-bottom:5px;">Reason for outside work</div>
-            <textarea id="bco-reason-input" placeholder="e.g. Client visit, site inspection…" rows="3" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#fff;font-size:12px;padding:9px 11px;font-family:inherit;resize:none;outline:none;margin-bottom:10px;box-sizing:border-box;"></textarea>
-            <button id="bco-btn-officework" onclick="bcoSubmit('office_work')" style="width:100%;background:rgba(10,132,255,0.18);border:0.5px solid rgba(10,132,255,0.4);border-radius:11px;color:#0A84FF;font-size:12px;font-weight:600;padding:10px;cursor:pointer;font-family:inherit;">Send Request to Admin →</button>
+            <div style="font-size:12px;color:rgba(245,245,247,0.5);margin-bottom:10px;text-align:center;font-weight:500;">What were you doing?</div>
+            <div style="display:flex;gap:7px;margin-bottom:12px;">
+              <button onclick="bcoQuickSel('Refreshment')" id="bco-q-0" style="flex:1;background:rgba(48,209,88,0.1);border:1px solid rgba(48,209,88,0.25);border-radius:12px;padding:10px 4px;font-size:11px;font-weight:600;color:#30D158;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <span style="font-size:20px;">🍵</span><span>Refreshment</span>
+              </button>
+              <button onclick="bcoQuickSel('Site Visit')" id="bco-q-1" style="flex:1;background:rgba(10,132,255,0.1);border:1px solid rgba(10,132,255,0.25);border-radius:12px;padding:10px 4px;font-size:11px;font-weight:600;color:#0A84FF;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <span style="font-size:20px;">🏗</span><span>Site Visit</span>
+              </button>
+              <button onclick="bcoQuickSel('Purchase')" id="bco-q-2" style="flex:1;background:rgba(191,95,255,0.1);border:1px solid rgba(191,95,255,0.25);border-radius:12px;padding:10px 4px;font-size:11px;font-weight:600;color:#BF5FFF;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <span style="font-size:20px;">🛒</span><span>Purchase</span>
+              </button>
+            </div>
+            <div id="bco-custom-wrap">
+              <div style="font-size:11px;color:rgba(245,245,247,0.35);margin-bottom:6px;">Or type your reason</div>
+              <textarea id="bco-reason-input" placeholder="e.g. Client meeting, delivery…" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;color:#fff;font-size:15px;padding:10px 12px;font-family:inherit;resize:none;outline:none;margin-bottom:10px;box-sizing:border-box;"></textarea>
+            </div>
+            <button id="bco-btn-officework" onclick="bcoSubmit('office_work')" style="width:100%;background:rgba(10,132,255,0.18);border:0.5px solid rgba(10,132,255,0.4);border-radius:12px;color:#0A84FF;font-size:14px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit;">Send Request to Admin →</button>
           </div>
         </div>
       </div>
@@ -4756,14 +4788,23 @@ async function _refreshCheckInDisplay(){
 }
 
 // ── Break vs Office Work Choice Overlay ──
+var _bcoQuickSel = '';
 function showBreakChoiceOverlay(awayMins){
   var ov = document.getElementById('break-choice-overlay');
   if(!ov) return;
-  _bcoAwayMins = awayMins || 0; // store for bcoSubmit
+  _bcoAwayMins = awayMins || 0;
   var minsTxt = document.getElementById('bco-away-mins');
   if(minsTxt) minsTxt.textContent = 'You were away for '+(awayMins||'a few')+' min';
   document.getElementById('bco-reason-wrap').style.display = 'none';
   document.getElementById('bco-reason-input').value = '';
+  // Reset quick selection
+  _bcoQuickSel = '';
+  ['bco-q-0','bco-q-1','bco-q-2'].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b){ b.style.opacity='1'; b.style.transform=''; b.style.boxShadow=''; }
+  });
+  var cw = document.getElementById('bco-custom-wrap');
+  if(cw) cw.style.display='block';
   ov.style.display = 'flex';
   setTimeout(function(){ ov.style.opacity='1'; },10);
 }
@@ -4776,8 +4817,34 @@ function hideBreakChoiceOverlay(){
 }
 
 function bcoSelectOfficeWork(){
+  _bcoQuickSel = '';
   document.getElementById('bco-reason-wrap').style.display = 'block';
+  document.getElementById('bco-custom-wrap').style.display = 'block';
   document.getElementById('bco-reason-input').focus();
+}
+
+function bcoQuickSel(label){
+  // Toggle selection
+  _bcoQuickSel = (_bcoQuickSel === label) ? '' : label;
+  var labels = ['Refreshment','Site Visit','Purchase'];
+  var colors = [
+    {on:'rgba(48,209,88,0.3)',border:'rgba(48,209,88,0.7)'},
+    {on:'rgba(10,132,255,0.3)',border:'rgba(10,132,255,0.7)'},
+    {on:'rgba(191,95,255,0.3)',border:'rgba(191,95,255,0.7)'}
+  ];
+  labels.forEach(function(lbl, i){
+    var btn = document.getElementById('bco-q-'+i);
+    if(!btn) return;
+    var active = (lbl === _bcoQuickSel);
+    btn.style.opacity = (_bcoQuickSel && !active) ? '0.45' : '1';
+    btn.style.transform = active ? 'scale(1.05)' : '';
+    btn.style.background = active ? colors[i].on : '';
+    btn.style.boxShadow = active ? '0 0 0 2px '+colors[i].border : '';
+  });
+  // Show typing input only when no quick option selected
+  var cw = document.getElementById('bco-custom-wrap');
+  if(cw) cw.style.display = _bcoQuickSel ? 'none' : 'block';
+  if(!_bcoQuickSel) setTimeout(function(){ document.getElementById('bco-reason-input').focus(); }, 50);
 }
 
 async function bcoSubmit(type){
@@ -4788,10 +4855,14 @@ async function bcoSubmit(type){
   btn.innerHTML='…'; btn.disabled=true;
   var reason = '';
   if(type==='office_work'){
-    reason = (document.getElementById('bco-reason-input').value||'').trim();
-    if(!reason){
-      document.getElementById('bco-reason-input').style.borderColor='rgba(255,69,58,0.6)';
-      btn.innerHTML=origText; btn.disabled=false; return;
+    if(_bcoQuickSel){
+      reason = _bcoQuickSel;
+    } else {
+      reason = (document.getElementById('bco-reason-input').value||'').trim();
+      if(!reason){
+        document.getElementById('bco-reason-input').style.borderColor='rgba(255,69,58,0.6)';
+        btn.innerHTML=origText; btn.disabled=false; return;
+      }
     }
   }
   try{
