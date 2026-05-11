@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260511a -->
+<!-- v20260511b -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -4960,6 +4960,25 @@ async function manualCheckout(staffId, staffName, date){
   }catch(e){ showToast('Server error','error'); }
 }
 
+// ── Admin Force Checkout (from attendance table "Force Out" button) ──
+async function adminForceCheckout(staffId, staffName, date){
+  if(!confirm('Force check out '+staffName+'?\n\nThis will mark them as checked out NOW.')) return;
+  try{
+    var res = await fetch(API+'/api/attendance/manual-checkout',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ staff_id: staffId, date: date })
+    });
+    var d = await res.json();
+    if(d.success){
+      showToast('✅ '+staffName+' checked out!');
+      loadAttendancePage();
+    } else {
+      showToast('⚠️ '+(d.message||'Could not checkout'), 'error');
+    }
+  }catch(e){ showToast('Server error','error'); }
+}
+
 /* ── HOOK: load data when page shown ── */
 var _origShowPage = window.showPage;
 window.showPage = function(page, el){
@@ -7513,16 +7532,23 @@ function attViewRow(r,i){
     : '<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>';
   var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
   // Determine check-out display
+  var todayStr = new Date().toISOString().split('T')[0];
   var coDisplay;
-  if (r.check_out) {
-    // Real checkout done — show time only, nothing else
+  if (r.check_out && !r.break_checkout) {
+    // Real checkout done — show time only
     coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
   } else if (r.break_checkout) {
-    // WiFi disconnected mid-work — still checked in, not in office
-    coDisplay = '<span style="color:rgba(255,159,10,0.7);font-size:10px;">Not in office</span>';
+    // WiFi disconnected — not in office + Force Checkout option
+    coDisplay = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
+      +'<span style="color:rgba(255,159,10,0.7);font-size:10px;">Not in office</span>'
+      +'<button onclick="adminForceCheckout('+r.id+',\''+escHtml(r.name)+'\',\''+todayStr+'\')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.3);border-radius:6px;padding:2px 7px;font-size:9px;color:#FF453A;cursor:pointer;font-family:inherit;">Force Out</button>'
+      +'</div>';
   } else if (r.check_in) {
-    // Checked in, working normally
-    coDisplay = '<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>';
+    // Working — show Force Checkout for admin convenience
+    coDisplay = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
+      +'<span style="color:rgba(48,209,88,0.5);font-size:10px;">Working ✓</span>'
+      +'<button onclick="adminForceCheckout('+r.id+',\''+escHtml(r.name)+'\',\''+todayStr+'\')" style="background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:6px;padding:2px 7px;font-size:9px;color:#FF9F0A;cursor:pointer;font-family:inherit;">Force Out</button>'
+      +'</div>';
   } else {
     coDisplay = '<span style="color:var(--muted);">—</span>';
   }
