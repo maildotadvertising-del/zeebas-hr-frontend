@@ -4473,8 +4473,9 @@ function listenBreakApproval(){
     _refreshCheckInDisplay();
   });
 
-  // ── Announcement received ──
+  // ── Announcement received (real-time) ──
   staffSocket.on('announcement', function(data){
+    markAnnSeen(data.id);
     showAnnouncementPopup(data);
   });
 
@@ -5449,6 +5450,42 @@ async function s1UpdateTask(id,status){
 }
 
 /* ── Announcement Popup ── */
+/* ── Missed Announcements (fetch on load / foreground) ── */
+function markAnnSeen(id){
+  if(!id) return;
+  try{
+    var seen = JSON.parse(localStorage.getItem('seen_ann_ids')||'[]');
+    if(!seen.includes(id)){ seen.push(id); }
+    // Keep only last 100 IDs to avoid bloat
+    if(seen.length > 100) seen = seen.slice(-100);
+    localStorage.setItem('seen_ann_ids', JSON.stringify(seen));
+  }catch(e){}
+}
+
+async function loadMissedAnnouncements(){
+  var s = zStaff();
+  if(!s || s.role==='admin') return;
+  try{
+    var res = await fetch(API_URL+'/api/announcements/my', { headers:{Authorization:'Bearer '+zToken()} });
+    if(!res.ok) return;
+    var js = await res.json();
+    if(!js.success || !js.data || !js.data.length) return;
+    var seen = [];
+    try{ seen = JSON.parse(localStorage.getItem('seen_ann_ids')||'[]'); }catch(e){}
+    var cutoff = Date.now() - 24*60*60*1000; // Only show last 24 hours
+    // Filter unseen + recent, newest first
+    var unseen = js.data.filter(function(a){
+      return !seen.includes(a.id) && new Date(a.created_at).getTime() > cutoff;
+    });
+    if(!unseen.length) return;
+    // Show most recent one (they're already newest-first from API)
+    var ann = unseen[0];
+    markAnnSeen(ann.id);
+    // Small delay so app UI settles first
+    setTimeout(function(){ showAnnouncementPopup(ann); }, 1200);
+  }catch(e){ console.log('loadMissedAnnouncements err:', e); }
+}
+
 function showAnnouncementPopup(data){
   // Remove any existing announcement popup
   var old=document.getElementById('ann-popup');
@@ -5682,7 +5719,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); syncNotifCard(); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); }
+    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); syncNotifCard(); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); setTimeout(loadMissedAnnouncements, 2500); }
   }
 });
 
@@ -5697,6 +5734,7 @@ document.addEventListener('visibilitychange', function(){
       _appJustOpened = true;
       // NOTE: Do NOT clear _wifiOffSince here — wifiCheckAndAct uses it to detect break return
       setTimeout(wifiCheckAndAct, 600); // slight delay so network reconnects first
+      setTimeout(loadMissedAnnouncements, 1500); // check for announcements missed while backgrounded
     }
   }
 });
