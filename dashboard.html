@@ -4435,11 +4435,50 @@ function buildAnnCard(a){
     +(a.title?'<div style="color:#fff;font-size:14px;font-weight:500;margin-bottom:2px;">'+escHtml(a.title)+'</div>':'')
     +'<div style="color:rgba(245,245,247,0.4);font-size:11px;">'+escHtml(a.sent_by_name||'Admin')+' · '+ts+recLabel+'</div>'
     +'</div>'
+    +'<div style="display:flex;gap:5px;flex-shrink:0;">'
+    +'<button onclick="editAnnouncement('+a.id+')" title="Edit" style="background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.25);color:#0A84FF;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">✏️</button>'
+    +'<button onclick="deleteAnnouncement('+a.id+')" title="Delete" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">🗑</button>'
+    +'</div>'
     +'</div>'
     +(a.message?'<div style="color:rgba(245,245,247,0.85);font-size:13px;line-height:1.6;margin-bottom:'+(a.image_url||a.audio_url?'12':'0')+'px;white-space:pre-wrap;">'+escHtml(a.message)+'</div>':'')
     +(a.image_url?'<img src="'+API+a.image_url+'" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;margin-bottom:'+(a.audio_url?'10':'0')+'px;" onerror="this.style.display=\'none\'">':'')
     +(a.audio_url?'<audio controls src="'+API+a.audio_url+'" style="width:100%;border-radius:8px;margin-top:4px;"></audio>':'')
     +'</div>';
+}
+
+var _annEditId = null;
+
+async function deleteAnnouncement(id){
+  if(!confirm('Delete this announcement? This cannot be undone.')) return;
+  try{
+    var r = await fetch(API+'/api/announcements/'+id, { method:'DELETE', headers:zHdr() });
+    var d = await r.json();
+    if(d.success){ showToast('🗑 Announcement deleted'); loadAnnouncements(); }
+    else alert(d.message||'Could not delete');
+  }catch(e){ alert('Network error'); }
+}
+
+function editAnnouncement(id){
+  // Find the announcement data from current list
+  var listEl = document.getElementById('ann-list');
+  if(!listEl) return;
+  // Re-fetch to get current data
+  fetch(API+'/api/announcements', {headers:zHdr()}).then(function(r){ return r.json(); }).then(function(data){
+    var rows = data.data||[];
+    var ann = rows.find(function(a){ return a.id===id; });
+    if(!ann) return;
+    _annEditId = id;
+    // Pre-fill compose form
+    document.getElementById('ann-title').value   = ann.title   || '';
+    document.getElementById('ann-message').value = ann.message || '';
+    clearAnnImage(); clearAnnAudio();
+    setAnnRecipients(ann.recipients||'all');
+    // Change send button to Update
+    var btn = document.getElementById('ann-send-btn');
+    if(btn){ btn.textContent='✏️ Update Announcement'; btn.style.background='linear-gradient(135deg,#0A84FF,#0A60CC)'; }
+    document.getElementById('ann-overlay').style.display='block';
+    document.getElementById('ann-panel').style.display='block';
+  }).catch(function(){ alert('Could not load announcement'); });
 }
 
 async function loadAnnStaffList(){
@@ -4452,11 +4491,13 @@ async function loadAnnStaffList(){
 }
 
 function openAnnCompose(){
-  _annRecipients='all'; _annStaff=[];
+  _annEditId=null; _annRecipients='all'; _annStaff=[];
   document.getElementById('ann-title').value='';
   document.getElementById('ann-message').value='';
   clearAnnImage(); clearAnnAudio();
   setAnnRecipients('all');
+  var btn=document.getElementById('ann-send-btn');
+  if(btn){ btn.textContent='📢 Send Announcement'; btn.style.background='linear-gradient(135deg,#FF9F0A,#FF6B00)'; }
   document.getElementById('ann-overlay').style.display='block';
   document.getElementById('ann-panel').style.display='block';
 }
@@ -4608,17 +4649,37 @@ async function sendAnnouncement(){
   if(audFile) fd.append('audio', audFile);
 
   try{
-    var res=await fetch(API+'/api/announcements',{method:'POST',headers:{Authorization:'Bearer '+zTok()},body:fd});
-    var d=await res.json();
+    var res, d;
+    if(_annEditId){
+      // Edit mode — PUT with JSON (no file re-upload for edits)
+      res = await fetch(API+'/api/announcements/'+_annEditId, {
+        method:'PUT',
+        headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
+        body: JSON.stringify({title, message})
+      });
+      d = await res.json();
+      if(d.success){ showToast('✅ Announcement updated!'); }
+      else showToast(d.message||'Failed to update');
+    } else {
+      // New announcement — POST with FormData
+      res = await fetch(API+'/api/announcements',{method:'POST',headers:{Authorization:'Bearer '+zTok()},body:fd});
+      d = await res.json();
+      if(d.success){ showToast('📢 Announcement sent!'); var dot=document.getElementById('ann-nav-dot'); if(dot) dot.style.display='none'; }
+      else showToast(d.message||'Failed to send');
+    }
     if(d.success){
-      showToast('📢 Announcement sent!');
+      _annEditId = null;
       document.getElementById('ann-overlay').style.display='none';
       document.getElementById('ann-panel').style.display='none';
       loadAnnouncements();
-      var dot=document.getElementById('ann-nav-dot'); if(dot) dot.style.display='none';
-    } else showToast(d.message||'Failed to send');
+    }
   }catch(e){ showToast('Network error'); }
-  finally{ btn.textContent='📢 Send Announcement'; btn.disabled=false; }
+  finally{
+    _annEditId = null;
+    btn.textContent='📢 Send Announcement';
+    btn.style.background='linear-gradient(135deg,#FF9F0A,#FF6B00)';
+    btn.disabled=false;
+  }
 }
 
 // Close ann staff dropdown on outside click
