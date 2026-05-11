@@ -327,7 +327,7 @@ body.desktop-mode #s1-sidebar {
         <!-- Profile banner -->
         <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));">
           <div style="display:flex;align-items:center;gap:11px;">
-            <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;">—</div>
+            <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
             <div style="flex:1;">
               <div id="s1-name" style="color:#fff;font-size:15px;font-weight:500;">Welcome</div>
               <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
@@ -348,21 +348,21 @@ body.desktop-mode #s1-sidebar {
           </div>
           <!-- Work Timer Row -->
           <div id="work-timer-row" style="display:none;margin-top:10px;background:rgba(255,255,255,0.05);border-radius:9px;padding:8px 12px;align-items:center;justify-content:space-between;">
-            <!-- Left: Time Worked (live elapsed) -->
+            <!-- Left: Work Remaining (countdown) -->
             <div style="display:flex;flex-direction:column;gap:2px;">
               <div style="display:flex;align-items:center;gap:5px;">
-                <span id="s1-elapsed-dot" style="width:6px;height:6px;border-radius:50%;background:#30D158;flex-shrink:0;animation:pulse-green 1.5s infinite;"></span>
-                <span style="color:rgba(245,245,247,0.4);font-size:9px;">Time Worked</span>
+                <span id="s1-elapsed-dot" style="width:6px;height:6px;border-radius:50%;background:#FF9F0A;flex-shrink:0;animation:pulse-green 1.5s infinite;"></span>
+                <span style="color:rgba(245,245,247,0.4);font-size:9px;">Work Remaining</span>
               </div>
-              <div id="s1-elapsed-timer" style="color:#30D158;font-size:14px;font-weight:700;font-family:monospace;letter-spacing:1px;">00:00:00</div>
-            </div>
-            <!-- Right: Work Remaining -->
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Remaining</span>
               <div style="display:flex;align-items:center;gap:5px;">
-                <div id="s1-work-timer" style="color:#FF9F0A;font-size:13px;font-weight:600;font-family:monospace;letter-spacing:0.5px;">--:--:--</div>
+                <div id="s1-work-timer" style="color:#FF9F0A;font-size:14px;font-weight:700;font-family:monospace;letter-spacing:1px;">--:--:--</div>
                 <div id="s1-work-timer-done" style="display:none;color:#30D158;font-size:9px;font-weight:500;background:rgba(48,209,88,0.12);border-radius:5px;padding:2px 6px;">✓ Done</div>
               </div>
+            </div>
+            <!-- Right: Task Remaining -->
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Task Remaining</span>
+              <div id="s1-task-remaining" style="color:#0A84FF;font-size:14px;font-weight:700;font-family:monospace;letter-spacing:1px;">—</div>
             </div>
           </div>
           <!-- Monthly Balance Row -->
@@ -418,24 +418,16 @@ body.desktop-mode #s1-sidebar {
           </div>
         </div>
 
-        <!-- This week attendance -->
+        <!-- This week attendance — loaded dynamically -->
         <div class="g" style="padding:12px;margin-bottom:10px;">
           <div style="color:#fff;font-size:12px;font-weight:500;margin-bottom:10px;">This Week</div>
-          <div style="display:flex;justify-content:space-between;gap:4px;">
-            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:rgba(245,245,247,0.3);margin-bottom:4px;">MON</div><div style="height:32px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:7px;display:flex;align-items:center;justify-content:center;"><svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
-            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:rgba(245,245,247,0.3);margin-bottom:4px;">TUE</div><div style="height:32px;background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.28);border-radius:7px;display:flex;align-items:center;justify-content:center;"><span style="color:#FF9F0A;font-size:10px;font-weight:600;">L</span></div></div>
-            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:rgba(245,245,247,0.3);margin-bottom:4px;">WED</div><div style="height:32px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:7px;display:flex;align-items:center;justify-content:center;"><svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
-            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:rgba(245,245,247,0.3);margin-bottom:4px;">THU</div><div style="height:32px;background:rgba(255,69,58,0.16);border:0.5px solid rgba(255,69,58,0.26);border-radius:7px;display:flex;align-items:center;justify-content:center;"><span style="color:#FF453A;font-size:11px;font-weight:600;">✕</span></div></div>
-            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:rgba(245,245,247,0.3);margin-bottom:4px;">FRI</div><div style="height:32px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:7px;display:flex;align-items:center;justify-content:center;"><svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
-            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:rgba(245,245,247,0.3);margin-bottom:4px;">SAT</div><div style="height:32px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(245,245,247,0.2);font-size:10px;">—</span></div></div>
+          <div id="s1-week-cal" style="display:flex;justify-content:space-between;gap:4px;">
+            <div style="color:rgba(245,245,247,0.25);font-size:10px;text-align:center;width:100%;padding:8px 0;">Loading…</div>
           </div>
         </div>
 
-        <!-- Leave status -->
-        <div class="gs" style="padding:11px 13px;display:flex;align-items:center;justify-content:space-between;">
-          <div><div style="color:#fff;font-size:12px;font-weight:400;">Leave Request</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">21–22 Apr · Casual Leave</div></div>
-          <span class="po">Pending</span>
-        </div>
+        <!-- Leave status — loaded dynamically, hidden if no leaves -->
+        <div id="s1-leave-status-card" style="display:none;padding:11px 13px;" class="gs"></div>
       </div>
       <div id="n1-home" class="bnav"></div>
     </div>
@@ -1608,7 +1600,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); }
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); }
@@ -4402,9 +4394,6 @@ function startWorkTimer(checkInTime, officeEndTimeStr, lateMinutes){
   if(!timerRow) return;
   timerRow.style.display = 'flex';
 
-  // Check-in moment
-  var ciMs = new Date(checkInTime).getTime();
-
   // Target = today at officeEndTime + lateMinutes compensation
   var parts = (officeEndTimeStr||'18:00').split(':').map(Number);
   var target = new Date();
@@ -4414,16 +4403,6 @@ function startWorkTimer(checkInTime, officeEndTimeStr, lateMinutes){
 
   function tick(){
     var now = new Date();
-
-    // ── Elapsed (time worked since check-in) ──
-    var elapsedMs = now - ciMs;
-    if(elapsedMs < 0) elapsedMs = 0;
-    var eSec = Math.floor(elapsedMs / 1000);
-    var eH = Math.floor(eSec / 3600);
-    var eM = Math.floor((eSec % 3600) / 60);
-    var eS = eSec % 60;
-    var elEl = document.getElementById('s1-elapsed-timer');
-    if(elEl) elEl.textContent = pad2(eH)+':'+pad2(eM)+':'+pad2(eS);
 
     // ── Remaining ──
     var diff = target - now;
@@ -5042,9 +5021,113 @@ function populateStaff(s){
   set('s1-desig', s.designation||'Staff');
   set('s1-brand', (s.brand&&s.brand.name)||'Zeebas Cluster');
   set('s1-home-netpay', '\u2026'); // will be updated by loadMySalary
+  // Avatar \u2014 show profile photo if available
   var av=document.getElementById('s1-avatar');
-  if(av) av.textContent=(s.name||'S').charAt(0).toUpperCase();
+  if(av){
+    var src = s.photo_data || (s.photo_url ? API_URL+s.photo_url : null);
+    if(src){
+      av.innerHTML = '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent=\''+(s.name||'S').charAt(0).toUpperCase()+'\';">';
+    } else {
+      av.innerHTML = '';
+      av.textContent = (s.name||'S').charAt(0).toUpperCase();
+    }
+  }
   updateSidebarUser(s);
+}
+
+// ── Update Task Remaining in work timer row ──
+function updateTaskRemaining(count){
+  var el = document.getElementById('s1-task-remaining');
+  if(!el) return;
+  if(typeof count === 'number'){
+    el.textContent = count > 0 ? count+' left' : '✓ All done';
+    el.style.color = count > 0 ? '#0A84FF' : '#30D158';
+  }
+}
+
+// ── Load home screen: This Week calendar + latest leave status ──
+async function loadHomeWeekAndLeave(){
+  try{
+    // ── This Week calendar ──
+    var calEl = document.getElementById('s1-week-cal');
+    if(calEl){
+      var now = new Date();
+      var dayOfWeek = now.getDay(); // 0=Sun,1=Mon,...6=Sat
+      // Get Monday of this week
+      var monday = new Date(now);
+      monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      monday.setHours(0,0,0,0);
+
+      var days = ['MON','TUE','WED','THU','FRI','SAT'];
+      var dates = days.map(function(_,i){
+        var d = new Date(monday); d.setDate(monday.getDate()+i);
+        return d;
+      });
+
+      // Fetch this month's attendance
+      var yr = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0');
+      var r = await fetch(API_URL+'/api/attendance/my?month='+yr+'-'+mo, {headers:zHead()});
+      var attData = {}; // date string → status
+      if(r.ok){
+        var d2 = await r.json();
+        (d2.data||[]).forEach(function(a){
+          var ds = (a.date||'').substring(0,10);
+          if(ds) attData[ds] = a.status||'present';
+        });
+      }
+
+      var nowDate = new Date(); nowDate.setHours(0,0,0,0);
+
+      calEl.innerHTML = dates.map(function(dt, i){
+        var ds = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+        var st = attData[ds];
+        var isFuture = dt > nowDate;
+        var isToday  = dt.getTime() === nowDate.getTime();
+
+        var cell, dotStyle='';
+        if(isToday) dotStyle='box-shadow:0 0 0 1.5px rgba(10,132,255,0.5);';
+        if(isFuture){
+          cell = '<div style="height:32px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:10px;">—</span></div>';
+        } else if(!st || st==='absent'){
+          cell = '<div style="height:32px;background:rgba(255,69,58,0.16);border:0.5px solid rgba(255,69,58,0.26);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:11px;font-weight:600;">✕</span></div>';
+        } else if(st==='late'||st==='late_pending'){
+          cell = '<div style="height:32px;background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.28);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF9F0A;font-size:10px;font-weight:600;">L</span></div>';
+        } else if(st==='on_leave'){
+          cell = '<div style="height:32px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.25);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:10px;font-weight:600;">OL</span></div>';
+        } else {
+          // present / onsite_approved etc
+          cell = '<div style="height:32px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:7px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg></div>';
+        }
+        return '<div style="text-align:center;flex:1;">'
+          +'<div style="font-size:9px;color:'+(isToday?'#0A84FF':'rgba(245,245,247,0.3)')+';margin-bottom:4px;font-weight:'+(isToday?'600':'400')+';">'+days[i]+'</div>'
+          +cell+'</div>';
+      }).join('');
+    }
+  }catch(e){ console.log('week cal error',e.message); }
+
+  try{
+    // ── Latest leave status ──
+    var leaveCard = document.getElementById('s1-leave-status-card');
+    if(!leaveCard) return;
+    var lr = await fetch(API_URL+'/api/leave/my', {headers:zHead()});
+    if(!lr.ok){ leaveCard.style.display='none'; return; }
+    var ld = await lr.json();
+    var leaves = (ld.data||[]).slice(0,1); // most recent
+    if(!leaves.length){ leaveCard.style.display='none'; return; }
+    var l = leaves[0];
+    var fd = (l.from_date||'').substring(0,10);
+    var td2 = (l.to_date||'').substring(0,10);
+    var dateStr2 = fd===td2 ? fd : fd+' – '+td2;
+    var sc2 = {pending:['#FF9F0A','Pending'],approved:['#30D158','Approved'],rejected:['#FF453A','Rejected']}[l.status]||['#888','—'];
+    leaveCard.style.display = 'flex';
+    leaveCard.style.alignItems = 'center';
+    leaveCard.style.justifyContent = 'space-between';
+    leaveCard.innerHTML = '<div>'
+      +'<div style="color:#fff;font-size:12px;font-weight:400;">Leave Request</div>'
+      +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">'+escHtml(dateStr2)+' · '+escHtml(l.leave_type||'Leave')+'</div>'
+      +'</div>'
+      +'<span style="background:'+sc2[0]+'22;color:'+sc2[0]+';border:0.5px solid '+sc2[0]+'44;border-radius:6px;padding:2px 9px;font-size:10px;white-space:nowrap;">'+sc2[1]+'</span>';
+  }catch(e){ console.log('leave status error',e.message); }
 }
 
 /* ── POPULATE ADMIN UI ── */
@@ -5067,8 +5150,10 @@ async function fetchMyTasks(staffId){
     var d=await res.json();
     var rows=Array.isArray(d)?d:(d.data||d.tasks||[]);
     var mine=rows.filter(function(t){ return String(t.assigned_to)===String(staffId)&&t.status!=='done'; });
+    var openCount=mine.length;
     var el=document.getElementById('s1-tasks-count');
-    if(el) el.textContent=mine.length;
+    if(el) el.textContent=openCount;
+    updateTaskRemaining(openCount);
   } catch(e){ console.log('Tasks error',e); }
 }
 
@@ -5090,6 +5175,7 @@ async function loadStaffTasks(){
     if(openEl) openEl.textContent=open+' open';
     var cntEl=document.getElementById('s1-tasks-count');
     if(cntEl) cntEl.textContent=open;
+    updateTaskRemaining(open);
     s1TaskTab(_s1TaskTab);
   }catch(e){
     if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
