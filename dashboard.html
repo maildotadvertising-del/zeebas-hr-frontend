@@ -7373,8 +7373,27 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
+      +'<div style="display:flex;align-items:center;gap:5px;justify-content:center;">'
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
+      +(r.check_in?'<button onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>':'')
+      +'</div>'
     +'</td></tr>';
+}
+
+async function deleteAttendance(i){
+  var r = window._attRows[i];
+  if(!r || !r.check_in) return;
+  if(!confirm('Delete attendance record for '+r.name+' on '+window._attDate+'?\nThis cannot be undone.')) return;
+  try{
+    var res = await fetch(API+'/api/attendance/admin-delete',{
+      method:'DELETE',
+      headers:Object.assign(zHdr(),{'Content-Type':'application/json'}),
+      body:JSON.stringify({staff_id:r.id, date:window._attDate})
+    });
+    var d = await res.json();
+    if(d.success){ showToast('🗑 Record deleted'); loadAttendancePage(); }
+    else alert(d.message||'Could not delete');
+  }catch(e){ alert('Network error'); }
 }
 
 // Auto-recalculate late_mins + status when check-in time is changed by admin
