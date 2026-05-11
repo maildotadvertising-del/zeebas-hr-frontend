@@ -4819,19 +4819,17 @@ async function wifiCheckAndAct(){
           return;
         }
 
-        // Detect if they were recently away using _wifiOffSince (primary) or server's minutesSinceLastPing (fallback)
+        // Detect if they were recently away using _wifiOffSince only.
+        // We do NOT use wasJustOpened + minutesSinceLastPing because when the
+        // app is backgrounded (screen locked) pings stop but staff may still
+        // be in the office — causing false positives.
         var awayMins = 0;
         if(_wifiOffSince !== null){
           awayMins = Math.floor((Date.now() - _wifiOffSince) / 60000);
-          // Use server's ping gap if it captures a longer absence (e.g. app was backgrounded)
-          if((d.minutesSinceLastPing||0) > awayMins) awayMins = d.minutesSinceLastPing;
-        } else if(wasJustOpened && (d.minutesSinceLastPing||0) >= 5){
-          // App just opened and server shows 5+ min since last ping → they were away
-          awayMins = d.minutesSinceLastPing;
         }
 
-        if(awayMins >= 2){
-          // Staff was away — show Break / Office Work choice modal
+        if(awayMins >= 15){
+          // Staff was visibly away from office WiFi for 15+ min → show Break / Office Work choice
           _bcoAwayMins = awayMins;
           _wifiOffSince = null;
           wifiBanner(false);
