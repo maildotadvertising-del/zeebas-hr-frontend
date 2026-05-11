@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260511c -->
+<!-- v20260511d -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -7426,26 +7426,35 @@ function _localTimeToUTC(dateStr, hmm){
 }
 
 // Compute OT minutes: how many minutes past THIS staff member's end time they worked
-function _calcOTMins(checkOut, empType){
+// OT calculation — accounts for late compensation + 40 min buffer
+// OT starts only after: end_time + late_mins (compensation) + 40 min buffer
+// e.g. 51 min late, end=21:00 → OT threshold = 21:51 + 40 = 22:31
+//      checkout at 22:23 < 22:31 → OT = 0
+function _calcOTMins(checkOut, empType, lateMins){
   if(!checkOut) return 0;
   var co = new Date(checkOut);
   if(isNaN(co.getTime())) return 0;
   var pr = window._attPayroll || {};
   var et = (empType || 'full_time').toLowerCase();
   var toM = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
-  // Each staff's OT starts after THEIR OWN employment-type end time (not the min of all types)
   var endStr;
   if(et === 'day_time')       endStr = pr.dt_end || pr.ft_end || '18:00';
   else if(et === 'part_time') endStr = pr.pt_end || '13:00';
-  else                        endStr = pr.ft_end || '18:00'; // full_time + daily_wage + default
+  else                        endStr = pr.ft_end || '18:00';
   var officeCloseMins = toM(endStr);
   var coMins = co.getHours()*60 + co.getMinutes();
-  return Math.max(0, coMins - officeCloseMins);
+  var lateM = Math.max(0, parseInt(lateMins || 0));
+  var OT_BUFFER = 40; // must work 40+ mins beyond compensation to earn OT
+  // OT is measured from end_time + late_mins (staff has compensated their late arrival)
+  var otStartMins   = officeCloseMins + lateM;
+  var otThreshMins  = otStartMins + OT_BUFFER;
+  if(coMins < otThreshMins) return 0;
+  return coMins - otStartMins;
 }
 
-// Build OT cell HTML — styled like Late Mins for visual consistency
+// Build OT cell HTML
 function _otCell(r){
-  var otMins = _calcOTMins(r.check_out, r.employment_type);
+  var otMins = _calcOTMins(r.check_out, r.employment_type, r.late_minutes);
   if(otMins < 5) return '<span style="color:var(--muted);">—</span>';
   var h = Math.floor(otMins/60), m = otMins%60;
   var label = h > 0 ? (h+'h'+(m?' '+m+'m':'')) : (m+'m');
@@ -7597,7 +7606,7 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
-      +(parseInt(r.early_mins||0)>0 && (!r.check_out || _calcOTMins(r.check_out, r.employment_type) > 0)?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
+      +(parseInt(r.early_mins||0)>0 && (!r.check_out || _calcOTMins(r.check_out, r.employment_type, r.late_minutes) > 0)?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
     +'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
