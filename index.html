@@ -1,4 +1,4 @@
-<!-- v20260511c -->
+<!-- v20260511d -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -1883,9 +1883,10 @@ function attActionWorkOutside(){
   if(act) act.style.display='none';
 }
 
-/* Action: Check Out */
+/* Action: Check Out → open EOD work report form */
 function attActionCheckout(){
-  go1('s1-dailylog');
+  _eodTriggered = false; // allow re-opening
+  showEodPopup();
 }
 
 async function markAttendance(){
@@ -4581,6 +4582,7 @@ function showEodPopup(){
 async function eodSubmit(){
   var btn = document.getElementById('eod-submit-btn');
   if(btn){ btn.textContent='Submitting…'; btn.disabled=true; }
+  var checkoutAt = new Date().toISOString(); // capture EXACT button-click time
   try{
     var items = _eodItems.filter(function(i){ return (i.text||'').trim(); }).map(function(i){
       return { text: (i.text||'').trim(), link: (i.link||'').trim(), category: i.cat||'', status: i.status||'done' };
@@ -4593,15 +4595,26 @@ async function eodSubmit(){
     var r = await fetch(API_URL+'/api/eod/submit', {
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'}, zHead()),
-      body: JSON.stringify({ items: items })
+      body: JSON.stringify({ items: items, checkout_at: checkoutAt })
     });
     var d = await r.json();
     if(d.success){
       var ov = document.getElementById('ov-eod');
       if(ov) ov.style.display='none';
-      showToast('✅ Checked out! Report sent to admin.');
-      // Refresh home to update check-in status + week calendar
-      setTimeout(function(){ wifiCheckAndAct(); stopWorkTimer(); loadHomeWeekAndLeave(); }, 800);
+      stopWorkTimer();
+      // Show checkout success screen
+      var successOv = document.createElement('div');
+      successOv.style.cssText='position:fixed;inset:0;background:rgba(4,4,8,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:10px;padding:28px;';
+      successOv.innerHTML=
+        '<div style="font-size:60px;margin-bottom:4px;">👋</div>'
+        +'<div style="color:#30D158;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Checked Out!</div>'
+        +'<div style="color:rgba(245,245,247,0.5);font-size:14px;margin-top:2px;">Work report submitted ✓</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:13px;">Have a great evening! 🌙</div>'
+        +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:20px;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:13px 36px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);">Back to Home</button>';
+      document.body.appendChild(successOv);
+      setTimeout(function(){ var b=successOv.querySelector('button'); if(b) b.click(); }, 3000);
+      // Refresh home data
+      setTimeout(function(){ wifiCheckAndAct(); loadHomeWeekAndLeave(); }, 800);
     } else {
       showToast('❌ '+(d.message||'Could not submit'));
       if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
@@ -5168,9 +5181,10 @@ async function wifiCheckAndAct(){
 }
 
 async function wifiCheckoutPrompt(){
-  // Manual checkout from banner — go to daily log screen
+  // Manual checkout from banner — open EOD work report form
   wifiBanner(false);
-  go1('s1-dailylog');
+  _eodTriggered = false;
+  showEodPopup();
 }
 
 /* ══════════════════════════════════════════
