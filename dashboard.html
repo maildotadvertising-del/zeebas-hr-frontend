@@ -4307,7 +4307,7 @@ async function loadDashStats(){
   try{
     var now = new Date();
     var mo = now.getMonth()+1, yr = now.getFullYear();
-    var pRes = await fetch(API+'/api/payroll?month='+mo+'&year='+yr, { headers: zHdr() });
+    var pRes = await fetch(API+'/api/payroll/salary-preview?month='+mo+'&year='+yr, { headers: zHdr() });
     var pData = await pRes.json();
     var prRows = pData.data || [];
     var totalEarned = prRows.reduce(function(sum, r){
