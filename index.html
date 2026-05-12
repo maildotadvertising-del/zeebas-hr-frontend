@@ -834,15 +834,11 @@ body.desktop-mode #s1-sidebar {
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;" id="att-type">
           <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;border-color:rgba(48,209,88,0.3);background:rgba(48,209,88,0.07);" onclick="selAtt(0)">
             <div id="att-radio-0" style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>
-            <div><div style="color:#fff;font-size:13px;">📍 Office</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">GPS verified · Within 300m</div></div>
+            <div><div style="color:#fff;font-size:13px;">📍 Office</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">WiFi · GPS auto detected</div></div>
           </div>
           <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selAtt(1)">
             <div id="att-radio-1" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
             <div><div style="color:#fff;font-size:13px;">🏗 Onsite</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Client location · Needs admin approval</div></div>
-          </div>
-          <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selAtt(2)">
-            <div id="att-radio-2" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
-            <div><div style="color:#fff;font-size:13px;">✋ Manual</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Direct check-in · WiFi / GPS not required</div></div>
           </div>
         </div>
 
@@ -1830,9 +1826,8 @@ function selAtt(idx){
   });
   var note=document.getElementById('onsite-note');
   var btn=document.getElementById('att-btn');
-  if(idx===0){ if(note) note.style.display='none'; if(btn) btn.textContent='Check In — Office'; }
+  if(idx===0){ if(note) note.style.display='none'; if(btn) btn.textContent='Check In'; }
   else if(idx===1){ if(note) note.style.display='block'; if(btn) btn.textContent='Check In — Onsite'; }
-  else if(idx===2){ if(note) note.style.display='none'; if(btn) btn.textContent='Check In — Manual'; }
 }
 
 /* Load attendance screen — show action buttons if checked in, check-in form if not */
@@ -1946,7 +1941,7 @@ function escStr(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 
 async function markAttendance(){
   var btn=document.getElementById('att-btn');
-  var type = _selAttIdx===1 ? 'onsite' : (_selAttIdx===2 ? 'manual' : 'office');
+  var type = _selAttIdx===1 ? 'onsite' : 'office';
   var isOnsite = (type==='onsite');
   var siteName=((document.getElementById('site-name')||{}).value||'').trim();
 
@@ -1966,36 +1961,67 @@ async function markAttendance(){
   }catch(e){ /* network issue — don't block check-in */ }
 
   btn.disabled=true;
-  btn.textContent='⏳ Marking attendance…';
+
+  var d=null;
 
   try{
-    var body={type:type};
-    if(siteName) body.site_name=siteName;
-    if(myLat!==null) body.lat=myLat;
-    if(myLng!==null) body.lng=myLng;
+    if(!isOnsite){
+      // ── Step 1: Try WiFi check-in first ──
+      try{
+        btn.textContent='⏳ Checking WiFi…';
+        var wdRes=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
+        var wd=await wdRes.json();
+        if(wd.wifiEnabled && wd.isOffice && !wd.alreadyCheckedIn){
+          btn.textContent='⏳ WiFi check-in…';
+          var wcRes=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
+          var wc=await wcRes.json();
+          if(wc.success) d=wc;
+        }
+      }catch(wifiErr){ /* WiFi unavailable — fall through to GPS */ }
 
-    var res=await fetch(API_URL+'/api/attendance/checkin',{
-      method:'POST',
-      headers:Object.assign({'Content-Type':'application/json'},zHead()),
-      body:JSON.stringify(body)
-    });
-    var d=await res.json();
+      // ── Step 2: GPS check-in if WiFi didn't work ──
+      if(!d || !d.success){
+        btn.textContent='⏳ GPS check-in…';
+        var body={type:'office'};
+        if(myLat!==null) body.lat=myLat;
+        if(myLng!==null) body.lng=myLng;
+        var res=await fetch(API_URL+'/api/attendance/checkin',{
+          method:'POST',
+          headers:Object.assign({'Content-Type':'application/json'},zHead()),
+          body:JSON.stringify(body)
+        });
+        d=await res.json();
+      }
+    } else {
+      // Onsite check-in
+      btn.textContent='⏳ Marking attendance…';
+      var body={type:'onsite'};
+      if(siteName) body.site_name=siteName;
+      if(myLat!==null) body.lat=myLat;
+      if(myLng!==null) body.lng=myLng;
+      var res=await fetch(API_URL+'/api/attendance/checkin',{
+        method:'POST',
+        headers:Object.assign({'Content-Type':'application/json'},zHead()),
+        body:JSON.stringify(body)
+      });
+      d=await res.json();
+    }
 
-    if(!d.success){
+    if(!d || !d.success){
       btn.disabled=false;
-      btn.textContent=isOnsite?'Check In — Onsite':(type==='manual'?'Check In — Manual':'Check In — Office');
-      if(d.code==='PAST_END_TIME'){
+      btn.textContent=isOnsite?'Check In — Onsite':'Check In';
+      if(d && d.code==='PAST_END_TIME'){
         var ov=document.createElement('div');
         ov.style.cssText='position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);';
         ov.innerHTML='<div style="background:linear-gradient(145deg,rgba(18,12,36,0.98),rgba(10,10,22,0.98));border:0.5px solid rgba(255,255,255,0.12);border-radius:24px;padding:28px 24px;text-align:center;max-width:280px;width:90%;">'
           +'<div style="font-size:36px;margin-bottom:12px;">🕐</div>'
           +'<div style="color:#fff;font-size:16px;font-weight:500;margin-bottom:8px;">Work Hours Ended</div>'
-          +'<div style="color:rgba(245,245,247,0.5);font-size:12px;line-height:1.6;margin-bottom:20px;">'+d.message+'</div>'
+          +'<div style="color:rgba(245,245,247,0.5);font-size:12px;line-height:1.6;margin-bottom:20px;">'+(d.message||'')+'</div>'
           +'<button onclick="this.parentNode.parentNode.remove()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 28px;color:rgba(245,245,247,0.7);font-size:13px;cursor:pointer;font-family:inherit;">OK</button>'
           +'</div>';
         document.body.appendChild(ov);
       } else {
-        alert(d.message||'Check-in failed. Please try again.');
+        alert((d&&d.message)||'Check-in failed. Please try again.');
       }
       return;
     }
@@ -2060,7 +2086,7 @@ async function markAttendance(){
     setTimeout(loadHomeWeekAndLeave, 600);
   } catch(e){
     btn.disabled=false;
-    btn.textContent=isOnsite?'Check In — Onsite':(type==='manual'?'Check In — Manual':'Check In — Office');
+    btn.textContent=isOnsite?'Check In — Onsite':'Check In';
     alert('Network error. Check connection and try again.');
   }
 }
