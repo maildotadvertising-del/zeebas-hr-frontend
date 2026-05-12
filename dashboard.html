@@ -863,6 +863,24 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         <div>Loading tasks…</div>
       </div>
     </div>
+
+    <!-- Daily Work Logs section -->
+    <div style="margin-top:28px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="font-size:14px;font-weight:600;color:#fff;">📝 Daily Work Logs</div>
+        <span style="color:var(--muted);font-size:11px;">Staff-wise · Day-wise EOD</span>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+          <select id="dl2-staff" class="inp" style="width:auto;padding:6px 10px;font-size:12px;" onchange="loadDailyTaskLogs()">
+            <option value="">All Staff</option>
+          </select>
+          <input type="date" id="dl2-date" class="inp" style="width:auto;padding:6px 10px;font-size:12px;" onchange="loadDailyTaskLogs()">
+          <button onclick="document.getElementById('dl2-date').value=new Date().toISOString().split('T')[0];loadDailyTaskLogs();" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer;">Today</button>
+        </div>
+      </div>
+      <div id="daily-task-logs" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading…</div>
+      </div>
+    </div>
   </div>
 
   <!-- ── ADD / EDIT TASK PANEL ── -->
@@ -5040,7 +5058,7 @@ window.showPage = function(page, el){
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
-  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); setTimeout(loadOverdueReasons, 300); }
+  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); setTimeout(loadOverdueReasons, 300); setTimeout(function(){ loadDailyTaskLogs(); populateDailyLogStaffFilter(); }, 400); }
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
   if(page==='admin-overview') { setTimeout(loadAdminOverview, 100); setTimeout(loadDailyLogs, 200); }
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
@@ -5388,7 +5406,7 @@ function buildTaskCard(t){
     // Actions
     +'<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'
       +'<button onclick="openEditTask('+ids[0]+','+idsStr+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.22);border-radius:8px;padding:5px 10px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">✏️ Edit</button>'
-      +'<button onclick="deleteTask('+idsStr+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;padding:5px 10px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">🗑 Delete</button>'
+      +(t.status!=='done'?'<button onclick="completeTask(['+idsStr+'])" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;padding:5px 10px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;">✅ Complete</button>':'')
     +'</div>'
     +'</div>'
     +'</div>';
@@ -6034,6 +6052,113 @@ async function saveTask(){
   } else {
     showToast('Failed to assign tasks. Try again.');
   }
+}
+
+/* ── Complete Task ── */
+async function completeTask(ids){
+  var idArr = Array.isArray(ids) ? ids : (typeof ids==='string' && ids.startsWith('[') ? JSON.parse(ids) : [ids]);
+  try{
+    await Promise.all(idArr.map(function(tid){
+      return fetch(API+'/api/tasks/'+tid, {
+        method:'PUT',
+        headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+        body:JSON.stringify({status:'done'})
+      });
+    }));
+    showToast('✅ Task marked as completed!');
+    loadTasks();
+  } catch(e){ showToast('❌ Server error'); }
+}
+
+/* ── Daily Work Logs (EOD staff-wise day-wise) ── */
+async function loadDailyTaskLogs(){
+  var el = document.getElementById('daily-task-logs');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Loading…</div>';
+  try{
+    var staffFilter = (document.getElementById('dl2-staff')||{}).value||'';
+    var dateFilter  = (document.getElementById('dl2-date')||{}).value||'';
+    var qs = [];
+    if(dateFilter)  qs.push('date='+dateFilter);
+    if(staffFilter) qs.push('staff_id='+staffFilter);
+    var url = API+'/api/eod/admin'+(qs.length?'?'+qs.join('&'):'');
+    var r = await fetch(url, {headers:zHdr()});
+    var d = await r.json();
+    var rows = d.data || [];
+
+    // Filter out rejected, keep pending+approved
+    rows = rows.filter(function(r){ return r.status !== 'rejected'; });
+
+    if(!rows.length){
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">No daily work logs found</div>';
+      return;
+    }
+
+    // Group by date
+    var byDate = {};
+    rows.forEach(function(r){
+      var ds = (r.date||'').substring(0,10);
+      if(!byDate[ds]) byDate[ds] = [];
+      byDate[ds].push(r);
+    });
+
+    var dates = Object.keys(byDate).sort(function(a,b){ return b.localeCompare(a); });
+    el.innerHTML = dates.map(function(ds){
+      var staffRows = byDate[ds];
+      var d2 = new Date(ds+'T00:00:00');
+      var dayLabel = d2.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+      var cards = staffRows.map(function(s){
+        var items = Array.isArray(s.items)?s.items:(typeof s.items==='string'?JSON.parse(s.items||'[]'):[]);
+        var initials = (s.staff_name||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+        var avSrc = s.photo_data || (s.photo_url ? API+s.photo_url : null);
+        var avatar = avSrc
+          ? '<img src="'+avSrc+'" style="width:32px;height:32px;object-fit:cover;border-radius:50%;flex-shrink:0;">'
+          : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+initials+'</div>';
+        var statusCol = s.status==='approved'?'#30D158':s.status==='rejected'?'#FF453A':'#FF9F0A';
+        var statusLbl = s.status==='approved'?'Approved':s.status==='rejected'?'Rejected':'Pending';
+        return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;margin-bottom:8px;">'
+          +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+            +avatar
+            +'<div style="flex:1;">'
+              +'<div style="font-size:12px;font-weight:500;color:#fff;">'+escHtml(s.staff_name||'')+'</div>'
+              +'<div style="font-size:10px;color:var(--muted);">'+(s.designation||s.brand_name||'')+'</div>'
+            +'</div>'
+            +'<span style="background:'+statusCol+'22;color:'+statusCol+';border:0.5px solid '+statusCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;">'+statusLbl+'</span>'
+          +'</div>'
+          +'<div style="display:flex;flex-direction:column;gap:4px;">'
+          +items.map(function(it,idx){
+            return '<div style="display:flex;align-items:flex-start;gap:7px;padding:5px 8px;background:rgba(255,255,255,0.03);border-radius:7px;">'
+              +'<span style="color:#30D158;font-size:10px;margin-top:1px;flex-shrink:0;">'+(idx+1)+'.</span>'
+              +'<div style="flex:1;font-size:11px;color:rgba(245,245,247,0.75);line-height:1.4;">'+escHtml(it.text||'')
+                +(it.link?'<a href="'+escHtml(it.link)+'" target="_blank" style="margin-left:6px;color:#0A84FF;font-size:10px;">🔗 Link</a>':'')
+              +'</div>'
+              +(it.status==='done'?'<span style="color:#30D158;font-size:10px;flex-shrink:0;">✓</span>':'')
+            +'</div>';
+          }).join('')
+          +'</div>'
+        +'</div>';
+      }).join('');
+      return '<div style="margin-bottom:16px;">'
+        +'<div style="font-size:11px;font-weight:600;color:rgba(245,245,247,0.5);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">'+dayLabel+'</div>'
+        +cards
+      +'</div>';
+    }).join('');
+  }catch(e){ el.innerHTML='<div style="color:#FF453A;padding:20px;font-size:12px;">Failed to load</div>'; }
+}
+
+/* ── Populate staff filter for daily logs ── */
+async function populateDailyLogStaffFilter(){
+  var sel = document.getElementById('dl2-staff');
+  if(!sel || sel.options.length > 1) return;
+  try{
+    var r = await fetch(API+'/api/staff', {headers:zHdr()});
+    var d = await r.json();
+    (d.data||[]).forEach(function(s){
+      var o = document.createElement('option');
+      o.value = s.id; o.textContent = s.name;
+      sel.appendChild(o);
+    });
+  }catch(e){}
 }
 
 /* ── Delete Task ── */
