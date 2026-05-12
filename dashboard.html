@@ -7522,13 +7522,60 @@ function _calcOTMins(checkOut, empType, lateMins){
   return coMins - otStartMins;
 }
 
-// Build OT cell HTML
+// Carry-over credit = early_mins minus how many extra mins were used past end (below OT threshold)
+// Formula: carry = earlyMins - pastEndMins  (when OT=0 and checkout > end)
+//          carry = earlyMins - shortfallMins (when checkout < end)
+//          carry = earlyMins                 (when full OT earned — early credit fully preserved)
+function _calcCarryMins(r){
+  if(!r.check_in || !r.check_out) return 0;
+  var earlyMins = parseInt(r.early_mins || 0);
+  if(earlyMins <= 0) return 0;
+  var pr  = window._attPayroll || {};
+  var et  = (r.employment_type || 'full_time').toLowerCase();
+  var toM = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
+  var endStr;
+  if(et === 'day_time')       endStr = pr.dt_end || pr.ft_end || '18:00';
+  else if(et === 'part_time') endStr = pr.pt_end || '13:00';
+  else                        endStr = pr.ft_end || '18:00';
+  var endMins   = toM(endStr);
+  var lateM     = Math.max(0, parseInt(r.late_minutes || 0));
+  var co        = new Date(r.check_out);
+  var coMins    = co.getHours()*60 + co.getMinutes();
+  var requiredEnd = endMins + lateM; // staff must stay until end + late-compensation
+  var OT_BUFFER = 40;
+  var otThresh  = requiredEnd + OT_BUFFER;
+
+  if(coMins >= otThresh){
+    // Full OT earned — early credit fully preserved
+    return earlyMins;
+  } else if(coMins >= requiredEnd){
+    // Past required end but below OT threshold — extra mins consume from early credit
+    var pastEnd = coMins - requiredEnd;
+    return Math.max(0, earlyMins - pastEnd);
+  } else {
+    // Left before required end — shortfall consumes from early credit
+    var shortfall = requiredEnd - coMins;
+    return Math.max(0, earlyMins - shortfall);
+  }
+}
+
+// Build OT cell HTML — shows OT if ≥ 40m past end, else shows carry-over credit
 function _otCell(r){
   var otMins = _calcOTMins(r.check_out, r.employment_type, r.late_minutes);
-  if(otMins < 5) return '<span style="color:var(--muted);">—</span>';
-  var h = Math.floor(otMins/60), m = otMins%60;
-  var label = h > 0 ? (h+'h'+(m?' '+m+'m':'')) : (m+'m');
-  return '<span style="color:#30D158;font-weight:700;font-size:12px;">+'+label+'</span>';
+  if(otMins >= 5){
+    var h = Math.floor(otMins/60), m = otMins%60;
+    var label = h > 0 ? (h+'h'+(m?' '+m+'m':'')) : (m+'m');
+    return '<span style="color:#30D158;font-weight:700;font-size:12px;">+'+label+'</span>';
+  }
+  // No OT — show carry-over if early credit exists
+  if(r.check_out && parseInt(r.early_mins||0) > 0){
+    var carry = _calcCarryMins(r);
+    if(carry > 0){
+      return '<div style="color:#5DDDAA;font-size:10px;font-weight:500;">'+carry+'m carry</div>'
+           + '<div style="color:rgba(93,221,170,0.5);font-size:9px;">→ balance</div>';
+    }
+  }
+  return '<span style="color:var(--muted);">—</span>';
 }
 
 // Compute late minutes from check_in time vs office start + grace (client-side)
@@ -7670,7 +7717,7 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
-      +(parseInt(r.early_mins||0)>0 && (!r.check_out || _calcOTMins(r.check_out, r.employment_type, r.late_minutes) > 0)?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
+      +(parseInt(r.early_mins||0)>0?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
     +'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
