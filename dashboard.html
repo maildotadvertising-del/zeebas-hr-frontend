@@ -859,6 +859,15 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       </select>
     </div>
 
+    <!-- Overdue Reasons Panel -->
+    <div id="overdue-reasons-panel" style="display:none;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="color:#FF453A;font-size:13px;font-weight:500;">⚠️ Overdue Task Reasons</div>
+        <span id="od-req-count" style="background:rgba(255,69,58,0.15);color:#FF453A;border-radius:8px;padding:1px 7px;font-size:10px;font-weight:600;">0</span>
+      </div>
+      <div id="overdue-reasons-list"></div>
+    </div>
+
     <!-- Extra Time Requests Panel -->
     <div id="extra-time-panel" style="display:none;margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
@@ -5001,7 +5010,7 @@ window.showPage = function(page, el){
   if(page==='dashboard')      setTimeout(loadDashStats, 100);
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
-  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); }
+  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); setTimeout(loadOverdueReasons, 300); }
   if(page==='daily-logs')     setTimeout(loadDailyLogs, 100);
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
   if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
@@ -5030,6 +5039,69 @@ var STATUS_LABEL   = { pending:'Pending', in_progress:'In Progress', done:'Done 
 var STATUS_COLOR   = { pending:'#FF9F0A', in_progress:'#0A84FF', done:'#30D158' };
 
 /* ── Load Tasks ── */
+/* ── Overdue Reasons (admin review) ── */
+async function loadOverdueReasons(){
+  try{
+    var res=await fetch(API+'/api/tasks/overdue-reasons?status=pending',{headers:zHdr()});
+    var d=await res.json();
+    var data=d.data||[];
+    var panel=document.getElementById('overdue-reasons-panel');
+    var listEl=document.getElementById('overdue-reasons-list');
+    var cntEl=document.getElementById('od-req-count');
+    if(!panel||!listEl) return;
+    // Update sidebar badge
+    var sbBadge=document.getElementById('tasks-badge');
+    var etPanel=document.getElementById('extra-time-panel');
+    var etCount=etPanel&&etPanel.style.display!=='none'?parseInt((document.getElementById('et-req-count')||{}).textContent||0):0;
+    var totalBadge=data.length+etCount;
+    if(sbBadge){ sbBadge.textContent=totalBadge; sbBadge.style.display=totalBadge>0?'':'none'; }
+    if(!data.length){ panel.style.display='none'; return; }
+    panel.style.display='block';
+    if(cntEl) cntEl.textContent=data.length;
+    listEl.innerHTML=data.map(function(r){
+      var avSrc=r.photo_data||(r.photo_url?API+r.photo_url:null);
+      var init=(r.staff_name||'?').charAt(0).toUpperCase();
+      var av=avSrc
+        ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:34px;height:34px;border-radius:10px;background:rgba(255,69,58,0.15);display:flex;align-items:center;justify-content:center;color:#FF453A;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
+      var dueLbl=r.due_date?new Date(r.due_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
+      var checkInDate=r.reason_date?new Date(r.reason_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
+      return '<div id="od-card-'+r.id+'" style="background:rgba(255,69,58,0.05);border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +av
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.task_title)+'</div>'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+escHtml(r.staff_name)+' · Task due: '+dueLbl+' · Check-in: '+checkInDate+'</div>'
+        +'</div>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px;margin-bottom:10px;">'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-bottom:4px;">REASON</div>'
+        +'<div style="color:rgba(245,245,247,0.85);font-size:12px;line-height:1.5;">'+escHtml(r.reason)+'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="reviewOverdueReason('+r.id+',\'rejected\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'<button onclick="reviewOverdueReason('+r.id+',\'approved\')" style="flex:2;background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Noted & Approve</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){ console.error('loadOverdueReasons:',e); }
+}
+
+async function reviewOverdueReason(id, status){
+  try{
+    var r=await fetch(API+'/api/tasks/overdue-reasons/'+id+'/review',{
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({status:status})
+    });
+    var d=await r.json();
+    if(d.success){
+      showToast(status==='approved'?'✅ Reason noted':'✕ Reason rejected');
+      loadOverdueReasons();
+    } else showToast(d.message||'Failed','error');
+  }catch(e){ showToast('Server error','error'); }
+}
+
 /* ── Extra Time Requests ── */
 async function loadExtraTimeRequests(){
   try{

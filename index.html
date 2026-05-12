@@ -1889,6 +1889,56 @@ function attActionCheckout(){
   showEodPopup();
 }
 
+// ── Overdue task reason popup ──
+async function showOverduePopup(tasks, onDone){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);';
+  var inner='<div style="background:linear-gradient(160deg,rgba(20,8,40,0.99),rgba(10,10,22,0.99));border:0.5px solid rgba(255,69,58,0.3);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">'
+    +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px;"></div>'
+    +'<div style="font-size:22px;text-align:center;margin-bottom:6px;">⚠️</div>'
+    +'<div style="font-size:16px;font-weight:600;text-align:center;color:#fff;margin-bottom:6px;">Pending Tasks Overdue</div>'
+    +'<div style="font-size:12px;color:rgba(245,245,247,0.5);text-align:center;margin-bottom:20px;line-height:1.5;">இந்த tasks complete பண்ணல — காரணம் சொல்லி check in பண்ணுங்க</div>';
+
+  tasks.forEach(function(t,i){
+    var dateStr=t.due_date?(new Date(t.due_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})):'';
+    inner+='<div style="background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px 14px 12px;margin-bottom:12px;">'
+      +'<div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:2px;">'+escStr(t.title)+'</div>'
+      +'<div style="font-size:11px;color:rgba(255,69,58,0.8);margin-bottom:10px;">Due: '+dateStr+(t.brand_name?' · '+escStr(t.brand_name):'')+'</div>'
+      +'<textarea id="od-reason-'+t.id+'" placeholder="என்ன reason?" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 11px;color:#fff;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box;"></textarea>'
+      +'</div>';
+  });
+
+  inner+='<button id="od-submit-btn" style="width:100%;background:linear-gradient(135deg,#FF453A,#cc2a1f);border:none;border-radius:14px;padding:15px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;">Submit & Check In →</button>'
+    +'</div>';
+  ov.innerHTML=inner;
+  document.body.appendChild(ov);
+
+  document.getElementById('od-submit-btn').onclick=async function(){
+    var reasons=[];
+    var allFilled=true;
+    tasks.forEach(function(t){
+      var val=(document.getElementById('od-reason-'+t.id)||{}).value||'';
+      if(!val.trim()){ allFilled=false; return; }
+      reasons.push({task_id:t.id, reason:val.trim()});
+    });
+    if(!allFilled){ alert('எல்லா tasks-க்கும் reason போடுங்க'); return; }
+    var btn=document.getElementById('od-submit-btn');
+    btn.disabled=true; btn.textContent='Submitting…';
+    try{
+      var r=await fetch(API_URL+'/api/tasks/overdue-reason',{
+        method:'POST',
+        headers:Object.assign({'Content-Type':'application/json'},zHead()),
+        body:JSON.stringify({reasons:reasons})
+      });
+      var d=await r.json();
+      if(d.success){ ov.remove(); onDone(); }
+      else{ btn.disabled=false; btn.textContent='Submit & Check In →'; alert(d.message||'Error'); }
+    }catch(e){ btn.disabled=false; btn.textContent='Submit & Check In →'; alert('Network error'); }
+  };
+}
+
+function escStr(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 async function markAttendance(){
   var btn=document.getElementById('att-btn');
   var type = _selAttIdx===1 ? 'onsite' : (_selAttIdx===2 ? 'manual' : 'office');
@@ -1899,6 +1949,16 @@ async function markAttendance(){
     alert('Please enter the site / client name first');
     return;
   }
+
+  // ── Check for overdue tasks before check-in ──
+  try{
+    var ocRes=await fetch(API_URL+'/api/tasks/overdue-check',{headers:zHead()});
+    var ocData=await ocRes.json();
+    if(ocData.success && ocData.blocked){
+      showOverduePopup(ocData.tasks, function(){ markAttendance(); });
+      return;
+    }
+  }catch(e){ /* network issue — don't block check-in */ }
 
   btn.disabled=true;
   btn.textContent='⏳ Marking attendance…';
