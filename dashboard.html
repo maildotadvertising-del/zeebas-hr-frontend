@@ -1698,7 +1698,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Deductions</th>
             <th style="padding:10px 8px;text-align:center;font-weight:500;font-size:11px;color:#FF9F0A;">Late Ded.</th>
-            <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Absent Ded.</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;color:#30D158;">Incentive</th>
             <th style="padding:10px 8px;text-align:center;font-weight:500;font-size:11px;color:#BF5FFF;">Allowance</th>
             <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Net Pay</th>
@@ -2681,7 +2680,6 @@ async function psLoadSalaryPreview(){
         +'<td style="'+tdStyle+'color:#FFD60A;">'+r.late_days+'</td>'
         +'<td style="'+tdStyle+'color:#FF453A;">'+r.days_absent+'</td>'
         +'<td style="'+tdStyle+'color:#FF9F0A;">₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
-        +'<td style="'+tdStyle+'color:#FF453A;">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
         +'<td style="'+tdStyle+'font-weight:700;font-size:13px;color:#30D158;">₹'+parseFloat(r.net_salary||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0})+'</td>'
         +'</tr>';
     });
@@ -7032,7 +7030,6 @@ async function loadPayrollPage(){
     rows.forEach(function(r){
       totalNet += window._prIsCurrMonth ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
       totalDed += parseFloat(r.late_deduction||0)
-               + parseFloat(r.absent_deduction||0)
                + parseFloat(r.advance_deduction||0)
                + parseFloat(r.other_deduction||0);
     });
@@ -7104,9 +7101,6 @@ function prViewRow(r,i){
             ?'<div style="color:rgba(245,245,247,0.3);font-size:10px;">—</div>'
             :'<span style="color:var(--muted);">—</span>')))
     +'</td>'
-    +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">'
-      +(parseFloat(r.absent_deduction||0)>0?'-₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN'):'—')
-    +'</td>'
     +'<td style="'+td+'text-align:center;color:'+(inc>0?'#30D158':'var(--muted)')+';">'
       +(inc>0?'₹'+inc.toLocaleString('en-IN'):'—')
       +(inc>0&&r.incentive_reason?'<div style="font-size:9px;color:rgba(48,209,88,0.6);margin-top:2px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escHtml(r.incentive_reason||'')+'">'+escHtml(r.incentive_reason)+'</div>':'')
@@ -7150,7 +7144,6 @@ function prEditRow(r,i){
     +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.late_deduction||0)>0?'#FF9F0A':'var(--muted)')+';font-size:11px;">'
       +(parseFloat(r.late_deduction||0)>0?'-₹'+parseFloat(r.late_deduction||0).toLocaleString('en-IN'):'—')
     +'</td>'
-    +'<td style="'+td+'text-align:center;color:#FF453A;font-size:11px;">₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN')+'</td>'
     // Incentive — editable (amount + reason)
     +'<td style="'+td+'text-align:center;">'
       +'<div style="font-size:9px;color:#30D158;margin-bottom:2px;">Incentive</div>'
