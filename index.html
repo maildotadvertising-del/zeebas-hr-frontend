@@ -428,19 +428,24 @@ body.desktop-mode #s1-sidebar {
         <div id="notif-inline-card" style="display:none;border-radius:14px;padding:13px 14px;margin-bottom:10px;align-items:center;"></div>
 
         <!-- Quick Actions -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-gps')">
-            <div style="width:32px;height:32px;background:rgba(48,209,88,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.4"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <!-- Attendance — full-width bold card -->
+        <div style="margin-bottom:10px;">
+          <div onclick="go1('s1-gps')" style="cursor:pointer;border-radius:16px;padding:16px 18px;background:linear-gradient(135deg,rgba(48,209,88,0.18) 0%,rgba(48,209,88,0.06) 100%);border:1px solid rgba(48,209,88,0.35);display:flex;align-items:center;gap:14px;">
+            <div style="width:46px;height:46px;background:rgba(48,209,88,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(48,209,88,0.3);">
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
-            <div style="color:#fff;font-size:12px;font-weight:500;">Attendance</div>
-            <div id="s1-att-sub" style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">GPS / WiFi check-in</div>
+            <div style="flex:1;">
+              <div style="color:#fff;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Attendance</div>
+              <div id="s1-att-sub" style="color:rgba(48,209,88,0.7);font-size:11px;margin-top:3px;">GPS / WiFi check-in</div>
+            </div>
+            <div style="color:rgba(48,209,88,0.6);font-size:18px;">›</div>
           </div>
         </div>
+        <!-- Apply Leave -->
         <div style="margin-bottom:10px;">
-          <div class="gs" style="padding:12px;cursor:pointer;" onclick="go1('s1-leave')">
+          <div class="gs" style="padding:13px 14px;cursor:pointer;" onclick="go1('s1-leave')">
             <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:32px;height:32px;background:rgba(10,132,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="width:36px;height:36px;background:rgba(10,132,255,0.15);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.5" width="12" height="11" rx="2" stroke="#0A84FF" stroke-width="1.4"/><path d="M5 1.5v2M11 1.5v2M2 6.5h12" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round"/></svg>
               </div>
               <div><div style="color:#fff;font-size:12px;font-weight:500;">Apply Leave</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Request time off</div></div>
