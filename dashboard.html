@@ -4255,6 +4255,7 @@ async function loadDashStats(){
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
     set('dash-present', p);
     set('dash-absent',  a);
+    set('dash-total-sub', 'of '+rows.length);
     set('dash-late-sub', a+' absent · '+l+' late'+(lp+op>0?' · '+(lp+op)+' pending':''));
     var pc=document.getElementById('present-count');
     if(pc) pc.textContent=p+' present today';
@@ -4289,6 +4290,39 @@ async function loadDashStats(){
       }
     }
   } catch(e){ console.log('dash stats error',e); }
+
+  // ── Open Tasks count ──
+  try{
+    var tRes = await fetch(API+'/api/tasks', { headers: zHdr() });
+    var tData = await tRes.json();
+    var allTasks = tData.data || [];
+    var openCount = allTasks.filter(function(t){ return t.status !== 'done' && t.status !== 'completed'; }).length;
+    var dtEl = document.getElementById('dash-tasks');
+    if(dtEl) dtEl.textContent = openCount;
+    var dtSub = document.querySelector('#dash-tasks')?.closest('.stat')?.querySelector('.ss');
+    if(dtSub) dtSub.textContent = openCount === 1 ? '1 pending task' : openCount + ' pending tasks';
+  } catch(e){ console.log('dash tasks error',e); }
+
+  // ── Current month payroll total ──
+  try{
+    var now = new Date();
+    var mo = now.getMonth()+1, yr = now.getFullYear();
+    var pRes = await fetch(API+'/api/payroll?month='+mo+'&year='+yr, { headers: zHdr() });
+    var pData = await pRes.json();
+    var prRows = pData.data || [];
+    var totalEarned = prRows.reduce(function(sum, r){
+      return sum + parseFloat(r.earned_so_far || 0);
+    }, 0);
+    var dpEl = document.getElementById('dash-payroll');
+    if(dpEl){
+      if(prRows.length){
+        dpEl.style.fontSize = '18px';
+        dpEl.textContent = '₹' + Math.round(totalEarned).toLocaleString('en-IN');
+      } else {
+        dpEl.textContent = '—';
+      }
+    }
+  } catch(e){ console.log('dash payroll error',e); }
 }
 
 /* ── EXPORT DASHBOARD (Today's Attendance CSV) ── */
