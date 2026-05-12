@@ -7713,19 +7713,18 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
       +(function(){
-          var isReal = r.check_out && !r.break_checkout;
+          var hasCheckout = !!r.check_out;  // any checkout time (real or break_checkout)
           var earlyM = parseInt(r.early_mins||0);
-          if(!isReal && earlyM>0){
-            // Still working / not checked out — show early badge
-            return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyM+'m early ⚡</div>';
-          }
-          if(isReal && earlyM>0){
+          if(hasCheckout && earlyM>0){
             // Checked out — show carry-over credit
             var carry = _calcCarryMins(r);
             if(carry>0){
               return '<div style="color:#5DDDAA;font-size:10px;font-weight:500;margin-top:2px;">'+carry+'m carry</div>'
                    + '<div style="color:rgba(93,221,170,0.5);font-size:9px;">→ balance</div>';
             }
+          } else if(!hasCheckout && earlyM>0){
+            // Still working — show early badge
+            return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyM+'m early ⚡</div>';
           }
           return '';
         })()
