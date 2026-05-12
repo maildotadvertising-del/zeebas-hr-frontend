@@ -5574,16 +5574,16 @@ async function loadHomeWeekAndLeave(){
         var clickFn = !isFuture ? 'onclick="showWeekDayDetail(\''+ds+'\')" style="cursor:pointer;"' : '';
 
         if(isFuture){
-          cell = '<div style="height:34px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:11px;">—</span></div>';
+          cell = '<div style="height:36px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:12px;">—</span></div>';
         } else if(!st || st==='absent'){
-          cell = '<div '+clickFn+' style="height:34px;background:rgba(255,69,58,0.16);border:0.5px solid rgba(255,69,58,0.26);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:12px;font-weight:600;">✕</span></div>';
-        } else if(st==='late'||st==='late_pending'){
-          cell = '<div '+clickFn+' style="height:34px;background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.28);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF9F0A;font-size:11px;font-weight:600;">L</span></div>';
+          // Absent → bold red ✗
+          cell = '<div '+clickFn+' style="height:36px;background:rgba(255,69,58,0.18);border:0.5px solid rgba(255,69,58,0.35);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:17px;font-weight:700;line-height:1;">✗</span></div>';
         } else if(st==='on_leave'){
-          cell = '<div '+clickFn+' style="height:34px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.25);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:11px;font-weight:600;">OL</span></div>';
+          // On leave → blue dash
+          cell = '<div '+clickFn+' style="height:36px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:11px;font-weight:600;">OL</span></div>';
         } else {
-          // present / onsite_approved / manual etc — show tick
-          cell = '<div '+clickFn+' style="height:34px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#30D158" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+          // present / late / onsite / any check-in → bold green ✓
+          cell = '<div '+clickFn+' style="height:36px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.35);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#30D158;font-size:17px;font-weight:700;line-height:1;">✓</span></div>';
         }
         return '<div style="text-align:center;flex:1;">'
           +'<div style="font-size:10px;color:'+(isToday?'#0A84FF':'rgba(245,245,247,0.35)')+';margin-bottom:5px;font-weight:'+(isToday?'600':'400')+';">'+days[i]+'</div>'
