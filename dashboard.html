@@ -286,7 +286,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="ni" onclick="showPage('announcements',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 12v2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Announcements<div id="ann-nav-dot" style="display:none;width:7px;height:7px;background:#FF9F0A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,159,10,0.6);"></div></div>
     <div class="ni" onclick="showPage('staff',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Team</div>
     <div class="ni" onclick="showPage('tasks',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tasks <span id="tasks-badge" style="display:none;background:rgba(255,159,10,0.2);color:#FF9F0A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
-    <div class="ni" onclick="showPage('daily-logs',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3"/><path d="M5 6h6M5 9h6M5 12h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Logs <span id="daily-logs-badge" style="display:none;background:rgba(191,95,255,0.2);color:#BF5FFF;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('approvals',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6l4 4 8-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 12h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Approvals <span id="approvals-badge" style="display:none;background:rgba(255,69,58,0.2);color:#FF453A;border-radius:8px;padding:1px 6px;font-size:9px;margin-left:4px;font-weight:500;">0</span></div>
     <div class="ni" onclick="showPage('payroll',this)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.3"/></svg>Payroll</div>
     <div class="ni" onclick="showPage('team-chat',this)" style="position:relative;"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>Team Chat<div id="chat-nav-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%);box-shadow:0 0 6px rgba(255,69,58,0.6);"></div></div>
@@ -699,26 +698,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
   </div>
 
   <!-- ── DAILY LOGS ── -->
-  <div id="page-daily-logs" class="page">
-    <div class="topbar">
-      <div>
-        <div class="ptitle">Daily Work Logs</div>
-        <div class="psub" id="dl-sub">Staff work logs — review &amp; approve</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="dl-staff-filter" onchange="loadDailyLogs()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);padding:8px 12px;font-size:13px;font-family:inherit;cursor:pointer;outline:none;">
-          <option value="">All Staff</option>
-        </select>
-        <input type="date" id="dl-date" onchange="loadDailyLogs()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);padding:8px 12px;font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-        <button class="btn-g" onclick="document.getElementById('dl-date').value='';document.getElementById('dl-staff-filter').selectedIndex=0;loadDailyLogs()">Today</button>
-        <button class="btn-g" onclick="loadDailyLogs()">↺</button>
-      </div>
-    </div>
-    <div id="dl-container">
-      <div style="text-align:center;padding:60px;color:var(--muted);font-size:13px;opacity:0.6;">Select a date or load today's logs</div>
-    </div>
-  </div>
-
   <!-- ── ANNOUNCEMENTS ── -->
   <div id="page-announcements" class="page">
     <div class="topbar">
@@ -1860,6 +1839,23 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             <button class="btn-g" style="text-align:left;padding:11px 14px;border-radius:12px;font-size:13px;" onclick="showPage('biometric',null)">🔌 Biometric Settings</button>
           </div>
         </div>
+      </div>
+    </div>
+    <!-- ── Daily Work Logs (moved from separate page) ── -->
+    <div class="g sec" style="margin-top:18px;">
+      <div class="sh" style="flex-wrap:wrap;gap:8px;">
+        <span class="st">📝 Daily Work Logs</span>
+        <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+          <select id="dl-staff-filter" onchange="loadDailyLogs()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);padding:6px 10px;font-size:12px;font-family:inherit;cursor:pointer;outline:none;">
+            <option value="">All Staff</option>
+          </select>
+          <input type="date" id="dl-date" onchange="loadDailyLogs()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);padding:6px 10px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
+          <button class="btn-g" style="font-size:12px;padding:6px 12px;" onclick="document.getElementById('dl-date').value='';document.getElementById('dl-staff-filter').selectedIndex=0;loadDailyLogs()">Today</button>
+          <button class="btn-g" style="font-size:12px;padding:6px 12px;" onclick="loadDailyLogs()">↺</button>
+        </div>
+      </div>
+      <div id="dl-container" style="margin-top:10px;">
+        <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;opacity:0.6;">Loading logs…</div>
       </div>
     </div>
   </div>
@@ -4078,10 +4074,10 @@ async function adminLogin(){
 /* ── ROLE-BASED NAV ACCESS ── */
 // Pages each role can access
 var NAV_ACCESS = {
-  owner:       ['dashboard','attendance','announcements','staff','tasks','daily-logs','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
-  admin:       ['dashboard','attendance','announcements','tasks','daily-logs','team-chat'],
+  owner:       ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
+  admin:       ['dashboard','attendance','announcements','tasks','team-chat'],
   team_leader: ['tasks','team-chat'],
-  editor:      ['dashboard','attendance','announcements','staff','tasks','daily-logs','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
+  editor:      ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
 };
 
 function applyNavAccess(staff){
@@ -5011,9 +5007,8 @@ window.showPage = function(page, el){
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
   if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); setTimeout(loadOverdueReasons, 300); }
-  if(page==='daily-logs')     setTimeout(loadDailyLogs, 100);
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
-  if(page==='admin-overview') setTimeout(loadAdminOverview, 100);
+  if(page==='admin-overview') { setTimeout(loadAdminOverview, 100); setTimeout(loadDailyLogs, 200); }
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
   if(page==='payroll')           setTimeout(loadPayrollPage, 100);
   if(page==='payroll-settings')  setTimeout(function(){ loadPayrollSettings(); psCalRender(); psLoadHolidays(); }, 100);
@@ -6305,8 +6300,9 @@ function dashLogout(){
 /* ── LOAD APPROVALS ── */
 function approvalCard(r, type){
   var init = (r.staff_name||'S').charAt(0).toUpperCase();
-  var avatarHtml = r.photo_url
-    ? '<img src="'+API+r.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+  var avSrcAC = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+  var avatarHtml = avSrcAC
+    ? '<img src="'+avSrcAC+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
     : init;
   var timeStr = r.check_in ? new Date(r.check_in).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
   var dateStr = r.date ? r.date.substring(0,10) : '—';
@@ -6448,7 +6444,8 @@ async function loadApprovals(){
         var mins = r.late_return_minutes || '?';
         var t = r.late_return_at ? new Date(r.late_return_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
         var init = (r.staff_name||'S').charAt(0).toUpperCase();
-        var avatarHtml = r.photo_url ? '<img src="'+API+r.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
+        var avSrcLR = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+        var avatarHtml = avSrcLR ? '<img src="'+avSrcLR+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
         return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.18);border-radius:12px;margin-bottom:8px;">'
           +'<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,159,10,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FF9F0A;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
           +'<div style="flex:1;">'
