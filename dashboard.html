@@ -7559,21 +7559,13 @@ function _calcCarryMins(r){
   }
 }
 
-// Build OT cell HTML — shows OT if ≥ 40m past end, else shows carry-over credit
+// Build OT cell HTML — shows OT only if ≥ 40m past required end
 function _otCell(r){
   var otMins = _calcOTMins(r.check_out, r.employment_type, r.late_minutes);
   if(otMins >= 5){
     var h = Math.floor(otMins/60), m = otMins%60;
     var label = h > 0 ? (h+'h'+(m?' '+m+'m':'')) : (m+'m');
     return '<span style="color:#30D158;font-weight:700;font-size:12px;">+'+label+'</span>';
-  }
-  // No OT — show carry-over if early credit exists
-  if(r.check_out && parseInt(r.early_mins||0) > 0){
-    var carry = _calcCarryMins(r);
-    if(carry > 0){
-      return '<div style="color:#5DDDAA;font-size:10px;font-weight:500;">'+carry+'m carry</div>'
-           + '<div style="color:rgba(93,221,170,0.5);font-size:9px;">→ balance</div>';
-    }
   }
   return '<span style="color:var(--muted);">—</span>';
 }
@@ -7697,8 +7689,11 @@ function attViewRow(r,i){
   if (r.check_out && !r.break_checkout) {
     // Real checkout done — show time only
     coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
+  } else if (r.check_out && r.break_checkout) {
+    // WiFi temp-out but checkout time recorded — show the time (EOD submitted)
+    coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
   } else if (r.break_checkout) {
-    // WiFi disconnected — not in office
+    // WiFi disconnected — no checkout time yet, not in office
     coDisplay = '<span style="color:rgba(255,159,10,0.7);font-size:10px;">Not in office</span>';
   } else if (r.check_in) {
     // Still working
@@ -7717,7 +7712,23 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;color:var(--muted);">'+(r.type==='onsite'?'🏗 Onsite':r.type==='office'?'🏢 Office':r.type==='leave'?'🏖 Leave':'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
-      +(parseInt(r.early_mins||0)>0?'<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+r.early_mins+'m early ⚡</div>':'')
+      +(function(){
+          var isReal = r.check_out && !r.break_checkout;
+          var earlyM = parseInt(r.early_mins||0);
+          if(!isReal && earlyM>0){
+            // Still working / not checked out — show early badge
+            return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyM+'m early ⚡</div>';
+          }
+          if(isReal && earlyM>0){
+            // Checked out — show carry-over credit
+            var carry = _calcCarryMins(r);
+            if(carry>0){
+              return '<div style="color:#5DDDAA;font-size:10px;font-weight:500;margin-top:2px;">'+carry+'m carry</div>'
+                   + '<div style="color:rgba(93,221,170,0.5);font-size:9px;">→ balance</div>';
+            }
+          }
+          return '';
+        })()
     +'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+attShortCell(r)+'</td>'
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
