@@ -303,7 +303,7 @@ body.desktop-mode #s1-sidebar {
       <div style="color:#fff;font-size:22px;font-weight:400;text-align:center;margin-bottom:4px;">Welcome Back Team!</div>
       <div style="margin-bottom:24px;"></div>
       <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:14px;">
-        <input class="inp" type="text" placeholder="Username or phone" id="u1">
+        <input class="inp" type="text" placeholder="Employee ID or Phone number" id="u1" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
         <input class="inp" type="password" placeholder="Password" id="pw1">
       </div>
       <button class="btn-p" style="margin-bottom:10px;" onclick="staffLogin()">Sign In</button>
@@ -4288,16 +4288,16 @@ function loginErr(msg){
 
 /* ── LOGIN ── */
 async function staffLogin(){
-  var phone=((document.getElementById('u1')||{}).value||'').trim();
-  var pw   =((document.getElementById('pw1')||{}).value||'').trim();
-  if(!phone||!pw){ loginErr('Phone number and password required!'); return; }
+  var identifier=((document.getElementById('u1')||{}).value||'').trim();
+  var pw        =((document.getElementById('pw1')||{}).value||'').trim();
+  if(!identifier||!pw){ loginErr('Employee ID / Phone and password required!'); return; }
   var btn=document.querySelector('#s1-login .btn-p');
   if(btn){ btn.textContent='Signing in…'; btn.disabled=true; btn.style.opacity='0.7'; }
   try{
     var res=await fetch(API_URL+'/api/auth/login',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:phone,password:pw})
+      body:JSON.stringify({identifier:identifier,password:pw})
     });
     var d=await res.json();
     if(d.success){
