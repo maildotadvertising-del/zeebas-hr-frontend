@@ -7826,8 +7826,9 @@ function attViewRow(r,i){
 
   return '<tr id="att-row-'+i+'" style="background:'+(i%2===0?'transparent':'rgba(255,255,255,0.015)')+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
-      +'<div><div style="font-size:12px;font-weight:500;">'+r.name+(r.beta_tester?' 🧪':'')+'</div>'
-      +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></div></div></td>'
+      +'<div onclick="openStaffLog('+r.staff_id+',\''+escHtml(r.name)+'\',\''+escHtml(r.designation||'')+'\');" style="cursor:pointer;">'
+      +'<div style="font-size:12px;font-weight:500;color:#fff;">'+r.name+(r.beta_tester?' 🧪':'')+'</div>'
+      +'<div style="font-size:10px;color:#64D2FF;">'+( r.designation||'')+'  📋</div></div></div></td>'
     +'<td style="'+td+'font-size:11px;color:var(--muted);">'+(r.brand_name||'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
     +'<td style="'+td+'text-align:center;">'+coDisplay+'</td>'
@@ -8090,5 +8091,163 @@ async function attSaveEdit(i){
   });
   obs.observe(document.body, { childList:true, subtree:true });
 })();
+</script>
+
+<!-- ── Staff Attendance Log Modal ── -->
+<div id="staff-log-overlay" onclick="if(event.target===this)closeStaffLog()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:5000;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;width:min(700px,96vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.8);">
+    <!-- Header -->
+    <div style="padding:18px 20px 14px;border-bottom:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div>
+        <div id="staff-log-name" style="font-size:15px;font-weight:600;color:#fff;"></div>
+        <div id="staff-log-desig" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <select id="staff-log-month" onchange="reloadStaffLog()" style="background:#2C2C2E;border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:12px;padding:5px 10px;font-family:inherit;">
+          <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+          <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+          <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+        </select>
+        <select id="staff-log-year" onchange="reloadStaffLog()" style="background:#2C2C2E;border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:12px;padding:5px 10px;font-family:inherit;">
+        </select>
+        <button onclick="closeStaffLog()" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:var(--muted);font-size:18px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+      </div>
+    </div>
+    <!-- Log Table -->
+    <div style="overflow-y:auto;flex:1;padding:12px 16px;">
+      <div id="staff-log-body" style="font-size:13px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _staffLogId = null, _staffLogName = '';
+
+function openStaffLog(staffId, name, designation) {
+  _staffLogId = staffId;
+  _staffLogName = name;
+  document.getElementById('staff-log-name').textContent = name;
+  document.getElementById('staff-log-desig').textContent = designation || '';
+
+  // Set month/year selects to current month
+  var now = new Date();
+  var mSel = document.getElementById('staff-log-month');
+  var ySel = document.getElementById('staff-log-year');
+  mSel.value = now.getMonth() + 1;
+
+  // Populate years (last 3 years)
+  ySel.innerHTML = '';
+  for (var y = now.getFullYear(); y >= now.getFullYear() - 2; y--) {
+    var opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    ySel.appendChild(opt);
+  }
+  ySel.value = now.getFullYear();
+
+  document.getElementById('staff-log-overlay').style.display = 'flex';
+  loadStaffLog();
+}
+
+function closeStaffLog() {
+  document.getElementById('staff-log-overlay').style.display = 'none';
+  _staffLogId = null;
+}
+
+function reloadStaffLog() { loadStaffLog(); }
+
+async function loadStaffLog() {
+  if (!_staffLogId) return;
+  var body = document.getElementById('staff-log-body');
+  body.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">Loading...</div>';
+  var month = document.getElementById('staff-log-month').value;
+  var year  = document.getElementById('staff-log-year').value;
+  try {
+    var res = await fetch(API_URL+'/api/attendance/staff-log/'+_staffLogId+'?month='+month+'&year='+year, { headers: zHead() });
+    var d = await res.json();
+    if (!d.success || !d.data.length) {
+      body.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">No records found for this period.</div>';
+      return;
+    }
+    renderStaffLog(d.data);
+  } catch(e) {
+    body.innerHTML = '<div style="text-align:center;padding:30px;color:#FF453A;">Error loading log</div>';
+  }
+}
+
+function renderStaffLog(rows) {
+  var sourceLabel = function(src, type) {
+    if (src === 'wifi') return '<span style="background:rgba(100,210,255,0.15);color:#64D2FF;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:500;">📶 WiFi</span>';
+    if (src === 'gps')  return '<span style="background:rgba(48,209,88,0.12);color:#30D158;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:500;">📍 GPS</span>';
+    if (src === 'manual') return '<span style="background:rgba(255,159,10,0.15);color:#FF9F0A;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:500;">✏️ Manual</span>';
+    if (type === 'onsite') return '<span style="background:rgba(175,82,222,0.15);color:#AF52DE;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:500;">🏗 Onsite</span>';
+    return '<span style="background:rgba(255,255,255,0.08);color:var(--muted);border-radius:6px;padding:2px 7px;font-size:10px;">—</span>';
+  };
+
+  var statusBadge = function(s) {
+    var map = { present:'#30D158', late:'#FF9F0A', absent:'#FF453A', on_leave:'#64D2FF', onsite_pending:'#FF9F0A', late_pending:'#FF9F0A' };
+    var col = map[s] || '#888';
+    var lbl = (s||'—').replace(/_/g,' ');
+    return '<span style="color:'+col+';font-size:10px;font-weight:500;text-transform:capitalize;">'+lbl+'</span>';
+  };
+
+  var fmt = function(dt) {
+    if (!dt) return '<span style="color:var(--muted);">—</span>';
+    var d = new Date(dt);
+    var h = d.getHours(), m = d.getMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return '<span style="font-family:monospace;font-size:12px;color:#fff;">' + h + ':' + (m<10?'0':'')+m + ' ' + ampm + '</span>';
+  };
+
+  var fmtDate = function(dt) {
+    if (!dt) return '—';
+    var d = new Date(dt);
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+  };
+
+  var coStatus = function(r) {
+    if (r.check_out && !r.break_checkout) {
+      return fmt(r.check_out) + '<div style="font-size:9px;color:rgba(48,209,88,0.6);margin-top:2px;">✓ Checked out</div>';
+    }
+    if (r.break_checkout) {
+      return '<span style="color:rgba(255,159,10,0.7);font-size:11px;">Not in office</span>';
+    }
+    if (r.check_in) {
+      return '<span style="color:rgba(48,209,88,0.5);font-size:11px;">Working ✓</span>';
+    }
+    return '<span style="color:var(--muted);">—</span>';
+  };
+
+  var html = '<table style="width:100%;border-collapse:collapse;">';
+  html += '<thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.08);">'
+        + '<th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:500;">Date</th>'
+        + '<th style="text-align:center;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:500;">Check In</th>'
+        + '<th style="text-align:center;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:500;">Check Out</th>'
+        + '<th style="text-align:center;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:500;">Method</th>'
+        + '<th style="text-align:center;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:500;">Status</th>'
+        + '<th style="text-align:center;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:500;">Late</th>'
+        + '</tr></thead><tbody>';
+
+  rows.forEach(function(r, i) {
+    var bg = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)';
+    html += '<tr style="background:'+bg+';border-bottom:0.5px solid rgba(255,255,255,0.04);">'
+          + '<td style="padding:10px 10px;"><div style="font-size:12px;font-weight:500;color:#fff;">'+fmtDate(r.date)+'</div>'
+          +   '<div style="font-size:10px;color:var(--muted);">'+(r.date||'').substring(0,10)+'</div></td>'
+          + '<td style="padding:10px;text-align:center;">'+fmt(r.check_in)+'</td>'
+          + '<td style="padding:10px;text-align:center;">'+coStatus(r)+'</td>'
+          + '<td style="padding:10px;text-align:center;">'+sourceLabel(r.source, r.type)+'</td>'
+          + '<td style="padding:10px;text-align:center;">'+statusBadge(r.status)+'</td>'
+          + '<td style="padding:10px;text-align:center;font-size:11px;">'
+          +   (r.late_minutes > 0 ? '<span style="color:#FF9F0A;">'+r.late_minutes+'m late</span>' : '<span style="color:var(--muted);">—</span>')
+          + '</td>'
+          + '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('staff-log-body').innerHTML = html;
+}
 </script>
 </body></html>
