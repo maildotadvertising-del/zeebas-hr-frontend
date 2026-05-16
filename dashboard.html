@@ -7812,13 +7812,10 @@ function attViewRow(r,i){
   var todayStr = new Date().toISOString().split('T')[0];
   var coDisplay;
   if (r.check_out && !r.break_checkout) {
-    // Real checkout done — show time only
-    coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
-  } else if (r.check_out && r.break_checkout) {
-    // WiFi temp-out but checkout time recorded — show the time (EOD submitted)
+    // Real checkout done — show time
     coDisplay = '<span style="font-family:monospace;font-size:12px;">'+fmtTime(r.check_out)+'</span>';
   } else if (r.break_checkout) {
-    // WiFi disconnected — no checkout time yet, not in office
+    // WiFi disconnected (any case — with or without temp check_out) — Not in office
     coDisplay = '<span style="color:rgba(255,159,10,0.7);font-size:10px;">Not in office</span>';
   } else if (r.check_in) {
     // Still working
@@ -7838,17 +7835,17 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
       +(function(){
-          var hasCheckout = !!r.check_out;  // any checkout time (real or break_checkout)
+          var isReal = !!(r.check_out && !r.break_checkout);  // only real checkout counts
           var earlyM = parseInt(r.early_mins||0);
-          if(hasCheckout && earlyM>0){
-            // Checked out — show carry-over credit
+          if(isReal && earlyM>0){
+            // Real checkout done — show carry-over credit
             var carry = _calcCarryMins(r);
             if(carry>0){
               return '<div style="color:#5DDDAA;font-size:10px;font-weight:500;margin-top:2px;">'+carry+'m carry</div>'
                    + '<div style="color:rgba(93,221,170,0.5);font-size:9px;">→ balance</div>';
             }
-          } else if(!hasCheckout && earlyM>0){
-            // Still working — show early badge
+          } else if(!isReal && earlyM>0){
+            // Still working / not yet real checkout — show early badge
             return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyM+'m early ⚡</div>';
           }
           return '';
