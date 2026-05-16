@@ -1453,6 +1453,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         </div>
         <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
+        <button onclick="openWifiCheckPanel()" style="background:rgba(100,210,255,0.1);border:0.5px solid rgba(100,210,255,0.35);color:#64D2FF;border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">📶 WiFi Check</button>
       </div>
     </div>
 
@@ -8117,6 +8118,163 @@ async function attSaveEdit(i){
   });
   obs.observe(document.body, { childList:true, subtree:true });
 })();
+</script>
+
+<!-- ── WiFi Check Panel ── -->
+<div id="wifi-check-overlay" onclick="if(event.target===this)closeWifiCheck()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:5100;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:#1C1C1E;border:0.5px solid rgba(100,210,255,0.2);border-radius:20px;width:min(720px,96vw);max-height:87vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.8);">
+    <!-- Header -->
+    <div style="padding:16px 20px 12px;border-bottom:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#fff;">📶 WiFi Presence Check</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Based on last office WiFi ping — review & apply</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="applyWifiDecisions()" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.4);color:#30D158;border-radius:9px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">✅ Apply All</button>
+        <button onclick="closeWifiCheck()" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:var(--muted);font-size:18px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+      </div>
+    </div>
+    <!-- Legend -->
+    <div style="padding:8px 20px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;gap:16px;flex-shrink:0;">
+      <span style="font-size:10px;color:#30D158;">🟢 Working (≤10m ping)</span>
+      <span style="font-size:10px;color:#FF9F0A;">🟡 Break (11–41m)</span>
+      <span style="font-size:10px;color:#FF453A;">🔴 Checkout (41m+)</span>
+      <span style="font-size:10px;color:#888;">⚪ No WiFi data</span>
+    </div>
+    <!-- Table -->
+    <div style="overflow-y:auto;flex:1;padding:8px 0;">
+      <div id="wifi-check-body"><div style="text-align:center;padding:32px;color:var(--muted);font-size:12px;">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _wifiCheckData = [];
+
+async function openWifiCheckPanel() {
+  document.getElementById('wifi-check-overlay').style.display = 'flex';
+  document.getElementById('wifi-check-body').innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:12px;">⏳ Checking WiFi status…</div>';
+  // First trigger immediate sync
+  try {
+    await fetch(API+'/api/attendance/wifi-departure-now', {method:'POST', headers:zHdr()});
+  } catch(e) {}
+  // Then load the report
+  try {
+    var res = await fetch(API+'/api/attendance/wifi-status-report', {headers:zHdr()});
+    var d = await res.json();
+    if (!d.success) { document.getElementById('wifi-check-body').innerHTML = '<div style="text-align:center;padding:32px;color:#FF453A;font-size:12px;">Error loading data</div>'; return; }
+    _wifiCheckData = d.data;
+    renderWifiCheckTable(d.data);
+  } catch(e) {
+    document.getElementById('wifi-check-body').innerHTML = '<div style="text-align:center;padding:32px;color:#FF453A;font-size:12px;">Network error</div>';
+  }
+}
+
+function closeWifiCheck() {
+  document.getElementById('wifi-check-overlay').style.display = 'none';
+}
+
+function renderWifiCheckTable(data) {
+  if (!data.length) {
+    document.getElementById('wifi-check-body').innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:12px;">No checked-in staff today</div>';
+    return;
+  }
+
+  var fmt = function(dt) {
+    if (!dt) return '—';
+    var d = new Date(dt), h = d.getHours(), m = d.getMinutes();
+    var ap = h>=12?'PM':'AM'; h=h%12||12;
+    return h+':'+(m<10?'0':'')+m+' '+ap;
+  };
+
+  var actionOptions = function(id, current) {
+    var opts = [
+      { val:'working',  label:'✅ Working',  col:'#30D158' },
+      { val:'break',    label:'🍵 Break',    col:'#FF9F0A' },
+      { val:'checkout', label:'🚪 Checkout', col:'#FF453A' },
+      { val:'skip',     label:'— Skip',      col:'#888'    }
+    ];
+    var sel = '<select id="wifi-action-'+id+'" style="background:#2C2C2E;border:0.5px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:11px;padding:4px 8px;font-family:inherit;cursor:pointer;">';
+    opts.forEach(function(o) {
+      sel += '<option value="'+o.val+'"'+(o.val===current?' selected':'')+' style="color:'+o.col+';">'+o.label+'</option>';
+    });
+    sel += '</select>';
+    return sel;
+  };
+
+  var td = 'padding:10px 16px;border-bottom:0.5px solid rgba(255,255,255,0.05);vertical-align:middle;';
+  var html = '<table style="width:100%;border-collapse:collapse;">';
+  html += '<thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.1);">'
+        + '<th style="'+td+'text-align:left;font-size:10px;color:var(--muted);font-weight:500;">Staff</th>'
+        + '<th style="'+td+'text-align:center;font-size:10px;color:var(--muted);font-weight:500;">Check In</th>'
+        + '<th style="'+td+'text-align:center;font-size:10px;color:var(--muted);font-weight:500;">Last WiFi Ping</th>'
+        + '<th style="'+td+'text-align:center;font-size:10px;color:var(--muted);font-weight:500;">Suggested</th>'
+        + '<th style="'+td+'text-align:center;font-size:10px;color:var(--muted);font-weight:500;">Action</th>'
+        + '</tr></thead><tbody>';
+
+  data.forEach(function(r, i) {
+    var bg = i%2===0 ? 'transparent' : 'rgba(255,255,255,0.02)';
+
+    // Ping indicator dot
+    var dot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+r.ping_color+';margin-right:6px;"></span>';
+
+    // Suggested badge
+    var sugBadge = {
+      working:  '<span style="color:#30D158;font-size:11px;font-weight:500;">✅ Working</span>',
+      break:    '<span style="color:#FF9F0A;font-size:11px;font-weight:500;">🍵 Break</span>',
+      checkout: '<span style="color:#FF453A;font-size:11px;font-weight:500;">🚪 Checkout</span>',
+      done:     '<span style="color:var(--muted);font-size:11px;">Already out</span>',
+      no_data:  '<span style="color:#888;font-size:11px;">No data</span>'
+    }[r.suggested] || '—';
+
+    // Action select (skip already-checked-out staff)
+    var actionSel = r.suggested === 'done'
+      ? '<span style="color:var(--muted);font-size:11px;">'+fmt(r.check_out)+'</span>'
+      : actionOptions(r.att_id, r.suggested === 'no_data' ? 'skip' : r.suggested);
+
+    html += '<tr style="background:'+bg+';">'
+          + '<td style="'+td+'"><div style="font-size:12px;font-weight:500;color:#fff;">'+escHtml(r.name)+'</div>'
+          +   '<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></td>'
+          + '<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmt(r.check_in)+'</td>'
+          + '<td style="'+td+'text-align:center;">'+dot+'<span style="font-size:11px;color:'+r.ping_color+';">'+r.ping_label+'</span></td>'
+          + '<td style="'+td+'text-align:center;">'+sugBadge+'</td>'
+          + '<td style="'+td+'text-align:center;" data-attid="'+r.att_id+'">'+actionSel+'</td>'
+          + '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('wifi-check-body').innerHTML = html;
+}
+
+async function applyWifiDecisions() {
+  var decisions = [];
+  document.querySelectorAll('#wifi-check-body [data-attid]').forEach(function(td) {
+    var attId = td.getAttribute('data-attid');
+    var sel = td.querySelector('select');
+    if (!sel) return; // already checked out
+    var action = sel.value;
+    if (action === 'skip') return;
+    decisions.push({ att_id: parseInt(attId), action: action });
+  });
+
+  if (!decisions.length) { showToast('Nothing to apply'); return; }
+
+  try {
+    var res = await fetch(API+'/api/attendance/wifi-apply-decisions', {
+      method:'POST',
+      headers: Object.assign(zHdr(), {'Content-Type':'application/json'}),
+      body: JSON.stringify({ decisions })
+    });
+    var d = await res.json();
+    if (d.success) {
+      showToast('✅ Applied to '+d.applied+' staff');
+      closeWifiCheck();
+      loadAttendancePage();
+    } else {
+      alert(d.message || 'Error applying decisions');
+    }
+  } catch(e) { alert('Network error'); }
+}
 </script>
 
 <!-- ── Staff Attendance Log Modal ── -->
