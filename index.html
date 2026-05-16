@@ -751,104 +751,113 @@ body.desktop-mode #s1-sidebar {
       </div>
 
       <!-- ══ CHECKED-IN STATE: Action buttons ══ -->
-      <div id="att-actions-section" style="display:none;flex:1;overflow-y:auto;padding:12px 13px 16px;">
+      <div id="att-actions-section" style="display:none;flex-direction:column;padding:14px 13px 20px;gap:12px;">
 
         <!-- Status card -->
-        <div id="att-status-card" style="background:linear-gradient(135deg,rgba(48,209,88,0.12),rgba(20,180,60,0.06));border:0.5px solid rgba(48,209,88,0.25);border-radius:18px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;background:rgba(48,209,88,0.18);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M1 7l5 5 11-11" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div id="att-status-card" style="background:linear-gradient(135deg,rgba(48,209,88,0.13),rgba(20,180,60,0.06));border:0.5px solid rgba(48,209,88,0.28);border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:13px;">
+          <div style="width:42px;height:42px;background:rgba(48,209,88,0.18);border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="16" viewBox="0 0 18 14" fill="none"><path d="M1 7l5 5 11-11" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <div style="flex:1;">
-            <div style="color:#30D158;font-size:13px;font-weight:600;" id="att-ci-time-lbl">Checked in</div>
-            <div style="color:rgba(245,245,247,0.45);font-size:10px;margin-top:2px;" id="att-ci-source-lbl">Office · WiFi / GPS verified</div>
+            <div style="color:#30D158;font-size:14px;font-weight:600;" id="att-ci-time-lbl">Checked in</div>
+            <div style="color:rgba(245,245,247,0.45);font-size:11px;margin-top:3px;" id="att-ci-source-lbl">Office · WiFi / GPS verified</div>
           </div>
         </div>
 
-        <!-- Action buttons -->
-        <div style="color:rgba(245,245,247,0.4);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Actions</div>
-
-        <!-- Break & Work Outside — side by side -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <button onclick="attActionBreak()" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);border-radius:16px;padding:18px 12px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;">
-            <span style="font-size:28px;">☕</span>
-            <div style="color:#FF9F0A;font-size:13px;font-weight:600;">Break</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:9px;text-align:center;line-height:1.4;">Going on a break</div>
-          </button>
-          <button onclick="attActionWorkOutside()" style="background:rgba(191,95,255,0.1);border:0.5px solid rgba(191,95,255,0.3);border-radius:16px;padding:18px 12px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;">
-            <span style="font-size:28px;">🏗</span>
-            <div style="color:#BF5FFF;font-size:13px;font-weight:600;">Work Outside</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:9px;text-align:center;line-height:1.4;">Client / Field work</div>
-          </button>
+        <!-- Location row -->
+        <div style="display:flex;align-items:center;gap:9px;padding:0 2px;">
+          <div style="width:28px;height:28px;background:rgba(10,132,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="#0A84FF" stroke-width="1.3"/><path d="M8 1v1M8 14v1M1 8h1M14 8h1" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div id="att-loc-label" style="color:rgba(245,245,247,0.4);font-size:11px;">—</div>
         </div>
 
-        <!-- Check Out — full width -->
-        <button onclick="attActionCheckout()" style="width:100%;background:linear-gradient(135deg,rgba(255,69,58,0.15),rgba(200,40,30,0.1));border:0.5px solid rgba(255,69,58,0.35);border-radius:16px;padding:18px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:12px;">
-          <span style="font-size:24px;">✅</span>
-          <div style="text-align:left;">
-            <div style="color:#FF453A;font-size:14px;font-weight:600;">Check Out</div>
-            <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">End your work day</div>
+        <!-- Spacer -->
+        <div style="flex:1;"></div>
+
+        <!-- Break button — big -->
+        <button onclick="attActionBreak()" style="width:100%;background:linear-gradient(135deg,rgba(255,159,10,0.18),rgba(255,159,10,0.08));border:0.5px solid rgba(255,159,10,0.4);border-radius:22px;padding:24px 20px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:16px;transition:opacity .15s;active:opacity:0.7;">
+          <div style="width:52px;height:52px;background:rgba(255,159,10,0.18);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="font-size:28px;">☕</span>
+          </div>
+          <div style="text-align:left;flex:1;">
+            <div style="color:#FF9F0A;font-size:18px;font-weight:700;">Break</div>
+            <div style="color:rgba(245,245,247,0.4);font-size:12px;margin-top:3px;">Going on a break</div>
+          </div>
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="none" style="opacity:0.3;"><path d="M1 1l6 6-6 6" stroke="#FF9F0A" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+
+        <!-- Check Out button — big -->
+        <button onclick="attActionCheckout()" style="width:100%;background:linear-gradient(135deg,rgba(255,69,58,0.18),rgba(200,40,30,0.10));border:0.5px solid rgba(255,69,58,0.4);border-radius:22px;padding:24px 20px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:16px;transition:opacity .15s;">
+          <div style="width:52px;height:52px;background:rgba(255,69,58,0.18);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="font-size:28px;">🚪</span>
+          </div>
+          <div style="text-align:left;flex:1;">
+            <div style="color:#FF453A;font-size:18px;font-weight:700;">Check Out</div>
+            <div style="color:rgba(245,245,247,0.4);font-size:12px;margin-top:3px;">End your work day</div>
+          </div>
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="none" style="opacity:0.3;"><path d="M1 1l6 6-6 6" stroke="#FF453A" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+
+        <!-- Work Outside — small secondary -->
+        <button onclick="attActionWorkOutside()" style="width:100%;background:rgba(191,95,255,0.07);border:0.5px solid rgba(191,95,255,0.25);border-radius:14px;padding:13px 16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🏗</span>
+          <div style="text-align:left;flex:1;">
+            <div style="color:#BF5FFF;font-size:13px;font-weight:600;">Work Outside</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Client / Field work</div>
           </div>
         </button>
+
       </div>
 
       <!-- ══ NOT CHECKED-IN STATE: Check-in form ══ -->
-      <div id="att-checkin-section" class="scroll" style="padding:12px 13px 8px;">
-        <!-- GPS map -->
-        <div class="g" style="padding:0;overflow:hidden;margin-bottom:10px;height:150px;position:relative;">
-          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0A1628,#0A2040,#050A14);display:flex;align-items:center;justify-content:center;">
-            <svg width="100%" height="150" viewBox="0 0 290 150" preserveAspectRatio="none" style="position:absolute;inset:0;opacity:0.15;">
-              <line x1="0" y1="37" x2="290" y2="37" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="0" y1="75" x2="290" y2="75" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="0" y1="113" x2="290" y2="113" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="72" y1="0" x2="72" y2="150" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="145" y1="0" x2="145" y2="150" stroke="#0A84FF" stroke-width="0.5"/>
-              <line x1="218" y1="0" x2="218" y2="150" stroke="#0A84FF" stroke-width="0.5"/>
-            </svg>
-            <div style="position:absolute;width:90px;height:90px;border:1.5px solid rgba(10,132,255,0.4);border-radius:50%;background:rgba(10,132,255,0.07);top:50%;left:50%;transform:translate(-50%,-50%);">
-              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:rgba(10,132,255,0.7);white-space:nowrap;">300m radius</div>
-            </div>
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);">
-              <div style="width:22px;height:22px;background:linear-gradient(145deg,#0A84FF,#0A60CC);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.3);box-shadow:0 4px 12px rgba(10,132,255,0.5);"></div>
-            </div>
-            <div style="position:absolute;top:38%;left:57%;transform:translate(-50%,-100%);">
-              <div style="width:18px;height:18px;background:linear-gradient(145deg,#30D158,#20A040);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(255,255,255,0.25);box-shadow:0 3px 10px rgba(48,209,88,0.45);"></div>
-            </div>
-            <div style="position:absolute;bottom:7px;left:10px;font-size:9px;color:rgba(245,245,247,0.5);">Office</div>
-            <div id="gps-range-badge" style="position:absolute;bottom:7px;right:10px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:2px 8px;font-size:9px;color:rgba(245,245,247,0.5);">⏳ Locating…</div>
-          </div>
-        </div>
+      <div id="att-checkin-section" style="flex:1;display:flex;flex-direction:column;padding:14px 13px 20px;">
 
-        <!-- Location info -->
-        <div class="gs" style="padding:11px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
-          <div style="width:32px;height:32px;background:rgba(48,209,88,0.14);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="#30D158" stroke-width="1.3"/><path d="M8 1v1M8 14v1M1 8h1M14 8h1" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <!-- Location status -->
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+          <div style="width:28px;height:28px;background:rgba(10,132,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="3" stroke="#0A84FF" stroke-width="1.3"/><path d="M8 1v1M8 14v1M1 8h1M14 8h1" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
-          <div style="flex:1;">
-            <div id="gps-status-label" style="color:#30D158;font-size:11px;font-weight:500;">Detecting location…</div>
+          <div>
+            <div id="gps-status-label" style="color:#0A84FF;font-size:11px;font-weight:500;">Detecting location…</div>
             <div id="gps-loc-text" style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;">—</div>
           </div>
+          <div id="gps-range-badge" style="margin-left:auto;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:3px 10px;font-size:9px;color:rgba(245,245,247,0.5);">⏳ Locating…</div>
         </div>
 
         <!-- Attendance type -->
-        <div style="color:rgba(245,245,247,0.45);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Check-in Type</div>
+        <div style="color:rgba(245,245,247,0.4);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Check-in Type</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;" id="att-type">
-          <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;border-color:rgba(48,209,88,0.3);background:rgba(48,209,88,0.07);" onclick="selAtt(0)">
+          <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-color:rgba(48,209,88,0.3);background:rgba(48,209,88,0.07);" onclick="selAtt(0)">
             <div id="att-radio-0" style="width:18px;height:18px;border-radius:50%;border:1.5px solid #30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:8px;height:8px;border-radius:50%;background:#30D158;"></div></div>
             <div><div style="color:#fff;font-size:13px;">📍 Office</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">WiFi · GPS auto detected</div></div>
           </div>
-          <div class="gs" style="padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selAtt(1)">
+          <div class="gs" style="padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="selAtt(1)">
             <div id="att-radio-1" style="width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
             <div><div style="color:#fff;font-size:13px;">🏗 Onsite</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Client location · Needs admin approval</div></div>
           </div>
         </div>
 
         <!-- Onsite site name (shown for onsite) -->
-        <div id="onsite-note" style="display:none;margin-bottom:12px;">
+        <div id="onsite-note" style="display:none;margin-bottom:14px;">
           <div style="color:rgba(245,245,247,0.45);font-size:10px;margin-bottom:6px;">Client / Site Name</div>
           <input class="inp" type="text" placeholder="e.g. Ahmed Constructions, Chennai" id="site-name">
         </div>
 
-        <button class="btn-p" id="att-btn" onclick="markAttendance()">Check In</button>
+        <!-- Spacer pushes button to bottom -->
+        <div style="flex:1;"></div>
+
+        <!-- BIG Check In Button -->
+        <button id="att-btn" onclick="markAttendance()" style="width:100%;border:none;border-radius:22px;padding:26px 20px;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#30D158,#1EA845);box-shadow:0 8px 28px rgba(48,209,88,0.35);display:flex;align-items:center;justify-content:center;gap:14px;transition:opacity .15s;-webkit-tap-highlight-color:transparent;">
+          <div style="width:54px;height:54px;background:rgba(255,255,255,0.18);border-radius:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2" opacity="0.6"/></svg>
+          </div>
+          <div style="text-align:left;">
+            <div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.3px;" id="att-btn-label">Check In</div>
+            <div style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:3px;" id="att-btn-sub">WiFi · GPS auto detected</div>
+          </div>
+        </button>
+
       </div>
     </div>
 
@@ -1708,7 +1717,8 @@ function go1(id){
   if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
   if(id==='s1-gps'){
     var btn=document.getElementById('att-btn');
-    if(btn){ btn.disabled=false; btn.textContent='Check In'; }
+    if(btn){ btn.disabled=false; }
+    _attBtnText('Check In'); _attBtnSub('WiFi · GPS auto detected');
     setTimeout(function(){ loadAttGpsScreen(); initGPSScreen(); }, 200);
   }
   if(id==='s1-tasks'){   setTimeout(loadStaffTasks, 100); }
@@ -1825,9 +1835,53 @@ function selAtt(idx){
     }
   });
   var note=document.getElementById('onsite-note');
-  var btn=document.getElementById('att-btn');
-  if(idx===0){ if(note) note.style.display='none'; if(btn) btn.textContent='Check In'; }
-  else if(idx===1){ if(note) note.style.display='block'; if(btn) btn.textContent='Check In — Onsite'; }
+  var lbl=document.getElementById('att-btn-label');
+  var sub=document.getElementById('att-btn-sub');
+  if(idx===0){
+    if(note) note.style.display='none';
+    if(lbl) lbl.textContent='Check In';
+    if(sub) sub.textContent='WiFi · GPS auto detected';
+  } else if(idx===1){
+    if(note) note.style.display='block';
+    if(lbl) lbl.textContent='Check In — Onsite';
+    if(sub) sub.textContent='Client location · Needs approval';
+  }
+}
+
+/* Show/hide attendance sections */
+function _attShowCheckedIn(d){
+  var sec = document.getElementById('att-checkin-section');
+  var act = document.getElementById('att-actions-section');
+  var title = document.getElementById('att-screen-title');
+  if(sec) sec.style.display='none';
+  if(act){ act.style.display='flex'; act.style.flexDirection='column'; }
+  if(title) title.textContent='Attendance';
+  if(d && d.checkInTime){
+    var ci=new Date(d.checkInTime), h=ci.getHours(), m=ci.getMinutes(), ap=h>=12?'PM':'AM';
+    h=h%12||12;
+    var lbl=document.getElementById('att-ci-time-lbl');
+    if(lbl) lbl.textContent='Checked in at '+h+':'+(m<10?'0':'')+m+' '+ap;
+    var src=document.getElementById('att-ci-source-lbl');
+    if(src){
+      var srcMap={'wifi':'Office · WiFi verified','gps':'Office · GPS verified','manual':'Office · Manual check-in','onsite':'Onsite · Pending approval'};
+      src.textContent=srcMap[d.source]||'Office';
+    }
+  }
+  // Update location label in actions section
+  var locLbl=document.getElementById('att-loc-label');
+  if(locLbl){
+    var lt=document.getElementById('gps-loc-text');
+    locLbl.textContent=(lt&&lt.textContent&&lt.textContent!=='—')?lt.textContent:'Location detected';
+  }
+}
+function _attShowCheckIn(){
+  var sec = document.getElementById('att-checkin-section');
+  var act = document.getElementById('att-actions-section');
+  var title = document.getElementById('att-screen-title');
+  if(sec){ sec.style.display='flex'; sec.style.flexDirection='column'; }
+  if(act) act.style.display='none';
+  if(title) title.textContent='Mark Attendance';
+  selAtt(0);
 }
 
 /* Load attendance screen — show action buttons if checked in, check-in form if not */
@@ -1835,36 +1889,13 @@ async function loadAttGpsScreen(){
   try{
     var res = await fetch(API_URL+'/api/attendance/wifi-detect', {headers:zHead()});
     var d   = await res.json();
-    var checkedIn = !!(d.checkInTime && !d.checkedOut);
-    var sec  = document.getElementById('att-checkin-section');
-    var act  = document.getElementById('att-actions-section');
-    var title= document.getElementById('att-screen-title');
-    if(checkedIn){
-      if(sec)  sec.style.display='none';
-      if(act)  act.style.display='block';
-      if(title) title.textContent='Attendance';
-      // Update status card
-      var ci=new Date(d.checkInTime), h=ci.getHours(), m=ci.getMinutes(), ap=h>=12?'PM':'AM';
-      h=h%12||12;
-      var lbl=document.getElementById('att-ci-time-lbl');
-      if(lbl) lbl.textContent='Checked in at '+h+':'+(m<10?'0':'')+m+' '+ap;
-      var src=document.getElementById('att-ci-source-lbl');
-      if(src){
-        var srcMap={'wifi':'Office · WiFi verified','gps':'Office · GPS verified','manual':'Office · Manual check-in'};
-        src.textContent=srcMap[d.source]||'Office';
-      }
-    } else {
-      if(sec)  sec.style.display='';
-      if(act)  act.style.display='none';
-      if(title) title.textContent='Mark Attendance';
-      selAtt(0);
-    }
+    // Break state (isBreakCheckout=true) → show Check In (staff on break, tap to return)
+    var onBreak   = !!(d.isBreakCheckout);
+    var checkedIn = !!(d.checkInTime && !d.checkedOut && !onBreak);
+    if(checkedIn){ _attShowCheckedIn(d); }
+    else { _attShowCheckIn(); }
   }catch(e){
-    // Default to check-in form on error
-    var sec=document.getElementById('att-checkin-section');
-    var act=document.getElementById('att-actions-section');
-    if(sec) sec.style.display='';
-    if(act) act.style.display='none';
+    _attShowCheckIn();
   }
 }
 
@@ -1874,13 +1905,10 @@ function attActionBreak(){
   showBreakChoiceOverlay(0);
 }
 
-/* Action: Work Outside (onsite request) */
+/* Action: Work Outside (onsite request) — go back to check-in form, pre-select onsite */
 function attActionWorkOutside(){
-  selAtt(1); // Select onsite
-  var sec=document.getElementById('att-checkin-section');
-  var act=document.getElementById('att-actions-section');
-  if(sec) sec.style.display='';
-  if(act) act.style.display='none';
+  _attShowCheckIn();
+  selAtt(1);
 }
 
 /* Action: Check Out → open EOD work report form */
@@ -1939,6 +1967,9 @@ async function showOverduePopup(tasks, onDone){
 
 function escStr(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function _attBtnText(t){ var l=document.getElementById('att-btn-label'); if(l) l.textContent=t; }
+function _attBtnSub(t){ var s=document.getElementById('att-btn-sub'); if(s) s.textContent=t; }
+
 async function markAttendance(){
   var btn=document.getElementById('att-btn');
   var type = _selAttIdx===1 ? 'onsite' : 'office';
@@ -1968,11 +1999,11 @@ async function markAttendance(){
     if(!isOnsite){
       // ── Step 1: Try WiFi check-in first ──
       try{
-        btn.textContent='⏳ Checking WiFi…';
+        _attBtnText('⏳ Checking WiFi…'); _attBtnSub('');
         var wdRes=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
         var wd=await wdRes.json();
         if(wd.wifiEnabled && wd.isOffice && !wd.alreadyCheckedIn){
-          btn.textContent='⏳ WiFi check-in…';
+          _attBtnText('⏳ WiFi check-in…');
           var wcRes=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
           var wc=await wcRes.json();
           if(wc.success) d=wc;
@@ -1981,7 +2012,7 @@ async function markAttendance(){
 
       // ── Step 2: GPS check-in if WiFi didn't work ──
       if(!d || !d.success){
-        btn.textContent='⏳ GPS check-in…';
+        _attBtnText('⏳ GPS check-in…');
         var body={type:'office'};
         if(myLat!==null) body.lat=myLat;
         if(myLng!==null) body.lng=myLng;
@@ -1994,7 +2025,7 @@ async function markAttendance(){
       }
     } else {
       // Onsite check-in
-      btn.textContent='⏳ Marking attendance…';
+      _attBtnText('⏳ Marking attendance…'); _attBtnSub('');
       var body={type:'onsite'};
       if(siteName) body.site_name=siteName;
       if(myLat!==null) body.lat=myLat;
@@ -2009,7 +2040,8 @@ async function markAttendance(){
 
     if(!d || !d.success){
       btn.disabled=false;
-      btn.textContent=isOnsite?'Check In — Onsite':'Check In';
+      _attBtnText(isOnsite?'Check In — Onsite':'Check In');
+      _attBtnSub(isOnsite?'Client location · Needs approval':'WiFi · GPS auto detected');
       if(d && d.code==='PAST_END_TIME'){
         var ov=document.createElement('div');
         ov.style.cssText='position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);';
@@ -2086,7 +2118,8 @@ async function markAttendance(){
     setTimeout(loadHomeWeekAndLeave, 600);
   } catch(e){
     btn.disabled=false;
-    btn.textContent=isOnsite?'Check In — Onsite':'Check In';
+    _attBtnText(isOnsite?'Check In — Onsite':'Check In');
+    _attBtnSub(isOnsite?'Client location · Needs approval':'WiFi · GPS auto detected');
     alert('Network error. Check connection and try again.');
   }
 }
@@ -5031,6 +5064,11 @@ async function bcoSubmit(type){
     if(d.success){
       // After any break return — refresh check-in time on home screen
       _refreshCheckInDisplay();
+      // If on attendance screen, switch to Check In view (on break → Check In to return)
+      setTimeout(function(){
+        var act=document.getElementById('att-actions-section');
+        if(act && act.style.display==='flex') _attShowCheckIn();
+      }, 300);
       if(type==='office_work'){
         wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','💼 Request Sent — Awaiting Approval',
           'Admin will review your outside work — you\'re still clocked in',false);
@@ -5046,9 +5084,9 @@ async function bcoSubmit(type){
             '₹'+d.break_excess_deduction+' deducted from salary',false);
           setTimeout(function(){ wifiBanner(false); },7000);
         } else {
-          wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)',
-            '☕ Break Noted ✓','Welcome back — no deduction',false);
-          setTimeout(function(){ wifiBanner(false); },5000);
+          wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)',
+            '☕ On Break','Tap Check In when you\'re back',false);
+          setTimeout(function(){ wifiBanner(false); },6000);
         }
       }
     } else {
