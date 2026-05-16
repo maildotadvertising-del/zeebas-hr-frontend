@@ -4814,6 +4814,11 @@ function listenBreakApproval(){
       s1TaskTab(_s1TaskTab);
     }
   });
+
+  // Admin triggered WiFi presence sync → ping wifi-detect immediately
+  staffSocket.on('request_wifi_ping', function(){
+    wifiCheckAndAct && wifiCheckAndAct();
+  });
 }
 
 // Refresh check-in time on home screen from server

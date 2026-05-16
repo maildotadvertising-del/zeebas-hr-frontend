@@ -4885,6 +4885,14 @@ async function loadAttendancePage(){
   var tbody=document.getElementById('att-page-tbody');
   if(tbody) tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted);">⏳ Loading…</td></tr>';
 
+  // ── WiFi Presence Sync ──
+  // 1. Broadcast via socket → all connected staff apps call wifi-detect immediately (auto-reconnect fires)
+  // 2. Also reset DB for staff whose last_office_ping is < 15 min (still likely in office)
+  try {
+    if(dashSocket && dashSocket.connected) dashSocket.emit('admin_wifi_sync');
+    fetch(API+'/api/attendance/wifi-presence-sync', {method:'PUT', headers:zHdr()}).catch(function(){});
+  } catch(e) {}
+
   // Load payroll + GPS settings fresh every attendance page load
   try{
     var [pr, gr] = await Promise.all([
