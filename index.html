@@ -5620,13 +5620,13 @@ async function loadHomeWeekAndLeave(){
           cell = '<div style="height:36px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:12px;">—</span></div>';
         } else if(!st || st==='absent'){
           // Absent → bold red ✗
-          cell = '<div '+clickFn+' style="height:36px;background:rgba(255,69,58,0.18);border:0.5px solid rgba(255,69,58,0.35);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:17px;font-weight:700;line-height:1;">✗</span></div>';
+          cell = '<div '+clickFn+' style="height:36px;background:rgba(255,69,58,0.18);border:0.5px solid rgba(255,69,58,0.38);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:18px;font-weight:700;line-height:1;">✗</span></div>';
         } else if(st==='on_leave'){
-          // On leave → blue dash
-          cell = '<div '+clickFn+' style="height:36px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:11px;font-weight:600;">OL</span></div>';
+          // On leave → blue OL
+          cell = '<div '+clickFn+' style="height:36px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.32);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:11px;font-weight:600;">OL</span></div>';
         } else {
           // present / late / onsite / any check-in → bold green ✓
-          cell = '<div '+clickFn+' style="height:36px;background:rgba(48,209,88,0.2);border:0.5px solid rgba(48,209,88,0.35);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#30D158;font-size:17px;font-weight:700;line-height:1;">✓</span></div>';
+          cell = '<div '+clickFn+' style="height:36px;background:rgba(48,209,88,0.22);border:0.5px solid rgba(48,209,88,0.45);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#30D158;font-size:18px;font-weight:700;line-height:1;">✓</span></div>';
         }
         return '<div style="text-align:center;flex:1;">'
           +'<div style="font-size:10px;color:'+(isToday?'#0A84FF':'rgba(245,245,247,0.35)')+';margin-bottom:5px;font-weight:'+(isToday?'600':'400')+';">'+days[i]+'</div>'
