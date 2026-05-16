@@ -8153,18 +8153,35 @@ var _wifiCheckData = [];
 
 async function openWifiCheckPanel() {
   document.getElementById('wifi-check-overlay').style.display = 'flex';
-  document.getElementById('wifi-check-body').innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">📡 Pinging staff devices…<br><span style="font-size:11px;opacity:0.6;">Waiting 4 seconds for responses</span></div>';
 
-  // Step 1: Broadcast socket ping to all connected staff apps
+  // Countdown display
+  var secs = 6;
+  var showCountdown = function(n) {
+    document.getElementById('wifi-check-body').innerHTML =
+      '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">'
+      + '📡 Pinging all staff devices…'
+      + '<div style="font-size:28px;font-weight:700;color:#64D2FF;margin:12px 0;">'+n+'</div>'
+      + '<span style="font-size:11px;opacity:0.6;">Waiting for responses (app open & closed)</span></div>';
+  };
+  showCountdown(secs);
+
+  // Step 1: Push notification → wakes service workers on CLOSED apps too
+  try { fetch(API+'/api/push/wifi-ping-all', {method:'POST', headers:zHdr()}); } catch(e){}
+  // Step 2: Socket → instant for open apps
   if (dashSocket && dashSocket.connected) dashSocket.emit('admin_wifi_sync');
 
-  // Step 2: Wait 4 seconds for staff apps to respond with wifi-detect
-  await new Promise(function(r){ setTimeout(r, 4000); });
+  // Step 3: Countdown 6 seconds for devices to respond
+  var cd = setInterval(function(){
+    secs--;
+    if (secs > 0) { showCountdown(secs); }
+    else { clearInterval(cd); }
+  }, 1000);
+  await new Promise(function(r){ setTimeout(r, 6000); });
 
-  // Step 3: Run departure check to apply any new data
-  try { await fetch(API+'/api/attendance/wifi-departure-now', {method:'POST', headers:zHdr()}); } catch(e) {}
+  // Step 4: Apply departure rules to any new data
+  try { await fetch(API+'/api/attendance/wifi-departure-now', {method:'POST', headers:zHdr()}); } catch(e){}
 
-  // Step 4: Load fresh report
+  // Step 5: Load fresh report
   await loadWifiReport();
 }
 
