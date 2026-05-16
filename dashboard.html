@@ -8164,7 +8164,7 @@ async function loadStaffLog(dateVal) {
   // Build query: specific date if selected, else today
   var query = dateVal ? 'date='+dateVal : '';
   try {
-    var res = await fetch(API_URL+'/api/attendance/staff-log/'+_staffLogId+(query?'?'+query:''), { headers: zHead() });
+    var res = await fetch(API+'/api/attendance/staff-log/'+_staffLogId+(query?'?'+query:''), { headers: zHdr() });
     var d = await res.json();
     if (!d.success || !d.data.length) {
       body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No attendance record for this date.</div>';
