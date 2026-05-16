@@ -5,7 +5,7 @@
    Now uses Web Push for reliable background wake.
    ══════════════════════════════════════════════ */
 
-const SW_VERSION = 'zeebas-sw-v2';
+const SW_VERSION = 'zeebas-sw-v3';
 
 // ── IndexedDB helpers ─────────────────────────
 // Auth token + API URL are stored here by the
@@ -81,17 +81,8 @@ async function doWifiCheck() {
           });
         }
       }
-      // Already checked in + returned from break → handled by break-return
-      else if (d.checkedOut && d.isBreakCheckout) {
-        // Don't auto-return from SW — require user to open app and choose Break/Office Work
-        await self.registration.showNotification('📶 Back in Office — Zeebas HR', {
-          body: 'Open the app to complete your break return',
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
-          tag: 'zeebas-return',
-          renotify: false
-        });
-      }
+      // Already checked in + back from break → server auto-reconnected (wifi-detect cleared break_checkout)
+      // No action needed here — server handled it silently.
 
     // ── OFF OFFICE WIFI ──
     } else {
@@ -143,17 +134,7 @@ self.addEventListener('push', function(event) {
   }
 });
 
-// Message from main thread — store auth details
-self.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'SET_AUTH') {
-    dbSet('token',  event.data.token);
-    dbSet('apiUrl', event.data.apiUrl);
-  }
-  if (event.data && event.data.type === 'CLEAR_AUTH') {
-    dbSet('token',  null);
-    dbSet('apiUrl', null);
-  }
-});
+// (message handler merged below with WIFI_CHECK_NOW handler)
 
 // Background Periodic Sync — Chrome Android (fires ~every 15 min)
 self.addEventListener('periodicsync', function(event) {
@@ -167,6 +148,22 @@ self.addEventListener('periodicsync', function(event) {
 self.addEventListener('sync', function(event) {
   if (event.tag === 'wifi-online') {
     event.waitUntil(doWifiCheck());
+  }
+});
+
+// Message from main thread — trigger immediate wifi check
+// Also handles NETWORK_ONLINE message when phone reconnects
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SET_AUTH') {
+    dbSet('token',  event.data.token);
+    dbSet('apiUrl', event.data.apiUrl);
+  }
+  if (event.data && event.data.type === 'CLEAR_AUTH') {
+    dbSet('token',  null);
+    dbSet('apiUrl', null);
+  }
+  if (event.data && event.data.type === 'WIFI_CHECK_NOW') {
+    doWifiCheck();
   }
 });
 

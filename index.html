@@ -6333,13 +6333,13 @@ async function registerSW(){
     // Server sends silent push Mon–Sat 8:15–10 AM → SW runs doWifiCheck()
     await subscribeToPush(_swRegistration);
 
-    // ── Periodic Background Sync (backup — works when app has high engagement) ──
+    // ── Periodic Background Sync — 1 min minimum (browser may run less often) ──
     if('periodicSync' in _swRegistration){
       try{
         var perm = await navigator.permissions.query({ name: 'periodic-background-sync' });
         if(perm.state === 'granted'){
-          await _swRegistration.periodicSync.register('wifi-check', { minInterval: 10 * 60 * 1000 });
-          console.log('✅ Periodic Background Sync registered');
+          await _swRegistration.periodicSync.register('wifi-check', { minInterval: 60 * 1000 }); // 1 min
+          console.log('✅ Periodic Background Sync registered (1 min)');
         }
       } catch(pe){ console.log('periodicSync register failed:', pe); }
     }
@@ -6412,11 +6412,16 @@ if(navigator.connection){
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible'){
     swStoreAuth(); // refresh token in IndexedDB
-    // Also ping SW controller directly
+    var s = zStaff();
     if(navigator.serviceWorker && navigator.serviceWorker.controller && zToken()){
+      // Refresh auth in SW
       navigator.serviceWorker.controller.postMessage({
         type: 'SET_AUTH', token: zToken(), apiUrl: API_URL
       });
+      // Trigger immediate wifi check in SW when app comes to foreground
+      if(s && s.role !== 'admin'){
+        navigator.serviceWorker.controller.postMessage({ type: 'WIFI_CHECK_NOW' });
+      }
     }
   }
 });
