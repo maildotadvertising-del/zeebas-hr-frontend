@@ -1453,6 +1453,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         </div>
         <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
+        <button onclick="resetAllInOffice()" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.35);color:#30D158;border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">✅ All In Office</button>
       </div>
     </div>
 
@@ -7861,6 +7862,23 @@ function attViewRow(r,i){
       +'<button onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>'
       +'</div>'
     +'</td></tr>';
+}
+
+async function resetAllInOffice(){
+  var date = document.getElementById('att-filter-date').value || '';
+  var count = (window._attRows||[]).filter(function(r){ return r.break_checkout; }).length;
+  if(count === 0){ showToast('No "Not in office" staff found'); return; }
+  if(!confirm('Reset all '+count+' "Not in office" staff as Working ✓?\n\nUse this when staff are physically in office but app marked them wrong.')) return;
+  try {
+    var res = await fetch(API+'/api/attendance/reset-all-in-office',{
+      method:'PUT',
+      headers:Object.assign(zHdr(),{'Content-Type':'application/json'}),
+      body:JSON.stringify({date: date})
+    });
+    var d = await res.json();
+    if(d.success){ showToast('✅ '+d.message); loadAttendancePage(); }
+    else alert(d.message||'Could not update');
+  }catch(e){ alert('Network error'); }
 }
 
 async function markInOffice(i){
