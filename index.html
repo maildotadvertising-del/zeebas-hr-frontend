@@ -420,7 +420,10 @@ body.desktop-mode #s1-sidebar {
             <div id="wifi-banner-title" style="font-size:12px;font-weight:500;"></div>
             <div id="wifi-banner-sub" style="font-size:10px;margin-top:1px;opacity:0.7;"></div>
           </div>
-          <button id="wifi-banner-btn" style="display:none;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;" onclick="wifiCheckoutPrompt()">Check Out</button>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+            <button id="wifi-banner-btn" style="display:none;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;" onclick="wifiCheckoutPrompt()">Check Out</button>
+            <button id="wifi-imhere-btn" onclick="pingImHere(event)" style="display:none;border:none;border-radius:8px;padding:5px 10px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:500;background:rgba(48,209,88,0.18);color:rgba(48,209,88,1);border:0.5px solid rgba(48,209,88,0.35);">📍 I'm Here</button>
+          </div>
         </div>
 
         <!-- Notification Permission Card — shown until user allows -->
@@ -4453,12 +4456,13 @@ async function loadMySalary(){
    WIFI AUTO ATTENDANCE
    ══════════════════════════════════════════ */
 
-function wifiBanner(show, color, iconColor, title, sub, showCheckoutBtn){
+function wifiBanner(show, color, iconColor, title, sub, showCheckoutBtn, showImHere){
   var b=document.getElementById('wifi-banner');
   var ic=document.getElementById('wifi-banner-icon');
   var t=document.getElementById('wifi-banner-title');
   var s=document.getElementById('wifi-banner-sub');
   var btn=document.getElementById('wifi-banner-btn');
+  var imHereBtn=document.getElementById('wifi-imhere-btn');
   if(!b) return;
   if(!show){ b.style.display='none'; return; }
   b.style.display='flex';
@@ -4475,6 +4479,24 @@ function wifiBanner(show, color, iconColor, title, sub, showCheckoutBtn){
     btn.style.background=iconColor.replace('1)','0.2)');
     btn.style.color=iconColor;
     btn.style.border='0.5px solid '+iconColor.replace('1)','0.35)');
+  }
+  if(imHereBtn){
+    imHereBtn.style.display=showImHere?'block':'none';
+  }
+}
+
+// "I'm Here" button — staff taps to confirm they're in office → pings wifi-detect
+async function pingImHere(e){
+  if(e) e.stopPropagation();
+  var btn=document.getElementById('wifi-imhere-btn');
+  if(btn){ btn.textContent='⏳'; btn.disabled=true; }
+  try{
+    await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
+    if(btn){ btn.textContent='✅ Here!'; btn.style.background='rgba(48,209,88,0.3)'; }
+  } catch(e2){
+    if(btn){ btn.textContent='📍 I\'m Here'; }
+  } finally{
+    setTimeout(function(){ if(btn){ btn.textContent='📍 I\'m Here'; btn.disabled=false; btn.style.background='rgba(48,209,88,0.18)'; } },3000);
   }
 }
 
@@ -5119,7 +5141,8 @@ function stopWifiPoller(){
 }
 
 // ── Global silent background pinger — keeps last_office_ping fresh on ANY screen ──
-// Runs every 5 min regardless of which screen is active — prevents false auto-checkout
+// Runs every 2 min when page is visible, every 5 min when hidden.
+// This ensures the server sees a recent ping and doesn't wrongly mark staff as "Not in office".
 async function _silentWifiPing(){
   try{
     var tok = localStorage.getItem('zhr_token');
@@ -5127,7 +5150,18 @@ async function _silentWifiPing(){
     await fetch(API_URL+'/api/attendance/wifi-detect', {headers: zHead()});
   } catch(e){ /* silent — never block UI */ }
 }
-setInterval(_silentWifiPing, 5 * 60 * 1000); // every 5 minutes, always running
+// Adaptive pinger: 2 min when visible, 5 min when hidden
+var _silentPingTimer = null;
+function _startSilentPinger(){
+  if(_silentPingTimer) clearInterval(_silentPingTimer);
+  var interval = document.hidden ? (5 * 60 * 1000) : (2 * 60 * 1000);
+  _silentPingTimer = setInterval(_silentWifiPing, interval);
+}
+_startSilentPinger(); // start immediately
+document.addEventListener('visibilitychange', function(){
+  _startSilentPinger(); // restart with correct interval when visibility changes
+  if(!document.hidden){ _silentWifiPing(); } // immediate ping when app comes to foreground
+});
 
 async function wifiCheckAndAct(){
   try{
@@ -5215,7 +5249,7 @@ async function wifiCheckAndAct(){
             ch2f=ch2f%12||12;
             ciEl2f.textContent=ch2f+':'+(cm2f<10?'0':'')+cm2f+' '+ca2f;
           }
-          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
+          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false, true);
           return;
         }
 
@@ -5259,9 +5293,9 @@ async function wifiCheckAndAct(){
           ct_h=ct_h%12||12;
           var compStr=ct_h+':'+(ct_m<10?'0':'')+ct_m+' '+ct_a;
           var subMsg = lmBanner+' · Work until '+compStr+' → deduction cleared';
-          wifiBanner(true,'rgba(255,159,10,0.08)','rgba(255,159,10,1)','⏰ In Office — '+lmBanner, subMsg, false);
+          wifiBanner(true,'rgba(255,159,10,0.08)','rgba(255,159,10,1)','⏰ In Office — '+lmBanner, subMsg, false, true);
         } else {
-          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false);
+          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false, true);
         }
       }
 
