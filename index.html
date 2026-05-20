@@ -6893,7 +6893,7 @@ async function dtDoLogin(){
     var r = await fetch(API_URL+'/api/auth/login',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({employee_id:empId, password:pass, role:'staff'})
+      body:JSON.stringify({identifier:empId, password:pass})
     });
     var d = await r.json();
     if(d.success && d.token){
