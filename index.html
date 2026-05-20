@@ -7174,7 +7174,7 @@ async function dtSubmitLeave(){
   var res=document.getElementById('dt-leave-result');
   if(!from||!to||!type||!reason){ if(res){res.style.display='block';res.style.background='rgba(255,69,58,0.12)';res.style.color='#FF453A';res.textContent='Please fill in all fields.';} return; }
   try{
-    var r=await fetch(API_URL+'/api/approvals',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}),body:JSON.stringify({type:'leave',leave_type:type,from_date:from,to_date:to,reason:reason})});
+    var r=await fetch(API_URL+'/api/leave/apply',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}),body:JSON.stringify({leave_type:type,from_date:from,to_date:to,reason:reason})});
     var d=await r.json();
     if(d.success){
       if(res){res.style.display='block';res.style.background='rgba(48,209,88,0.12)';res.style.color='#30D158';res.textContent='✅ Leave request submitted! Admin will review it shortly.';}
