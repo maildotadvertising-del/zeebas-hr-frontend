@@ -5114,6 +5114,17 @@ function stopWifiPoller(){
   if(_wifiPollTimer){ clearInterval(_wifiPollTimer); _wifiPollTimer = null; }
 }
 
+// ── Global silent background pinger — keeps last_office_ping fresh on ANY screen ──
+// Runs every 5 min regardless of which screen is active — prevents false auto-checkout
+async function _silentWifiPing(){
+  try{
+    var tok = localStorage.getItem('zhr_token');
+    if(!tok) return; // not logged in
+    await fetch(API_URL+'/api/attendance/wifi-detect', {headers: zHead()});
+  } catch(e){ /* silent — never block UI */ }
+}
+setInterval(_silentWifiPing, 5 * 60 * 1000); // every 5 minutes, always running
+
 async function wifiCheckAndAct(){
   try{
     var r=await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
