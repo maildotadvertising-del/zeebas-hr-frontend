@@ -3680,7 +3680,11 @@ async function loadAdminStaffList(){
     var d=await r.json();
     var staff=Array.isArray(d)?d:(d.data||d.staff||[]);
     _s2AllStaff=staff;
-    var active=staff.filter(function(s){return s.active!==0;});
+    var active=staff.filter(function(s){return s.active!==0;}).sort(function(a,b){
+      var na=parseInt((a.emp_id||'').replace(/\D+/g,''))||0;
+      var nb=parseInt((b.emp_id||'').replace(/\D+/g,''))||0;
+      return na-nb;
+    });
     var cntEl=document.getElementById('s2-staff-count');
     if(cntEl) cntEl.textContent=active.length+' members';
     if(!listEl) return;
@@ -6563,6 +6567,7 @@ textarea.dt-inp{resize:none;}
       <div style="margin-bottom:20px;">
         <div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:6px;">Password</div>
         <input id="dt-password" class="dt-inp" type="password" placeholder="Enter your password" autocomplete="current-password" spellcheck="false" autocorrect="off">
+        <div style="font-size:10px;color:rgba(245,245,247,0.3);margin-top:6px;">First time login? Default password: <span style="color:rgba(245,245,247,0.5);font-weight:500;">Dot*321</span></div>
       </div>
       <button id="dt-login-btn" onclick="dtDoLogin()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 5px 18px rgba(10,132,255,0.38);">Sign In</button>
     </div>
