@@ -260,28 +260,34 @@ body.desktop-mode #s1-sidebar {
     <div class="pbg"></div><div class="orb1"></div><div class="orb2"></div>
 
         <!-- SPLASH -->
-    <div id="s1-splash" class="scr on" style="background:#000;align-items:center;justify-content:center;flex-direction:column;">
+    <div id="s1-splash" class="scr on" style="background:#08080F;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;">
 
-      <!-- DOT Logo — actual logo image animated -->
-      <div style="display:flex;flex-direction:column;align-items:center;">
+      <!-- Radial glow pulse — red brand color, behind logo -->
+      <div id="sp-glow" style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(204,0,0,0.22) 0%,transparent 68%);opacity:0;transform:scale(0.6);pointer-events:none;"></div>
 
-        <!-- Actual DOT Advertising logo -->
-        <img id="sp-logo"
-          src="dot-logo.png"
-          alt="DOT Advertising"
-          style="width:170px;height:auto;opacity:0;transform:scale(0.78);transition:opacity 0.55s ease,transform 0.6s cubic-bezier(0.34,1.3,0.64,1);"
-        />
+      <!-- Outer ring — subtle, expands as logo enters -->
+      <div id="sp-ring" style="position:absolute;width:210px;height:210px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.07);opacity:0;transform:scale(0.7);pointer-events:none;"></div>
 
-        <!-- Divider -->
-        <div id="sp-line" style="width:0px;height:0.5px;background:rgba(255,255,255,0.15);margin:22px 0 14px;transition:width 0.6s ease;"></div>
+      <!-- Logo + shimmer wrapper -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;">
 
-        <!-- ZEEBAS CLUSTER LLP -->
-        <div id="splash-sub" style="color:rgba(235,235,245,0.3);font-size:9px;font-weight:300;letter-spacing:2px;font-family:'DM Sans',sans-serif;opacity:0;transform:translateY(6px);transition:opacity 0.5s ease,transform 0.5s ease;">ZEEBAS CLUSTER LLP</div>
+        <!-- Logo circle — clean clip, no edge artifact -->
+        <div id="sp-logo-wrap" style="width:174px;height:174px;border-radius:50%;overflow:hidden;background:#000;opacity:0;transform:scale(0.52);position:relative;box-shadow:0 0 0 1px rgba(0,0,0,1),0 12px 48px rgba(0,0,0,0.9);">
+          <img src="dot-logo.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;">
+          <!-- Shimmer light sweep -->
+          <div id="sp-shimmer" style="position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.16) 50%,transparent 72%);transform:translateX(-110%);pointer-events:none;border-radius:50%;"></div>
+        </div>
+
+        <!-- Divider line -->
+        <div id="sp-line" style="width:42px;height:0.5px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);margin:20px 0 11px;transform:scaleX(0);transform-origin:center;"></div>
+
+        <!-- Company name -->
+        <div id="splash-sub" style="color:rgba(235,235,245,0);font-size:8.5px;font-weight:300;letter-spacing:5px;font-family:'DM Sans',system-ui,sans-serif;text-transform:uppercase;white-space:nowrap;transition:color 0.6s ease,letter-spacing 0.7s ease;">ZEEBAS CLUSTER LLP</div>
       </div>
 
       <!-- Progress bar -->
-      <div style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);width:50px;height:1.5px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;">
-        <div id="sb" style="height:100%;background:linear-gradient(90deg,#CC0000,#FF4444);border-radius:2px;width:0%;transition:width 2.2s ease;"></div>
+      <div style="position:absolute;bottom:52px;left:50%;transform:translateX(-50%);width:46px;height:1px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
+        <div id="sb" style="height:100%;background:linear-gradient(90deg,#990000,#FF3B30);border-radius:2px;width:0%;"></div>
       </div>
     </div>
 
@@ -4125,33 +4131,78 @@ document.addEventListener('click', function(e){
   }
 });
 
-// Splash screen — logo image animation
+// Splash screen — professional multi-stage animation
 setTimeout(function(){
-  // 1. Logo scales in with slight overshoot bounce
-  var logo=document.getElementById('sp-logo');
-  if(logo){logo.style.opacity='1';logo.style.transform='scale(1)';}
 
-  // 2. Divider line expands
+  // ── Stage 1: Glow pulse radiates from center (0ms) ──
+  var glow = document.getElementById('sp-glow');
+  if(glow){
+    glow.style.transition = 'opacity 0.5s ease, transform 1s ease';
+    glow.style.opacity = '1'; glow.style.transform = 'scale(1.3)';
+    setTimeout(function(){ glow.style.opacity = '0'; glow.style.transform = 'scale(2.2)'; }, 600);
+  }
+
+  // ── Stage 2: Outer ring expands (50ms) ──
+  var ring = document.getElementById('sp-ring');
+  if(ring){
+    ring.style.transition = 'opacity 0.5s ease, transform 0.7s cubic-bezier(0.22,1,0.36,1)';
+    setTimeout(function(){
+      ring.style.opacity = '1'; ring.style.transform = 'scale(1)';
+      setTimeout(function(){ring.style.opacity='0';ring.style.transform='scale(1.4)';},700);
+    },50);
+  }
+
+  // ── Stage 3: Logo springs in with overshoot (100ms) ──
+  var wrap = document.getElementById('sp-logo-wrap');
+  if(wrap){
+    wrap.style.transition = 'opacity 0.4s ease, transform 0.7s cubic-bezier(0.34,1.5,0.64,1)';
+    setTimeout(function(){ wrap.style.opacity='1'; wrap.style.transform='scale(1)'; },100);
+  }
+
+  // ── Stage 4: Shimmer sweeps across logo (650ms) ──
+  var sh = document.getElementById('sp-shimmer');
+  if(sh){
+    setTimeout(function(){
+      sh.style.transition = 'transform 0.55s cubic-bezier(0.4,0,0.2,1)';
+      sh.style.transform = 'translateX(130%)';
+    },650);
+  }
+
+  // ── Stage 5: Divider line grows (750ms) ──
+  var line = document.getElementById('sp-line');
+  if(line){
+    setTimeout(function(){
+      line.style.transition = 'transform 0.55s cubic-bezier(0.4,0,0.2,1)';
+      line.style.transform = 'scaleX(1)';
+    },750);
+  }
+
+  // ── Stage 6: Company name fades in with letter-spacing (900ms) ──
+  var sub = document.getElementById('splash-sub');
+  if(sub){
+    setTimeout(function(){
+      sub.style.color = 'rgba(235,235,245,0.35)';
+      sub.style.letterSpacing = '3px';
+    },900);
+  }
+
+  // ── Progress bar fills (150ms) ──
+  var bar = document.getElementById('sb');
+  if(bar){
+    setTimeout(function(){
+      bar.style.transition = 'width 2.35s cubic-bezier(0.4,0,0.2,1)';
+      bar.style.width = '100%';
+    },150);
+  }
+
+  // ── Fade out → auth check (2850ms) ──
   setTimeout(function(){
-    var line=document.getElementById('sp-line');
-    if(line){line.style.width='60px';}
-  },500);
-
-  // 3. ZEEBAS CLUSTER LLP fades up
-  setTimeout(function(){
-    var sub=document.getElementById('splash-sub');
-    if(sub){sub.style.opacity='1';sub.style.transform='translateY(0)';}
-  },680);
-
-  // Progress bar fill
-  var b=document.getElementById('sb');
-  if(b){setTimeout(function(){b.style.width='100%';},200);}
-
-  // Fade out → check token → home or login
-  setTimeout(function(){
-    var sp=document.getElementById('s1-splash');
-    if(sp){sp.style.transition='opacity 0.5s ease';sp.style.opacity='0';
-      setTimeout(function(){sp.classList.remove('on');sp.style.display='none';},500);}
+    var sp = document.getElementById('s1-splash');
+    if(sp){
+      sp.style.transition = 'opacity 0.6s ease';
+      sp.style.opacity = '0';
+      setTimeout(function(){ sp.classList.remove('on'); sp.style.display='none'; },600);
+    }
 
     var savedToken = localStorage.getItem('zhr_token');
     var savedStaff = null;
@@ -4189,8 +4240,8 @@ setTimeout(function(){
       var lg=document.getElementById('s1-roleselect');
       if(lg){lg.style.display='flex';setTimeout(function(){lg.classList.add('on');},50);}
     }
-  },2900);
-},200);
+  },2850);
+},80);
 
 // ── CELEBRATION ENGINE ──
 var _cRun=false,_cAF=null;
