@@ -1737,10 +1737,78 @@ function initNavs2(active){
 }
 initNavs1(0);initNavs2(0);
 
+// ── Back-button / Android back-gesture navigation (staff app) ──
+var _s1NavInPopstate  = false;
+var _s1CurrentScreen  = 's1-home';
+var _s1BackPressCount = 0;
+var _s1BackTimer      = null;
+var _S1_APP_SCREENS   = ['s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile'];
+var _S1_LOGIN_SCREENS = ['s1-splash','s1-roleselect','s1-login'];
+
+window.addEventListener('popstate', function(e) {
+  var state = e.state || {};
+
+  // 1. Close open overlays first — back = dismiss, not navigate
+  var dmChat = document.getElementById('dm-chat-overlay');
+  if (dmChat && (dmChat.style.display === 'flex' || dmChat.classList.contains('open'))) {
+    if (typeof closeDmChat === 'function') closeDmChat(); else dmChat.style.display = 'none';
+    history.pushState({ screen: _s1CurrentScreen }, '', '#' + _s1CurrentScreen);
+    return;
+  }
+  var dmList = document.getElementById('dm-list-overlay');
+  if (dmList && (dmList.style.display === 'flex' || dmList.classList.contains('open'))) {
+    if (typeof closeDmList === 'function') closeDmList(); else dmList.style.display = 'none';
+    history.pushState({ screen: _s1CurrentScreen }, '', '#' + _s1CurrentScreen);
+    return;
+  }
+  var brkOv = document.getElementById('break-choice-overlay');
+  if (brkOv && brkOv.style.display !== 'none' && parseFloat(brkOv.style.opacity||'1') > 0) {
+    brkOv.style.opacity = '0';
+    setTimeout(function(){ brkOv.style.display = 'none'; }, 250);
+    history.pushState({ screen: _s1CurrentScreen }, '', '#' + _s1CurrentScreen);
+    return;
+  }
+
+  // 2. On pre-login screens — let the browser handle back naturally (close app / go to previous URL)
+  if (_S1_LOGIN_SCREENS.includes(_s1CurrentScreen)) return;
+
+  // 3. Sentinel = back pressed from home screen
+  if (state._sentinel || _s1CurrentScreen === 's1-home') {
+    clearTimeout(_s1BackTimer);
+    if (_s1BackPressCount > 0) {
+      // Second press within 2s → allow app close (do not re-push)
+      _s1BackPressCount = 0;
+      return;
+    }
+    _s1BackPressCount = 1;
+    // Show "press back again to exit" toast
+    var t=document.createElement('div');
+    t.textContent='Back again to exit';
+    t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,30,50,0.92);color:#f5f5f7;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;pointer-events:none;white-space:nowrap;';
+    document.body.appendChild(t);
+    _s1BackTimer = setTimeout(function(){ _s1BackPressCount=0; if(t.parentNode) t.parentNode.removeChild(t); }, 2000);
+    // Re-push home so back fires again
+    history.pushState({ screen: 's1-home' }, '', '#s1-home');
+    return;
+  }
+
+  // 4. Sub-screen → go back to home
+  var screen = state.screen || 's1-home';
+  if (!_S1_APP_SCREENS.includes(screen)) screen = 's1-home';
+  _s1NavInPopstate = true;
+  go1(screen);
+  _s1NavInPopstate = false;
+});
+
 function go1(id){
   var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
+  _s1CurrentScreen = id;
+  // Push history for app screens so Android back navigates within app
+  if (!_s1NavInPopstate && _S1_APP_SCREENS.includes(id)) {
+    history.pushState({ screen: id }, '', '#' + id);
+  }
   var idx=staffScrs.indexOf(id);if(idx>=0)initNavs1(idx);
   if(document.body.classList.contains('desktop-mode')){
     var _sb=document.getElementById('s1-sidebar');
@@ -4219,6 +4287,8 @@ setTimeout(function(){
             // ── BETA FEATURES FLAG ──
             // if(window._betaFeatures){ /* new logic for beta testers */ } else { /* stable */ }
             window._betaFeatures = d.staff.beta_tester === 1 || d.staff.beta_tester === '1';
+            // Sentinel history entry → back from home shows "exit?" toast instead of closing
+            history.replaceState({ screen: 's1-home', _sentinel: true }, '', '#s1-home');
             go1('s1-home');
             setTimeout(function(){ checkCelebrations(); }, 500);
           } else {
@@ -4233,6 +4303,7 @@ setTimeout(function(){
           // Network error — still go home with cached data (offline friendly)
           var _cs={}; try{_cs=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
           window._betaFeatures = _cs.beta_tester === 1 || _cs.beta_tester === '1';
+          history.replaceState({ screen: 's1-home', _sentinel: true }, '', '#s1-home');
           go1('s1-home');
         });
     } else {
@@ -4405,6 +4476,8 @@ async function staffLogin(){
         window.location.href='/dashboard.html';
       } else {
         populateStaff(d.staff);
+        // Sentinel history entry → back from home shows "exit?" toast instead of closing app
+        history.replaceState({ screen: 's1-home', _sentinel: true }, '', '#s1-home');
         go1('s1-home');
         fetchMyTasks(d.staff.id);
         syncNotifCard();
