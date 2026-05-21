@@ -59,8 +59,15 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 select.inp option{background:#1A1A2E;color:#fff;}
 
 /* BTN */
-.btn-p{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:600;width:100%;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(10,132,255,0.38);}
-.btn-g{background:rgba(255,255,255,0.07);color:rgba(245,245,247,0.7);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;font-size:15px;cursor:pointer;font-family:inherit;width:100%;}
+.btn-p{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:600;width:100%;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(10,132,255,0.38);transition:transform 0.1s ease,opacity 0.1s ease,box-shadow 0.1s ease;}
+.btn-g{background:rgba(255,255,255,0.07);color:rgba(245,245,247,0.7);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;font-size:15px;cursor:pointer;font-family:inherit;width:100%;transition:transform 0.1s ease,opacity 0.1s ease;}
+
+/* ── Button press feedback ── */
+.btn-p:active{transform:scale(0.96);opacity:0.85;box-shadow:0 2px 8px rgba(10,132,255,0.2)!important;}
+.btn-g:active{transform:scale(0.96);opacity:0.7;}
+button:active:not(.btn-p):not(.btn-g){transform:scale(0.95);opacity:0.75;}
+/* Nav items, cards with onclick, icon tap areas */
+[onclick]:not(input):not(select):not(textarea):not(button):active{opacity:0.65;}
 
 /* Global input/textarea font size (prevents iOS zoom) */
 input,textarea,select{font-size:16px;}
@@ -995,7 +1002,7 @@ body.desktop-mode #s1-sidebar {
           </div>
 
           <!-- Date of Birth — editable -->
-          <div id="prof-row-dob" style="padding:10px 14px;display:flex;align-items:center;gap:10px;min-height:42px;">
+          <div id="prof-row-dob" style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;min-height:42px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Date of Birth</div>
             <div id="prof-dob" style="color:#fff;font-size:13px;flex:1;"></div>
             <div id="prof-dob-edit-area" style="display:none;flex:1;align-items:center;gap:6px;">
@@ -1006,6 +1013,28 @@ body.desktop-mode #s1-sidebar {
             <button id="prof-dob-edit-btn" onclick="profEditField('dob')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
               <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
             </button>
+          </div>
+
+          <!-- Address — editable -->
+          <div id="prof-row-address" style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:flex-start;gap:10px;min-height:42px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;padding-top:2px;">Address</div>
+            <div id="prof-address" style="color:#fff;font-size:13px;flex:1;line-height:1.5;"></div>
+            <div id="prof-address-edit-area" style="display:none;flex:1;align-items:flex-start;gap:6px;">
+              <textarea id="prof-address-input" rows="2" placeholder="Your address…" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:13px;padding:6px 10px;outline:none;font-family:inherit;min-width:0;resize:none;line-height:1.4;"></textarea>
+              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+                <button onclick="profSaveField('address')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;">✓</button>
+                <button onclick="profCancelEdit('address')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;">✕</button>
+              </div>
+            </div>
+            <button id="prof-address-edit-btn" onclick="profEditField('address')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+          <!-- Joining Date — read only -->
+          <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Joining Date</div>
+            <div id="prof-joining" style="color:#fff;font-size:13px;flex:1;"></div>
           </div>
         </div>
 
@@ -2225,6 +2254,9 @@ function loadProfile(){
   set('prof-email', s.email);
   if(s.dob){ var d=new Date(s.dob); set('prof-dob', isNaN(d)?s.dob:d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})); }
   else { set('prof-dob','—'); }
+  set('prof-address', s.address || '—');
+  if(s.joining_date){ var jd=new Date(s.joining_date); set('prof-joining', isNaN(jd)?s.joining_date:jd.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})); }
+  else { set('prof-joining','—'); }
   profPhotoB64 = null;
   var btn=document.getElementById('prof-save-photo-btn'); if(btn) btn.style.display='none';
 }
@@ -2268,9 +2300,10 @@ async function profSavePhoto(){
 
 // ── Inline profile field edit ──
 var _profFieldConfig = {
-  phone: { inputId:'prof-phone-input', displayId:'prof-phone', areaId:'prof-phone-edit-area', btnId:'prof-phone-edit-btn', apiKey:'phone' },
-  email: { inputId:'prof-email-input', displayId:'prof-email', areaId:'prof-email-edit-area', btnId:'prof-email-edit-btn', apiKey:'email' },
-  dob:   { inputId:'prof-dob-input',   displayId:'prof-dob',   areaId:'prof-dob-edit-area',   btnId:'prof-dob-edit-btn',   apiKey:'dob' }
+  phone:   { inputId:'prof-phone-input',   displayId:'prof-phone',   areaId:'prof-phone-edit-area',   btnId:'prof-phone-edit-btn',   apiKey:'phone' },
+  email:   { inputId:'prof-email-input',   displayId:'prof-email',   areaId:'prof-email-edit-area',   btnId:'prof-email-edit-btn',   apiKey:'email' },
+  dob:     { inputId:'prof-dob-input',     displayId:'prof-dob',     areaId:'prof-dob-edit-area',     btnId:'prof-dob-edit-btn',     apiKey:'dob' },
+  address: { inputId:'prof-address-input', displayId:'prof-address', areaId:'prof-address-edit-area', btnId:'prof-address-edit-btn', apiKey:'address' }
 };
 
 function profEditField(field){
@@ -2284,9 +2317,10 @@ function profEditField(field){
       var dobRaw = s.dob;
       if(dobRaw.length > 10) dobRaw = dobRaw.substring(0,10);
       inp.value = dobRaw;
+    } else if(field==='phone') {
+      inp.value = s.phone || s.mobile || '';
     } else {
-      inp.value = s[cfg.apiKey] || s.mobile || '';
-      if(field==='phone') inp.value = s.phone || s.mobile || '';
+      inp.value = s[cfg.apiKey] || '';
     }
   }
   // Show edit area, hide display + pencil
@@ -2358,7 +2392,8 @@ async function profSaveField(field){
         }
       }
       profCancelEdit(field);
-      showToast1('✅ '+(field==='dob'?'Date of Birth':field.charAt(0).toUpperCase()+field.slice(1))+' updated!');
+      var _fLabel = {dob:'Date of Birth', address:'Address', phone:'Phone', email:'Email'}[field] || (field.charAt(0).toUpperCase()+field.slice(1));
+      showToast1('✅ '+_fLabel+' updated!');
     } else {
       showToast1('❌ '+(d.message||'Update failed'));
       btns.forEach(function(b){ b.disabled=false; });
@@ -4370,13 +4405,13 @@ async function loadMySalary(){
     var pData = await pRes.json();
     var sData = await sRes.json();
 
-    var staffInfo = JSON.parse(localStorage.getItem('staffInfo')||'{}');
+    var staffInfo = zStaff() || {};
     var att = (pData.attendance_summary)||{};
     var payroll = pData.payroll || null;
     var advances = pData.advances || [];
     var settings = sData.data || {};
 
-    var baseSalary     = parseFloat(payroll ? payroll.base_salary : (staffInfo.base_salary||0));
+    var baseSalary     = parseFloat(payroll ? payroll.base_salary : (staffInfo.base_salary || staffInfo.daily_rate || 0));
     var daysWorked     = parseInt(att.days_present||0);
     var lateDays       = parseInt(att.late_days||0);
     var absentDays     = parseInt(att.days_absent||0);
@@ -4678,6 +4713,11 @@ function eodSetStatus(id, st){
   renderEodItems();
 }
 
+function eodSetDesc(id, val){
+  var idx = _eodItems.findIndex(function(i){ return i.id===id; });
+  if(idx > -1) _eodItems[idx].link = val;
+}
+
 function renderEodItems(){
   var el = document.getElementById('eod-items-list');
   if(!el) return;
@@ -4690,27 +4730,40 @@ function renderEodItems(){
     var selSt  = item.status||'done';
     var catHtml = _eodCats.map(function(c){
       var active = (c===selCat);
-      return '<button onclick="eodSetCat('+item.id+',\''+c+'\')" style="flex-shrink:0;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;border:0.5px solid '+(active?'rgba(10,132,255,0.6)':'rgba(255,255,255,0.1)')+';background:'+(active?'rgba(10,132,255,0.22)':'rgba(255,255,255,0.05)')+';color:'+(active?'#0A84FF':'rgba(245,245,247,0.45)')+';transition:all 0.15s;">'+c+'</button>';
+      return '<button onclick="eodSetCat('+item.id+',\''+c+'\')" style="flex-shrink:0;padding:4px 11px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;border:0.5px solid '+(active?'rgba(10,132,255,0.6)':'rgba(255,255,255,0.1)')+';background:'+(active?'rgba(10,132,255,0.22)':'rgba(255,255,255,0.05)')+';color:'+(active?'#0A84FF':'rgba(245,245,247,0.45)')+';transition:all 0.15s;">'+c+'</button>';
     }).join('');
     var doneActive = selSt==='done';
     var progActive = selSt==='progress';
-    return '<div style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.11);border-radius:14px;padding:13px 14px;margin-bottom:2px;">'
-      // Top row: text + remove
-      +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">'
-      +'<div style="flex:1;">'
-      +'<input id="eod-text-'+item.id+'" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="What did you work on today?" style="width:100%;background:none;border:none;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;">'
+    var itemNum = idx+1;
+    return '<div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 14px 12px;margin-bottom:8px;">'
+
+      // ── Header: item number + remove ──
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+      +'<div style="font-size:10px;font-weight:600;color:rgba(245,245,247,0.3);letter-spacing:0.8px;text-transform:uppercase;">Work Item '+itemNum+'</div>'
+      +'<button onclick="eodRemoveItem('+item.id+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.22);border-radius:7px;color:#FF453A;font-size:12px;cursor:pointer;padding:3px 9px;font-family:inherit;line-height:1.4;">✕ Remove</button>'
       +'</div>'
-      +'<button onclick="eodRemoveItem('+item.id+')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:14px;cursor:pointer;padding:3px 8px;flex-shrink:0;font-family:inherit;line-height:1;">✕</button>'
-      +'</div>'
-      // Category row
-      +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">'
+
+      // ── Title ──
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:5px;font-weight:500;">TASK TITLE</div>'
+      +'<input id="eod-text-'+item.id+'" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="e.g. Designed social media banner for DOT…" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:13px;font-family:inherit;outline:none;padding:9px 11px;box-sizing:border-box;margin-bottom:10px;">'
+
+      // ── Description ──
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:5px;font-weight:500;">DESCRIPTION <span style="color:rgba(245,245,247,0.2);font-weight:400;">(optional)</span></div>'
+      +'<textarea id="eod-desc-'+item.id+'" oninput="eodSetDesc('+item.id+',this.value)" placeholder="Any extra details, notes, or links…" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:12px;font-family:inherit;outline:none;padding:9px 11px;box-sizing:border-box;resize:none;line-height:1.5;margin-bottom:10px;">'+escHtml(item.link||'')+'</textarea>'
+
+      // ── Category ──
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:7px;font-weight:500;">CATEGORY</div>'
+      +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px;">'
       +catHtml
       +'</div>'
-      // Status row
-      +'<div style="display:flex;gap:7px;margin-bottom:10px;">'
-      +'<button onclick="eodSetStatus('+item.id+',\'done\')" style="flex:1;padding:7px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(doneActive?'rgba(48,209,88,0.6)':'rgba(255,255,255,0.1)')+';background:'+(doneActive?'rgba(48,209,88,0.18)':'rgba(255,255,255,0.04)')+';color:'+(doneActive?'#30D158':'rgba(245,245,247,0.4)')+';">✅ Completed</button>'
-      +'<button onclick="eodSetStatus('+item.id+',\'progress\')" style="flex:1;padding:7px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(progActive?'rgba(255,159,10,0.6)':'rgba(255,255,255,0.1)')+';background:'+(progActive?'rgba(255,159,10,0.18)':'rgba(255,255,255,0.04)')+';color:'+(progActive?'#FF9F0A':'rgba(245,245,247,0.4)')+';">⏳ In Progress</button>'
+
+      // ── Status ──
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:7px;font-weight:500;">STATUS</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">'
+      +'<button onclick="eodSetStatus('+item.id+',\'done\')" style="padding:9px 7px;border-radius:11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(doneActive?'rgba(48,209,88,0.55)':'rgba(255,255,255,0.1)')+';background:'+(doneActive?'rgba(48,209,88,0.16)':'rgba(255,255,255,0.04)')+';color:'+(doneActive?'#30D158':'rgba(245,245,247,0.4)')+';transition:all 0.15s;">✅ Completed</button>'
+      +'<button onclick="eodSetStatus('+item.id+',\'progress\')" style="padding:9px 7px;border-radius:11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid '+(progActive?'rgba(255,159,10,0.55)':'rgba(255,255,255,0.1)')+';background:'+(progActive?'rgba(255,159,10,0.16)':'rgba(255,255,255,0.04)')+';color:'+(progActive?'#FF9F0A':'rgba(245,245,247,0.4)')+';transition:all 0.15s;">⏳ In Progress</button>'
       +'</div>'
+
       +'</div>';
   }).join('');
 }
@@ -5669,16 +5722,16 @@ async function loadHomeWeekAndLeave(){
         var clickFn = !isFuture ? 'onclick="showWeekDayDetail(\''+ds+'\')" style="cursor:pointer;"' : '';
 
         if(isFuture){
-          cell = '<div style="height:36px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:12px;">—</span></div>';
+          cell = '<div style="height:38px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:rgba(245,245,247,0.2);font-size:12px;">—</span></div>';
         } else if(!st || st==='absent'){
-          // Absent → bold red ✗
-          cell = '<div '+clickFn+' style="height:36px;background:rgba(255,69,58,0.18);border:0.5px solid rgba(255,69,58,0.38);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#FF453A;font-size:18px;font-weight:700;line-height:1;">✗</span></div>';
+          // Absent → ❌
+          cell = '<div '+clickFn+' style="height:38px;background:rgba(255,69,58,0.14);border:0.5px solid rgba(255,69,58,0.32);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="font-size:20px;line-height:1;">❌</span></div>';
         } else if(st==='on_leave'){
-          // On leave → blue OL
-          cell = '<div '+clickFn+' style="height:36px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.32);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#0A84FF;font-size:11px;font-weight:600;">OL</span></div>';
+          // On leave → 🏖
+          cell = '<div '+clickFn+' style="height:38px;background:rgba(10,132,255,0.13);border:0.5px solid rgba(10,132,255,0.28);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="font-size:16px;line-height:1;">🏖</span></div>';
         } else {
-          // present / late / onsite / any check-in → bold green ✓
-          cell = '<div '+clickFn+' style="height:36px;background:rgba(48,209,88,0.22);border:0.5px solid rgba(48,209,88,0.45);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="color:#30D158;font-size:18px;font-weight:700;line-height:1;">✓</span></div>';
+          // present / late / onsite / any check-in → ✅
+          cell = '<div '+clickFn+' style="height:38px;background:rgba(48,209,88,0.16);border:0.5px solid rgba(48,209,88,0.38);border-radius:9px;display:flex;align-items:center;justify-content:center;'+dotStyle+'"><span style="font-size:20px;line-height:1;">✅</span></div>';
         }
         return '<div style="text-align:center;flex:1;">'
           +'<div style="font-size:10px;color:'+(isToday?'#0A84FF':'rgba(245,245,247,0.35)')+';margin-bottom:5px;font-weight:'+(isToday?'600':'400')+';">'+days[i]+'</div>'
