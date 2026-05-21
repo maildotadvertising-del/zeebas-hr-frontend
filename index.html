@@ -4305,11 +4305,11 @@ setTimeout(checkCelebrations,3500);
    ═══════════════════════════════════════════ */
 var API_URL = 'https://zeebas-hr-backend.onrender.com';
 
-/* ── SERVER KEEPALIVE — ping every 14 min so Render never sleeps ── */
+/* ── SERVER KEEPALIVE — ping every 8 min so Render never sleeps ── */
 (function keepAlive(){
-  setInterval(function(){
-    fetch(API_URL + '/api/auth/ping', {method:'GET', cache:'no-store'}).catch(function(){});
-  }, 14 * 60 * 1000);
+  var ping = function(){ fetch(API_URL + '/api/auth/ping', {method:'GET', cache:'no-store'}).catch(function(){}); };
+  ping(); // immediate ping on load
+  setInterval(ping, 8 * 60 * 1000);
 })();
 
 function zToken(){ return localStorage.getItem('zhr_token'); }
