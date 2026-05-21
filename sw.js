@@ -124,7 +124,7 @@ async function doWifiCheck() {
 
 // ── Push from server → run WiFi check silently ──
 // This is the reliable path: server sends silent push every 10 min
-// (Mon–Sat, 8:15–10:00 AM). SW wakes up, checks WiFi, auto check-in.
+// (Mon–Sat, 7:30 AM–8:00 PM). SW wakes up, checks WiFi, auto check-in/out.
 self.addEventListener('push', function(event) {
   var data = null;
   try { data = event.data ? event.data.json() : null; } catch(e) {}

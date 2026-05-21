@@ -6524,7 +6524,7 @@ async function registerSW(){
     await swStoreAuth();
 
     // ── Web Push — primary background check-in mechanism ──
-    // Server sends silent push Mon–Sat 8:15–10 AM → SW runs doWifiCheck()
+    // Server sends silent push Mon–Sat 7:30 AM–8 PM → SW runs doWifiCheck()
     await subscribeToPush(_swRegistration);
 
     // ── Periodic Background Sync — 1 min minimum (browser may run less often) ──
