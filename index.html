@@ -441,7 +441,7 @@ body.desktop-mode #s1-sidebar {
 
         <!-- Notification Permission Card — shown until user allows -->
         <!-- Notification card — content built dynamically by syncNotifCard() -->
-        <div id="notif-inline-card" style="display:none;border-radius:14px;padding:13px 14px;margin-bottom:10px;align-items:center;"></div>
+        <div id="notif-inline-card" style="display:none;border-radius:14px;padding:13px 14px;margin-bottom:12px;border:1px solid transparent;"></div>
 
         <!-- Quick Actions -->
         <!-- Attendance — full-width bold card -->
@@ -4691,17 +4691,20 @@ function syncNotifCard(){
     card.style.borderColor = 'rgba(255,69,58,0.3)';
     card.style.background = 'linear-gradient(135deg,rgba(255,69,58,0.08),rgba(255,69,58,0.04))';
   } else {
-    // 'default' — show Allow button
-    card.style.display = 'flex';
-    card.style.borderColor = 'rgba(10,132,255,0.3)';
-    card.style.background = 'linear-gradient(135deg,rgba(10,132,255,0.1),rgba(94,92,230,0.08))';
+    // 'default' — show prominent Allow button
+    card.style.display = 'block';
+    card.style.borderColor = 'rgba(10,132,255,0.5)';
+    card.style.background = 'linear-gradient(135deg,rgba(10,132,255,0.18),rgba(94,92,230,0.12))';
+    card.style.padding = '16px';
     card.innerHTML = ''
-      +'<div style="width:36px;height:36px;border-radius:11px;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🔔</div>'
-      +'<div style="flex:1;margin-left:12px;">'
-      +'<div style="font-size:12px;font-weight:500;color:#fff;margin-bottom:2px;">Enable Notifications</div>'
-      +'<div style="font-size:10px;color:rgba(245,245,247,0.45);line-height:1.4;">Get auto check-in alerts & updates even when app is closed.</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
+      +'<div style="width:42px;height:42px;border-radius:13px;background:rgba(10,132,255,0.2);border:1px solid rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">🔔</div>'
+      +'<div>'
+      +'<div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px;">Notification Allow பண்ணுங்க!</div>'
+      +'<div style="font-size:11px;color:rgba(245,245,247,0.55);line-height:1.5;">App திறக்காம WiFi-ல connect ஆனாலே Auto Check-in ஆகும். அதுக்கு Allow வேணும்.</div>'
       +'</div>'
-      +'<button onclick="doAllowNotif()" style="flex-shrink:0;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:9px;padding:7px 13px;color:#fff;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(10,132,255,0.35);">🔔 Allow</button>';
+      +'</div>'
+      +'<button onclick="doAllowNotif()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(10,132,255,0.45);letter-spacing:0.3px;">🔔 Allow பண்ணு — Auto Check-in On ஆகும்</button>';
   }
 }
 
