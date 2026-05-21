@@ -273,7 +273,7 @@ body.desktop-mode #s1-sidebar {
 
         <!-- Logo circle — clean clip, no edge artifact -->
         <div id="sp-logo-wrap" style="width:174px;height:174px;border-radius:50%;overflow:hidden;background:#000;opacity:0;transform:scale(0.52);position:relative;box-shadow:0 0 0 1px rgba(0,0,0,1),0 12px 48px rgba(0,0,0,0.9);">
-          <img src="dot-logo.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;">
+          <img src="icon-512.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;">
           <!-- Shimmer light sweep -->
           <div id="sp-shimmer" style="position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.16) 50%,transparent 72%);transform:translateX(-110%);pointer-events:none;border-radius:50%;"></div>
         </div>
@@ -386,10 +386,20 @@ body.desktop-mode #s1-sidebar {
             </div>
           </div>
           <div style="height:0.5px;background:rgba(255,255,255,0.08);margin:12px 0;"></div>
-          <div style="display:flex;justify-content:space-between;">
-            <div style="text-align:center;">
-              <div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Check-in</div>
-              <div id="s1-checkin" style="color:#30D158;font-size:13px;font-weight:500;">--:--</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <!-- Check-in + Check-out times -->
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="text-align:center;">
+                  <div style="color:rgba(245,245,247,0.4);font-size:8px;margin-bottom:2px;">Check-in</div>
+                  <div id="s1-checkin" style="color:#30D158;font-size:12px;font-weight:500;">--:--</div>
+                </div>
+                <div style="color:rgba(245,245,247,0.2);font-size:11px;margin-top:6px;">→</div>
+                <div style="text-align:center;">
+                  <div style="color:rgba(245,245,247,0.4);font-size:8px;margin-bottom:2px;">Check-out</div>
+                  <div id="s1-checkout" style="color:#FF9F0A;font-size:12px;font-weight:500;">--:--</div>
+                </div>
+              </div>
               <div id="s1-late-badge" style="display:none;margin-top:3px;background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.3);border-radius:5px;padding:1px 5px;font-size:9px;color:#FF453A;font-weight:500;"></div>
             </div>
             <div style="text-align:center;"><div style="color:rgba(245,245,247,0.4);font-size:9px;margin-bottom:3px;">Tasks</div><div id="s1-tasks-count" style="color:#FF9F0A;font-size:13px;font-weight:500;">0</div></div>
@@ -444,17 +454,57 @@ body.desktop-mode #s1-sidebar {
         <div id="notif-inline-card" style="display:none;border-radius:14px;padding:13px 14px;margin-bottom:12px;border:1px solid transparent;"></div>
 
         <!-- Quick Actions -->
-        <!-- Attendance — full-width bold card -->
-        <div style="margin-bottom:10px;">
-          <div onclick="go1('s1-gps')" style="cursor:pointer;border-radius:16px;padding:16px 18px;background:linear-gradient(135deg,rgba(48,209,88,0.18) 0%,rgba(48,209,88,0.06) 100%);border:1px solid rgba(48,209,88,0.35);display:flex;align-items:center;gap:14px;">
-            <div style="width:46px;height:46px;background:rgba(48,209,88,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(48,209,88,0.3);">
-              <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <!-- Attendance Card — dynamic: shows check-in buttons OR checked-in state -->
+        <div id="s1-att-card" style="margin-bottom:10px;">
+
+          <!-- State A: Not yet checked in → show check-in options -->
+          <div id="s1-att-notchecked" style="border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,rgba(48,209,88,0.18) 0%,rgba(48,209,88,0.06) 100%);border:1px solid rgba(48,209,88,0.35);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(48,209,88,0.3);">
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <div style="color:#fff;font-size:14px;font-weight:600;">Mark Attendance</div>
+                <div style="color:rgba(48,209,88,0.65);font-size:10px;margin-top:1px;">Choose your check-in method</div>
+              </div>
             </div>
-            <div style="flex:1;">
-              <div style="color:#fff;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Attendance</div>
-              <div id="s1-att-sub" style="color:rgba(48,209,88,0.7);font-size:11px;margin-top:3px;">GPS / WiFi check-in</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button onclick="homeWifiCheckin()" id="s1-home-wifi-btn" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);border-radius:12px;padding:11px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.2s;">
+                <span style="font-size:20px;">📶</span>
+                <span style="color:#5AABF0;font-size:11px;font-weight:600;">WiFi Check-in</span>
+                <span style="color:rgba(90,171,240,0.55);font-size:9px;">Auto office detect</span>
+              </button>
+              <button onclick="go1('s1-gps')" style="background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.28);border-radius:12px;padding:11px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.2s;">
+                <span style="font-size:20px;">📍</span>
+                <span style="color:#30D158;font-size:11px;font-weight:600;">GPS Check-in</span>
+                <span style="color:rgba(48,209,88,0.55);font-size:9px;">Location based</span>
+              </button>
             </div>
-            <div style="color:rgba(48,209,88,0.6);font-size:18px;">›</div>
+          </div>
+
+          <!-- State B: Checked in → show time + checkout -->
+          <div id="s1-att-checkedin" style="display:none;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,rgba(48,209,88,0.15) 0%,rgba(48,209,88,0.05) 100%);border:1px solid rgba(48,209,88,0.32);">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div>
+                  <div style="color:#30D158;font-size:13px;font-weight:600;">Checked In</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                    <span style="color:rgba(245,245,247,0.5);font-size:10px;">at</span>
+                    <span id="s1-att-ci-time" style="color:#fff;font-size:11px;font-weight:500;font-family:monospace;">--:--</span>
+                    <span id="s1-att-src-badge" style="font-size:9px;color:rgba(245,245,247,0.4);"></span>
+                  </div>
+                </div>
+              </div>
+              <button onclick="wifiCheckoutPrompt()" style="background:rgba(255,159,10,0.15);border:0.5px solid rgba(255,159,10,0.35);border-radius:10px;color:#FF9F0A;font-size:11px;font-weight:600;padding:8px 14px;cursor:pointer;font-family:inherit;flex-shrink:0;">Check Out</button>
+            </div>
+            <div style="height:0.5px;background:rgba(255,255,255,0.07);margin:10px 0;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div id="s1-att-status-row" style="color:rgba(245,245,247,0.4);font-size:10px;"></div>
+              <button onclick="go1('s1-gps')" style="background:none;border:none;color:rgba(48,209,88,0.6);font-size:10px;cursor:pointer;font-family:inherit;padding:0;">GPS / Onsite →</button>
+            </div>
           </div>
         </div>
         <!-- Apply Leave -->
@@ -1021,20 +1071,23 @@ body.desktop-mode #s1-sidebar {
             </button>
           </div>
 
-          <!-- Address — editable -->
-          <div id="prof-row-address" style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);display:flex;align-items:flex-start;gap:10px;min-height:42px;">
-            <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;padding-top:2px;">Address</div>
-            <div id="prof-address" style="color:#fff;font-size:13px;flex:1;line-height:1.5;"></div>
-            <div id="prof-address-edit-area" style="display:none;flex:1;align-items:flex-start;gap:6px;">
-              <textarea id="prof-address-input" rows="2" placeholder="Your address…" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:13px;padding:6px 10px;outline:none;font-family:inherit;min-width:0;resize:none;line-height:1.4;"></textarea>
-              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-                <button onclick="profSaveField('address')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;">✓</button>
-                <button onclick="profCancelEdit('address')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;">✕</button>
+          <!-- Address — editable (stacked layout so buttons never get cut off) -->
+          <div id="prof-row-address" style="padding:10px 14px;border-bottom:0.5px solid rgba(255,255,255,0.06);min-height:42px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;padding-top:2px;">Address</div>
+              <div id="prof-address" style="color:#fff;font-size:13px;flex:1;line-height:1.5;"></div>
+              <button id="prof-address-edit-btn" onclick="profEditField('address')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <!-- Edit area — full width below, buttons always visible -->
+            <div id="prof-address-edit-area" style="display:none;flex-direction:column;gap:7px;margin-top:8px;">
+              <textarea id="prof-address-input" rows="3" placeholder="Your address…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:13px;padding:8px 11px;outline:none;font-family:inherit;resize:none;line-height:1.45;"></textarea>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button onclick="profSaveField('address')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:9px;color:#30D158;font-size:13px;padding:7px 20px;cursor:pointer;font-family:inherit;font-weight:500;">✓ Save</button>
+                <button onclick="profCancelEdit('address')" style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.25);border-radius:9px;color:#FF453A;font-size:13px;padding:7px 16px;cursor:pointer;font-family:inherit;">✕</button>
               </div>
             </div>
-            <button id="prof-address-edit-btn" onclick="profEditField('address')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
-            </button>
           </div>
 
           <!-- Joining Date — read only -->
@@ -2657,13 +2710,19 @@ async function doCheckout(){
     });
     var d = await r.json();
     if(d.success){
+      // Update checkout time display immediately
+      var nowCo=new Date(),hCo=nowCo.getHours(),mCo=nowCo.getMinutes(),apCo=hCo>=12?'PM':'AM';
+      hCo=hCo%12||12; var coTs=hCo+':'+(mCo<10?'0':'')+mCo+' '+apCo;
+      var coEl=document.getElementById('s1-checkout'); if(coEl) coEl.textContent=coTs;
+      updateAttendanceCard(false,null,null,null,null);
       // Show success overlay
       var overlay = document.createElement('div');
       overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px;';
       overlay.innerHTML='<div style="font-size:56px;">👋</div>'
         +'<div style="color:#30D158;font-size:22px;font-weight:600;">Checked Out!</div>'
         +'<div style="color:rgba(245,245,247,0.6);font-size:13px;">Have a great evening!</div>'
-        +(d.ot_hours>0?'<div style="color:#FF9F0A;font-size:12px;margin-top:4px;">⏱ OT: '+parseFloat(d.ot_hours).toFixed(1)+'h</div>':'')
+        +(d.ot_hours>0?'<div style="color:#FF9F0A;font-size:12px;margin-top:4px;">⭐ OT: '+parseFloat(d.ot_hours).toFixed(1)+'h earned</div>':'')
+        +'<div style="color:rgba(245,245,247,0.4);font-size:12px;">Check-out: '+coTs+'</div>'
         +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:16px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:14px;padding:12px 32px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">Back to Home</button>';
       document.body.appendChild(overlay);
       setTimeout(function(){ overlay.querySelector('button').click(); }, 3000);
@@ -5133,6 +5192,81 @@ function showLateBadge(lateMinutes){
   }
 }
 
+// ── Attendance Card State on Home Page ──
+function updateAttendanceCard(checkedIn, checkInTime, source, statusText, checkOutTime){
+  var cardA = document.getElementById('s1-att-notchecked');
+  var cardB = document.getElementById('s1-att-checkedin');
+  if(!cardA || !cardB) return;
+  function fmtTs(ts){
+    if(!ts) return '--:--';
+    var d=new Date(typeof ts==='string'?ts.replace(' ','T'):ts);
+    if(isNaN(d.getTime())) return '--:--';
+    var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';
+    h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+ap;
+  }
+  if(checkedIn){
+    cardA.style.display='none'; cardB.style.display='block';
+    var ciTime = document.getElementById('s1-att-ci-time');
+    var srcBadge = document.getElementById('s1-att-src-badge');
+    var stRow = document.getElementById('s1-att-status-row');
+    if(ciTime) ciTime.textContent = fmtTs(checkInTime);
+    if(srcBadge){
+      var srcMap={'wifi':'📶 WiFi','gps':'📍 GPS','manual':'✏️ Manual'};
+      srcBadge.textContent = srcMap[source]||'';
+    }
+    if(stRow) stRow.textContent = statusText||'';
+    // Update checkout in stats bar
+    var coEl = document.getElementById('s1-checkout');
+    if(coEl) coEl.textContent = checkOutTime ? fmtTs(checkOutTime) : '--:--';
+  } else {
+    cardA.style.display='block'; cardB.style.display='none';
+    var coEl2 = document.getElementById('s1-checkout');
+    if(coEl2) coEl2.textContent = '--:--';
+  }
+}
+
+// ── WiFi Check-in triggered from home page button ──
+async function homeWifiCheckin(){
+  var btn = document.getElementById('s1-home-wifi-btn');
+  if(btn){ btn.disabled=true; btn.style.opacity='0.5'; }
+  try{
+    // First detect if on office WiFi
+    var rd = await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
+    var rs = await rd.json();
+    if(!rs.wifiEnabled){
+      showToast1('WiFi attendance not enabled. Use GPS check-in.'); return;
+    }
+    if(!rs.isOffice){
+      showToast1('Not on Office WiFi. Please use GPS check-in.'); return;
+    }
+    if(rs.alreadyCheckedIn && !rs.checkedOut){
+      // Already checked in — just update card
+      var ciEl=document.getElementById('s1-checkin');
+      if(ciEl&&rs.checkInTime){
+        var d=new Date(rs.checkInTime),h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';
+        h=h%12||12; ciEl.textContent=h+':'+(m<10?'0':'')+m+' '+ap;
+      }
+      var stMap={'present':'Present ✓','late':'Late','late_pending':'Late — Pending'};
+      updateAttendanceCard(true,rs.checkInTime,rs.source,stMap[rs.status]||'Present ✓',null);
+      showToast1('Already checked in via WiFi ✓'); return;
+    }
+    // Trigger actual check-in
+    var cr=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
+    var cd=await cr.json();
+    if(cd.success){
+      var now=new Date(),h2=now.getHours(),m2=now.getMinutes(),ap2=h2>=12?'PM':'AM';
+      h2=h2%12||12; var ts=h2+':'+(m2<10?'0':'')+m2+' '+ap2;
+      var ciEl2=document.getElementById('s1-checkin'); if(ciEl2) ciEl2.textContent=ts;
+      var stLbl = cd.status==='late_pending'?'Late — Pending Admin Approval':cd.status==='late'?'Late check-in':'Present ✓';
+      updateAttendanceCard(true,new Date().toISOString(),'wifi',stLbl,null);
+      showToast1(cd.message||'Checked in via WiFi ✓');
+    } else {
+      showToast1(cd.message||'WiFi check-in failed');
+    }
+  } catch(e){ showToast1('Connection error. Try again.'); }
+  finally{ if(btn){ btn.disabled=false; btn.style.opacity='1'; } }
+}
+
 // ── Monthly Balance Fetch & Display ──
 async function fetchMonthlyBalance(){
   try{
@@ -5377,6 +5511,8 @@ async function wifiCheckAndAct(){
             var ts=h+':'+(mn<10?'0':'')+mn+' '+ap;
             var ciEl=document.getElementById('s1-checkin');
             if(ciEl) ciEl.textContent=ts;
+            var stLblWifi = cd.status==='late_pending'?'Late — Pending Admin Approval':cd.status==='late'?'Late check-in':'Present ✓';
+            updateAttendanceCard(true, new Date().toISOString(), 'wifi', stLblWifi, null);
             if(cd.status==='late_pending'){
               wifiBanner(true,'rgba(255,159,10,0.1)','rgba(255,159,10,1)','⏳ Late — Pending Admin Approval',cd.message,false);
             } else if(cd.status==='late'){
@@ -5464,6 +5600,8 @@ async function wifiCheckAndAct(){
           ch2=ch2%12||12;
           ciEl2.textContent=ch2+':'+(cm2<10?'0':'')+cm2+' '+ca2;
         }
+        var stLblInOf = d.lateMinutes>0?'Late — '+d.lateMinutes+' min':'Present ✓';
+        updateAttendanceCard(true, d.checkInTime, d.source||'wifi', stLblInOf, null);
         // Start work remaining timer + late badge
         if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
         showLateBadge(d.lateMinutes||0);
@@ -5510,6 +5648,10 @@ async function wifiCheckAndAct(){
         // Show work remaining timer + late badge for GPS/non-wifi staff too
         if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
         showLateBadge(d.lateMinutes||0);
+        var stLblGps = d.lateMinutes>0?'Late — '+d.lateMinutes+' min':'Present ✓';
+        updateAttendanceCard(true, d.checkInTime, d.source||'gps', stLblGps, null);
+        var ciElGps=document.getElementById('s1-checkin');
+        if(ciElGps && d.checkInTime){ var cig=new Date(d.checkInTime),hig=cig.getHours(),mig=cig.getMinutes(),aig=hig>=12?'PM':'AM'; hig=hig%12||12; ciElGps.textContent=hig+':'+(mig<10?'0':'')+mig+' '+aig; }
 
         if(offMs < GRACE){
           // Within 5-min grace → subtle countdown banner
@@ -5534,12 +5676,18 @@ async function wifiCheckAndAct(){
       } else if(!d.alreadyCheckedIn){
         _appJustOpened = false;
         stopWorkTimer();
+        updateAttendanceCard(false,null,null,null,null);
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
-        // Checked out
+        // Checked out — show checkout time if available
         _appJustOpened = false;
         stopWorkTimer();
+        updateAttendanceCard(false,null,null,null,null);
+        if(d.checkInTime){
+          var ciElCo=document.getElementById('s1-checkin');
+          if(ciElCo){ var cico=new Date(d.checkInTime),hco=cico.getHours(),mco=cico.getMinutes(),aco=hco>=12?'PM':'AM'; hco=hco%12||12; ciElCo.textContent=hco+':'+(mco<10?'0':'')+mco+' '+aco; }
+        }
         wifiBanner(false);
       }
     }
@@ -5820,7 +5968,7 @@ async function loadHomeWeekAndLeave(){
 
       // Fetch this month's attendance
       var yr = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0');
-      var r = await fetch(API_URL+'/api/attendance/my?month='+yr+'-'+mo, {headers:zHead()});
+      var r = await fetch(API_URL+'/api/attendance/my?month='+mo+'&year='+yr, {headers:zHead()});
       var attData = {}; // date string → status
       _weekAttFull = {};
       if(r.ok){
@@ -5896,13 +6044,40 @@ async function loadHomeWeekAndLeave(){
 function showWeekDayDetail(ds){
   var a = _weekAttFull[ds] || {};
   var old = document.getElementById('week-day-popup'); if(old) old.remove();
-  function fmtT(ts){ if(!ts) return '—'; var d=new Date(ts),h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap; }
+  // Reliable time formatter — handles MySQL "YYYY-MM-DD HH:MM:SS" and ISO strings
+  function fmtT(ts){
+    if(!ts) return '—';
+    // Replace space with T so all browsers parse correctly
+    var d = new Date(typeof ts === 'string' ? ts.replace(' ','T') : ts);
+    if(isNaN(d.getTime())) return '—';
+    var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';
+    h=h%12||12;
+    return h+':'+(m<10?'0':'')+m+' '+ap;
+  }
+  function toMinsFrom(ts){
+    if(!ts) return 0;
+    var d=new Date(typeof ts==='string'?ts.replace(' ','T'):ts);
+    return isNaN(d.getTime())?0:d.getHours()*60+d.getMinutes();
+  }
   var dateObj = new Date(ds+'T00:00:00');
   var dateStr = dateObj.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'});
-  var stMap = {present:'✅ Present',late_pending:'⏱ Late (Pending)',late:'⏱ Late',absent:'❌ Absent',on_leave:'🌴 On Leave',onsite_approved:'🏗 Onsite Work',manual:'✅ Manual Check-in'};
-  var clMap = {present:'#30D158',late_pending:'#FF9F0A',late:'#FF9F0A',absent:'#FF453A',on_leave:'#0A84FF',onsite_approved:'#BF5FFF',manual:'#30D158'};
-  var stLabel = stMap[a.status] || (a.check_in ? '✅ Present' : '—');
+  var stMap = {present:'✅ Present',late_pending:'⏱ Late (Pending)',late:'⏱ Late',absent:'❌ Absent',on_leave:'🌴 On Leave',onsite_approved:'🏗 Onsite Work',manual:'✅ Manual Check-in',onsite_pending:'🏗 Onsite (Pending)'};
+  var clMap = {present:'#30D158',late_pending:'#FF9F0A',late:'#FF9F0A',absent:'#FF453A',on_leave:'#0A84FF',onsite_approved:'#BF5FFF',manual:'#30D158',onsite_pending:'#BF5FFF'};
+  var hasRecord = !!(a.check_in || a.status);
+  var stLabel = stMap[a.status] || (a.check_in ? '✅ Present' : '📭 No Record');
   var stColor = clMap[a.status] || (a.check_in ? '#30D158' : 'rgba(245,245,247,0.4)');
+  // Worked hours calculation
+  var workedStr = '';
+  if(a.check_in && a.check_out){
+    var dIn=new Date((a.check_in+'').replace(' ','T')), dOut=new Date((a.check_out+'').replace(' ','T'));
+    if(!isNaN(dIn)&&!isNaN(dOut)){
+      var wMins=Math.round((dOut-dIn)/60000);
+      if(wMins>0){ var wH=Math.floor(wMins/60),wM=wMins%60; workedStr=(wH?wH+'h ':'')+(wM?wM+'m':''); }
+    }
+  }
+  // Source badge
+  var srcMap = {wifi:'📶 Office WiFi',gps:'📍 GPS',manual:'✏️ Manual'};
+  var srcLabel = srcMap[a.source] || '';
   var popup = document.createElement('div');
   popup.id = 'week-day-popup';
   popup.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);';
@@ -5910,15 +6085,32 @@ function showWeekDayDetail(ds){
   popup.innerHTML =
     '<div style="width:100%;max-width:430px;background:rgba(14,14,22,0.98);border:0.5px solid rgba(255,255,255,0.12);border-radius:22px 22px 0 0;padding:20px 18px 36px;">'
     +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 18px;"></div>'
-    +'<div style="color:#fff;font-size:17px;font-weight:600;margin-bottom:4px;">'+dateStr+'</div>'
-    +'<div style="color:'+stColor+';font-size:13px;font-weight:500;margin-bottom:18px;">'+stLabel+'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
-    +'<div style="background:rgba(255,255,255,0.05);border-radius:13px;padding:13px;"><div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:5px;">Check-in</div><div style="color:#30D158;font-size:17px;font-weight:600;font-family:monospace;">'+fmtT(a.check_in)+'</div></div>'
-    +'<div style="background:rgba(255,255,255,0.05);border-radius:13px;padding:13px;"><div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:5px;">Check-out</div><div style="color:'+(a.check_out?'#FF9F0A':'rgba(245,245,247,0.3)')+';font-size:17px;font-weight:600;font-family:monospace;">'+fmtT(a.check_out)+'</div></div>'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">'
+    +'<div style="color:#fff;font-size:17px;font-weight:600;">'+dateStr+'</div>'
+    +(srcLabel?'<span style="font-size:10px;color:rgba(245,245,247,0.4);margin-top:3px;">'+srcLabel+'</span>':'')
     +'</div>'
-    +(a.late_mins>0?'<div style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.25);border-radius:11px;padding:10px 13px;margin-bottom:10px;font-size:13px;color:#FF9F0A;">⏱ '+a.late_mins+' min late</div>':'')
-    +(a.break_start?'<div style="background:rgba(255,255,255,0.04);border-radius:11px;padding:10px 13px;margin-bottom:10px;"><div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:3px;">Break</div><div style="color:#fff;font-size:14px;">'+fmtT(a.break_start)+' – '+fmtT(a.break_end)+'</div></div>':'')
-    +((!a.check_in && !a.status)?'<div style="background:rgba(255,255,255,0.04);border-radius:11px;padding:12px;text-align:center;color:rgba(245,245,247,0.35);font-size:13px;margin-bottom:10px;">No attendance record for this day.</div>':'')
+    +'<div style="color:'+stColor+';font-size:13px;font-weight:500;margin-bottom:18px;">'+stLabel+'</div>'
+    +(hasRecord
+      ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:13px;padding:13px;">'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:5px;">Check-in</div>'
+        +'<div style="color:#30D158;font-size:17px;font-weight:600;font-family:monospace;">'+fmtT(a.check_in)+'</div>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:13px;padding:13px;">'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-bottom:5px;">Check-out</div>'
+        +'<div style="color:'+(a.check_out?'#FF9F0A':'rgba(245,245,247,0.3)')+';font-size:17px;font-weight:600;font-family:monospace;">'+fmtT(a.check_out)+'</div>'
+        +'</div>'
+        +'</div>'
+        +(workedStr?'<div style="background:rgba(48,209,88,0.07);border:0.5px solid rgba(48,209,88,0.2);border-radius:11px;padding:10px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Worked</span><span style="color:#30D158;font-size:14px;font-weight:600;">'+workedStr+'</span></div>':'')
+        +(a.late_minutes>0?'<div style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.25);border-radius:11px;padding:10px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#FF9F0A;font-size:13px;">⏱ Late</span><span style="color:#FF9F0A;font-size:13px;font-weight:600;">'+a.late_minutes+' min</span></div>':'')
+        +((a.ot_hours>0)?'<div style="background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.2);border-radius:11px;padding:10px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#BF5FFF;font-size:13px;">⭐ Overtime</span><span style="color:#BF5FFF;font-size:13px;font-weight:600;">'+parseFloat(a.ot_hours).toFixed(1)+'h</span></div>':'')
+        +(!a.check_in&&a.status==='absent'?'<div style="background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.18);border-radius:11px;padding:12px;text-align:center;color:rgba(245,245,247,0.4);font-size:13px;margin-bottom:10px;">Marked absent — no check-in recorded.</div>':'')
+        +(a.status==='on_leave'?'<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.18);border-radius:11px;padding:12px;text-align:center;color:#5AABF0;font-size:13px;margin-bottom:10px;">On approved leave this day.</div>':'')
+      : '<div style="background:rgba(255,255,255,0.04);border-radius:11px;padding:16px;text-align:center;margin-bottom:10px;">'
+        +'<div style="font-size:28px;margin-bottom:8px;">📭</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:13px;">No attendance record for this day.</div>'
+        +'</div>'
+    )
     +'<button onclick="document.getElementById(\'week-day-popup\').remove()" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:13px;color:#fff;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;">Close</button>'
     +'</div>';
   document.body.appendChild(popup);
