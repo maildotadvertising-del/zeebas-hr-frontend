@@ -1838,7 +1838,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     </div>
 
     <!-- Monthly Balance Section -->
-    <div style="margin-top:14px;">
+    <div id="mb-section" style="margin-top:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:12px;font-weight:600;color:rgba(245,245,247,0.7);">📊 Monthly Balance — <span id="mb-month-label" style="color:#0A84FF;"></span></div>
         <div style="display:flex;gap:6px;align-items:center;">
@@ -5797,7 +5797,7 @@ window.showPage = function(page, el){
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
   if(page==='dashboard')      { applyDashWidgets(); setTimeout(loadDashStats, 100); }
-  if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(loadMonthlyBalance, 500); }
+  if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(initMbLazyLoad, 200); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
   if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); }
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
@@ -7311,6 +7311,28 @@ async function loadMonthlyBalance(){
     tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);">Error loading balance</td></tr>';
     console.error('monthly balance error',e);
   }
+}
+
+// ── Lazy-load Monthly Balance when scrolled into view ──
+var _mbObserver = null;
+var _mbLoaded   = false;
+function initMbLazyLoad(){
+  _mbLoaded = false; // reset on each attendance page open
+  var sec = document.getElementById('mb-section');
+  if(!sec) return;
+  // Show placeholder so user knows it will load
+  var tbody = document.getElementById('mb-tbody');
+  if(tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Scroll down to load monthly balance…</td></tr>';
+  // Disconnect previous observer if any
+  if(_mbObserver){ _mbObserver.disconnect(); _mbObserver = null; }
+  _mbObserver = new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting && !_mbLoaded){
+      _mbLoaded = true;
+      _mbObserver.disconnect();
+      loadMonthlyBalance();
+    }
+  }, { threshold: 0.1 });
+  _mbObserver.observe(sec);
 }
 
 async function loadApprovals(){
