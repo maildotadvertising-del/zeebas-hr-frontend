@@ -2196,7 +2196,9 @@ function showPage(name, el){
     _stopWifiAutoCheck();
   }
   // Save current page — update URL path (clean URLs) + sessionStorage
-  try{ history.pushState({page:name}, '', '/'+name); } catch(e){ location.hash = name; }
+  // URL name overrides: internal page id → friendly URL slug
+  var urlSlug = {'staff':'team','team-chat':'chat','gps-settings':'gps','payroll-settings':'payroll-settings','admin-overview':'overview'}[name] || name;
+  try{ history.pushState({page:name}, '', '/'+urlSlug); } catch(e){ location.hash = name; }
   try{ sessionStorage.setItem('zhr_page', name); } catch(e){}
 }
 
@@ -3989,6 +3991,9 @@ document.addEventListener('DOMContentLoaded', function(){
     var allowedPages = NAV_ACCESS[roleKey2] || ['dashboard'];
     var saved=''; try{ saved=sessionStorage.getItem('zhr_page')||''; }catch(e){}
     var pathPage = (location.pathname||'').replace(/^\//,'').trim(); // e.g. /attendance → attendance
+    // Reverse map friendly URL slugs back to internal page ids
+    var urlToPage = {'team':'staff','chat':'team-chat','gps':'gps-settings','overview':'admin-overview'};
+    pathPage = urlToPage[pathPage] || pathPage;
     var hash=(location.hash||'').replace('#','').trim();
     var fromUrl = (pathPage&&allowedPages.includes(pathPage))?pathPage:(hash&&allowedPages.includes(hash))?hash:'';
     var preferred = (saved&&allowedPages.includes(saved))?saved:fromUrl||allowedPages[0];
