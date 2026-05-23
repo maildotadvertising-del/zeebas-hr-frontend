@@ -9253,7 +9253,7 @@ function attEditRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'+_otCell(r)+'</td>'
     // Status
     +'<td style="'+td+'">'
-      +'<select id="ae-st-'+i+'" style="'+inp+'width:110px;cursor:pointer;">'
+      +'<select id="ae-st-'+i+'" onchange="attStatusChange('+i+')" style="'+inp+'width:110px;cursor:pointer;">'
         +'<option value="present"'+(r.status==='present'?' selected':'')+'>✅ Present</option>'
         +'<option value="late"'+(r.status==='late'?' selected':'')+'>🟡 Late</option>'
         +'<option value="absent"'+(r.status==='absent'?' selected':'')+'>❌ Absent</option>'
@@ -9285,14 +9285,36 @@ function attCancelEdit(i){
   if(row) row.outerHTML = attViewRow(r,i);
 }
 
+// Auto-clear check-in/out when Absent is selected
+function attStatusChange(i){
+  var st = document.getElementById('ae-st-'+i);
+  if(!st) return;
+  if(st.value === 'absent'){
+    var ci = document.getElementById('ae-ci-'+i);
+    var co = document.getElementById('ae-co-'+i);
+    var tp = document.getElementById('ae-type-'+i);
+    var lm = document.getElementById('ae-lm-'+i);
+    var lmDisp = document.getElementById('ae-lm-display-'+i);
+    if(ci) ci.value = '';
+    if(co) co.value = '';
+    if(tp) tp.value = 'absent';
+    if(lm) lm.value = '0';
+    if(lmDisp) lmDisp.textContent = '';
+  }
+}
+
 async function attSaveEdit(i){
   var r = window._attRows[i];
   var saveBtn = document.querySelector('#att-row-'+i+' button');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='…'; }
 
+  var stVal = document.getElementById('ae-st-'+i).value;
+  var isAbsent = (stVal === 'absent');
+
   // Read raw local-time values from the time inputs (e.g. "09:30" IST)
-  var ciRaw = document.getElementById('ae-ci-'+i).value || null;
-  var coRaw = document.getElementById('ae-co-'+i).value || null;
+  // Force null for absent — backend also enforces this
+  var ciRaw = isAbsent ? null : (document.getElementById('ae-ci-'+i).value || null);
+  var coRaw = isAbsent ? null : (document.getElementById('ae-co-'+i).value || null);
 
   // Convert to UTC before sending — MySQL/server are UTC, admin is in local time
   var ciUTC = _localTimeToUTC(window._attDate, ciRaw);
@@ -9301,11 +9323,11 @@ async function attSaveEdit(i){
   var payload = {
     staff_id:     r.id,
     date:         window._attDate,
-    check_in:     ciUTC,
-    check_out:    coUTC,
-    type:         document.getElementById('ae-type-'+i).value,
-    late_minutes: parseInt(document.getElementById('ae-lm-'+i).value) || 0,
-    status:       document.getElementById('ae-st-'+i).value
+    check_in:     isAbsent ? null : ciUTC,
+    check_out:    isAbsent ? null : coUTC,
+    type:         isAbsent ? 'absent' : document.getElementById('ae-type-'+i).value,
+    late_minutes: isAbsent ? 0 : (parseInt(document.getElementById('ae-lm-'+i).value) || 0),
+    status:       stVal
   };
 
   try{
@@ -9317,8 +9339,9 @@ async function attSaveEdit(i){
     if(d.success){
       // Cache uses local-time string so _toHHMM shows correct value before page reload
       window._attRows[i] = Object.assign({}, r, {
-        check_in: ciRaw ? window._attDate+'T'+ciRaw+':00' : r.check_in,
-        check_out: coRaw ? window._attDate+'T'+coRaw+':00' : null,
+        check_in:  isAbsent ? null : (ciRaw ? window._attDate+'T'+ciRaw+':00' : r.check_in),
+        check_out: isAbsent ? null : (coRaw ? window._attDate+'T'+coRaw+':00' : null),
+        break_checkout: isAbsent ? 0 : r.break_checkout,
         type: payload.type, late_minutes: payload.late_minutes, status: payload.status
       });
       var row = document.getElementById('att-row-'+i);
