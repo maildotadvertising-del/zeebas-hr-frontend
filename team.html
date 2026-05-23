@@ -34,8 +34,9 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .scroll{flex:1;overflow-y:auto;}
 
 /* GLASS */
-.g{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.11);border-radius:18px;}
-.gs{background:rgba(255,255,255,0.05);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:13px;}
+.g{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.11);border-radius:13px;}
+.gs{background:rgba(255,255,255,0.05);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.09);border-radius:10px;}
+@keyframes skPulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
 
 /* NAV */
 .bnav{background:rgba(4,4,8,0.8);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-shrink:0;padding-bottom:5px;position:relative;z-index:10;}
@@ -1834,7 +1835,7 @@ var adminTabs=[
   {l:'More',   p:'M4 9h1M8.5 9h1M13 9h1'}
 ];
 var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-more'];
-var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[];
+var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[], _s2TasksCache=null;
 
 function makeNav(tabs,scrs,active,prefix){
   return tabs.map(function(x,i){
@@ -3974,13 +3975,19 @@ async function quickApproveLeave(id,action,btn){
 // ── Tasks Page ──
 async function loadAdminTasks(){
   var listEl=document.getElementById('s2-tasks-list');
-  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  if(_s2TasksCache){
+    _s2AllTasks=_s2TasksCache; s2TaskTab(_s2TaskTab);
+  } else {
+    var sk='<div style="background:rgba(255,255,255,0.05);border-radius:10px;height:68px;margin-bottom:8px;animation:skPulse 1.2s ease-in-out infinite;"></div>';
+    if(listEl) listEl.innerHTML=sk+sk+sk;
+  }
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
     _s2AllTasks=Array.isArray(d)?d:(d.data||d.tasks||[]);
+    _s2TasksCache=_s2AllTasks;
     s2TaskTab(_s2TaskTab);
-  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+  }catch(e){ if(!_s2TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
 }
 
 function s2TaskTab(tab){
@@ -3997,29 +4004,34 @@ function s2TaskTab(tab){
   listEl.innerHTML=filtered.map(function(t){
     var done=t.status==='done';
     var pr=t.priority||'medium';
-    return'<div class="gs" style="padding:11px;opacity:'+(done?0.6:1)+';">'
+    var tickBtn=done
+      ?'<div onclick="event.stopPropagation();s2UpdateTaskStatus('+t.id+',\'pending\')" title="Reopen" style="width:22px;height:22px;border-radius:50%;background:#30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 0 8px rgba(48,209,88,0.4);"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      :'<div onclick="event.stopPropagation();s2UpdateTaskStatus('+t.id+',\'done\')" title="Mark done" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.04);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(48,209,88,0.18)\';this.style.borderColor=\'rgba(48,209,88,0.5)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.04)\';this.style.borderColor=\'rgba(255,255,255,0.2)\'"></div>';
+    return'<div class="gs" style="padding:11px;margin-bottom:7px;opacity:'+(done?0.6:1)+';">'
       +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;">'
+      +tickBtn
       +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;'+(done?'text-decoration:line-through;color:rgba(245,245,247,0.5);':'')+'">'+escHtml(t.title||'Task')+'</div>'
       +(t.assigned_name?'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">👤 '+escHtml(t.assigned_name)+'</div>':'')
       +'</div>'
       +'<span style="background:'+prColor[pr]+'22;color:'+prColor[pr]+';border:0.5px solid '+prColor[pr]+'44;border-radius:5px;padding:1px 7px;font-size:9px;white-space:nowrap;">'+(pr.charAt(0).toUpperCase()+pr.slice(1))+'</span>'
       +'</div>'
-      +(t.due_date?'<div style="color:rgba(245,245,247,0.3);font-size:9px;margin-bottom:7px;">📅 Due '+t.due_date+'</div>':'')
-      +(done?'':'<div style="display:flex;gap:6px;">'
-        +(t.status==='pending'?'<button onclick="s2UpdateTaskStatus('+t.id+',\'in_progress\')" style="flex:1;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:6px;color:#FF9F0A;font-size:10px;cursor:pointer;font-family:inherit;">Start</button>':'')
-        +(t.status==='in_progress'?'<button onclick="s2UpdateTaskStatus('+t.id+',\'done\')" style="flex:1;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:8px;padding:6px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">Mark Done ✓</button>':'')
-        +'</div>')
+      +(t.due_date?'<div style="color:rgba(245,245,247,0.3);font-size:9px;">📅 Due '+t.due_date+'</div>':'')
       +'</div>';
   }).join('');
 }
 
 async function s2UpdateTaskStatus(id,status){
+  // Optimistic — update cache + re-render immediately
+  var t=_s2AllTasks.find(function(x){return String(x.id)===String(id);});
+  if(t){ t.status=status; if(status==='done') t.progress_percent=100; }
+  if(_s2TasksCache){ var ct=_s2TasksCache.find(function(x){return String(x.id)===String(id);}); if(ct){ct.status=status;if(status==='done')ct.progress_percent=100;} }
+  s2TaskTab(_s2TaskTab);
   try{
     var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
     var d=await r.json();
-    if(d.success){ showToast1(status==='done'?'✅ Task done!':'▶ Task started'); loadAdminTasks(); }
-    else showToast1('❌ '+(d.message||'Failed'));
-  }catch(e){ showToast1('❌ Network error'); }
+    if(d.success){ showToast1(status==='done'?'✅ Task done!':status==='pending'?'↩ Task reopened':'▶ Task started'); }
+    else{ showToast1('❌ '+(d.message||'Failed')); loadAdminTasks(); }
+  }catch(e){ showToast1('❌ Network error'); loadAdminTasks(); }
 }
 
 var _s2NewTaskOpen=false;
@@ -6530,16 +6542,28 @@ async function fetchMyTasks(staffId){
 /* ══════════════════════════════════════
    STAFF TASKS — Full task list with countdown timers
    ══════════════════════════════════════ */
-var _s1Tasks=[], _s1TaskTab='active', _s1CountdownTimer=null;
+var _s1Tasks=[], _s1TaskTab='active', _s1CountdownTimer=null, _s1TasksCache=null;
 var _etTaskId=null, _etMins=30;
+
+function _s1SkeletonHtml(){
+  var s='<div style="background:rgba(255,255,255,0.05);border-radius:10px;height:68px;margin-bottom:8px;animation:skPulse 1.2s ease-in-out infinite;"></div>';
+  return s+s+s;
+}
 
 async function loadStaffTasks(){
   var listEl=document.getElementById('s1-tasks-list');
-  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  if(_s1TasksCache){
+    // Instant render from cache
+    _s1Tasks=_s1TasksCache;
+    s1TaskTab(_s1TaskTab);
+  } else {
+    if(listEl) listEl.innerHTML=_s1SkeletonHtml();
+  }
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
     _s1Tasks=Array.isArray(d)?d:(d.data||[]);
+    _s1TasksCache=_s1Tasks;
     var open=_s1Tasks.filter(function(t){return t.status!=='done';}).length;
     var openEl=document.getElementById('s1-tasks-open-lbl');
     if(openEl) openEl.textContent=open+' open';
@@ -6548,7 +6572,7 @@ async function loadStaffTasks(){
     updateTaskRemaining(open);
     s1TaskTab(_s1TaskTab);
   }catch(e){
-    if(listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
+    if(!_s1TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
   }
 }
 
@@ -6620,8 +6644,12 @@ function renderS1Tasks(tasks){
       var dl=ds===today?'Today':ds;
       dueHtml='<div style="color:rgba(245,245,247,0.3);font-size:9px;margin-top:2px;">📅 '+dl+ts+'</div>';
     }
+    var tickBtn=done
+      ?'<div onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'in_progress\')" title="Reopen" style="width:22px;height:22px;border-radius:50%;background:#30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 0 8px rgba(48,209,88,0.4);"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      :'<div onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'done\')" title="Mark done" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.04);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(48,209,88,0.18)\';this.style.borderColor=\'rgba(48,209,88,0.5)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.04)\';this.style.borderColor=\'rgba(255,255,255,0.2)\'"></div>';
     return '<div class="gs" style="padding:12px;margin-bottom:8px;border-left:2px solid '+(prC[pr]||'#0A84FF')+';'+(done?'opacity:0.55;':'')+';">'
       +'<div style="display:flex;align-items:flex-start;gap:8px;">'
+      +tickBtn
       +'<div style="flex:1;min-width:0;">'
       +'<div style="color:'+(done?'rgba(245,245,247,0.5)':'#fff')+';font-size:12px;font-weight:500;'+(done?'text-decoration:line-through;':'')+'">'+escHtml(t.title||'Task')+'</div>'
       +(t.brand_name?'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+escHtml(t.brand_name)+(t.category?' · '+t.category:'')+'</div>':'')
@@ -6631,11 +6659,6 @@ function renderS1Tasks(tasks){
       +'</div>'
       +(pct>0||t.status==='in_progress'?'<div style="background:rgba(255,255,255,0.07);border-radius:3px;height:3px;overflow:hidden;margin-top:8px;"><div style="background:linear-gradient(90deg,#0A84FF,#5E5CE6);width:'+pct+'%;height:100%;border-radius:3px;"></div></div>':'')
       +(done?'':s1CountdownHtml(t))
-      +(done?''
-        :'<div style="display:flex;gap:6px;margin-top:9px;">'
-        +(t.status==='pending'?'<button onclick="s1UpdateTask('+t.id+',\'in_progress\')" style="flex:1;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.2);border-radius:9px;padding:7px;color:#FF9F0A;font-size:10px;cursor:pointer;font-family:inherit;">▶ Start</button>':'')
-        +(t.status==='in_progress'?'<button onclick="s1UpdateTask('+t.id+',\'done\')" style="flex:1;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:9px;padding:7px;color:#30D158;font-size:10px;cursor:pointer;font-family:inherit;">✓ Mark Done</button>':'')
-        +'</div>')
       +'</div>';
   }).join('');
   startS1Countdowns();
@@ -6676,12 +6699,17 @@ function startS1Countdowns(){
 }
 
 async function s1UpdateTask(id,status){
+  // Optimistic — update cache + re-render immediately
+  var t=_s1Tasks.find(function(x){return String(x.id)===String(id);});
+  if(t){ t.status=status; if(status==='done') t.progress_percent=100; }
+  if(_s1TasksCache){ var ct=_s1TasksCache.find(function(x){return String(x.id)===String(id);}); if(ct){ct.status=status;if(status==='done')ct.progress_percent=100;} }
+  s1TaskTab(_s1TaskTab);
   try{
     var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
     var d=await r.json();
-    if(d.success){ showToast1(status==='done'?'✅ Task done!':'▶ Task started'); loadStaffTasks(); }
-    else showToast1('❌ '+(d.message||'Failed'));
-  }catch(e){ showToast1('❌ Network error'); }
+    if(d.success){ showToast1(status==='done'?'✅ Task done!':'↩ Task reopened'); }
+    else{ showToast1('❌ '+(d.message||'Failed')); loadStaffTasks(); }
+  }catch(e){ showToast1('❌ Network error'); loadStaffTasks(); }
 }
 
 /* ── Announcement Popup ── */
