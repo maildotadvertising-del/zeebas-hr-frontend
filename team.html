@@ -515,7 +515,7 @@ body.desktop-mode #s1-sidebar {
         <div class="g" style="padding:12px;margin-bottom:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div style="color:#fff;font-size:12px;font-weight:500;">This Week</div>
-            <div style="color:rgba(10,132,255,0.7);font-size:10px;cursor:pointer;" onclick="go1('s1-salary')">View History →</div>
+            <div style="color:rgba(10,132,255,0.7);font-size:10px;cursor:pointer;" onclick="go1('s1-atthistory')">View History →</div>
           </div>
           <div id="s1-week-cal" style="display:flex;justify-content:space-between;gap:4px;">
             <div style="color:rgba(245,245,247,0.25);font-size:10px;text-align:center;width:100%;padding:8px 0;">Loading…</div>
@@ -1089,10 +1089,18 @@ body.desktop-mode #s1-sidebar {
             </div>
           </div>
 
-          <!-- Joining Date — read only -->
-          <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <!-- Joining Date — editable -->
+          <div id="prof-row-joining" style="padding:10px 14px;display:flex;align-items:center;gap:10px;min-height:42px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Joining Date</div>
             <div id="prof-joining" style="color:#fff;font-size:13px;flex:1;"></div>
+            <div id="prof-joining-edit-area" style="display:none;flex:1;align-items:center;gap:6px;">
+              <input id="prof-joining-input" type="date" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:12px;padding:6px 8px;outline:none;font-family:inherit;min-width:0;color-scheme:dark;">
+              <button onclick="profSaveField('joining')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✓</button>
+              <button onclick="profCancelEdit('joining')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;">✕</button>
+            </div>
+            <button id="prof-joining-edit-btn" onclick="profEditField('joining')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            </button>
           </div>
         </div>
 
@@ -1103,6 +1111,35 @@ body.desktop-mode #s1-sidebar {
         </button>
       </div>
       <div id="n1-profile" class="bnav"></div>
+    </div>
+
+    <!-- ATTENDANCE HISTORY -->
+    <div id="s1-atthistory" class="scr" style="background:#07071A;">
+      <!-- Header -->
+      <div style="padding:10px 14px 0;background:rgba(14,14,30,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <button onclick="go1('s1-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:32px;height:32px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
+          <div style="flex:1;font-size:16px;font-weight:500;color:#fff;">Attendance History</div>
+        </div>
+        <!-- Month navigator -->
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;">
+          <button onclick="attHistPrevMonth()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:9px;width:30px;height:30px;cursor:pointer;color:rgba(245,245,247,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
+          <div id="ath-month-label" style="flex:1;text-align:center;color:#F5F5F7;font-size:13px;font-weight:500;">May 2026</div>
+          <button onclick="attHistNextMonth()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.09);border-radius:9px;width:30px;height:30px;cursor:pointer;color:rgba(245,245,247,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <!-- Summary chips -->
+        <div id="ath-summary" style="display:flex;gap:6px;padding-bottom:10px;overflow-x:auto;"></div>
+      </div>
+      <!-- List -->
+      <div class="scroll" style="flex:1;padding:8px 12px 12px;" id="ath-list">
+        <div style="text-align:center;padding:50px 0;color:rgba(245,245,247,0.25);font-size:12px;">Loading…</div>
+      </div>
     </div>
 
     <!-- DAILY LOG -->
@@ -1794,7 +1831,7 @@ var _s1NavInPopstate  = false;
 var _s1CurrentScreen  = 's1-home';
 var _s1BackPressCount = 0;
 var _s1BackTimer      = null;
-var _S1_APP_SCREENS   = ['s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile'];
+var _S1_APP_SCREENS   = ['s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory'];
 var _S1_LOGIN_SCREENS = ['s1-splash','s1-roleselect','s1-login'];
 
 window.addEventListener('popstate', function(e) {
@@ -1853,7 +1890,7 @@ window.addEventListener('popstate', function(e) {
 });
 
 function go1(id){
-  var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile'];
+  var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   _s1CurrentScreen = id;
@@ -1881,6 +1918,7 @@ function go1(id){
   }
   if(id==='s1-tasks'){   setTimeout(loadStaffTasks, 100); }
   if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
+  if(id==='s1-atthistory'){ loadAttHistory(); }
   if(id==='s1-profile'){ setTimeout(loadProfile, 100); }
 }
 
@@ -2448,7 +2486,8 @@ var _profFieldConfig = {
   phone:   { inputId:'prof-phone-input',   displayId:'prof-phone',   areaId:'prof-phone-edit-area',   btnId:'prof-phone-edit-btn',   apiKey:'phone' },
   email:   { inputId:'prof-email-input',   displayId:'prof-email',   areaId:'prof-email-edit-area',   btnId:'prof-email-edit-btn',   apiKey:'email' },
   dob:     { inputId:'prof-dob-input',     displayId:'prof-dob',     areaId:'prof-dob-edit-area',     btnId:'prof-dob-edit-btn',     apiKey:'dob' },
-  address: { inputId:'prof-address-input', displayId:'prof-address', areaId:'prof-address-edit-area', btnId:'prof-address-edit-btn', apiKey:'address' }
+  address: { inputId:'prof-address-input', displayId:'prof-address', areaId:'prof-address-edit-area', btnId:'prof-address-edit-btn', apiKey:'address' },
+  joining: { inputId:'prof-joining-input', displayId:'prof-joining', areaId:'prof-joining-edit-area', btnId:'prof-joining-edit-btn', apiKey:'joining_date' }
 };
 
 function profEditField(field){
@@ -2462,6 +2501,10 @@ function profEditField(field){
       var dobRaw = s.dob;
       if(dobRaw.length > 10) dobRaw = dobRaw.substring(0,10);
       inp.value = dobRaw;
+    } else if(field==='joining' && s.joining_date){
+      var jRaw = s.joining_date;
+      if(jRaw.length > 10) jRaw = jRaw.substring(0,10);
+      inp.value = jRaw;
     } else if(field==='phone') {
       inp.value = s.phone || s.mobile || '';
     } else {
@@ -2532,12 +2575,15 @@ async function profSaveField(field){
         if(field==='dob'){
           var dDate = new Date(val);
           display.textContent = isNaN(dDate) ? val : dDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+        } else if(field==='joining'){
+          var jDate = new Date(val);
+          display.textContent = isNaN(jDate) ? val : jDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
         } else {
           display.textContent = val || '—';
         }
       }
       profCancelEdit(field);
-      var _fLabel = {dob:'Date of Birth', address:'Address', phone:'Phone', email:'Email'}[field] || (field.charAt(0).toUpperCase()+field.slice(1));
+      var _fLabel = {dob:'Date of Birth', address:'Address', phone:'Phone', email:'Email', joining:'Joining Date'}[field] || (field.charAt(0).toUpperCase()+field.slice(1));
       showToast1('✅ '+_fLabel+' updated!');
     } else {
       showToast1('❌ '+(d.message||'Update failed'));
@@ -4708,7 +4754,8 @@ async function loadMySalary(){
     var wdFull    = pData.working_days || settings.working_days_per_month || 26;
     var wdSoFar   = pData.working_days_so_far || wdFull;
     var dailyRate = baseSalary / wdFull;
-    var absentDeduction = payroll ? parseFloat(payroll.absent_deduction||0) : (absentDays * dailyRate);
+    // For current month always recalculate from live attendance — stored payroll value can be stale
+    var absentDeduction = isCurrMonth ? (absentDays * dailyRate) : (payroll ? parseFloat(payroll.absent_deduction||0) : absentDays * dailyRate);
     var isCurrMonth = (myPayMonth === new Date().getMonth()+1 && myPayYear === new Date().getFullYear());
     var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt - lateDeduction - advDeduction);
     var netSalary  = isCurrMonth ? earnedSoFar : parseFloat(payroll ? payroll.net_salary : earnedSoFar);
@@ -4767,6 +4814,124 @@ async function loadMySalary(){
 
   } catch(e){
     if(el) el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load salary data</div>';
+  }
+}
+
+/* ══════════════════════════════════════════
+   ATTENDANCE HISTORY
+   ══════════════════════════════════════════ */
+
+var _athMonth = new Date().getMonth() + 1;
+var _athYear  = new Date().getFullYear();
+var _athMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var _athDayNames   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function attHistPrevMonth(){
+  _athMonth--; if(_athMonth < 1){ _athMonth = 12; _athYear--; }
+  loadAttHistory();
+}
+function attHistNextMonth(){
+  var now = new Date();
+  if(_athYear > now.getFullYear() || (_athYear === now.getFullYear() && _athMonth >= now.getMonth()+1)) return;
+  _athMonth++; if(_athMonth > 12){ _athMonth = 1; _athYear++; }
+  loadAttHistory();
+}
+
+async function loadAttHistory(){
+  var labelEl = document.getElementById('ath-month-label');
+  var listEl  = document.getElementById('ath-list');
+  var sumEl   = document.getElementById('ath-summary');
+  if(labelEl) labelEl.textContent = _athMonthNames[_athMonth-1] + ' ' + _athYear;
+  if(listEl)  listEl.innerHTML = '<div style="text-align:center;padding:50px 0;color:rgba(245,245,247,0.25);font-size:12px;">Loading…</div>';
+
+  try{
+    var res = await fetch(API_URL+'/api/attendance/my?month='+_athMonth+'&year='+_athYear, {headers:zHead()});
+    var d = await res.json();
+    var rows = d.data || [];
+    var sum  = d.summary || {};
+
+    // Summary chips
+    if(sumEl){
+      var chips = [
+        {label:'✅ Present', val: sum.days_present||0, color:'#30D158'},
+        {label:'⏰ Late',    val: sum.days_late||0,    color:'#FF9F0A'},
+        {label:'❌ Absent',  val: sum.days_absent||0,  color:'#FF453A'},
+        {label:'⚡ OT hrs',  val: parseFloat(sum.total_ot_hours||0).toFixed(1), color:'#0A84FF'}
+      ];
+      sumEl.innerHTML = chips.map(function(c){
+        return '<div style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.09);border-radius:20px;padding:4px 10px;white-space:nowrap;display:flex;align-items:center;gap:4px;">'
+          +'<span style="font-size:10px;color:rgba(245,245,247,0.45);">'+c.label+'</span>'
+          +'<span style="font-size:12px;font-weight:600;color:'+c.color+';">'+c.val+'</span>'
+          +'</div>';
+      }).join('');
+    }
+
+    if(!rows.length){
+      if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:50px 0;"><div style="font-size:32px;margin-bottom:10px;opacity:0.3;">📅</div><div style="color:rgba(245,245,247,0.3);font-size:12px;">No records for this month</div></div>';
+      return;
+    }
+
+    var fmtTime = function(ts){
+      if(!ts) return '—';
+      var d = new Date(typeof ts === 'string' ? ts.replace(' ','T') : ts);
+      if(isNaN(d)) return '—';
+      var h = d.getHours(), m = d.getMinutes(), a = h>=12?'PM':'AM';
+      h = h%12||12; return h+':'+(m<10?'0':'')+m+' '+a;
+    };
+
+    var html = rows.map(function(r){
+      var dt = new Date(r.date);
+      var dayName  = _athDayNames[dt.getDay()];
+      var dateNum  = dt.getDate();
+      var monthAb  = _athMonthNames[dt.getMonth()].slice(0,3);
+      var st = (r.status||'absent').toLowerCase();
+      var stLabel = {present:'Present',late:'Late',absent:'Absent',on_leave:'Leave',onsite_approved:'Onsite',onsite_pending:'Onsite?',late_pending:'Late'}[st] || 'Absent';
+      var stColor  = {present:'#30D158',late:'#FF9F0A',absent:'#FF453A',on_leave:'#0A84FF',onsite_approved:'#5AABF0',onsite_pending:'rgba(245,245,247,0.4)',late_pending:'#FF9F0A'}[st] || '#FF453A';
+      var stBg     = {present:'rgba(48,209,88,0.1)',late:'rgba(255,159,10,0.1)',absent:'rgba(255,69,58,0.1)',on_leave:'rgba(10,132,255,0.1)',onsite_approved:'rgba(90,171,240,0.1)',onsite_pending:'rgba(255,255,255,0.06)',late_pending:'rgba(255,159,10,0.1)'}[st] || 'rgba(255,69,58,0.1)';
+
+      // Late comp done — override display
+      if(parseInt(r.late_comp_done) === 1 && (st === 'late' || st === 'late_pending')){ stLabel='Present'; stColor='#30D158'; stBg='rgba(48,209,88,0.1)'; }
+
+      var checkIn  = fmtTime(r.check_in);
+      var checkOut = fmtTime(r.check_out);
+      var lateMins = parseInt(r.late_minutes)||0;
+      var earlyMins= parseInt(r.early_mins)||0;
+      var otMins   = Math.round(parseFloat(r.ot_hours||0) * 60);
+
+      var indicators = '';
+      if(lateMins > 0 && !parseInt(r.late_comp_done))
+        indicators += '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:5px;font-size:9px;padding:1px 5px;">+'+lateMins+'m late</span> ';
+      if(earlyMins > 0)
+        indicators += '<span style="background:rgba(48,209,88,0.1);color:rgba(48,209,88,0.7);border-radius:5px;font-size:9px;padding:1px 5px;">+'+earlyMins+'m early ⚡</span> ';
+      if(otMins > 0)
+        indicators += '<span style="background:rgba(10,132,255,0.12);color:#0A84FF;border-radius:5px;font-size:9px;padding:1px 5px;">OT '+otMins+'m</span>';
+
+      return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:14px;padding:10px 12px;margin-bottom:8px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;">'
+          // Date block
+          +'<div style="width:40px;text-align:center;flex-shrink:0;">'
+            +'<div style="color:rgba(245,245,247,0.35);font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">'+dayName+'</div>'
+            +'<div style="color:#fff;font-size:18px;font-weight:600;line-height:1.1;">'+dateNum+'</div>'
+            +'<div style="color:rgba(245,245,247,0.3);font-size:9px;">'+monthAb+'</div>'
+          +'</div>'
+          +'<div style="width:0.5px;background:rgba(255,255,255,0.08);align-self:stretch;flex-shrink:0;"></div>'
+          // Times block
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
+              +'<span style="color:#30D158;font-size:12px;font-weight:500;font-family:monospace;">'+checkIn+'</span>'
+              +(checkOut!=='—' ? '<span style="color:rgba(245,245,247,0.2);font-size:10px;">→</span><span style="color:rgba(245,245,247,0.6);font-size:12px;font-family:monospace;">'+checkOut+'</span>' : '')
+            +'</div>'
+            +(indicators ? '<div style="display:flex;flex-wrap:wrap;gap:3px;">'+indicators+'</div>' : '')
+          +'</div>'
+          // Status badge
+          +'<div style="background:'+stBg+';color:'+stColor+';border-radius:8px;font-size:10px;font-weight:500;padding:3px 8px;white-space:nowrap;flex-shrink:0;">'+stLabel+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+
+    if(listEl) listEl.innerHTML = html;
+  }catch(e){
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load history</div>';
   }
 }
 
