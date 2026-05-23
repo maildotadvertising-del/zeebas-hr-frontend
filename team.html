@@ -721,6 +721,8 @@ body.desktop-mode #s1-sidebar {
         <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
         <span id="m-ctx-pin" onclick="pinMsg1()" style="display:none;font-size:20px;cursor:pointer;white-space:nowrap;" title="Pin">📌</span>
         <span id="m-ctx-vreply" onclick="voiceReply1()" style="display:none;font-size:20px;cursor:pointer;white-space:nowrap;" title="Voice Reply">🎤</span>
+        <!-- DM button — shown only for other people's messages -->
+        <span id="m-ctx-dm" onclick="dmFromCtx1()" style="display:none;font-size:11px;font-weight:600;color:#0A84FF;cursor:pointer;background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:10px;padding:3px 9px;white-space:nowrap;font-family:inherit;" title="Direct Message">💬 DM</span>
         <div id="m-ctx-delete-wrap" style="display:none;">
           <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
           <span onclick="deleteMsg1()" style="font-size:19px;cursor:pointer;padding:2px 3px;" title="Delete">🗑️</span>
@@ -2979,9 +2981,11 @@ function appendStaffMsg1(msg, doScroll){
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
   var avSrc = msg.photo_data || (msg.photo_url ? API_URL+msg.photo_url : null);
   var avFbStyle1 = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);';
+  // Avatar — tappable to open DM (only for other people's messages)
+  var _avOnClick = !isMe ? ' onclick="openDmChat('+msg.staff_id+',\''+escHtml(msg.staff_name||'?')+'\',\''+escHtml(msg.photo_url||'')+'\',\''+escHtml(msg.brand_name||'')+'\',\''+init+'\')" title="DM '+escHtml(msg.staff_name||'')+'" style="cursor:pointer;"' : '';
   var av = avSrc
-    ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle1+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
-    : '<div style="'+avFbStyle1+'">'+init+'</div>';
+    ? '<img src="'+avSrc+'" '+_avOnClick+' style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle1+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
+    : '<div '+_avOnClick+' style="'+avFbStyle1+'">'+init+'</div>';
   var t = (function(){
     var dt = msg.created_at ? new Date(msg.created_at) : new Date();
     var h = dt.getHours(), m = dt.getMinutes(), a = h>=12?'PM':'AM';
@@ -3038,13 +3042,16 @@ function appendStaffMsg1(msg, doScroll){
     var _pt = null;
     bubble.addEventListener('touchstart', function(e){
       _pt = setTimeout(function(){
-        _reactMsgId1 = msgId; _reactMsgName1 = msg.staff_name; _reactMsgText1 = msg.message; _reactIsMe1 = isMe;
+        _reactMsgId1 = msgId; _reactMsgName1 = msg.staff_name; _reactMsgText1 = msg.message; _reactIsMe1 = isMe; _reactMsgAuthorId1 = msg.staff_id; _reactMsgAuthorPhoto1 = msg.photo_url||''; _reactMsgAuthorBrand1 = msg.brand_name||'';
         // Show/hide context-sensitive options
         var pinOpt = document.getElementById('m-ctx-pin');
         var vrOpt  = document.getElementById('m-ctx-vreply');
         var delWrap = document.getElementById('m-ctx-delete-wrap');
         if(pinOpt) pinOpt.style.display = 'inline';
         if(vrOpt)  vrOpt.style.display  = !isMe ? 'inline' : 'none';
+        // Show DM button only for other people's messages
+        var dmOpt = document.getElementById('m-ctx-dm');
+        if(dmOpt) dmOpt.style.display = !isMe ? 'inline-flex' : 'none';
         // Show delete for own messages or admin/editor
         var myRole = (zStaff()||{}).role||'';
         var canDel = isMe || myRole==='admin' || myRole==='editor';
@@ -3332,6 +3339,15 @@ function renderMsgContent(msg){
 
 // ── DM State ──
 var _dmPeerId = null, _dmPeerName = '', _dmReplyTo = null, _dmEmojiOn = false;
+
+// DM from long-press context menu in group chat
+function dmFromCtx1(){
+  var rp = document.getElementById('react-picker');
+  if(rp) rp.style.display = 'none';
+  if(!_reactMsgAuthorId1) return;
+  var init = (_reactMsgName1||'?').charAt(0).toUpperCase();
+  openDmChat(_reactMsgAuthorId1, _reactMsgName1||'', _reactMsgAuthorPhoto1, _reactMsgAuthorBrand1, init);
+}
 
 function showDmBadge(show){
   var b = document.getElementById('dm-badge');
@@ -4218,7 +4234,7 @@ async function s2MarkPaid(payrollId, btn){
 }
 
 // ── Chat reply / react state ──
-var _replyTo1 = null, _reactMsgId1 = null, _reactMsgName1 = '', _reactMsgText1 = '', _reactIsMe1 = false;
+var _replyTo1 = null, _reactMsgId1 = null, _reactMsgName1 = '', _reactMsgText1 = '', _reactIsMe1 = false, _reactMsgAuthorId1 = null, _reactMsgAuthorPhoto1 = '', _reactMsgAuthorBrand1 = '';
 
 function setReply1(id, name, text){
   _replyTo1 = {id:id, name:name, text:text};
