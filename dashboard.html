@@ -5916,7 +5916,7 @@ async function approveExtraTime(taskId, action){
 // ── Mark task(s) as done ──
 async function markTaskDone(ids){
   if(!Array.isArray(ids)) ids=[ids];
-  // Optimistic update — mark done in cache immediately
+  // Optimistic update — mark done in cache immediately, no re-fetch needed on success
   if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t){ t.status='done'; t.progress_percent=100; } }); _renderTasks(_tasksCache); }
   try{
     await Promise.all(ids.map(function(id){
@@ -5927,8 +5927,12 @@ async function markTaskDone(ids){
       });
     }));
     showToast('✅ Task marked complete');
-    loadTasks();
-  }catch(e){ showToast('Error: '+e.message); }
+    // No loadTasks() — optimistic cache is already correct
+  }catch(e){
+    showToast('❌ Failed — please try again');
+    // Revert optimistic update on failure
+    _tasksCache=null; loadTasks();
+  }
 }
 
 // ── Reopen task(s) (done → pending) ──
@@ -5944,8 +5948,12 @@ async function markTaskReopen(ids){
       });
     }));
     showToast('↩ Task reopened');
-    loadTasks();
-  }catch(e){ showToast('Error: '+e.message); }
+    // No loadTasks() — optimistic cache is already correct
+  }catch(e){
+    showToast('❌ Failed — please try again');
+    // Revert optimistic update on failure
+    _tasksCache=null; loadTasks();
+  }
 }
 
 // ── Toggle completed section ──
