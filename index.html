@@ -457,53 +457,45 @@ body.desktop-mode #s1-sidebar {
         <!-- Attendance Card — dynamic: shows check-in buttons OR checked-in state -->
         <div id="s1-att-card" style="margin-bottom:10px;">
 
-          <!-- State A: Not yet checked in → show check-in options -->
-          <div id="s1-att-notchecked" style="border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,rgba(48,209,88,0.18) 0%,rgba(48,209,88,0.06) 100%);border:1px solid rgba(48,209,88,0.35);">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <!-- State A: Not yet checked in → single Check In button -->
+          <div id="s1-att-notchecked" style="border-radius:16px;padding:16px;background:linear-gradient(135deg,rgba(48,209,88,0.18) 0%,rgba(48,209,88,0.06) 100%);border:1px solid rgba(48,209,88,0.35);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
               <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(48,209,88,0.3);">
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>
               </div>
               <div>
                 <div style="color:#fff;font-size:14px;font-weight:600;">Mark Attendance</div>
-                <div style="color:rgba(48,209,88,0.65);font-size:10px;margin-top:1px;">Choose your check-in method</div>
+                <div style="color:rgba(48,209,88,0.6);font-size:10px;margin-top:1px;">Tap to check in</div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button onclick="homeWifiCheckin()" id="s1-home-wifi-btn" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);border-radius:12px;padding:11px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.2s;">
-                <span style="font-size:20px;">📶</span>
-                <span style="color:#5AABF0;font-size:11px;font-weight:600;">WiFi Check-in</span>
-                <span style="color:rgba(90,171,240,0.55);font-size:9px;">Auto office detect</span>
-              </button>
-              <button onclick="go1('s1-gps')" style="background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.28);border-radius:12px;padding:11px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.2s;">
-                <span style="font-size:20px;">📍</span>
-                <span style="color:#30D158;font-size:11px;font-weight:600;">GPS Check-in</span>
-                <span style="color:rgba(48,209,88,0.55);font-size:9px;">Location based</span>
-              </button>
-            </div>
+            <button id="s1-home-checkin-btn" onclick="homeSmartCheckin()" style="width:100%;background:linear-gradient(135deg,rgba(48,209,88,0.3),rgba(48,209,88,0.15));border:1px solid rgba(48,209,88,0.5);border-radius:13px;padding:14px;color:#30D158;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.3px;transition:opacity 0.2s;">
+              ✅ Check In
+            </button>
           </div>
 
-          <!-- State B: Checked in → show time + checkout -->
+          <!-- State B: Checked in → time + Break + Check Out -->
           <div id="s1-att-checkedin" style="display:none;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,rgba(48,209,88,0.15) 0%,rgba(48,209,88,0.05) 100%);border:1px solid rgba(48,209,88,0.32);">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-                <div>
-                  <div style="color:#30D158;font-size:13px;font-weight:600;">Checked In</div>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
-                    <span style="color:rgba(245,245,247,0.5);font-size:10px;">at</span>
-                    <span id="s1-att-ci-time" style="color:#fff;font-size:11px;font-weight:500;font-family:monospace;">--:--</span>
-                    <span id="s1-att-src-badge" style="font-size:9px;color:rgba(245,245,247,0.4);"></span>
-                  </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div>
+                <div style="color:#30D158;font-size:13px;font-weight:600;">Checked In</div>
+                <div style="display:flex;align-items:center;gap:5px;margin-top:2px;">
+                  <span style="color:rgba(245,245,247,0.45);font-size:10px;">at</span>
+                  <span id="s1-att-ci-time" style="color:#fff;font-size:11px;font-weight:500;font-family:monospace;">--:--</span>
+                  <span id="s1-att-src-badge" style="font-size:9px;color:rgba(245,245,247,0.35);"></span>
                 </div>
               </div>
-              <button onclick="wifiCheckoutPrompt()" style="background:rgba(255,159,10,0.15);border:0.5px solid rgba(255,159,10,0.35);border-radius:10px;color:#FF9F0A;font-size:11px;font-weight:600;padding:8px 14px;cursor:pointer;font-family:inherit;flex-shrink:0;">Check Out</button>
             </div>
-            <div style="height:0.5px;background:rgba(255,255,255,0.07);margin:10px 0;"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div id="s1-att-status-row" style="color:rgba(245,245,247,0.4);font-size:10px;"></div>
-              <button onclick="go1('s1-gps')" style="background:none;border:none;color:rgba(48,209,88,0.6);font-size:10px;cursor:pointer;font-family:inherit;padding:0;">GPS / Onsite →</button>
+            <div id="s1-att-status-row" style="color:rgba(245,245,247,0.4);font-size:10px;margin-bottom:10px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button onclick="attActionBreak()" style="background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.35);border-radius:12px;padding:12px 8px;color:#FF9F0A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+                ☕ Break
+              </button>
+              <button onclick="wifiCheckoutPrompt()" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);border-radius:12px;padding:12px 8px;color:#FF453A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+                🚪 Check Out
+              </button>
             </div>
           </div>
         </div>
@@ -5226,46 +5218,81 @@ function updateAttendanceCard(checkedIn, checkInTime, source, statusText, checkO
 }
 
 // ── WiFi Check-in triggered from home page button ──
-async function homeWifiCheckin(){
-  var btn = document.getElementById('s1-home-wifi-btn');
-  if(btn){ btn.disabled=true; btn.style.opacity='0.5'; }
+// Smart Check-in: auto WiFi detect → fallback GPS (no user choice needed)
+async function homeSmartCheckin(){
+  var btn = document.getElementById('s1-home-checkin-btn');
+  function setBtnState(txt, disabled){
+    if(!btn) return;
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? '0.55' : '1';
+    btn.textContent = txt;
+  }
+  setBtnState('Detecting...', true);
   try{
-    // First detect if on office WiFi
+    // Step 1: Try WiFi detect
     var rd = await fetch(API_URL+'/api/attendance/wifi-detect',{headers:zHead()});
     var rs = await rd.json();
-    if(!rs.wifiEnabled){
-      showToast1('WiFi attendance not enabled. Use GPS check-in.'); return;
-    }
-    if(!rs.isOffice){
-      showToast1('Not on Office WiFi. Please use GPS check-in.'); return;
-    }
+
+    // Already checked in
     if(rs.alreadyCheckedIn && !rs.checkedOut){
-      // Already checked in — just update card
       var ciEl=document.getElementById('s1-checkin');
-      if(ciEl&&rs.checkInTime){
-        var d=new Date(rs.checkInTime),h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';
-        h=h%12||12; ciEl.textContent=h+':'+(m<10?'0':'')+m+' '+ap;
+      if(ciEl && rs.checkInTime){
+        var d0=new Date(typeof rs.checkInTime==='string'?rs.checkInTime.replace(' ','T'):rs.checkInTime);
+        var h0=d0.getHours(),m0=d0.getMinutes(),ap0=h0>=12?'PM':'AM';
+        h0=h0%12||12; ciEl.textContent=h0+':'+(m0<10?'0':'')+m0+' '+ap0;
       }
       var stMap={'present':'Present ✓','late':'Late','late_pending':'Late — Pending'};
       updateAttendanceCard(true,rs.checkInTime,rs.source,stMap[rs.status]||'Present ✓',null);
-      showToast1('Already checked in via WiFi ✓'); return;
+      showToast1('Already checked in ✓');
+      setBtnState('✅ Check In', false); return;
     }
-    // Trigger actual check-in
-    var cr=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
-    var cd=await cr.json();
-    if(cd.success){
-      var now=new Date(),h2=now.getHours(),m2=now.getMinutes(),ap2=h2>=12?'PM':'AM';
-      h2=h2%12||12; var ts=h2+':'+(m2<10?'0':'')+m2+' '+ap2;
-      var ciEl2=document.getElementById('s1-checkin'); if(ciEl2) ciEl2.textContent=ts;
-      var stLbl = cd.status==='late_pending'?'Late — Pending Admin Approval':cd.status==='late'?'Late check-in':'Present ✓';
-      updateAttendanceCard(true,new Date().toISOString(),'wifi',stLbl,null);
-      showToast1(cd.message||'Checked in via WiFi ✓');
-    } else {
-      showToast1(cd.message||'WiFi check-in failed');
+
+    // Step 2a: On office WiFi → WiFi check-in
+    if(rs.wifiEnabled && rs.isOffice){
+      var cr=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
+      var cd=await cr.json();
+      if(cd.success){
+        var now=new Date(),h2=now.getHours(),m2=now.getMinutes(),ap2=h2>=12?'PM':'AM';
+        h2=h2%12||12; var ts2=h2+':'+(m2<10?'0':'')+m2+' '+ap2;
+        var ciEl2=document.getElementById('s1-checkin'); if(ciEl2) ciEl2.textContent=ts2;
+        var stLbl=cd.status==='late_pending'?'Late — Pending Approval':cd.status==='late'?'Late':'Present ✓';
+        updateAttendanceCard(true,new Date().toISOString(),'wifi',stLbl,null);
+        showToast1('✅ Checked in via WiFi');
+      } else { showToast1(cd.message||'Check-in failed. Try again.'); }
+      setBtnState('✅ Check In', false); return;
     }
+
+    // Step 2b: Not on office WiFi → GPS check-in
+    if(!navigator.geolocation){ showToast1('GPS not available on this device.'); setBtnState('✅ Check In',false); return; }
+    setBtnState('Getting location...', true);
+    navigator.geolocation.getCurrentPosition(
+      async function(pos){
+        try{
+          var lat=pos.coords.latitude, lng=pos.coords.longitude;
+          var headers=Object.assign({'Content-Type':'application/json'},zHead());
+          var gr=await fetch(API_URL+'/api/attendance/checkin',{method:'POST',headers:headers,body:JSON.stringify({lat:lat,lng:lng,type:'office'})});
+          var gd=await gr.json();
+          if(gd.success||gd.status==='present'||gd.status==='late_pending'||gd.status==='late'){
+            var now2=new Date(),h3=now2.getHours(),m3=now2.getMinutes(),ap3=h3>=12?'PM':'AM';
+            h3=h3%12||12; var ts3=h3+':'+(m3<10?'0':'')+m3+' '+ap3;
+            var ciEl3=document.getElementById('s1-checkin'); if(ciEl3) ciEl3.textContent=ts3;
+            var stLbl2=gd.status==='late_pending'?'Late — Pending Approval':gd.status==='late'?'Late':'Present ✓';
+            updateAttendanceCard(true,new Date().toISOString(),'gps',stLbl2,null);
+            showToast1('✅ Checked in via GPS');
+          } else { showToast1(gd.message||'Check-in failed. Try again.'); }
+        } catch(e){ showToast1('Connection error. Try again.'); }
+        setBtnState('✅ Check In', false);
+      },
+      function(err){ showToast1('Location denied. Enable GPS and try again.'); setBtnState('✅ Check In',false); },
+      {timeout:12000, maximumAge:30000}
+    );
+    return; // GPS async — button reset handled inside callbacks
   } catch(e){ showToast1('Connection error. Try again.'); }
-  finally{ if(btn){ btn.disabled=false; btn.style.opacity='1'; } }
+  setBtnState('✅ Check In', false);
 }
+
+// Legacy alias kept for any other references
+async function homeWifiCheckin(){ return homeSmartCheckin(); }
 
 // ── Monthly Balance Fetch & Display ──
 async function fetchMonthlyBalance(){
