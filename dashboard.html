@@ -30,20 +30,20 @@ body{min-height:100vh;background:#050508;background-image:radial-gradient(ellips
 .ni.active{background:rgba(10,132,255,0.15);color:var(--blue);border:0.5px solid rgba(10,132,255,0.18);}
 .sb-bot{padding:14px;border-top:0.5px solid rgba(255,255,255,0.06);}
 
-.main{margin-left:210px;flex:1;padding:28px 28px 48px;position:relative;z-index:1;}
+.main{margin-left:210px;flex:1;padding:18px 20px 32px;position:relative;z-index:1;}
 .page{display:none;animation:fu 0.22s ease;}
 .page.active{display:block;}
 @keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
 @keyframes skPulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
-.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;}
-.ptitle{font-size:22px;font-weight:500;letter-spacing:-0.3px;}
-.psub{font-size:13px;color:var(--muted);font-weight:300;margin-top:3px;}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.ptitle{font-size:19px;font-weight:500;letter-spacing:-0.3px;}
+.psub{font-size:13px;color:var(--muted);font-weight:300;margin-top:2px;}
 
 /* GLASS */
-.g{background:rgba(255,255,255,0.05);backdrop-filter:blur(24px);border:0.5px solid rgba(255,255,255,0.1);border-radius:18px;}
-.gs{background:rgba(255,255,255,0.04);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;}
+.g{background:rgba(255,255,255,0.05);backdrop-filter:blur(24px);border:0.5px solid rgba(255,255,255,0.1);border-radius:13px;}
+.gs{background:rgba(255,255,255,0.04);backdrop-filter:blur(14px);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;}
 
 /* BTNS */
 .btn{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(10,132,255,0.35);}
@@ -82,7 +82,7 @@ textarea.inp{resize:none;}
 .mono{font-family:'DM Mono',monospace;font-size:12px;}
 .av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:500;flex-shrink:0;}
 
-.stat{border-radius:14px;padding:13px 15px;}
+.stat{border-radius:14px;padding:10px 13px;}
 .sg{background:linear-gradient(135deg,rgba(48,209,88,0.11),rgba(48,209,88,0.03));border:0.5px solid rgba(48,209,88,0.16);backdrop-filter:blur(18px);}
 .sr{background:linear-gradient(135deg,rgba(255,69,58,0.11),rgba(255,69,58,0.03));border:0.5px solid rgba(255,69,58,0.16);backdrop-filter:blur(18px);}
 .so{background:linear-gradient(135deg,rgba(255,159,10,0.11),rgba(255,159,10,0.03));border:0.5px solid rgba(255,159,10,0.16);backdrop-filter:blur(18px);}
@@ -97,8 +97,8 @@ textarea.inp{resize:none;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl tr:hover td{background:rgba(255,255,255,0.015);}
 
-.sec{padding:20px;margin-bottom:14px;}
-.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.sec{padding:14px 16px;margin-bottom:10px;}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;}
 .st{font-size:14px;font-weight:500;}
 
 /* OVERLAY */
@@ -656,6 +656,9 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       onmouseover="this.style.background='rgba(255,69,58,0.14)'" onmouseout="this.style.background='rgba(255,69,58,0.06)'">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l3-3-3-3M13 8H6" stroke="#FF453A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Logout
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.05);text-align:center;">
+      <div style="font-size:9px;color:rgba(245,245,247,0.18);letter-spacing:0.3px;line-height:1.6;">© App Designed By<br><span style="color:rgba(245,245,247,0.28);font-weight:500;">DOT Advertising</span></div>
     </div>
   </div>
 </aside>
@@ -1493,7 +1496,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         <button class="btn" onclick="savePayrollSettings()">💾 Save Settings</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
 
       <!-- LEFT COLUMN -->
       <div>
@@ -2248,7 +2251,27 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             <button onclick="closeBrandModal()" style="background:rgba(255,255,255,0.07);border:none;border-radius:8px;width:30px;height:30px;color:#fff;cursor:pointer;font-size:16px;">✕</button>
           </div>
           <input type="hidden" id="brand-edit-id">
-          <div style="display:flex;flex-direction:column;gap:14px;">
+          <input type="hidden" id="brand-inp-logo-data">
+          <div style="display:flex;flex-direction:column;gap:13px;">
+            <!-- Logo upload row -->
+            <div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Brand Logo (optional)</div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div id="brand-logo-preview" style="width:52px;height:52px;border-radius:10px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/><circle cx="7.5" cy="8.5" r="1.5" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/><path d="M3 14l4-4 3 3 2-2 5 5" stroke="rgba(245,245,247,0.3)" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <label style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:9px;padding:7px 13px;cursor:pointer;font-size:12px;color:rgba(245,245,247,0.6);">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v9M4 4l3-3 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    Upload Logo
+                    <input type="file" id="brand-logo-file" accept="image/*" style="display:none;" onchange="brandLogoPreview(this)">
+                  </label>
+                  <button onclick="clearBrandLogo()" style="background:none;border:none;color:rgba(255,69,58,0.6);font-size:11px;cursor:pointer;margin-left:8px;font-family:inherit;" id="brand-logo-clear" style="display:none;">✕ Remove</button>
+                  <div style="font-size:10px;color:rgba(245,245,247,0.25);margin-top:4px;">PNG, JPG · max 500KB</div>
+                </div>
+              </div>
+            </div>
+            <!-- Brand Name -->
             <div>
               <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Brand Name</div>
               <input type="text" id="brand-inp-name" class="inp" placeholder="e.g. DOT Advertising">
@@ -2263,7 +2286,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
                 <input type="text" id="brand-inp-code" class="inp" placeholder="e.g. DOT" maxlength="5" style="text-transform:uppercase;">
               </div>
             </div>
-            <button onclick="saveBrand()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">💾 Save Brand</button>
+            <button onclick="saveBrand()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:12px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">💾 Save Brand</button>
           </div>
         </div>
       </div>
@@ -8379,7 +8402,9 @@ function _renderBrandsList(brands){
     var color = b.color || '#0A84FF';
     var initials = (b.name||'?').split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();
     return '<div class="gs" style="display:flex;align-items:center;gap:12px;padding:13px 15px;">'
-      +'<div style="width:36px;height:36px;border-radius:10px;background:'+color+'22;border:1.5px solid '+color+'55;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:'+color+';flex-shrink:0;">'+escHtml(initials)+'</div>'
+      +(b.logo_data
+        ? '<img src="'+b.logo_data+'" style="width:40px;height:40px;border-radius:10px;object-fit:contain;flex-shrink:0;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);padding:3px;">'
+        : '<div style="width:40px;height:40px;border-radius:10px;background:'+color+'22;border:1.5px solid '+color+'55;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:'+color+';flex-shrink:0;">'+escHtml(initials)+'</div>')
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(b.name||'—')+'</div>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'
@@ -8395,12 +8420,39 @@ function _renderBrandsList(brands){
   }).join('');
 }
 
+function brandLogoPreview(input){
+  var file = input.files[0];
+  if(!file) return;
+  if(file.size > 600000){ showToast('⚠️ Image too large (max 500KB)'); input.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var data = e.target.result;
+    document.getElementById('brand-inp-logo-data').value = data;
+    var prev = document.getElementById('brand-logo-preview');
+    if(prev) prev.innerHTML = '<img src="'+data+'" style="width:52px;height:52px;object-fit:contain;border-radius:8px;">';
+    var clr = document.getElementById('brand-logo-clear'); if(clr) clr.style.display='inline';
+  };
+  reader.readAsDataURL(file);
+}
+function clearBrandLogo(){
+  document.getElementById('brand-inp-logo-data').value = '';
+  var prev = document.getElementById('brand-logo-preview');
+  if(prev) prev.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/><circle cx="7.5" cy="8.5" r="1.5" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/><path d="M3 14l4-4 3 3 2-2 5 5" stroke="rgba(245,245,247,0.3)" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  var clr = document.getElementById('brand-logo-clear'); if(clr) clr.style.display='none';
+  var fi = document.getElementById('brand-logo-file'); if(fi) fi.value='';
+}
+
 function openAddBrand(){
   document.getElementById('brand-modal-title').textContent = 'New Brand';
   document.getElementById('brand-edit-id').value = '';
   document.getElementById('brand-inp-name').value = '';
   document.getElementById('brand-inp-color').value = '#0A84FF';
   document.getElementById('brand-inp-code').value = '';
+  document.getElementById('brand-inp-logo-data').value = '';
+  var prev = document.getElementById('brand-logo-preview');
+  if(prev) prev.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/><circle cx="7.5" cy="8.5" r="1.5" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/><path d="M3 14l4-4 3 3 2-2 5 5" stroke="rgba(245,245,247,0.3)" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  var clr = document.getElementById('brand-logo-clear'); if(clr) clr.style.display='none';
+  var fi = document.getElementById('brand-logo-file'); if(fi) fi.value='';
   var m = document.getElementById('brand-modal');
   m.style.display = 'flex';
 }
@@ -8413,6 +8465,12 @@ function openEditBrand(id){
   document.getElementById('brand-inp-name').value = b.name || '';
   document.getElementById('brand-inp-color').value = b.color || '#0A84FF';
   document.getElementById('brand-inp-code').value = b.code_prefix || '';
+  var prev = document.getElementById('brand-logo-preview');
+  if(b.logo_data && prev){ prev.innerHTML = '<img src="'+b.logo_data+'" style="width:52px;height:52px;object-fit:contain;border-radius:8px;">'; }
+  else if(prev){ prev.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12" rx="2" stroke="rgba(245,245,247,0.3)" stroke-width="1.3"/></svg>'; }
+  var clr = document.getElementById('brand-logo-clear'); if(clr) clr.style.display = b.logo_data ? 'inline' : 'none';
+  document.getElementById('brand-inp-logo-data').value = b.logo_data || '';
+  var fi = document.getElementById('brand-logo-file'); if(fi) fi.value='';
   var m = document.getElementById('brand-modal');
   m.style.display = 'flex';
 }
@@ -8422,10 +8480,11 @@ function closeBrandModal(){
 }
 
 async function saveBrand(){
-  var editId = (document.getElementById('brand-edit-id').value||'').trim();
-  var name   = (document.getElementById('brand-inp-name').value||'').trim();
-  var color  = (document.getElementById('brand-inp-color').value||'#0A84FF').trim();
-  var code   = (document.getElementById('brand-inp-code').value||'').trim().toUpperCase().slice(0,5);
+  var editId   = (document.getElementById('brand-edit-id').value||'').trim();
+  var name     = (document.getElementById('brand-inp-name').value||'').trim();
+  var color    = (document.getElementById('brand-inp-color').value||'#0A84FF').trim();
+  var code     = (document.getElementById('brand-inp-code').value||'').trim().toUpperCase().slice(0,5);
+  var logoData = (document.getElementById('brand-inp-logo-data').value||'').trim();
 
   if(!name){ showToast('⚠️ Brand name required'); return; }
 
@@ -8436,7 +8495,7 @@ async function saveBrand(){
     var r = await fetch(url, {
       method: method,
       headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
-      body: JSON.stringify({ name, color, code_prefix: code })
+      body: JSON.stringify({ name, color, code_prefix: code, logo_data: logoData })
     });
     var d = await r.json();
     if(d.success){
