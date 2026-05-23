@@ -9111,6 +9111,12 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +'<div style="display:flex;align-items:center;gap:5px;justify-content:center;flex-wrap:wrap;">'
+      +(r.check_in && r.break_checkout && !r.check_out
+        ? '<button onclick="markInOffice('+i+')" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Mark as In Office">✓ In Office</button>'
+        : '')
+      +(r.check_in && !r.check_out && !r.break_checkout
+        ? '<button onclick="adminForceCheckout('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Force check out now">⬛ Out</button>'
+        : '')
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
       +'<button onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>'
       +'</div>'
@@ -9130,6 +9136,37 @@ async function markInOffice(i){
     var d = await res.json();
     if(d.success){ showToast('✅ Marked as In Office'); loadAttendancePage(); }
     else alert(d.message||'Could not update');
+  }catch(e){ alert('Network error'); }
+}
+
+// ── Force check-out a specific staff member right now ──
+async function adminForceCheckout(i){
+  var r = window._attRows[i];
+  if(!r) return;
+  if(!confirm('Force check out '+r.name+' right now?')) return;
+  try{
+    var today = window._attDate || new Date().toISOString().split('T')[0];
+    // Use manual-edit to set check_out = current IST time
+    var nowIST = new Date(Date.now() + (5*60+30)*60000);
+    var hh = nowIST.getUTCHours().toString().padStart(2,'0');
+    var mm = nowIST.getUTCMinutes().toString().padStart(2,'0');
+    var coTime = hh+':'+mm;
+    var res = await fetch(API+'/api/attendance/manual-edit',{
+      method:'POST',
+      headers:Object.assign(zHdr(),{'Content-Type':'application/json'}),
+      body:JSON.stringify({
+        staff_id: r.id,
+        date: today,
+        check_in:  r.check_in ? (function(){ var d=new Date(r.check_in); return d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'); })() : null,
+        check_out: coTime,
+        status: r.status || 'present',
+        type: r.type || 'office',
+        late_minutes: r.late_minutes || 0
+      })
+    });
+    var d = await res.json();
+    if(d.success){ showToast('⬛ Checked out '+r.name+' at '+coTime); loadAttendancePage(); }
+    else alert(d.message||'Could not check out');
   }catch(e){ alert('Network error'); }
 }
 
