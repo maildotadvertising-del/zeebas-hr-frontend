@@ -263,19 +263,19 @@ body.desktop-mode #s1-sidebar {
     <div id="s1-splash" class="scr on" style="background:#08080F;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;">
 
       <!-- Radial glow pulse — red brand color, behind logo -->
-      <div id="sp-glow" style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(204,0,0,0.22) 0%,transparent 68%);opacity:0;transform:scale(0.6);pointer-events:none;"></div>
+      <div id="sp-glow" style="position:absolute;width:340px;height:200px;border-radius:50%;background:radial-gradient(ellipse,rgba(204,0,0,0.2) 0%,transparent 68%);opacity:0;transform:scale(0.6);pointer-events:none;"></div>
 
       <!-- Outer ring — subtle, expands as logo enters -->
-      <div id="sp-ring" style="position:absolute;width:210px;height:210px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.07);opacity:0;transform:scale(0.7);pointer-events:none;"></div>
+      <div id="sp-ring" style="position:absolute;width:260px;height:150px;border-radius:16px;border:0.5px solid rgba(255,255,255,0.06);opacity:0;transform:scale(0.7);pointer-events:none;"></div>
 
       <!-- Logo + shimmer wrapper -->
       <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;">
 
-        <!-- Logo circle — clean clip, no edge artifact -->
-        <div id="sp-logo-wrap" style="width:174px;height:174px;border-radius:50%;overflow:hidden;background:#000;opacity:0;transform:scale(0.52);position:relative;box-shadow:0 0 0 1px rgba(0,0,0,1),0 12px 48px rgba(0,0,0,0.9);">
-          <img src="icon-512.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;">
+        <!-- DOT logo — rectangular, transparent bg, animated entrance -->
+        <div id="sp-logo-wrap" style="width:210px;height:111px;opacity:0;transform:scale(0.52);position:relative;overflow:hidden;">
+          <img src="dot-logo.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:contain;display:block;">
           <!-- Shimmer light sweep -->
-          <div id="sp-shimmer" style="position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.16) 50%,transparent 72%);transform:translateX(-110%);pointer-events:none;border-radius:50%;"></div>
+          <div id="sp-shimmer" style="position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.18) 50%,transparent 72%);transform:translateX(-110%);pointer-events:none;"></div>
         </div>
 
         <!-- Divider line -->
