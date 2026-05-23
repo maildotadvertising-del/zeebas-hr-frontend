@@ -4801,9 +4801,9 @@ async function loadMySalary(){
       // Rules card
       +'<div style="background:rgba(10,132,255,0.08);border:0.5px solid rgba(10,132,255,0.16);border-radius:13px;padding:11px 13px;">'
         +'<div style="color:#0A84FF;font-size:11px;font-weight:500;margin-bottom:8px;">Attendance Rules</div>'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.38);font-size:11px;">Grace period</span><span style="color:#fff;font-size:11px;font-family:monospace;">'+(settings.late_grace_minutes||15)+' mins</span></div>'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.38);font-size:11px;">Late deduction</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">₹'+(settings.late_deduction_per_min||2)+'/min</span></div>'
-        +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.38);font-size:11px;">Max late cut/day</span><span style="color:#FF9F0A;font-size:11px;font-family:monospace;">₹'+(settings.late_max_per_day||200)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.38);font-size:11px;">Grace period</span><span style="color:#fff;font-size:11px;font-family:monospace;">'+(parseInt(settings.late_grace_minutes)||15)+' mins</span></div>'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.38);font-size:11px;">Late deduction</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">₹'+(parseFloat(settings.late_deduction_per_min)||2)+'/min</span></div>'
+        +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.38);font-size:11px;">Max late cut/day</span><span style="color:#FF9F0A;font-size:11px;font-family:monospace;">₹'+(parseFloat(settings.late_max_per_day)||200)+'</span></div>'
       +'</div>'
       +(isCurrMonth ? '<div style="text-align:center;padding:10px 0 2px;color:rgba(245,245,247,0.3);font-size:10px;">Live estimate based on attendance — final amount after admin processes payroll</div>' : '');
 
