@@ -36,6 +36,7 @@ body{min-height:100vh;background:#050508;background-image:radial-gradient(ellips
 @keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+@keyframes skPulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
 .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;}
 .ptitle{font-size:22px;font-weight:500;letter-spacing:-0.3px;}
 .psub{font-size:13px;color:var(--muted);font-weight:300;margin-top:3px;}
@@ -5843,6 +5844,7 @@ window.showPage = function(page, el){
    ════════════════════════════════════════ */
 
 var _taskFilters = { status:'', brand:'', category:'', priority:'' };
+var _tasksCache  = null; // cached raw task array for instant re-render
 var _staffCache  = [];
 
 var CATEGORY_LABELS = {
@@ -5918,6 +5920,8 @@ async function approveExtraTime(taskId, action){
 // ── Mark task(s) as done ──
 async function markTaskDone(ids){
   if(!Array.isArray(ids)) ids=[ids];
+  // Optimistic update — mark done in cache immediately
+  if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t){ t.status='done'; t.progress_percent=100; } }); _renderTasks(_tasksCache); }
   try{
     await Promise.all(ids.map(function(id){
       return fetch(API+'/api/tasks/'+id+'/status',{
@@ -5934,6 +5938,7 @@ async function markTaskDone(ids){
 // ── Reopen task(s) (done → pending) ──
 async function markTaskReopen(ids){
   if(!Array.isArray(ids)) ids=[ids];
+  if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t){ t.status='pending'; t.progress_percent=0; } }); _renderTasks(_tasksCache); }
   try{
     await Promise.all(ids.map(function(id){
       return fetch(API+'/api/tasks/'+id+'/status',{
@@ -5957,109 +5962,112 @@ function toggleCompletedSection(){
   if(arrow) arrow.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
 }
 
+function _renderTasks(allTasks){
+  var grid = document.getElementById('tasks-grid');
+  var sub  = document.getElementById('tasks-sub');
+  if(!grid) return;
+
+  var isTodayDone = (_taskFilters.status === 'today_done');
+
+  // Split into active vs completed
+  var activeTasks    = allTasks.filter(function(t){ return t.status !== 'done'; });
+  var completedTasks = allTasks.filter(function(t){ return t.status === 'done'; });
+
+  // Client-side "Today Done" filter (for the tab)
+  if(isTodayDone){
+    var todayStr = new Date().toISOString().slice(0,10);
+    completedTasks = completedTasks.filter(function(t){
+      return t.completed_at && new Date(t.completed_at).toISOString().slice(0,10) === todayStr;
+    });
+    activeTasks = [];
+  }
+
+  // Apply status filter on active tasks if needed
+  var filteredActive = activeTasks;
+  if(_taskFilters.status && _taskFilters.status !== 'done' && !isTodayDone){
+    filteredActive = activeTasks.filter(function(t){ return t.status === _taskFilters.status; });
+  }
+  if(_taskFilters.status === 'done') { filteredActive = []; }
+
+  var groupedActive    = groupTasks(filteredActive);
+  var groupedCompleted = groupTasks(completedTasks);
+  var pending = groupTasks(activeTasks).filter(function(t){ return t.status !== 'done'; }).length;
+
+  var badge = document.getElementById('tasks-badge');
+  if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
+  var subLabel = isTodayDone
+    ? groupedCompleted.length+' completed today'
+    : groupedActive.length+' task'+(groupedActive.length!==1?'s':'')+' · '+pending+' pending'+(groupedCompleted.length?' · '+groupedCompleted.length+' done':'');
+  if(sub) sub.textContent = subLabel;
+
+  var dt = document.getElementById('dash-tasks');
+  if(dt) dt.textContent = pending;
+
+  // ── Active tasks section ──
+  var activeHtml = '';
+  if(_taskFilters.status === 'done'){
+    // show nothing in active
+  } else if(!groupedActive.length && !isTodayDone){
+    activeHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
+      +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📌</div>'
+      +'<div style="font-size:14px;margin-bottom:6px;">No tasks found</div>'
+      +'<div style="font-size:12px;opacity:0.6;">Click &quot;+ Assign Task&quot; to create one</div>'
+      +'</div>';
+  } else {
+    activeHtml = groupedActive.map(function(t){ return buildTaskCard(t); }).join('');
+  }
+
+  // ── Completed section ──
+  var completedHtml = '';
+  if(groupedCompleted.length > 0){
+    completedHtml = '<div style="margin-top:14px;">'
+      +'<div onclick="toggleCompletedSection()" style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:rgba(48,209,88,0.07);border:0.5px solid rgba(48,209,88,0.18);border-radius:13px;cursor:pointer;user-select:none;margin-bottom:10px;">'
+        +'<span style="color:#30D158;font-size:16px;">✅</span>'
+        +'<span style="color:#30D158;font-size:13px;font-weight:500;flex:1;">Completed Work</span>'
+        +'<span style="background:rgba(48,209,88,0.15);color:#30D158;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;">'+groupedCompleted.length+'</span>'
+        +'<svg id="completed-tasks-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" style="transition:transform 0.2s;flex-shrink:0;"><path d="M3 5l4 4 4-4" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>'
+      +'</div>'
+      +'<div id="completed-tasks-body" style="display:none;flex-direction:column;gap:10px;">'
+        +groupedCompleted.map(function(t){ return buildTaskCard(t); }).join('')
+      +'</div>'
+      +'</div>';
+  } else if(isTodayDone){
+    completedHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
+      +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">🎉</div>'
+      +'<div style="font-size:14px;">No tasks completed today yet</div>'
+      +'</div>';
+  }
+
+  grid.innerHTML = activeHtml + completedHtml;
+}
+
 async function loadTasks(){
   var grid = document.getElementById('tasks-grid');
   var sub  = document.getElementById('tasks-sub');
   if(!grid) return;
-  grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">Loading tasks…</div>';
+
+  // ── Instant render from cache (no spinner) ──
+  if(_tasksCache){
+    _renderTasks(_tasksCache);
+  } else {
+    grid.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">'
+      +Array(4).fill('<div style="height:80px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:16px;animation:skPulse 1.2s ease-in-out infinite;"></div>').join('')
+      +'</div>';
+  }
 
   try{
-    // Always fetch ALL tasks (no status filter) — we split active/done client-side
-    var isTodayDone = (_taskFilters.status === 'today_done');
-    var qs = [];
-    // When a specific filter tab is active (other than 'done' / 'today_done'), keep it
-    if(_taskFilters.status && _taskFilters.status !== 'done' && !isTodayDone)
-      qs.push('status='+_taskFilters.status);
-    if(_taskFilters.brand)    qs.push('brand_id='+_taskFilters.brand);
-    if(_taskFilters.category) qs.push('category='+_taskFilters.category);
-    if(_taskFilters.priority) qs.push('priority='+_taskFilters.priority);
-
-    // Always also fetch ALL (for completed section) — but to keep it simple, fetch without status filter
-    var allRes  = await fetch(API+'/api/tasks'+(
-      (function(){ var q2=[]; if(_taskFilters.brand) q2.push('brand_id='+_taskFilters.brand); if(_taskFilters.category) q2.push('category='+_taskFilters.category); if(_taskFilters.priority) q2.push('priority='+_taskFilters.priority); return q2.length?'?'+q2.join('&'):''; })()
-    ), { headers: zHdr() });
+    // Fetch ALL tasks — filter client-side
+    var q2=[]; if(_taskFilters.brand) q2.push('brand_id='+_taskFilters.brand); if(_taskFilters.category) q2.push('category='+_taskFilters.category); if(_taskFilters.priority) q2.push('priority='+_taskFilters.priority);
+    var allRes  = await fetch(API+'/api/tasks'+(q2.length?'?'+q2.join('&'):''), { headers: zHdr() });
     var allData = await allRes.json();
     var allTasks = allData.data || [];
+    _tasksCache = allTasks; // update cache
 
-    // Split into active vs completed
-    var activeTasks    = allTasks.filter(function(t){ return t.status !== 'done'; });
-    var completedTasks = allTasks.filter(function(t){ return t.status === 'done'; });
-
-    // Client-side "Today Done" filter (for the tab)
-    if(isTodayDone){
-      var todayStr = new Date().toISOString().slice(0,10);
-      completedTasks = completedTasks.filter(function(t){
-        return t.completed_at && new Date(t.completed_at).toISOString().slice(0,10) === todayStr;
-      });
-      activeTasks = []; // "Today Done" tab shows only completed
-    }
-
-    // Apply status filter on active tasks if needed
-    var filteredActive = activeTasks;
-    if(_taskFilters.status && _taskFilters.status !== 'done' && !isTodayDone){
-      filteredActive = activeTasks.filter(function(t){ return t.status === _taskFilters.status; });
-    }
-    if(_taskFilters.status === 'done') {
-      filteredActive = [];
-    }
-
-    var groupedActive    = groupTasks(filteredActive);
-    var groupedCompleted = groupTasks(completedTasks);
-    var pending = groupTasks(activeTasks).filter(function(t){ return t.status !== 'done'; }).length;
-
-    var badge = document.getElementById('tasks-badge');
-    if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
-
-    var subLabel = isTodayDone
-      ? groupedCompleted.length+' completed today'
-      : groupedActive.length+' task'+(groupedActive.length!==1?'s':'')+' · '+pending+' pending'+(groupedCompleted.length?' · '+groupedCompleted.length+' done':'');
-    if(sub) sub.textContent = subLabel;
-
-    var dt = document.getElementById('dash-tasks');
-    if(dt) dt.textContent = pending;
-
-    // ── Active tasks section ──
-    var activeHtml = '';
-    if(_taskFilters.status === 'done'){
-      // "Done" tab — show nothing in active, show all done in completed
-    } else if(!groupedActive.length && !isTodayDone){
-      activeHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
-        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📌</div>'
-        +'<div style="font-size:14px;margin-bottom:6px;">No tasks found</div>'
-        +'<div style="font-size:12px;opacity:0.6;">Click &quot;+ Assign Task&quot; to create one</div>'
-        +'</div>';
-    } else {
-      activeHtml = groupedActive.map(function(t){ return buildTaskCard(t); }).join('');
-    }
-
-    // ── Completed section ──
-    var completedHtml = '';
-    if(groupedCompleted.length > 0){
-      completedHtml = '<div style="margin-top:14px;">'
-        // Header — clickable to expand/collapse
-        +'<div onclick="toggleCompletedSection()" style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:rgba(48,209,88,0.07);border:0.5px solid rgba(48,209,88,0.18);border-radius:13px;cursor:pointer;user-select:none;margin-bottom:10px;">'
-          +'<span style="color:#30D158;font-size:16px;">✅</span>'
-          +'<span style="color:#30D158;font-size:13px;font-weight:500;flex:1;">Completed Work</span>'
-          +'<span style="background:rgba(48,209,88,0.15);color:#30D158;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;">'+groupedCompleted.length+'</span>'
-          +'<svg id="completed-tasks-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" style="transition:transform 0.2s;flex-shrink:0;"><path d="M3 5l4 4 4-4" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>'
-        +'</div>'
-        // Completed cards (collapsed by default)
-        +'<div id="completed-tasks-body" style="display:none;flex-direction:column;gap:10px;">'
-          +groupedCompleted.map(function(t){ return buildTaskCard(t); }).join('')
-        +'</div>'
-        +'</div>';
-    } else if(isTodayDone){
-      completedHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
-        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">🎉</div>'
-        +'<div style="font-size:14px;">No tasks completed today yet</div>'
-        +'</div>';
-    }
-
-    grid.innerHTML = activeHtml + completedHtml;
+    _renderTasks(allTasks);
 
   } catch(e){
     console.error('loadTasks error',e);
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#FF453A;">Failed to load tasks</div>';
+    if(!_tasksCache) grid.innerHTML = '<div style="text-align:center;padding:40px;color:#FF453A;">Failed to load tasks</div>';
   }
 }
 
@@ -6139,13 +6147,26 @@ function buildTaskCard(t){
   var ids    = t._ids || [t.id];
   var idsStr = JSON.stringify(ids);
 
-  var doneCls = t.status==='done' ? ' status-done' : '';
-  return '<div class="task-card priority-'+t.priority+doneCls+'" onclick="openEditTask('+ids[0]+','+idsStr+')" style="cursor:pointer;">'
+  var isDone  = t.status === 'done';
+  var doneCls = isDone ? ' status-done' : '';
+
+  // ── Tick circle button (left of title) ──
+  var tickBtn = isDone
+    // Done — filled green circle with checkmark
+    ? '<div onclick="event.stopPropagation();markTaskReopen('+idsStr+')" title="Mark as pending" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#30D158;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.12s,opacity 0.12s;" onmouseenter="this.style.opacity=\'0.75\'" onmouseleave="this.style.opacity=\'1\'">'
+        +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.8 3L9.5 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      +'</div>'
+    // Pending — empty circle border
+    : '<div onclick="event.stopPropagation();markTaskDone('+idsStr+')" title="Mark as complete" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;" onmouseenter="this.style.borderColor=\'#30D158\';this.style.background=\'rgba(48,209,88,0.12)\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.2)\';this.style.background=\'transparent\'">'
+      +'</div>';
+
+  return '<div class="task-card priority-'+t.priority+doneCls+'" style="cursor:default;">'
     +'<div style="display:flex;align-items:flex-start;gap:12px;">'
-    +'<div style="margin-top:3px;width:10px;height:10px;border-radius:50%;background:'+sColor+';flex-shrink:0;box-shadow:0 0 6px '+sColor+'66;"></div>'
-    +'<div style="flex:1;min-width:0;">'
+    // Tick button
+    +'<div style="margin-top:1px;">'+tickBtn+'</div>'
+    +'<div style="flex:1;min-width:0;cursor:pointer;" onclick="openEditTask('+ids[0]+','+idsStr+')">'
       // Title
-      +'<div style="font-size:14px;font-weight:500;color:#fff;margin-bottom:7px;'+(t.status==='done'?'text-decoration:line-through;opacity:0.6;':'')+'">'+escHtml(t.title)+'</div>'
+      +'<div style="font-size:14px;font-weight:500;color:#fff;margin-bottom:7px;'+(isDone?'text-decoration:line-through;opacity:0.55;':'')+'">'+escHtml(t.title)+'</div>'
       // Tags
       +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px;">'
         +(t.brand_name?'<span style="display:inline-flex;align-items:center;gap:4px;background:'+bColor+'18;border:0.5px solid '+bColor+'40;color:'+bColor+';border-radius:999px;padding:2px 9px;font-size:10px;font-weight:500;"><span style="width:5px;height:5px;border-radius:50%;background:'+bColor+';display:inline-block;"></span>'+escHtml(t.brand_name)+'</span>':'')
@@ -6155,17 +6176,14 @@ function buildTaskCard(t){
       +'</div>'
       // Bottom info row
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
-        // Staff avatars + names
         +'<div style="display:flex;align-items:center;gap:7px;">'
           +'<div style="display:flex;align-items:center;">'+avatarStrip+'</div>'
           +'<span style="font-size:11px;color:var(--muted);">'+staffNames+'</span>'
         +'</div>'
-        // Start date
         +(startStr?'<div style="display:flex;align-items:center;gap:4px;">'
           +'<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="2" y="2.5" width="10" height="9" rx="1.5" stroke="'+(overdue?'#FF453A':'rgba(245,245,247,0.35')+'" stroke-width="1.2"/><path d="M4.5 1.5v2M9.5 1.5v2M2 6h10" stroke="'+(overdue?'#FF453A':'rgba(245,245,247,0.35')+'" stroke-width="1.2" stroke-linecap="round"/></svg>'
           +'<span style="font-size:11px;color:'+(overdue?'#FF453A':'rgba(245,245,247,0.4)')+';">'+startStr+(overdue?' · Overdue':'')+'</span>'
           +'</div>':'')
-        // Arrow + End date
         +(startStr&&endStr?'<span style="color:rgba(245,245,247,0.25);font-size:10px;">→</span>':'')
         +(endStr?'<div style="display:flex;align-items:center;gap:4px;">'
           +'<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="2" y="2.5" width="10" height="9" rx="1.5" stroke="rgba(245,245,247,0.35)" stroke-width="1.2"/><path d="M4.5 1.5v2M9.5 1.5v2M2 6h10" stroke="rgba(245,245,247,0.35)" stroke-width="1.2" stroke-linecap="round"/></svg>'
@@ -6173,9 +6191,7 @@ function buildTaskCard(t){
           +'</div>':'')
         +(t.attachment_url?'<span style="font-size:10px;color:#0A84FF;">📎 '+escHtml(t.attachment_name||'file')+'</span>':'')
       +'</div>'
-      // Description
       +(t.description?'<div style="margin-top:8px;font-size:11px;color:rgba(245,245,247,0.35);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(t.description)+'</div>':'')
-      // Sub tasks
       +(function(){
         var sts=[];try{sts=JSON.parse(t.subtasks||'[]');}catch(e){}
         if(!sts.length) return '';
@@ -6192,12 +6208,9 @@ function buildTaskCard(t){
           +'</div></div>';
       })()
     +'</div>'
-    // Actions — Complete + Delete
-    +'<div style="flex-shrink:0;display:flex;flex-direction:column;gap:5px;align-items:flex-end;">'
-      +(t.status !== 'done'
-        ? '<button onclick="event.stopPropagation();markTaskDone('+idsStr+')" style="background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.25);border-radius:8px;padding:5px 10px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;">✓ Complete</button>'
-        : '<button onclick="event.stopPropagation();markTaskReopen('+idsStr+')" style="background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:5px 10px;color:#FF9F0A;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Reopen</button>')
-      +'<button onclick="event.stopPropagation();deleteTask('+idsStr+')" style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.18);border-radius:8px;padding:5px 10px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">🗑</button>'
+    // Delete button only
+    +'<div style="flex-shrink:0;">'
+      +'<button onclick="event.stopPropagation();deleteTask('+idsStr+')" title="Delete task" style="background:transparent;border:none;border-radius:8px;padding:5px 6px;color:rgba(255,255,255,0.2);font-size:14px;cursor:pointer;font-family:inherit;transition:color 0.15s;" onmouseenter="this.style.color=\'#FF453A\'" onmouseleave="this.style.color=\'rgba(255,255,255,0.2)\'">🗑</button>'
     +'</div>'
     +'</div>'
     +'</div>';
