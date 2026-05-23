@@ -5923,7 +5923,7 @@ async function wifiCheckAndAct(){
             ch2f=ch2f%12||12;
             ciEl2f.textContent=ch2f+':'+(cm2f<10?'0':'')+cm2f+' '+ca2f;
           }
-          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false, true);
+          wifiBanner(false); // checked in — no need to show WiFi status card
           return;
         }
 
@@ -5969,9 +5969,9 @@ async function wifiCheckAndAct(){
           ct_h=ct_h%12||12;
           var compStr=ct_h+':'+(ct_m<10?'0':'')+ct_m+' '+ct_a;
           var subMsg = lmBanner+' · Work until '+compStr+' → deduction cleared';
-          wifiBanner(true,'rgba(255,159,10,0.08)','rgba(255,159,10,1)','⏰ In Office — '+lmBanner, subMsg, false, true);
+          wifiBanner(false); // late info already shown in attendance card — hide banner
         } else {
-          wifiBanner(true,'rgba(48,209,88,0.08)','rgba(48,209,88,1)','📶 In Office','You\'re connected to Office WiFi',false, true);
+          wifiBanner(false); // in office + checked in — no need to show WiFi status card
         }
       }
 
