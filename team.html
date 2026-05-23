@@ -4879,6 +4879,23 @@ async function loadAttHistory(){
       h = h%12||12; return h+':'+(m<10?'0':'')+m+' '+a;
     };
 
+    // Helper: did staff work full required hours? (for late/early balance)
+    var _athWorkedFull = function(rec){
+      if(!rec.check_in || !rec.check_out) return false;
+      var toM2 = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+      var ci2 = new Date(typeof rec.check_in==='string'?rec.check_in.replace(' ','T'):rec.check_in);
+      var co2 = new Date(typeof rec.check_out==='string'?rec.check_out.replace(' ','T'):rec.check_out);
+      if(isNaN(ci2.getTime())||isNaN(co2.getTime())) return false;
+      var wm = Math.floor((co2 - ci2) / 60000);
+      var exp;
+      if(rec.work_end_time && rec.work_start_time){
+        exp = toM2(rec.work_end_time) - toM2(rec.work_start_time);
+      } else {
+        exp = (rec.employment_type||'').toLowerCase() === 'part_time' ? 240 : 480;
+      }
+      return wm >= exp;
+    };
+
     var html = rows.map(function(r){
       var dt = new Date(r.date);
       var dayName  = _athDayNames[dt.getDay()];
@@ -4889,8 +4906,10 @@ async function loadAttHistory(){
       var stColor  = {present:'#30D158',late:'#FF9F0A',absent:'#FF453A',on_leave:'#0A84FF',onsite_approved:'#5AABF0',onsite_pending:'rgba(245,245,247,0.4)',late_pending:'#FF9F0A'}[st] || '#FF453A';
       var stBg     = {present:'rgba(48,209,88,0.1)',late:'rgba(255,159,10,0.1)',absent:'rgba(255,69,58,0.1)',on_leave:'rgba(10,132,255,0.1)',onsite_approved:'rgba(90,171,240,0.1)',onsite_pending:'rgba(255,255,255,0.06)',late_pending:'rgba(255,159,10,0.1)'}[st] || 'rgba(255,69,58,0.1)';
 
-      // Late comp done — override display
-      if(parseInt(r.late_comp_done) === 1 && (st === 'late' || st === 'late_pending')){ stLabel='Present'; stColor='#30D158'; stBg='rgba(48,209,88,0.1)'; }
+      // Override to Present: late_comp_done OR worked full required hours
+      if((st === 'late' || st === 'late_pending') && (parseInt(r.late_comp_done) === 1 || _athWorkedFull(r))){
+        stLabel='Present'; stColor='#30D158'; stBg='rgba(48,209,88,0.1)';
+      }
 
       var checkIn  = fmtTime(r.check_in);
       var checkOut = fmtTime(r.check_out);
@@ -4898,10 +4917,27 @@ async function loadAttHistory(){
       var earlyMins= parseInt(r.early_mins)||0;
       var otMins   = Math.round(parseFloat(r.ot_hours||0) * 60);
 
+      // Balance: calculate net worked vs required for early badge
+      var _showEarlyBadge = false;
+      if(earlyMins > 0){
+        if(!r.check_out){
+          _showEarlyBadge = true; // still working — show early check-in
+        } else {
+          var _toME = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+          var _ciE = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
+          var _coE = new Date(typeof r.check_out==='string'?r.check_out.replace(' ','T'):r.check_out);
+          var _expE = r.work_end_time && r.work_start_time
+            ? _toME(r.work_end_time) - _toME(r.work_start_time)
+            : ((r.employment_type||'').toLowerCase() === 'part_time' ? 240 : 480);
+          var _wkE = Math.floor((_coE - _ciE) / 60000);
+          _showEarlyBadge = _wkE > _expE; // only show if net surplus (true early bonus)
+        }
+      }
+
       var indicators = '';
-      if(lateMins > 0 && !parseInt(r.late_comp_done))
+      if(lateMins > 0 && !parseInt(r.late_comp_done) && !_athWorkedFull(r))
         indicators += '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:5px;font-size:9px;padding:1px 5px;">+'+lateMins+'m late</span> ';
-      if(earlyMins > 0)
+      if(_showEarlyBadge)
         indicators += '<span style="background:rgba(48,209,88,0.1);color:rgba(48,209,88,0.7);border-radius:5px;font-size:9px;padding:1px 5px;">+'+earlyMins+'m early ⚡</span> ';
       if(otMins > 0)
         indicators += '<span style="background:rgba(10,132,255,0.12);color:#0A84FF;border-radius:5px;font-size:9px;padding:1px 5px;">OT '+otMins+'m</span>';
@@ -5300,9 +5336,32 @@ function showBreakPendingBanner(){
     'Admin will approve your post-break check-in shortly',false);
 }
 
+// Refresh approval badge dot (admin only) — called on real-time approval events
+async function _refreshApprovalDot(){
+  if(!staff || staff.role !== 'admin') return;
+  try{
+    var lr = await fetch(API_URL+'/api/leave/pending',{headers:zHead()});
+    var ld = await lr.json();
+    var leaves = (ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
+    var ar = await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
+    var ad = await ar.json();
+    var total = leaves.length + (ad.data||[]).length;
+    var dot = document.getElementById('s2-appr-dot');
+    if(dot) dot.style.display = total > 0 ? 'block' : 'none';
+    var stat = document.getElementById('s2-stat-pending');
+    if(stat) stat.textContent = total;
+    var sub = document.getElementById('s2-home-appr-sub');
+    if(sub) sub.textContent = total > 0 ? total+' pending' : 'No pending';
+  }catch(e){}
+}
+
 // Listen for admin approval via socket
 function listenBreakApproval(){
   if(!staffSocket) return;
+  // Admin: real-time approval request dot update
+  staffSocket.on('new-leave-request', function(){ _refreshApprovalDot(); });
+  staffSocket.on('office-work-request', function(){ _refreshApprovalDot(); });
+  staffSocket.on('break-overtime-request', function(){ _refreshApprovalDot(); });
   staffSocket.on('break-return-approved', function(data){
     wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Check-in Approved!',
       'Admin approved your attendance — you\'re all set',false);
