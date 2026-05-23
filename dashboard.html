@@ -8637,8 +8637,8 @@ function _cap(s){ s=String(s||'').trim(); return s ? s.charAt(0).toUpperCase()+s
 // Pre-filled advance modal for a specific staff (called from payroll row 💳 button)
 async function openAddAdvanceForStaff(staffId, name, designation, photoSrc){
   await openAddAdvance();
-  // Pre-select the staff member
-  _advSelectStaff(staffId, name, designation, photoSrc ? API+photoSrc : null);
+  // Pre-select the staff member (photoSrc already resolved — no API prefix needed)
+  _advSelectStaff(staffId, name, designation, photoSrc || null);
   // Lock staff picker (can't change when opened from a row)
   var trigger = document.getElementById('adv-staff-trigger');
   if(trigger) trigger.style.pointerEvents = 'none';
@@ -8658,7 +8658,7 @@ async function openAdvanceDetail(advId){
     document.getElementById('adv-date').value  = adv.given_date ? adv.given_date.slice(0,10) : '';
     document.getElementById('adv-reason').value= adv.reason||'';
     document.getElementById('adv-notes').value = adv.notes||'';
-    _advSelectStaff(adv.staff_id, adv.staff_name||'', adv.designation||'', adv.photo_url ? API+adv.photo_url : null);
+    _advSelectStaff(adv.staff_id, adv.staff_name||'', adv.designation||'', adv.photo_data || (adv.photo_url ? API+adv.photo_url : null));
     var trigger = document.getElementById('adv-staff-trigger');
     if(trigger) trigger.style.pointerEvents = 'none';
     var modal = document.getElementById('adv-modal');
@@ -8764,9 +8764,9 @@ function renderAdvStaffList(q){
   }
   list.innerHTML = staff.map(function(s){
     var init = (s.name||'?')[0].toUpperCase();
-    var photoSrc = s.photo_data || s.photo_url || '';
+    var photoSrc = s.photo_data || (s.photo_url ? API+s.photo_url : '');
     var photo = photoSrc
-      ? '<img src="'+photoSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      ? '<img src="'+photoSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
       : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
     var safePhoto = photoSrc.replace(/'/g,"\\'");
     var safeName  = (s.name||'').replace(/'/g,"\\'");
