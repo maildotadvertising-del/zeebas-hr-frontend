@@ -9070,6 +9070,16 @@ function attViewRow(r,i){
           var earlyMins = Math.max(0, toM(startStr) - ciMins);
           earlyMins = Math.min(earlyMins, 120); // cap same as backend
           if(earlyMins <= 0) return '';
+          // Balance check: if checked out, only show early badge when worked > required
+          // early check-in + early check-out (exact hours) = balanced → hide badge
+          if(r.check_out){
+            var co2 = new Date(typeof r.check_out==='string'?r.check_out.replace(' ','T'):r.check_out);
+            var expMins2 = r.work_end_time && r.work_start_time
+              ? toM(r.work_end_time) - toM(r.work_start_time)
+              : (et==='day_time' ? pr.dt_mins||480 : et==='part_time' ? pr.pt_mins||240 : pr.ft_mins||480);
+            var workedMins2 = Math.floor((co2 - ci) / 60000);
+            if(workedMins2 <= expMins2) return ''; // early balanced by early checkout — no badge
+          }
           return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyMins+'m early ⚡</div>';
         })()
     +'</td>'
