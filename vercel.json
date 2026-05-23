@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/teamlogin",        "destination": "/team.html" },
     { "source": "/admin",            "destination": "/dashboard.html" },
     { "source": "/dashboard",        "destination": "/dashboard.html" },
     { "source": "/attendance",       "destination": "/dashboard.html" },
