@@ -662,6 +662,13 @@ body.desktop-mode #s1-sidebar {
           <span style="color:#FF453A;font-size:12px;font-weight:500;flex:1;">Recording… release to send</span>
           <span id="vrec-timer" style="color:rgba(245,245,247,0.45);font-size:12px;font-family:monospace;">0:00</span>
         </div>
+        <!-- @ Mention popup -->
+        <div id="mention-popup" style="display:none;position:relative;flex-shrink:0;">
+          <div style="background:rgba(18,18,32,0.98);border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;margin:0 12px 6px;overflow:hidden;box-shadow:0 -4px 24px rgba(0,0,0,0.5);">
+            <div style="padding:7px 12px 5px;border-bottom:0.5px solid rgba(255,255,255,0.07);font-size:10px;color:rgba(245,245,247,0.35);font-weight:500;letter-spacing:0.5px;">MENTION</div>
+            <div id="mention-list" style="max-height:180px;overflow-y:auto;"></div>
+          </div>
+        </div>
         <!-- Input bar (group) — Professional design with separate mic + send -->
         <div style="padding:8px 12px 12px;background:rgba(14,14,28,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
           <input type="file" id="fi-chat-grp" style="display:none" accept="image/*,.pdf,.doc,.docx,.mp4,.mov" onchange="handleChatFileUpload(this,'group')">
@@ -2926,7 +2933,7 @@ function appendStaffMsg1(msg, doScroll){
   if(msgs.querySelector('[style*="padding-top:40px"]') || msgs.querySelector('[style*="padding-top:60px"]')) msgs.innerHTML = '';
   var isMe = msg.staff_id === staff.id;
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
-  var avSrc = msg.photo_url ? API_URL+msg.photo_url : null;
+  var avSrc = msg.photo_data || (msg.photo_url ? API_URL+msg.photo_url : null);
   var avFbStyle1 = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);';
   var av = avSrc
     ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle1+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
@@ -3027,7 +3034,7 @@ async function sendChat1(overrideMsg){
 
   if(staffSocket && staffSocket.connected){
     staffSocket.emit('send-message', payload);
-    appendStaffMsg1(Object.assign({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, brand_name:null, created_at:new Date(), reactions:[]}, payload));
+    appendStaffMsg1(Object.assign({staff_id:staff.id, staff_name:staff.name, photo_url:staff.photo_url, photo_data:staff.photo_data||null, brand_name:null, created_at:new Date(), reactions:[]}, payload));
   } else {
     try{
       var res = await fetch(API_URL+'/api/chat/messages', {method:'POST', headers:zHead(), body:JSON.stringify(payload)});
@@ -3038,8 +3045,86 @@ async function sendChat1(overrideMsg){
 }
 
 // ── Input listeners ──
-document.getElementById('ci1').addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat1(); });
-document.getElementById('ci1').addEventListener('input', function(){});
+document.getElementById('ci1').addEventListener('keydown', function(e){ if(e.key==='Enter'){ hideMentionPopup(); sendChat1(); } });
+document.getElementById('ci1').addEventListener('input', function(){ handleMentionInput(this); });
+document.getElementById('ci1').addEventListener('blur', function(){ setTimeout(hideMentionPopup, 200); });
+
+// ── @ Mention ──
+var _mentionMembers = [];
+var _mentionQuery = null;
+
+function hideMentionPopup(){
+  var p = document.getElementById('mention-popup');
+  if(p) p.style.display = 'none';
+  _mentionQuery = null;
+}
+
+function handleMentionInput(inp){
+  var val = inp.value;
+  var pos = inp.selectionStart;
+  // Find the last @ before cursor
+  var before = val.slice(0, pos);
+  var atIdx = before.lastIndexOf('@');
+  if(atIdx === -1){ hideMentionPopup(); return; }
+  // Make sure it's preceded by space or start of string
+  var preceding = atIdx > 0 ? before.charAt(atIdx - 1) : ' ';
+  if(preceding !== ' ' && preceding !== '\n'){ hideMentionPopup(); return; }
+  var query = before.slice(atIdx + 1).toLowerCase();
+  _mentionQuery = {atIdx: atIdx, query: query};
+  showMentionPopup(query);
+}
+
+async function showMentionPopup(query){
+  // Load members if needed
+  if(!_mentionMembers.length){
+    try{
+      var res = await fetch(API_URL+'/api/chat/members', {headers:zHead()});
+      var d = await res.json();
+      _mentionMembers = d.data || [];
+    }catch(e){ return; }
+  }
+  var me = zStaff() || {};
+  var filtered = _mentionMembers.filter(function(m){
+    if(m.id === me.id) return false;
+    return !query || (m.name||'').toLowerCase().indexOf(query) !== -1;
+  }).slice(0, 6);
+
+  var popup = document.getElementById('mention-popup');
+  var list = document.getElementById('mention-list');
+  if(!popup || !list) return;
+
+  if(!filtered.length){ hideMentionPopup(); return; }
+
+  list.innerHTML = filtered.map(function(m){
+    var init = (m.name||'?').charAt(0).toUpperCase();
+    var avSrc = m.photo_data || (m.photo_url ? API_URL+m.photo_url : null);
+    var av = avSrc
+      ? '<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<div style=&quot;width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:600;flex-shrink:0;&quot;>'+init+'</div>\'">'
+      : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:600;flex-shrink:0;">'+init+'</div>';
+    return '<div onclick="insertMention(\''+escHtml(m.name||'')+'\','+m.id+')" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.05);" ontouchstart="this.style.background=\'rgba(10,132,255,0.08)\'" ontouchend="this.style.background=\'\'">'
+      +av
+      +'<div style="flex:1;"><div style="color:#E8E8E8;font-size:13px;font-weight:400;">'+escHtml(m.name||'')+'</div>'
+      +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">'+escHtml(m.designation||m.role||'')+(m.brand_name?' · '+escHtml(m.brand_name):'')+'</div></div>'
+      +'<span style="color:#0A84FF;font-size:12px;font-weight:500;opacity:0.7;">@</span>'
+      +'</div>';
+  }).join('');
+
+  popup.style.display = 'block';
+}
+
+function insertMention(name, staffId){
+  var inp = document.getElementById('ci1');
+  if(!inp || !_mentionQuery) return;
+  var val = inp.value;
+  var pos = inp.selectionStart;
+  var atIdx = _mentionQuery.atIdx;
+  // Replace from @ to cursor with @name + space
+  inp.value = val.slice(0, atIdx) + '@' + name + ' ' + val.slice(pos);
+  var newPos = atIdx + name.length + 2;
+  inp.setSelectionRange(newPos, newPos);
+  inp.focus();
+  hideMentionPopup();
+}
 
 // ── Chat tab switch ──
 function switchChatTab(tab){
@@ -3233,8 +3318,9 @@ async function loadDmMemberList(){
     if(!members.length){ list.innerHTML='<div style="padding:20px 16px;color:rgba(232,232,232,0.4);font-size:13px;text-align:center;">No other members online</div>'; return; }
     list.innerHTML = members.map(function(m){
       var init = (m.name||'?').charAt(0).toUpperCase();
-      var avHtml = m.photo_url
-        ? '<img src="'+API_URL+m.photo_url+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      var _mAvSrc = m.photo_data || (m.photo_url ? API_URL+m.photo_url : null);
+      var avHtml = _mAvSrc
+        ? '<img src="'+_mAvSrc+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
         : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
       var n = escHtml(m.name||''), ph = escHtml(m.photo_url||''), bn = escHtml(m.brand_name||''), des = escHtml(m.designation||m.role||'');
       return '<div onclick="closeDmList();openDmChat('+m.id+',\''+n+'\',\''+ph+'\',\''+bn+'\',\''+init+'\')" style="display:flex;align-items:center;gap:13px;padding:12px 16px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.05);active-background:#2A3942;">'
