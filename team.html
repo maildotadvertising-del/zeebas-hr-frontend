@@ -260,34 +260,52 @@ body.desktop-mode #s1-sidebar {
     <div class="pbg"></div><div class="orb1"></div><div class="orb2"></div>
 
         <!-- SPLASH -->
-    <div id="s1-splash" class="scr on" style="background:#08080F;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;">
+    <div id="s1-splash" class="scr on" style="background:#060609;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;">
+      <style>
+      @keyframes t-logo-in{0%{opacity:0;transform:scale(0.82) translateY(6px);}100%{opacity:1;transform:scale(1) translateY(0);}}
+      @keyframes t-fade-up{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+      @keyframes t-line-grow{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+      @keyframes t-progress{from{width:0%;}to{width:100%;}}
+      @keyframes t-bloom{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3);}18%{opacity:0.85;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);}}
+      @keyframes t-ring1{0%{opacity:0;transform:translate(-50%,-50%) scale(0.25);}15%{opacity:0.5;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2);}}
+      @keyframes t-ring2{0%{opacity:0;transform:translate(-50%,-50%) scale(0.25);}15%{opacity:0.28;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8);}}
+      @keyframes t-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+      </style>
 
-      <!-- Radial glow pulse — red brand color, behind logo -->
-      <div id="sp-glow" style="position:absolute;width:340px;height:200px;border-radius:50%;background:radial-gradient(ellipse,rgba(204,0,0,0.2) 0%,transparent 68%);opacity:0;transform:scale(0.6);pointer-events:none;"></div>
+      <!-- Ambient background glow -->
+      <div style="position:absolute;width:700px;height:380px;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(160,8,8,0.1) 0%,transparent 68%);opacity:0.7;pointer-events:none;"></div>
+      <!-- Noise grain -->
+      <div style="position:absolute;inset:0;opacity:0.022;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22/></svg>');pointer-events:none;"></div>
 
-      <!-- Outer ring — subtle, expands as logo enters -->
-      <div id="sp-ring" style="position:absolute;width:260px;height:150px;border-radius:16px;border:0.5px solid rgba(255,255,255,0.06);opacity:0;transform:scale(0.7);pointer-events:none;"></div>
+      <!-- Bloom burst (fires after logo lands) -->
+      <div style="position:absolute;top:42%;left:50%;width:260px;height:140px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,0.16) 0%,rgba(220,80,60,0.05) 45%,transparent 70%);filter:blur(8px);animation:t-bloom 1.1s cubic-bezier(0.2,0,0.4,1) 0.68s forwards;opacity:0;pointer-events:none;"></div>
+      <div style="position:absolute;top:42%;left:50%;width:240px;height:130px;border-radius:50%;border:1px solid rgba(255,255,255,0.11);animation:t-ring1 1.2s cubic-bezier(0.15,0,0.4,1) 0.7s forwards;opacity:0;pointer-events:none;"></div>
+      <div style="position:absolute;top:42%;left:50%;width:240px;height:130px;border-radius:50%;border:0.5px solid rgba(200,50,30,0.16);animation:t-ring2 1.4s cubic-bezier(0.15,0,0.4,1) 0.82s forwards;opacity:0;pointer-events:none;"></div>
 
-      <!-- Logo + shimmer wrapper -->
+      <!-- Center content -->
       <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;">
-
-        <!-- DOT logo — rectangular, transparent bg, animated entrance -->
-        <div id="sp-logo-wrap" style="width:210px;height:111px;opacity:0;transform:scale(0.52);position:relative;overflow:hidden;">
-          <img src="dot-logo.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:contain;display:block;">
-          <!-- Shimmer light sweep -->
-          <div id="sp-shimmer" style="position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.18) 50%,transparent 72%);transform:translateX(-110%);pointer-events:none;"></div>
+        <!-- Logo -->
+        <div style="width:200px;height:106px;opacity:0;animation:t-logo-in 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s forwards, t-float 3.5s ease-in-out 1.1s infinite;">
+          <img src="dot-logo.png" alt="DOT Advertising" style="width:100%;height:100%;object-fit:contain;display:block;filter:brightness(1.06) drop-shadow(0 0 18px rgba(200,30,20,0.2));">
         </div>
-
-        <!-- Divider line -->
-        <div id="sp-line" style="width:42px;height:0.5px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);margin:20px 0 11px;transform:scaleX(0);transform-origin:center;"></div>
-
+        <!-- Divider -->
+        <div style="width:56px;height:0.5px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);margin:20px 0 14px;transform:scaleX(0);transform-origin:center;animation:t-line-grow 0.5s cubic-bezier(0.4,0,0.2,1) 0.78s forwards;"></div>
         <!-- Company name -->
-        <div id="splash-sub" style="color:rgba(235,235,245,0);font-size:8.5px;font-weight:300;letter-spacing:5px;font-family:'DM Sans',system-ui,sans-serif;text-transform:uppercase;white-space:nowrap;transition:color 0.6s ease,letter-spacing 0.7s ease;">ZEEBAS CLUSTER LLP</div>
+        <div style="opacity:0;animation:t-fade-up 0.55s ease 0.92s forwards;">
+          <div style="font-size:8.5px;font-weight:400;letter-spacing:6px;text-transform:uppercase;color:rgba(235,235,245,0.38);font-family:'DM Sans',system-ui,sans-serif;text-align:center;white-space:nowrap;">DOT ADVERTISING</div>
+        </div>
+        <!-- Team badge -->
+        <div style="opacity:0;animation:t-fade-up 0.5s ease 1.1s forwards;margin-top:7px;">
+          <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.09);border-radius:20px;padding:4px 12px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:#30D158;box-shadow:0 0 7px rgba(48,209,88,0.7);"></div>
+            <span style="font-size:7px;font-weight:400;letter-spacing:3.5px;text-transform:uppercase;color:rgba(235,235,245,0.26);font-family:'DM Sans',system-ui,sans-serif;">TEAM APP</span>
+          </div>
+        </div>
       </div>
 
       <!-- Progress bar -->
-      <div style="position:absolute;bottom:52px;left:50%;transform:translateX(-50%);width:46px;height:1px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
-        <div id="sb" style="height:100%;background:linear-gradient(90deg,#990000,#FF3B30);border-radius:2px;width:0%;"></div>
+      <div style="position:absolute;bottom:52px;left:50%;transform:translateX(-50%);width:52px;height:1px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;">
+        <div id="sb" style="height:100%;background:linear-gradient(90deg,rgba(48,209,88,0.5),#30D158);border-radius:2px;width:0%;animation:t-progress 1.8s cubic-bezier(0.4,0,0.2,1) 0.08s forwards;"></div>
       </div>
     </div>
 
@@ -4453,71 +4471,9 @@ document.addEventListener('click', function(e){
   }
 });
 
-// Splash screen — professional multi-stage animation
+// Splash — CSS handles animation; just wait then do auth check
 setTimeout(function(){
-
-  // ── Stage 1: Glow pulse radiates from center (0ms) ──
-  var glow = document.getElementById('sp-glow');
-  if(glow){
-    glow.style.transition = 'opacity 0.5s ease, transform 1s ease';
-    glow.style.opacity = '1'; glow.style.transform = 'scale(1.3)';
-    setTimeout(function(){ glow.style.opacity = '0'; glow.style.transform = 'scale(2.2)'; }, 600);
-  }
-
-  // ── Stage 2: Outer ring expands (50ms) ──
-  var ring = document.getElementById('sp-ring');
-  if(ring){
-    ring.style.transition = 'opacity 0.5s ease, transform 0.7s cubic-bezier(0.22,1,0.36,1)';
-    setTimeout(function(){
-      ring.style.opacity = '1'; ring.style.transform = 'scale(1)';
-      setTimeout(function(){ring.style.opacity='0';ring.style.transform='scale(1.4)';},700);
-    },50);
-  }
-
-  // ── Stage 3: Logo springs in with overshoot (100ms) ──
-  var wrap = document.getElementById('sp-logo-wrap');
-  if(wrap){
-    wrap.style.transition = 'opacity 0.4s ease, transform 0.7s cubic-bezier(0.34,1.5,0.64,1)';
-    setTimeout(function(){ wrap.style.opacity='1'; wrap.style.transform='scale(1)'; },100);
-  }
-
-  // ── Stage 4: Shimmer sweeps across logo (650ms) ──
-  var sh = document.getElementById('sp-shimmer');
-  if(sh){
-    setTimeout(function(){
-      sh.style.transition = 'transform 0.55s cubic-bezier(0.4,0,0.2,1)';
-      sh.style.transform = 'translateX(130%)';
-    },650);
-  }
-
-  // ── Stage 5: Divider line grows (750ms) ──
-  var line = document.getElementById('sp-line');
-  if(line){
-    setTimeout(function(){
-      line.style.transition = 'transform 0.55s cubic-bezier(0.4,0,0.2,1)';
-      line.style.transform = 'scaleX(1)';
-    },750);
-  }
-
-  // ── Stage 6: Company name fades in with letter-spacing (900ms) ──
-  var sub = document.getElementById('splash-sub');
-  if(sub){
-    setTimeout(function(){
-      sub.style.color = 'rgba(235,235,245,0.35)';
-      sub.style.letterSpacing = '3px';
-    },900);
-  }
-
-  // ── Progress bar fills (150ms) ──
-  var bar = document.getElementById('sb');
-  if(bar){
-    setTimeout(function(){
-      bar.style.transition = 'width 2.35s cubic-bezier(0.4,0,0.2,1)';
-      bar.style.width = '100%';
-    },150);
-  }
-
-  // ── Fade out → auth check (2850ms) ──
+  // ── Fade out → auth check (2200ms) ──
   setTimeout(function(){
     var sp = document.getElementById('s1-splash');
     if(sp){
@@ -4565,8 +4521,8 @@ setTimeout(function(){
       var lg=document.getElementById('s1-roleselect');
       if(lg){lg.style.display='flex';setTimeout(function(){lg.classList.add('on');},50);}
     }
-  },2850);
-},80);
+  },2200);
+},0);
 
 // ── CELEBRATION ENGINE ──
 var _cRun=false,_cAF=null;
