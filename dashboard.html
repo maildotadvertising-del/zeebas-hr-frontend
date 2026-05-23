@@ -8946,35 +8946,66 @@ function _workedFullHours(r){
   return workedMins >= expMins;
 }
 
-// ── Late arrival cell ──
+// ── Shared helper: get required working minutes for this staff row ──
+function _getRequiredMins(r){
+  var pr  = window._attPayroll || {};
+  var et  = (r.employment_type || 'full_time').toLowerCase();
+  var toM = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+  if(r.work_end_time && r.work_start_time)
+    return toM(r.work_end_time) - toM(r.work_start_time);
+  if(et === 'day_time')  return pr.dt_mins  || 480;
+  if(et === 'part_time') return pr.pt_mins  || 240;
+  return pr.ft_mins || 480;
+}
+
+// ── Late cell ──
+// When checked out: NET calculation — required_mins − worked_mins.
+//   Positive → "X min late"   (worked less than required)
+//   Zero/neg → "—"            (worked full hours or more — OT column handles the surplus)
+// When not checked out yet: show check-in based late (how late they arrived).
 function attLateCell(r){
-  // If late was compensated (staff worked past end to make up for late arrival), show —
-  if(parseInt(r.late_comp_done) === 1) return '<span style="color:var(--muted);">—</span>';
-  // If staff completed required hours (checked in late but worked full shift), show —
-  if(_workedFullHours(r)) return '<span style="color:var(--muted);">—</span>';
-  var dbLate    = parseInt(r.late_minutes) || 0;
   var rowStatus = (r.status || '').toLowerCase();
-  // If DB says present and late_minutes is 0 → late was cleared, show —
-  if(rowStatus === 'present' && dbLate === 0) return '<span style="color:var(--muted);">—</span>';
-  var actualMins       = _calcActualLateMinutes(r.check_in, r.employment_type);
-  var graceAdjustedMin = _calcLateFromCheckIn(r.check_in, r.employment_type);
-  // Only override status to late if DB also has late_minutes (don't override DB late_comp)
-  if(rowStatus === 'present' && graceAdjustedMin > 0 && dbLate > 0) rowStatus = 'late';
-  var isActuallyLate = actualMins > 0
-    && rowStatus !== 'on_leave' && rowStatus !== 'absent'
-    && (graceAdjustedMin > 0 || dbLate > 0);
-  if(isActuallyLate){
-    var lh=Math.floor(actualMins/60), lm=actualMins%60;
-    var lateStr = lh>0 ? (lh+'h '+(lm>0?lm+'m ':'')+'late') : (actualMins+' min late');
+  if(rowStatus === 'on_leave' || rowStatus === 'absent')
+    return '<span style="color:var(--muted);">—</span>';
+
+  if(r.check_in && r.check_out){
+    // ── POST-CHECKOUT: use NET hours ──
+    var ci = new Date(typeof r.check_in  === 'string' ? r.check_in.replace(' ','T')  : r.check_in);
+    var co = new Date(typeof r.check_out === 'string' ? r.check_out.replace(' ','T') : r.check_out);
+    if(isNaN(ci.getTime()) || isNaN(co.getTime()))
+      return '<span style="color:var(--muted);">—</span>';
+    var workedMins  = Math.floor((co - ci) / 60000);
+    var reqMins     = _getRequiredMins(r);
+    var deficit     = reqMins - workedMins;
+    if(deficit <= 0) return '<span style="color:var(--muted);">—</span>';
+    var lh = Math.floor(deficit/60), lm = deficit%60;
+    var lateStr = lh > 0 ? (lh+'h '+(lm>0?lm+'m ':'')+' late') : (deficit+' min late');
     return '<span style="color:#FF9F0A;font-weight:500;">'+lateStr+'</span>';
   }
-  return '<span style="color:var(--muted);">—</span>';
+
+  // ── PRE-CHECKOUT: check-in based late ──
+  if(parseInt(r.late_comp_done) === 1)
+    return '<span style="color:var(--muted);">—</span>';
+  var dbLate = parseInt(r.late_minutes) || 0;
+  if(rowStatus === 'present' && dbLate === 0)
+    return '<span style="color:var(--muted);">—</span>';
+  var actualMins = _calcActualLateMinutes(r.check_in, r.employment_type);
+  if(actualMins <= 0 && dbLate <= 0)
+    return '<span style="color:var(--muted);">—</span>';
+  var mins = actualMins || dbLate;
+  var lh2=Math.floor(mins/60), lm2=mins%60;
+  var lateStr2 = lh2>0?(lh2+'h '+(lm2>0?lm2+'m ':'')+'late'):(mins+' min late');
+  return '<span style="color:#FF9F0A;font-weight:500;">'+lateStr2+'</span>';
 }
 
 // ── Short hours cell ──
-// Uses per-staff custom hours (work_end_time/work_start_time) if set — same priority as backend
+// When checked out: Late column already shows net deficit → Short always "—"
+// When not checked out: show if left before scheduled end time
 function attShortCell(r){
   if(!r.check_in || !r.check_out) return '<span style="color:var(--muted);">—</span>';
+  // Net deficit is already shown in Late column — Short column stays clean
+  return '<span style="color:var(--muted);">—</span>';
+  /* legacy below kept for reference — remove comment to re-enable schedule-based short */
   var co  = new Date(r.check_out);
   var pr  = window._attPayroll || {};
   var empType = (r.employment_type || 'full_time').toLowerCase();
