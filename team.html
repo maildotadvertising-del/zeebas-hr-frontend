@@ -7172,6 +7172,18 @@ async function registerSW(){
   } catch(e){ console.log('SW registration error:', e); }
 }
 
+// ── SW update handler — force reload when a new SW activates ─────────────
+// When sw.js version changes, the new SW sends SW_UPDATED → we reload the page
+// so users always run the latest HTML/JS (fixes stale PWA cache issues).
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', function(event){
+    if(event.data && event.data.type === 'SW_UPDATED'){
+      console.log('[SW] New service worker activated — reloading for fresh content');
+      window.location.reload(true);
+    }
+  });
+}
+
 // Register SW on load — always, so push works from first load
 window.addEventListener('load', function(){
   var s = zStaff();

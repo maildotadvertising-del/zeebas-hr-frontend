@@ -5,7 +5,7 @@
    Now uses Web Push for reliable background wake.
    ══════════════════════════════════════════════ */
 
-const SW_VERSION = 'zeebas-sw-v3';
+const SW_VERSION = 'zeebas-sw-v4';
 
 // ── IndexedDB helpers ─────────────────────────
 // Auth token + API URL are stored here by the
@@ -180,9 +180,18 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-// Activate — claim all clients immediately
+// Activate — claim all clients immediately, then tell them to reload for fresh content
 self.addEventListener('activate', function(event) {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    self.clients.claim().then(function() {
+      // Notify all open tabs to reload so they pick up the latest HTML/JS
+      return self.clients.matchAll({ type: 'window' }).then(function(list) {
+        list.forEach(function(client) {
+          client.postMessage({ type: 'SW_UPDATED' });
+        });
+      });
+    })
+  );
 });
 
 self.addEventListener('install', function(event) {
