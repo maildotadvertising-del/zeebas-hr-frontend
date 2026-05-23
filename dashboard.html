@@ -9183,7 +9183,11 @@ async function resetAllInOffice(){
     });
     var d = await res.json();
     if(d.success){
-      showToast('✅ Fixed! '+d.updated+' staff marked as In Office');
+      var msg = d.updated > 0
+        ? '✅ ' + d.updated + ' staff restored (confirmed on WiFi)'
+        : '📶 No staff with recent WiFi ping found';
+      if(d.skipped > 0) msg += ' · ' + d.skipped + ' skipped (no recent ping)';
+      showToast(msg);
       loadAttendancePage();
     } else {
       alert(d.message||'Could not reset');
