@@ -7162,14 +7162,16 @@ function dashLogout(){
 /* ── LOAD APPROVALS ── */
 function approvalCard(r, type){
   var init = (r.staff_name||'S').charAt(0).toUpperCase();
-  var avatarHtml = r.photo_url
-    ? '<img src="'+API+r.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+  var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+  var avatarHtml = avSrc
+    ? '<img src="'+avSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'
+      +'<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:14px;font-weight:600;">'+init+'</span>'
     : init;
   var timeStr = r.check_in ? new Date(r.check_in).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
   var dateStr = r.date ? r.date.substring(0,10) : '—';
 
   if(type==='late'){
-    return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.15);border-radius:12px;margin-bottom:8px;">'
+    return '<div id="appr-card-late-'+r.id+'" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.15);border-radius:12px;margin-bottom:8px;">'
       +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,rgba(255,159,10,0.3),rgba(255,159,10,0.1));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FF9F0A;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:13px;font-weight:500;">'+(r.staff_name||'—')+'</div>'
@@ -7186,7 +7188,7 @@ function approvalCard(r, type){
       +'</div></div>';
   }
   if(type==='onsite'){
-    return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(10,132,255,0.15);border-radius:12px;margin-bottom:8px;">'
+    return '<div id="appr-card-onsite-'+r.id+'" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(10,132,255,0.15);border-radius:12px;margin-bottom:8px;">'
       +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,132,255,0.1));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0A84FF;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:13px;font-weight:500;">'+(r.staff_name||'—')+'</div>'
@@ -7606,21 +7608,45 @@ async function dismissEarlyExit(id, btn){
 }
 
 async function approveLate(id, action){
+  // Instant UI: disable buttons on the card
+  var card = document.getElementById('appr-card-late-'+id);
+  if(card){ var btns=card.querySelectorAll('button'); btns.forEach(function(b){b.disabled=true;b.style.opacity='0.5';}); }
   try{
     var res=await fetch(API+'/api/attendance/approve-late/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:action})});
     var d=await res.json();
-    if(d.success){ showToast(action==='approve'?'✅ Late check-in accepted':'✅ Marked as absent'); loadApprovals(); }
-    else showToast('❌ '+(d.message||'Failed'));
-  }catch(e){ showToast('❌ Server error'); }
+    if(d.success){
+      showToast(action==='approve'?'✅ Late check-in accepted':'✅ Marked as absent');
+      // Remove card instantly — no full reload
+      if(card) card.style.transition='opacity 0.25s'; if(card) card.style.opacity='0';
+      setTimeout(function(){ if(card) card.remove(); }, 260);
+    } else {
+      showToast('❌ '+(d.message||'Failed'));
+      if(card){ var btns=card.querySelectorAll('button'); btns.forEach(function(b){b.disabled=false;b.style.opacity='1';}); }
+    }
+  }catch(e){
+    showToast('❌ Server error');
+    if(card){ var btns=card.querySelectorAll('button'); btns.forEach(function(b){b.disabled=false;b.style.opacity='1';}); }
+  }
 }
 
 async function approveOnsite(id, action){
+  var card = document.getElementById('appr-card-onsite-'+id);
+  if(card){ var btns=card.querySelectorAll('button'); btns.forEach(function(b){b.disabled=true;b.style.opacity='0.5';}); }
   try{
     var res=await fetch(API+'/api/attendance/approve/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:action})});
     var d=await res.json();
-    if(d.success){ showToast(action==='approve'?'✅ Onsite approved':'✅ Onsite rejected'); loadApprovals(); }
-    else showToast('❌ '+(d.message||'Failed'));
-  }catch(e){ showToast('❌ Server error'); }
+    if(d.success){
+      showToast(action==='approve'?'✅ Onsite approved':'✅ Onsite rejected');
+      if(card) card.style.transition='opacity 0.25s'; if(card) card.style.opacity='0';
+      setTimeout(function(){ if(card) card.remove(); }, 260);
+    } else {
+      showToast('❌ '+(d.message||'Failed'));
+      if(card){ var btns=card.querySelectorAll('button'); btns.forEach(function(b){b.disabled=false;b.style.opacity='1';}); }
+    }
+  }catch(e){
+    showToast('❌ Server error');
+    if(card){ var btns=card.querySelectorAll('button'); btns.forEach(function(b){b.disabled=false;b.style.opacity='1';}); }
+  }
 }
 
 async function approveLeave(id, action){
