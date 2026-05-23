@@ -8857,37 +8857,34 @@ function _localTimeToUTC(dateStr, hmm){
 }
 
 // Compute OT minutes: how many minutes past THIS staff member's end time they worked
-// _calcOTMins — recalculates OT using current per-staff hours + 40-min threshold.
-// Always uses current work_end_time (so Team Page updates sync immediately).
-// Also accounts for late_minutes: OT only starts after staff covers their late time.
-function _calcOTMins(checkOut, empType, staffRow){
-  if(!checkOut) return 0;
+// _calcOTMins — recalculates OT using total net worked time vs required hours.
+// OT only triggers when (worked - required) > 40 min; OT = net_extra - 40.
+// Net extra 1-40 min = shown as "+Xm extra ⚡" badge, NOT OT.
+function _calcOTMins(checkIn, checkOut, empType, staffRow){
+  if(!checkIn || !checkOut) return 0;
+  var ci = new Date(typeof checkIn  === 'string' ? checkIn.replace(' ','T')  : checkIn);
   var co = new Date(typeof checkOut === 'string' ? checkOut.replace(' ','T') : checkOut);
-  if(isNaN(co.getTime())) return 0;
+  if(isNaN(ci.getTime()) || isNaN(co.getTime())) return 0;
+  var workedMins = Math.floor((co - ci) / 60000);
   var pr = window._attPayroll || {};
   var et = (empType || 'full_time').toLowerCase();
-  var toM = function(hhmm){ var p=(hhmm||'18:00').split(':').map(Number); return p[0]*60+p[1]; };
-  var endStr;
-  // Per-staff custom hours take priority (same chain as backend)
-  if(staffRow && staffRow.work_end_time) endStr = staffRow.work_end_time;
-  else if(et === 'day_time')             endStr = pr.dt_end || pr.ft_end || '18:00';
-  else if(et === 'part_time')            endStr = pr.pt_end || '13:00';
-  else                                   endStr = pr.ft_end || '18:00';
-  var officeCloseMins = toM(endStr);
-  // OT start = end + late_minutes (same as backend otStartTime)
-  var lateMins = parseInt((staffRow && staffRow.late_minutes) || 0);
-  var otStartMins = officeCloseMins + lateMins;
-  var coMins = co.getHours()*60 + co.getMinutes();
-  var extraMins = Math.max(0, coMins - otStartMins);
-  // OT triggers after 40-min buffer; OT counted FROM threshold onwards
-  // e.g. end=21:00, checkout=22:00 → extra=60, OT = 60-40 = 20 min
+  var toM = function(hhmm){ var p=(hhmm||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+  var reqMins;
+  if(staffRow && staffRow.work_end_time && staffRow.work_start_time)
+    reqMins = toM(staffRow.work_end_time) - toM(staffRow.work_start_time);
+  else if(et === 'day_time')  reqMins = pr.dt_mins || 480;
+  else if(et === 'part_time') reqMins = pr.pt_mins || 240;
+  else                        reqMins = pr.ft_mins || 480;
+  var netExtra = workedMins - reqMins;
+  // OT triggers only after 40-min buffer beyond required hours
+  // 1-40 min extra = "+Xm extra" badge (not OT). 41+ min = OT.
   var OT_THRESHOLD = 40;
-  return extraMins >= OT_THRESHOLD ? extraMins - OT_THRESHOLD : 0;
+  return netExtra > OT_THRESHOLD ? netExtra - OT_THRESHOLD : 0;
 }
 
 // Build OT cell HTML — recalculates from current staff hours (so Team Page updates sync instantly)
 function _otCell(r){
-  var otMins = _calcOTMins(r.check_out, r.employment_type, r);
+  var otMins = _calcOTMins(r.check_in, r.check_out, r.employment_type, r);
   if(otMins < 1) return '<span style="color:var(--muted);">—</span>';
   var h = Math.floor(otMins/60), m = otMins%60;
   var label = h > 0 ? (h+'h'+(m?' '+m+'m':'')) : (m+'m');
@@ -9083,31 +9080,29 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
       +(function(){
-          // Show total net extra minutes (early check-in + late check-out combined)
-          // e.g. 8:45 in + 5:17 out = 32m extra (not just 15m early)
+          // "+Xm extra ⚡" — shows for net extra 1-40 min (any combo of early-in + late-out).
+          // 41+ min net extra → OT column handles it, no badge here.
           if(!r.check_in) return '';
           var pr = window._attPayroll || {};
           var et = (r.employment_type||'full_time').toLowerCase();
           var toM = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+          var ci = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
+          if(r.check_out){
+            // Checked out: compute net extra (total worked − required)
+            var co2 = new Date(typeof r.check_out==='string'?r.check_out.replace(' ','T'):r.check_out);
+            var reqMins = r.work_end_time && r.work_start_time
+              ? toM(r.work_end_time) - toM(r.work_start_time)
+              : (et==='day_time' ? pr.dt_mins||480 : et==='part_time' ? pr.pt_mins||240 : pr.ft_mins||480);
+            var netExtra = Math.floor((co2 - ci) / 60000) - reqMins;
+            if(netExtra <= 0 || netExtra > 40) return ''; // deficit OR OT range — hide badge
+            return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+netExtra+'m extra ⚡</div>';
+          }
+          // Still working — show early arrival if came in before start
           var startStr = r.work_start_time
             ? r.work_start_time
             : (et==='day_time' ? pr.dt_start||'09:00' : et==='part_time' ? pr.pt_start||'09:00' : pr.ft_start||'09:00');
-          var ci = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
-          var ciMins = ci.getHours()*60+ci.getMinutes();
-          var earlyMins = Math.max(0, toM(startStr) - ciMins);
-          earlyMins = Math.min(earlyMins, 120);
-          if(earlyMins <= 0) return ''; // didn't come in early — nothing to show here
-          if(r.check_out){
-            // Checked out: show TOTAL net surplus (early check-in + late check-out combined)
-            var co2 = new Date(typeof r.check_out==='string'?r.check_out.replace(' ','T'):r.check_out);
-            var expMins2 = r.work_end_time && r.work_start_time
-              ? toM(r.work_end_time) - toM(r.work_start_time)
-              : (et==='day_time' ? pr.dt_mins||480 : et==='part_time' ? pr.pt_mins||240 : pr.ft_mins||480);
-            var netExtra = Math.floor((co2 - ci) / 60000) - expMins2;
-            if(netExtra <= 0) return ''; // balanced or deficit — hide
-            return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+netExtra+'m extra ⚡</div>';
-          }
-          // Still working — show early arrival badge
+          var earlyMins = Math.max(0, Math.min(toM(startStr) - (ci.getHours()*60+ci.getMinutes()), 120));
+          if(earlyMins <= 0) return '';
           return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyMins+'m early ⚡</div>';
         })()
     +'</td>'
