@@ -5717,7 +5717,8 @@ async function loadAttendancePage(){
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
       // Auto-upgrade: present → late if check-in is past grace window
-      if(st==='present' && r.check_in && _calcLateFromCheckIn(r.check_in, r.employment_type) > 0){
+      var _lcd = parseInt(r.late_comp_done) === 1;
+      if(st==='present' && r.check_in && _calcLateFromCheckIn(r.check_in, r.employment_type) > 0 && !_lcd){
         st = 'late';
       }
       // Auto-downgrade: late/late_pending → present if check-in is within grace window
@@ -5725,6 +5726,10 @@ async function loadAttendancePage(){
       if((st==='late'||st==='late_pending') && r.check_in && _calcLateFromCheckIn(r.check_in, r.employment_type) === 0){
         st = 'present';
       }
+      // Auto-downgrade: late → present if staff worked full required hours
+      if((st==='late'||st==='late_pending') && _workedFullHours(r)) st = 'present';
+      // Force present if late_comp_done
+      if(_lcd && (st==='late'||st==='late_pending')) st = 'present';
       if(st==='present'||st==='onsite_approved') cnt.present++;
       else if(st==='late'){ cnt.present++; cnt.late++; }
       else if(st==='absent') cnt.absent++;
@@ -8899,10 +8904,31 @@ function _calcActualLateMinutes(checkIn, empType){
   return ci > start ? Math.floor((ci - start) / 60000) : 0;
 }
 
+// ── Helper: did staff complete their required hours? (late arrival compensated by extra work) ──
+function _workedFullHours(r){
+  if(!r.check_in || !r.check_out) return false;
+  var ci = new Date(typeof r.check_in==='string'  ? r.check_in.replace(' ','T')  : r.check_in);
+  var co = new Date(typeof r.check_out==='string' ? r.check_out.replace(' ','T') : r.check_out);
+  if(isNaN(ci.getTime()) || isNaN(co.getTime())) return false;
+  var workedMins = Math.floor((co - ci) / 60000);
+  var pr = window._attPayroll || {};
+  var et = (r.employment_type || 'full_time').toLowerCase();
+  var expMins;
+  if(r.work_end_time && r.work_start_time){
+    var toM = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+    expMins = toM(r.work_end_time) - toM(r.work_start_time);
+  } else if(et === 'day_time')  expMins = pr.dt_mins || 480;
+  else if(et === 'part_time')   expMins = pr.pt_mins || 240;
+  else                          expMins = pr.ft_mins || 480;
+  return workedMins >= expMins;
+}
+
 // ── Late arrival cell ──
 function attLateCell(r){
   // If late was compensated (staff worked past end to make up for late arrival), show —
   if(parseInt(r.late_comp_done) === 1) return '<span style="color:var(--muted);">—</span>';
+  // If staff completed required hours (checked in late but worked full shift), show —
+  if(_workedFullHours(r)) return '<span style="color:var(--muted);">—</span>';
   var dbLate    = parseInt(r.late_minutes) || 0;
   var rowStatus = (r.status || '').toLowerCase();
   // If DB says present and late_minutes is 0 → late was cleared, show —
@@ -8981,6 +9007,8 @@ function attViewRow(r,i){
   }
   // Force 'present' if late was compensated
   if(lateCompDone && (st === 'late' || st === 'late_pending')) st = 'present';
+  // Force 'present' if staff worked full required hours (late check-in but left late too)
+  if((st === 'late' || st === 'late_pending') && _workedFullHours(r)) st = 'present';
   var stColors={'present':'#30D158','late':'#FF9F0A','absent':'#FF453A','on_leave':'#0A84FF','onsite_approved':'#BF5FFF','late_pending':'#FF9F0A','onsite_pending':'#BF5FFF'};
   var stLabels={'present':'Present','late':'Late','absent':'Absent','on_leave':'On Leave','onsite_approved':'Onsite ✓','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'};
   // Override status display for break_checkout state
