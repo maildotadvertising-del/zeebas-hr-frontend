@@ -1,5 +1,17 @@
 {
   "rewrites": [
-    { "source": "/admin", "destination": "/dashboard.html" }
+    { "source": "/admin",            "destination": "/dashboard.html" },
+    { "source": "/dashboard",        "destination": "/dashboard.html" },
+    { "source": "/attendance",       "destination": "/dashboard.html" },
+    { "source": "/payroll",          "destination": "/dashboard.html" },
+    { "source": "/staff",            "destination": "/dashboard.html" },
+    { "source": "/approvals",        "destination": "/dashboard.html" },
+    { "source": "/announcements",    "destination": "/dashboard.html" },
+    { "source": "/tasks",            "destination": "/dashboard.html" },
+    { "source": "/team-chat",        "destination": "/dashboard.html" },
+    { "source": "/gps-settings",     "destination": "/dashboard.html" },
+    { "source": "/payroll-settings", "destination": "/dashboard.html" },
+    { "source": "/biometric",        "destination": "/dashboard.html" },
+    { "source": "/admin-overview",   "destination": "/dashboard.html" }
   ]
 }

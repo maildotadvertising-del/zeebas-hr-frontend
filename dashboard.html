@@ -2195,8 +2195,8 @@ function showPage(name, el){
   } else {
     _stopWifiAutoCheck();
   }
-  // Save current page — both hash and sessionStorage for reliable restore
-  location.hash = name;
+  // Save current page — update URL path (clean URLs) + sessionStorage
+  try{ history.pushState({page:name}, '', '/'+name); } catch(e){ location.hash = name; }
   try{ sessionStorage.setItem('zhr_page', name); } catch(e){}
 }
 
@@ -3988,8 +3988,10 @@ document.addEventListener('DOMContentLoaded', function(){
     var roleKey2 = staff.is_owner ? 'owner' : (staff.role||'staff');
     var allowedPages = NAV_ACCESS[roleKey2] || ['dashboard'];
     var saved=''; try{ saved=sessionStorage.getItem('zhr_page')||''; }catch(e){}
+    var pathPage = (location.pathname||'').replace(/^\//,'').trim(); // e.g. /attendance → attendance
     var hash=(location.hash||'').replace('#','').trim();
-    var preferred = (saved&&allowedPages.includes(saved))?saved:(hash&&allowedPages.includes(hash))?hash:allowedPages[0];
+    var fromUrl = (pathPage&&allowedPages.includes(pathPage))?pathPage:(hash&&allowedPages.includes(hash))?hash:'';
+    var preferred = (saved&&allowedPages.includes(saved))?saved:fromUrl||allowedPages[0];
     var page = preferred || 'dashboard';
 
     // Pre-warm Render server
