@@ -5892,6 +5892,48 @@ async function approveExtraTime(taskId, action){
   }catch(e){ showToast('Server error'); }
 }
 
+// ── Mark task(s) as done ──
+async function markTaskDone(ids){
+  if(!Array.isArray(ids)) ids=[ids];
+  try{
+    await Promise.all(ids.map(function(id){
+      return fetch(API+'/api/tasks/'+id+'/status',{
+        method:'PATCH',
+        headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+        body:JSON.stringify({status:'done',progress_percent:100})
+      });
+    }));
+    showToast('✅ Task marked complete');
+    loadTasks();
+  }catch(e){ showToast('Error: '+e.message); }
+}
+
+// ── Reopen task(s) (done → pending) ──
+async function markTaskReopen(ids){
+  if(!Array.isArray(ids)) ids=[ids];
+  try{
+    await Promise.all(ids.map(function(id){
+      return fetch(API+'/api/tasks/'+id+'/status',{
+        method:'PATCH',
+        headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+        body:JSON.stringify({status:'pending',progress_percent:0})
+      });
+    }));
+    showToast('↩ Task reopened');
+    loadTasks();
+  }catch(e){ showToast('Error: '+e.message); }
+}
+
+// ── Toggle completed section ──
+function toggleCompletedSection(){
+  var body = document.getElementById('completed-tasks-body');
+  var arrow= document.getElementById('completed-tasks-arrow');
+  if(!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : 'flex';
+  if(arrow) arrow.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
 async function loadTasks(){
   var grid = document.getElementById('tasks-grid');
   var sub  = document.getElementById('tasks-sub');
@@ -5899,58 +5941,99 @@ async function loadTasks(){
   grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">Loading tasks…</div>';
 
   try{
+    // Always fetch ALL tasks (no status filter) — we split active/done client-side
     var isTodayDone = (_taskFilters.status === 'today_done');
     var qs = [];
-    if(_taskFilters.status && !isTodayDone) qs.push('status='+_taskFilters.status);
-    if(isTodayDone) qs.push('status=done'); // fetch done, filter client-side
+    // When a specific filter tab is active (other than 'done' / 'today_done'), keep it
+    if(_taskFilters.status && _taskFilters.status !== 'done' && !isTodayDone)
+      qs.push('status='+_taskFilters.status);
     if(_taskFilters.brand)    qs.push('brand_id='+_taskFilters.brand);
     if(_taskFilters.category) qs.push('category='+_taskFilters.category);
     if(_taskFilters.priority) qs.push('priority='+_taskFilters.priority);
-    var url = API+'/api/tasks'+(qs.length?'?'+qs.join('&'):'');
 
-    var res  = await fetch(url, { headers: zHdr() });
-    var data = await res.json();
-    var tasks = data.data || [];
+    // Always also fetch ALL (for completed section) — but to keep it simple, fetch without status filter
+    var allRes  = await fetch(API+'/api/tasks'+(
+      (function(){ var q2=[]; if(_taskFilters.brand) q2.push('brand_id='+_taskFilters.brand); if(_taskFilters.category) q2.push('category='+_taskFilters.category); if(_taskFilters.priority) q2.push('priority='+_taskFilters.priority); return q2.length?'?'+q2.join('&'):''; })()
+    ), { headers: zHdr() });
+    var allData = await allRes.json();
+    var allTasks = allData.data || [];
 
-    // Client-side "Today Done" filter
+    // Split into active vs completed
+    var activeTasks    = allTasks.filter(function(t){ return t.status !== 'done'; });
+    var completedTasks = allTasks.filter(function(t){ return t.status === 'done'; });
+
+    // Client-side "Today Done" filter (for the tab)
     if(isTodayDone){
       var todayStr = new Date().toISOString().slice(0,10);
-      tasks = tasks.filter(function(t){
-        if(t.status !== 'done' || !t.completed_at) return false;
-        return new Date(t.completed_at).toISOString().slice(0,10) === todayStr;
+      completedTasks = completedTasks.filter(function(t){
+        return t.completed_at && new Date(t.completed_at).toISOString().slice(0,10) === todayStr;
       });
+      activeTasks = []; // "Today Done" tab shows only completed
     }
 
-    // Group first — counts reflect grouped cards, not raw rows
-    var grouped        = groupTasks(data.data || []);
-    var pending        = grouped.filter(function(t){ return t.status !== 'done'; }).length;
+    // Apply status filter on active tasks if needed
+    var filteredActive = activeTasks;
+    if(_taskFilters.status && _taskFilters.status !== 'done' && !isTodayDone){
+      filteredActive = activeTasks.filter(function(t){ return t.status === _taskFilters.status; });
+    }
+    if(_taskFilters.status === 'done') {
+      filteredActive = [];
+    }
+
+    var groupedActive    = groupTasks(filteredActive);
+    var groupedCompleted = groupTasks(completedTasks);
+    var pending = groupTasks(activeTasks).filter(function(t){ return t.status !== 'done'; }).length;
+
     var badge = document.getElementById('tasks-badge');
     if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
 
-    // For display: use grouped+filtered tasks
-    var displayGroups = isTodayDone
-      ? groupTasks(tasks)   // tasks is already filtered to today-done
-      : grouped;
-
     var subLabel = isTodayDone
-      ? displayGroups.length+' completed today'
-      : displayGroups.length+' task'+(displayGroups.length!==1?'s':'')+' · '+pending+' pending';
+      ? groupedCompleted.length+' completed today'
+      : groupedActive.length+' task'+(groupedActive.length!==1?'s':'')+' · '+pending+' pending'+(groupedCompleted.length?' · '+groupedCompleted.length+' done':'');
     if(sub) sub.textContent = subLabel;
 
-    // Update dashboard stat
     var dt = document.getElementById('dash-tasks');
     if(dt) dt.textContent = pending;
 
-    if(!displayGroups.length){
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">'
-        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">'+(isTodayDone?'🎉':'📌')+'</div>'
-        +'<div style="font-size:14px;margin-bottom:6px;">'+(isTodayDone?'No tasks completed today yet':'No tasks found')+'</div>'
-        +(isTodayDone?'':'<div style="font-size:12px;opacity:0.6;">Click "+ Assign Task" to create one</div>')
+    // ── Active tasks section ──
+    var activeHtml = '';
+    if(_taskFilters.status === 'done'){
+      // "Done" tab — show nothing in active, show all done in completed
+    } else if(!groupedActive.length && !isTodayDone){
+      activeHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
+        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📌</div>'
+        +'<div style="font-size:14px;margin-bottom:6px;">No tasks found</div>'
+        +'<div style="font-size:12px;opacity:0.6;">Click &quot;+ Assign Task&quot; to create one</div>'
         +'</div>';
-      return;
+    } else {
+      activeHtml = groupedActive.map(function(t){ return buildTaskCard(t); }).join('');
     }
 
-    grid.innerHTML = displayGroups.map(function(t){ return buildTaskCard(t); }).join('');
+    // ── Completed section ──
+    var completedHtml = '';
+    if(groupedCompleted.length > 0){
+      completedHtml = '<div style="margin-top:14px;">'
+        // Header — clickable to expand/collapse
+        +'<div onclick="toggleCompletedSection()" style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:rgba(48,209,88,0.07);border:0.5px solid rgba(48,209,88,0.18);border-radius:13px;cursor:pointer;user-select:none;margin-bottom:10px;">'
+          +'<span style="color:#30D158;font-size:16px;">✅</span>'
+          +'<span style="color:#30D158;font-size:13px;font-weight:500;flex:1;">Completed Work</span>'
+          +'<span style="background:rgba(48,209,88,0.15);color:#30D158;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;">'+groupedCompleted.length+'</span>'
+          +'<svg id="completed-tasks-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" style="transition:transform 0.2s;flex-shrink:0;"><path d="M3 5l4 4 4-4" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>'
+        +'</div>'
+        // Completed cards (collapsed by default)
+        +'<div id="completed-tasks-body" style="display:none;flex-direction:column;gap:10px;">'
+          +groupedCompleted.map(function(t){ return buildTaskCard(t); }).join('')
+        +'</div>'
+        +'</div>';
+    } else if(isTodayDone){
+      completedHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
+        +'<div style="font-size:40px;margin-bottom:12px;opacity:0.3;">🎉</div>'
+        +'<div style="font-size:14px;">No tasks completed today yet</div>'
+        +'</div>';
+    }
+
+    grid.innerHTML = activeHtml + completedHtml;
+
   } catch(e){
     console.error('loadTasks error',e);
     grid.innerHTML = '<div style="text-align:center;padding:40px;color:#FF453A;">Failed to load tasks</div>';
@@ -6086,8 +6169,11 @@ function buildTaskCard(t){
           +'</div></div>';
       })()
     +'</div>'
-    // Actions — only Delete (card itself is clickable to edit)
-    +'<div style="flex-shrink:0;">'
+    // Actions — Complete + Delete
+    +'<div style="flex-shrink:0;display:flex;flex-direction:column;gap:5px;align-items:flex-end;">'
+      +(t.status !== 'done'
+        ? '<button onclick="event.stopPropagation();markTaskDone('+idsStr+')" style="background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.25);border-radius:8px;padding:5px 10px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;">✓ Complete</button>'
+        : '<button onclick="event.stopPropagation();markTaskReopen('+idsStr+')" style="background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:5px 10px;color:#FF9F0A;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ Reopen</button>')
       +'<button onclick="event.stopPropagation();deleteTask('+idsStr+')" style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.18);border-radius:8px;padding:5px 10px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">🗑</button>'
     +'</div>'
     +'</div>'
