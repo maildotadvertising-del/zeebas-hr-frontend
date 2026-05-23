@@ -9083,7 +9083,8 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
       +(function(){
-          // Calculate early mins using current staff hours (handles hours updated after check-in)
+          // Show total net extra minutes (early check-in + late check-out combined)
+          // e.g. 8:45 in + 5:17 out = 32m extra (not just 15m early)
           if(!r.check_in) return '';
           var pr = window._attPayroll || {};
           var et = (r.employment_type||'full_time').toLowerCase();
@@ -9094,18 +9095,19 @@ function attViewRow(r,i){
           var ci = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
           var ciMins = ci.getHours()*60+ci.getMinutes();
           var earlyMins = Math.max(0, toM(startStr) - ciMins);
-          earlyMins = Math.min(earlyMins, 120); // cap same as backend
-          if(earlyMins <= 0) return '';
-          // Balance check: if checked out, only show early badge when worked > required
-          // early check-in + early check-out (exact hours) = balanced → hide badge
+          earlyMins = Math.min(earlyMins, 120);
+          if(earlyMins <= 0) return ''; // didn't come in early — nothing to show here
           if(r.check_out){
+            // Checked out: show TOTAL net surplus (early check-in + late check-out combined)
             var co2 = new Date(typeof r.check_out==='string'?r.check_out.replace(' ','T'):r.check_out);
             var expMins2 = r.work_end_time && r.work_start_time
               ? toM(r.work_end_time) - toM(r.work_start_time)
               : (et==='day_time' ? pr.dt_mins||480 : et==='part_time' ? pr.pt_mins||240 : pr.ft_mins||480);
-            var workedMins2 = Math.floor((co2 - ci) / 60000);
-            if(workedMins2 <= expMins2) return ''; // early balanced by early checkout — no badge
+            var netExtra = Math.floor((co2 - ci) / 60000) - expMins2;
+            if(netExtra <= 0) return ''; // balanced or deficit — hide
+            return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+netExtra+'m extra ⚡</div>';
           }
+          // Still working — show early arrival badge
           return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyMins+'m early ⚡</div>';
         })()
     +'</td>'
