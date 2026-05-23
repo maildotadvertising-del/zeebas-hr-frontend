@@ -4917,11 +4917,11 @@ async function loadAttHistory(){
       var earlyMins= parseInt(r.early_mins)||0;
       var otMins   = Math.round(parseFloat(r.ot_hours||0) * 60);
 
-      // Balance: calculate net worked vs required for early badge
-      var _showEarlyBadge = false;
+      // Balance: show total net extra (early check-in + late check-out combined)
+      var _extraBadge = '';
       if(earlyMins > 0){
         if(!r.check_out){
-          _showEarlyBadge = true; // still working — show early check-in
+          _extraBadge = '+'+earlyMins+'m early ⚡'; // still working — show early arrival
         } else {
           var _toME = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
           var _ciE = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
@@ -4929,16 +4929,16 @@ async function loadAttHistory(){
           var _expE = r.work_end_time && r.work_start_time
             ? _toME(r.work_end_time) - _toME(r.work_start_time)
             : ((r.employment_type||'').toLowerCase() === 'part_time' ? 240 : 480);
-          var _wkE = Math.floor((_coE - _ciE) / 60000);
-          _showEarlyBadge = _wkE > _expE; // only show if net surplus (true early bonus)
+          var _netE = Math.floor((_coE - _ciE) / 60000) - _expE;
+          if(_netE > 0) _extraBadge = '+'+_netE+'m extra ⚡'; // total surplus (early in + late out)
         }
       }
 
       var indicators = '';
       if(lateMins > 0 && !parseInt(r.late_comp_done) && !_athWorkedFull(r))
         indicators += '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:5px;font-size:9px;padding:1px 5px;">+'+lateMins+'m late</span> ';
-      if(_showEarlyBadge)
-        indicators += '<span style="background:rgba(48,209,88,0.1);color:rgba(48,209,88,0.7);border-radius:5px;font-size:9px;padding:1px 5px;">+'+earlyMins+'m early ⚡</span> ';
+      if(_extraBadge)
+        indicators += '<span style="background:rgba(48,209,88,0.1);color:rgba(48,209,88,0.7);border-radius:5px;font-size:9px;padding:1px 5px;">'+_extraBadge+'</span> ';
       if(otMins > 0)
         indicators += '<span style="background:rgba(10,132,255,0.12);color:#0A84FF;border-radius:5px;font-size:9px;padding:1px 5px;">OT '+otMins+'m</span>';
 
