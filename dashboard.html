@@ -8940,7 +8940,7 @@ function _advResetStaffPicker(){
 }
 
 function _advSelectStaff(id, name, designation, photoSrc){
-  document.getElementById('adv-staff-id').value = id;
+  document.getElementById('adv-staff-id').value = parseInt(id,10) || '';
   var av = document.getElementById('adv-staff-avatar');
   var lb = document.getElementById('adv-staff-label');
   if(av){
@@ -9013,10 +9013,11 @@ function renderAdvStaffList(q){
 }
 
 function _advSelectStaffById(id){
-  var s = (_advStaffCache||[]).find(function(x){ return x.id === id; });
+  var numId = parseInt(id, 10);
+  var s = (_advStaffCache||[]).find(function(x){ return parseInt(x.id,10) === numId; });
   if(!s) return;
   var photoSrc = s.photo_data || (s.photo_url ? API+s.photo_url : '');
-  _advSelectStaff(s.id, s.name||'', s.designation||'', photoSrc);
+  _advSelectStaff(numId, s.name||'', s.designation||'', photoSrc);
 }
 
 function advShowNotice(val){
