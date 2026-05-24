@@ -1496,10 +1496,10 @@ body.desktop-mode #s1-sidebar {
     </div>
 
     <!-- TASKS -->
-    <div id="s2-tasks" class="scr">
+    <div id="s2-tasks" class="scr" style="overflow:hidden;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 13px 0;flex-shrink:0;">
         <div style="display:flex;align-items:center;gap:9px;">
-          <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
           <div style="color:#fff;font-size:17px;font-weight:500;">Tasks</div>
@@ -1841,9 +1841,10 @@ var adminTabs=[
   {l:'Attend.', p:'M9 3A6 6 0 1 0 9 15A6 6 0 0 0 9 3Z M9 6v3.5l2.5 2.5'},
   {l:'Approve', p:'M2.5 8.5l3.5 3.5 9-9'},
   {l:'Chat',   p:'M3 4.5C3 3.7 3.7 3 4.5 3H13.5C14.3 3 15 3.7 15 4.5V10C15 10.8 14.3 11.5 13.5 11.5H9.5L7 14V11.5H4.5C3.7 11.5 3 10.8 3 10V4.5Z'},
+  {l:'Tasks',  p:'M3.5 5h11M3.5 9h11M3.5 13h7'},
   {l:'More',   p:'M4.5 9h0.01M9 9h0.01M13.5 9h0.01', sw:'2.8'}
 ];
-var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-more'];
+var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
 var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[], _s2TasksCache=null;
 
 function makeNav(tabs,scrs,active,prefix){
