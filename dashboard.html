@@ -5916,18 +5916,25 @@ async function approveExtraTime(taskId, action){
 // ── Mark task(s) as done ──
 async function markTaskDone(ids){
   if(!Array.isArray(ids)) ids=[ids];
-  // Optimistic update — mark done in cache immediately, no re-fetch needed on success
-  if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t){ t.status='done'; t.progress_percent=100; } }); _renderTasks(_tasksCache); }
+  // Optimistic update — mark done in cache immediately
+  var prevStates = {};
+  if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t){ prevStates[id]={status:t.status,progress_percent:t.progress_percent}; t.status='done'; t.progress_percent=100; } }); _renderTasks(_tasksCache); }
   try{
-    await Promise.all(ids.map(function(id){
+    var results = await Promise.all(ids.map(function(id){
       return fetch(API+'/api/tasks/'+id+'/status',{
         method:'PATCH',
         headers:Object.assign({'Content-Type':'application/json'},zHdr()),
         body:JSON.stringify({status:'done',progress_percent:100})
-      });
+      }).then(function(r){ return r.json(); });
     }));
-    showToast('✅ Task marked complete');
-    // No loadTasks() — optimistic cache is already correct
+    var anyFailed = results.some(function(d){ return !d.success; });
+    if(anyFailed){
+      // Revert optimistic update
+      if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t&&prevStates[id]){ t.status=prevStates[id].status; t.progress_percent=prevStates[id].progress_percent; } }); _renderTasks(_tasksCache); }
+      showToast('❌ Failed to save — please try again','error');
+    } else {
+      showToast('✅ Task marked complete');
+    }
   }catch(e){
     showToast('❌ Failed — please try again');
     // Revert optimistic update on failure
@@ -8798,23 +8805,26 @@ function advShowNotice(val){
 }
 
 async function saveAdvance(){
-  var id       = document.getElementById('adv-edit-id').value;
-  var staff_id = document.getElementById('adv-staff-id').value;
-  var total    = document.getElementById('adv-total').value;
-  var date     = document.getElementById('adv-date').value;
-  var reason   = document.getElementById('adv-reason').value.trim();
-  var notes    = document.getElementById('adv-notes').value.trim();
+  var id         = (document.getElementById('adv-edit-id').value || '').trim();
+  var staff_id   = (document.getElementById('adv-staff-id').value || '').trim();
+  var total      = (document.getElementById('adv-total').value || '').trim();
+  var date       = document.getElementById('adv-date').value;
+  var reason     = document.getElementById('adv-reason').value.trim();
+  var notes      = document.getElementById('adv-notes').value.trim();
 
-  if(!id && !staff_id) return showToast('Please select a staff member','error');
-  if(!total || parseFloat(total)<=0) return showToast('Enter a valid advance amount','error');
+  var staff_id_num = parseInt(staff_id, 10);
+  var total_num    = parseFloat(total);
+
+  if(!id && (isNaN(staff_id_num) || staff_id_num <= 0)) return showToast('Please select a staff member','error');
+  if(isNaN(total_num) || total_num <= 0) return showToast('Enter a valid advance amount','error');
 
   var body = {
-    total_amount: parseFloat(total),
+    total_amount: total_num,
     reason: reason || null,
     given_date: date || null,
     notes: notes || null
   };
-  if(!id) body.staff_id = parseInt(staff_id);
+  if(!id) body.staff_id = staff_id_num;
 
   try {
     var url    = id ? API+'/api/advances/'+id : API+'/api/advances';
