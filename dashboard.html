@@ -6152,11 +6152,11 @@ async function markTaskDone(ids){
         body:JSON.stringify({status:'done',progress_percent:100})
       }).then(function(r){ return r.json(); });
     }));
-    var anyFailed = results.some(function(d){ return !d.success; });
-    if(anyFailed){
+    var failedResult = results.find(function(d){ return !d.success; });
+    if(failedResult){
       // Revert optimistic update
       if(_tasksCache){ ids.forEach(function(id){ var t=_tasksCache.find(function(x){return x.id===id;}); if(t&&prevStates[id]){ t.status=prevStates[id].status; t.progress_percent=prevStates[id].progress_percent; } }); _renderTasks(_tasksCache); }
-      showToast('❌ Failed to save — please try again','error');
+      showToast('❌ '+(failedResult.message||'Failed to save'),'error');
     } else {
       showToast('✅ Task marked complete');
     }
