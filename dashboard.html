@@ -9000,10 +9000,7 @@ function renderAdvStaffList(q){
     var photo = photoSrc
       ? '<img src="'+photoSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
       : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
-    var safePhoto = photoSrc.replace(/'/g,"\\'");
-    var safeName  = (s.name||'').replace(/'/g,"\\'");
-    var safeDes   = (s.designation||'').replace(/'/g,"\\'");
-    return '<div onclick="_advSelectStaff('+s.id+',\''+safeName+'\',\''+safeDes+'\',\''+safePhoto+'\')" '
+    return '<div onclick="_advSelectStaffById('+s.id+')" '
       +'style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background 0.1s;" '
       +'onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" '
       +'onmouseout="this.style.background=\'transparent\'">'
@@ -9013,6 +9010,13 @@ function renderAdvStaffList(q){
         +'<div style="font-size:10px;color:rgba(245,245,247,0.4);">'+_esc(s.designation||s.brand_name||'')+'</div>'
       +'</div></div>';
   }).join('');
+}
+
+function _advSelectStaffById(id){
+  var s = (_advStaffCache||[]).find(function(x){ return x.id === id; });
+  if(!s) return;
+  var photoSrc = s.photo_data || (s.photo_url ? API+s.photo_url : '');
+  _advSelectStaff(s.id, s.name||'', s.designation||'', photoSrc);
 }
 
 function advShowNotice(val){
