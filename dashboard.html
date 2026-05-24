@@ -2346,6 +2346,59 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
 
     </div>
 
+    <!-- ── GOOGLE DRIVE DAILY BACKUP ── -->
+    <div class="g sec" style="margin-top:20px;" id="backup-section">
+      <div class="sh" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <div style="width:28px;height:28px;background:rgba(10,132,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h12" stroke="#0A84FF" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <span class="st">Google Drive Daily Backup</span>
+          <span id="backup-cfg-badge" style="display:none;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500;"></span>
+        </div>
+        <button onclick="runManualBackup()" id="backup-now-btn" style="background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:9px;padding:7px 14px;color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 11h12" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Backup Now
+        </button>
+      </div>
+
+      <!-- Status cards row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;" id="backup-stat-cards">
+        <div class="gs" style="padding:12px;text-align:center;">
+          <div id="bk-last-status" style="font-size:18px;margin-bottom:2px;">—</div>
+          <div style="font-size:10px;color:var(--muted);">Last Status</div>
+        </div>
+        <div class="gs" style="padding:12px;text-align:center;">
+          <div id="bk-last-time" style="font-size:11px;font-weight:500;margin-bottom:2px;">—</div>
+          <div style="font-size:10px;color:var(--muted);">Last Backup</div>
+        </div>
+        <div class="gs" style="padding:12px;text-align:center;">
+          <div id="bk-last-size" style="font-size:13px;font-weight:600;color:#30D158;margin-bottom:2px;">—</div>
+          <div style="font-size:10px;color:var(--muted);">File Size</div>
+        </div>
+        <div class="gs" style="padding:12px;text-align:center;">
+          <div id="bk-next-run" style="font-size:11px;font-weight:500;color:#FF9F0A;margin-bottom:2px;">—</div>
+          <div style="font-size:10px;color:var(--muted);">Next Auto Backup</div>
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Backup History</div>
+      <div id="backup-history" style="display:flex;flex-direction:column;gap:6px;">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Loading…</div>
+      </div>
+
+      <!-- Not configured notice -->
+      <div id="backup-not-cfg" style="display:none;background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:12px;padding:14px 16px;margin-top:10px;">
+        <div style="font-size:13px;font-weight:500;color:#FF9F0A;margin-bottom:4px;">⚠️ Google Drive Not Configured</div>
+        <div style="font-size:11px;color:rgba(245,245,247,0.5);line-height:1.6;">
+          Set <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_SERVICE_ACCOUNT_KEY</code> and
+          <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_DRIVE_FOLDER_ID</code>
+          environment variables on Render to enable automatic backups.
+        </div>
+      </div>
+    </div>
+
     <!-- ── DAILY WORK LOGS (embedded) ── -->
     <div style="margin-top:28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
@@ -8206,6 +8259,119 @@ async function loadAdminOverview(){
     var pctEl=document.getElementById('ao-att-pct'); if(pctEl){ pctEl.textContent=pct+'%'; pctEl.style.color=pct>=80?'#30D158':pct>=60?'#FF9F0A':'#FF453A'; }
     var bar=document.getElementById('ao-att-bar'); if(bar) bar.style.width=pct+'%';
   }catch(e){}
+
+  // Load backup status whenever Admin Overview opens
+  loadBackupStatus();
+}
+
+/* ── Google Drive Backup ── */
+async function loadBackupStatus(){
+  try{
+    var res = await fetch(API+'/api/backup/gdrive/status', { headers: zHdr() });
+    var d   = await res.json();
+    if(!d.success) return;
+
+    // configured badge
+    var badge = document.getElementById('backup-cfg-badge');
+    if(badge){
+      badge.style.display = 'inline-block';
+      if(d.configured){
+        badge.textContent  = '✅ Connected';
+        badge.style.background = 'rgba(48,209,88,0.12)';
+        badge.style.color      = '#30D158';
+        badge.style.border     = '0.5px solid rgba(48,209,88,0.2)';
+      } else {
+        badge.textContent  = '⚠️ Not Configured';
+        badge.style.background = 'rgba(255,159,10,0.12)';
+        badge.style.color      = '#FF9F0A';
+        badge.style.border     = '0.5px solid rgba(255,159,10,0.2)';
+      }
+    }
+
+    // not-configured notice
+    var notCfg = document.getElementById('backup-not-cfg');
+    if(notCfg) notCfg.style.display = d.configured ? 'none' : 'block';
+
+    // next run
+    var nx = document.getElementById('bk-next-run');
+    if(nx) nx.textContent = d.next_run_ist ? d.next_run_ist+' IST' : '11:30 PM IST';
+
+    // last backup card
+    var logs = d.logs || [];
+    var last = logs[0];
+    if(last){
+      var statusEl = document.getElementById('bk-last-status');
+      var timeEl   = document.getElementById('bk-last-time');
+      var sizeEl   = document.getElementById('bk-last-size');
+      if(statusEl) statusEl.innerHTML = last.status==='success'
+        ? '<span style="color:#30D158;font-size:22px;">✅</span>'
+        : '<span style="color:#FF453A;font-size:22px;">❌</span>';
+      if(timeEl){
+        var dt = last.created_at ? new Date(last.created_at) : null;
+        timeEl.textContent = dt ? _fmtISTDate(dt) : '—';
+      }
+      if(sizeEl) sizeEl.textContent = last.file_size_kb > 0 ? last.file_size_kb + ' KB' : '—';
+    }
+
+    // history table
+    var histEl = document.getElementById('backup-history');
+    if(histEl){
+      if(!logs.length){
+        histEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No backups yet</div>';
+      } else {
+        histEl.innerHTML = logs.map(function(lg){
+          var isOk = lg.status === 'success';
+          var dt   = lg.created_at ? new Date(lg.created_at) : null;
+          var dtStr = dt ? _fmtISTDate(dt) : '—';
+          return '<div class="gs" style="display:flex;align-items:center;gap:10px;padding:9px 12px;">'
+            +'<span style="font-size:14px;">'+(isOk?'✅':'❌')+'</span>'
+            +'<div style="flex:1;min-width:0;">'
+              +'<div style="font-size:12px;font-weight:500;color:'+(isOk?'#F5F5F7':'#FF453A')+';">'
+                +(isOk ? (lg.filename||'Success') : ('Failed — '+(lg.error_msg||'').slice(0,60)))
+              +'</div>'
+              +'<div style="font-size:10px;color:var(--muted);margin-top:1px;">'
+                +dtStr+' · '+(lg.triggered_by==='manual'?'Manual':'Auto')+' · '+(lg.records_count||0)+' records · '+(lg.file_size_kb||0)+' KB'
+              +'</div>'
+            +'</div>'
+            +(isOk && lg.file_link
+              ? '<a href="'+lg.file_link+'" target="_blank" style="flex-shrink:0;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.2);border-radius:7px;padding:5px 10px;font-size:10px;color:#0A84FF;text-decoration:none;white-space:nowrap;">View ↗</a>'
+              : '')
+          +'</div>';
+        }).join('');
+      }
+    }
+  } catch(e){ console.error('loadBackupStatus:', e); }
+}
+
+function _fmtISTDate(d){
+  // d is a Date object (from DB, UTC stored — show as IST)
+  var ist = new Date(d.getTime() + (5*60+30)*60000);
+  var day = ist.getUTCDate(), mon = ist.getUTCMonth(), yr = ist.getUTCFullYear();
+  var hr  = ist.getUTCHours(), mn = ist.getUTCMinutes();
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return day+' '+months[mon]+' '+yr+', '+String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0')+' IST';
+}
+
+var _backupRunning = false;
+async function runManualBackup(){
+  if(_backupRunning) return;
+  _backupRunning = true;
+  var btn = document.getElementById('backup-now-btn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#fff" stroke-width="1.5" stroke-dasharray="14" stroke-dashoffset="0"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur="1s" repeatCount="indefinite"/></circle></svg> Backing up…'; }
+  try{
+    var res = await fetch(API+'/api/backup/gdrive/run', { method:'POST', headers: Object.assign({'Content-Type':'application/json'}, zHdr()) });
+    var d   = await res.json();
+    if(d.success){
+      showToast('✅ Backup complete — '+d.sizeKb+'KB uploaded to Drive');
+      loadBackupStatus();
+    } else {
+      showToast('❌ Backup failed — '+(d.message||'check config'),'error');
+    }
+  } catch(e){ showToast('❌ Backup error — '+e.message,'error'); }
+  finally{
+    _backupRunning = false;
+    if(btn){ btn.disabled=false; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 11h12" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg> Backup Now'; }
+  }
 }
 </script>
 
