@@ -3791,8 +3791,8 @@ async function loadAdminHome(){
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
       if(st==='present'||st==='onsite_approved') p++;
-      else if(st==='late'){p++;l++;}
-      else if(st==='onsite') o++;
+      else if(st==='late'||st==='late_pending'){p++;l++;}
+      else if(st==='onsite_pending') o++;
       else if(st!=='on_leave') a++;
     });
     var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
@@ -3986,10 +3986,12 @@ async function s2ActLeave(id,action,btn){
 async function s2ActOnsite(id,action,btn){
   var card=btn.closest('[data-oid]');
   if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  // Backend expects 'approve' or 'reject' (not 'approved'/'rejected')
+  var apiAction = (action==='approved'||action==='approve') ? 'approve' : 'reject';
   try{
-    var r=await fetch(API_URL+'/api/attendance/approve/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({action:action})});
+    var r=await fetch(API_URL+'/api/attendance/approve/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({action:apiAction})});
     var d=await r.json();
-    if(d.success){ showToast1(action==='approved'?'✅ Onsite approved':'❌ Onsite rejected'); _s2ApprOnsites=_s2ApprOnsites.filter(function(o){return o.id!==id;}); s2ApprTab('onsite'); }
+    if(d.success){ showToast1(apiAction==='approve'?'✅ Onsite approved':'Onsite rejected'); _s2ApprOnsites=_s2ApprOnsites.filter(function(o){return o.id!==id;}); s2ApprTab('onsite'); }
     else { if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
   }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
 }
@@ -4157,16 +4159,28 @@ async function openStaffProfile(id){
     var d=await r.json();
     if(!d.success||!d.data){ body.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Not found</div>'; return; }
     var s=d.data;
-    // Also load this month attendance summary
+    // Load this month attendance summary directly (not via payroll which needs processing first)
     var today=new Date();
     var month=today.getMonth()+1, year=today.getFullYear();
     var attSummary={days_present:0,days_absent:0,late_days:0};
     try{
-      var ar=await fetch(API_URL+'/api/payroll/salary-preview?month='+month+'&year='+year,{headers:zHead()});
+      var ar=await fetch(API_URL+'/api/attendance/date?staffId='+s.id+'&month='+month+'&year='+year,{headers:zHead()});
       var ad=await ar.json();
-      var found=(ad.data||[]).find(function(x){return x.id===s.id;});
-      if(found) attSummary={days_present:found.days_present||0,days_absent:found.days_absent||0,late_days:found.late_days||0};
-    }catch(e){}
+      var sum=ad.summary||{};
+      attSummary={
+        days_present: parseInt(sum.present||sum.days_present||0),
+        days_absent:  parseInt(sum.absent||sum.days_absent||0),
+        late_days:    parseInt(sum.late||sum.days_late||sum.late_days||0)
+      };
+    }catch(e){
+      // Fallback: try payroll preview
+      try{
+        var ar2=await fetch(API_URL+'/api/payroll/salary-preview?month='+month+'&year='+year,{headers:zHead()});
+        var ad2=await ar2.json();
+        var found=(ad2.data||[]).find(function(x){return x.id===s.id;});
+        if(found) attSummary={days_present:found.days_present||0,days_absent:found.days_absent||0,late_days:found.late_days||0};
+      }catch(e2){}
+    }
     var emp=s.employment_type||'full_time';
     var empColors={'full_time':'#30D158','part_time':'#FF9F0A','daily_wage':'#0A84FF','day_time':'#BF5FFF'};
     var empLabel={'full_time':'Full Time','part_time':'Part Time','daily_wage':'Daily Wage','day_time':'Day Time'};
@@ -4239,6 +4253,7 @@ async function loadAdminPayroll(){
     var d=await res.json();
     if(!d.success){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ '+(d.message||'Load failed')+'</div>'; return; }
     _s2PrData=d.data||[];
+    var now2=new Date(); window._s2PrIsCurrMonth=(_s2PrMonth===now2.getMonth()+1&&_s2PrYear===now2.getFullYear());
     var workDays=d.working_days||26;
     var totalNet=_s2PrData.reduce(function(a,s){return a+parseFloat(s.net_salary||0);},0);
     var notProcessed=_s2PrData.filter(function(s){return s.payroll_status==='not_processed';}).length;
@@ -4260,7 +4275,14 @@ async function loadAdminPayroll(){
       var statusLbl=ps==='paid'?'Paid':ps==='pending'?'Pending':'Not Processed';
       var absDed=parseFloat(s.absent_deduction||0);
       var lateDed=parseFloat(s.late_deduction||0);
-      return'<div class="g" style="padding:12px;" data-pid="'+(s.payroll_id||'')+'" data-sid="'+s.id+'">'
+      var otAmt=parseFloat(s.ot_amount||0);
+      var otHrs=parseFloat(s.ot_hours||0);
+      var incAmt=parseFloat(s.other_incentive||0);
+      var alwAmt=parseFloat(s.allowance_amount||0);
+      var advDed=parseFloat(s.advance_deduction||0);
+      var isLivePr=!!window._s2PrIsCurrMonth;
+      var netToShow=isLivePr?parseFloat(s.earned_so_far||0):parseFloat(s.net_salary||0);
+      return'<div class="g" style="padding:12px;margin-bottom:10px;" data-pid="'+(s.payroll_id||'')+'" data-sid="'+s.id+'">'
         +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
         +'<div style="width:34px;height:34px;background:rgba(48,209,88,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:500;flex-shrink:0;">'+(s.name||'?').charAt(0).toUpperCase()+'</div>'
         +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(s.name||'—')+'</div>'
@@ -4268,11 +4290,15 @@ async function loadAdminPayroll(){
         +'<span style="background:'+statusCol+'22;color:'+statusCol+';border:0.5px solid '+statusCol+'44;border-radius:5px;padding:2px 8px;font-size:9px;">'+statusLbl+'</span>'
         +'</div>'
         +'<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:9px 11px;margin-bottom:9px;">'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Base</span><span style="color:#fff;font-size:10px;">₹'+parseFloat(s.base_salary||0).toLocaleString('en-IN')+'</span></div>'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Days '+(s.days_present||0)+'/'+workDays+'</span><span style="color:rgba(245,245,247,0.55);font-size:10px;">'+(absDed>0?'−₹'+absDed.toLocaleString('en-IN'):'✓')+'</span></div>'
-        +(lateDed>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Late '+s.late_days+' days</span><span style="color:#FF9F0A;font-size:10px;">−₹'+lateDed.toLocaleString('en-IN')+'</span></div>':'')
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Base Salary</span><span style="color:#fff;font-size:10px;">₹'+parseFloat(s.base_salary||0).toLocaleString('en-IN')+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Present '+(s.days_present||0)+'/'+workDays+'d</span><span style="color:rgba(245,245,247,0.55);font-size:10px;">'+(absDed>0?'−₹'+absDed.toLocaleString('en-IN'):'✓')+'</span></div>'
+        +(lateDed>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Late '+(s.late_days||s.days_late||0)+'d</span><span style="color:#FF9F0A;font-size:10px;">−₹'+lateDed.toLocaleString('en-IN')+'</span></div>':'')
+        +(otAmt>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">OT '+otHrs.toFixed(1)+'h</span><span style="color:#0A84FF;font-size:10px;">+₹'+otAmt.toLocaleString('en-IN')+'</span></div>':'')
+        +(incAmt>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Incentive</span><span style="color:#30D158;font-size:10px;">+₹'+incAmt.toLocaleString('en-IN')+'</span></div>':'')
+        +(alwAmt>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Allowance'+(s.allowance_note?' ('+s.allowance_note+')':'')+'</span><span style="color:#BF5FFF;font-size:10px;">+₹'+alwAmt.toLocaleString('en-IN')+'</span></div>':'')
+        +(advDed>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Advance Recovery</span><span style="color:#FF453A;font-size:10px;">−₹'+advDed.toLocaleString('en-IN')+'</span></div>':'')
         +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>'
-        +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.6);font-size:11px;font-weight:500;">Net Salary</span><span style="color:#30D158;font-size:13px;font-weight:600;">₹'+parseFloat(s.net_salary||0).toLocaleString('en-IN')+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.6);font-size:11px;font-weight:500;">Net Salary'+(isLivePr?' (Live)':'')+'</span><span style="color:#30D158;font-size:13px;font-weight:600;">₹'+Math.round(netToShow).toLocaleString('en-IN')+'</span></div>'
         +'</div>'
         +(ps==='pending'?'<button onclick="s2MarkPaid('+s.payroll_id+',this)" style="width:100%;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Mark as Paid</button>'
           :(ps==='not_processed'?'<div style="color:rgba(245,245,247,0.28);font-size:10px;text-align:center;padding:4px 0;">Process payroll to generate this record</div>':'<div style="display:flex;align-items:center;justify-content:center;gap:4px;color:rgba(48,209,88,0.6);font-size:10px;padding:2px 0;">✓ Paid</div>'))
@@ -4858,6 +4884,19 @@ async function loadMySalary(){
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">OT hrs</div><div style="color:#0A84FF;font-size:14px;font-weight:500;">'+otHours.toFixed(1)+'</div></div>'
         +'</div>'
       +'</div>'
+      // ── Salary Breakdown ──
+      +(otAmount>0||incentiveAmt>0||allowanceAmt>0||advDeduction>0||lateDeduction>0||absentDeduction>0
+        ?'<div class="g" style="padding:11px 13px;margin-bottom:10px;">'
+          +'<div style="color:rgba(245,245,247,0.45);font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Breakdown</div>'
+          +(otAmount>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">OT Pay <span style="font-size:9px;color:rgba(245,245,247,0.3);">('+otHours.toFixed(1)+'h)</span></span><span style="color:#0A84FF;font-size:11px;font-family:monospace;">+₹'+otAmount.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
+          +(incentiveAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Incentive 🎯</span><span style="color:#30D158;font-size:11px;font-family:monospace;">+₹'+incentiveAmt.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
+          +(allowanceAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Allowance'+(allowanceNote?' · <span style="font-size:9px;">'+allowanceNote+'</span>':'')+'</span><span style="color:#BF5FFF;font-size:11px;font-family:monospace;">+₹'+allowanceAmt.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
+          +(lateDeduction>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Late Cut <span style="background:rgba(255,159,10,0.12);color:#FF9F0A;padding:1px 4px;border-radius:4px;font-size:9px;">'+lateDays+'d</span></span><span style="color:#FF453A;font-size:11px;font-family:monospace;">−₹'+lateDeduction.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
+          +(absentDeduction>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Absent Cut <span style="background:rgba(255,69,58,0.1);color:#FF453A;padding:1px 4px;border-radius:4px;font-size:9px;">'+absentDays+'d</span></span><span style="color:#FF453A;font-size:11px;font-family:monospace;">−₹'+absentDeduction.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
+          +(advDeduction>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Advance Recovery 💳</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">−₹'+advDeduction.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
+          +'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0 2px;"><span style="color:#fff;font-size:12px;font-weight:600;">Net Pay</span><span style="color:#30D158;font-size:15px;font-weight:700;font-family:monospace;">₹'+fmt(netSalary)+'</span></div>'
+        +'</div>':''
+      )
       // ── Work & Attendance Rules ──
       +'<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
         +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
