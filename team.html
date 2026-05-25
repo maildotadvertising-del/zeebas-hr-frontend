@@ -1209,8 +1209,8 @@ body.desktop-mode #s1-sidebar {
       <!-- Checkout button -->
       <div style="padding:10px 13px 14px;flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
         <div id="dl-checkout-hint" style="color:rgba(255,159,10,0.8);font-size:11px;text-align:center;margin-bottom:8px;display:none;">⚠️ Add at least one task to enable checkout</div>
-        <button id="dl-checkout-btn" onclick="doCheckout()" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(48,209,88,0.8),rgba(20,160,60,0.85));border:0.5px solid rgba(48,209,88,0.4);border-radius:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;opacity:0.4;pointer-events:none;">
-          ✅ Check Out for Today
+        <button id="dl-checkout-btn" onclick="dlCheckoutWithEod()" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(48,209,88,0.8),rgba(20,160,60,0.85));border:0.5px solid rgba(48,209,88,0.4);border-radius:14px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;opacity:0.4;pointer-events:none;">
+          📋 Submit EOD & Check Out
         </button>
       </div>
     </div>
@@ -2842,6 +2842,12 @@ async function doCheckout(){
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='✅ Log Complete — Check Out Now'; }
   }
+}
+
+// ── Daily Log checkout → open EOD popup instead of direct checkout ──
+function dlCheckoutWithEod(){
+  _eodTriggered = false;
+  showEodPopup();
 }
 
 function showEarlyExitDialog(endTime){
@@ -5367,6 +5373,8 @@ async function eodSubmit(){
         +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:20px;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:13px 36px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);">Back to Home</button>';
       document.body.appendChild(successOv);
       setTimeout(function(){ var b=successOv.querySelector('button'); if(b) b.click(); }, 3000);
+      // Update home attendance card to show Checked Out state
+      updateAttendanceCard(false, null, null, null, null);
       // Refresh home data
       setTimeout(function(){ wifiCheckAndAct(); loadHomeWeekAndLeave(); }, 800);
     } else {
@@ -7887,9 +7895,8 @@ async function dtReturnFromBreak(){
 
 /* ── CHECK OUT ── */
 function dtGoCheckout(){
-  // Navigate to the daily log checkout screen (reuse mobile flow)
-  go1('s1-salary'); // temp — use actual checkout
-  doCheckout().then(function(){ setTimeout(dtRefreshAttStatus, 1000); });
+  _eodTriggered = false;
+  showEodPopup();
 }
 
 /* ── ATTENDANCE PANEL ── */
