@@ -618,7 +618,7 @@ body.desktop-mode #s1-sidebar {
     </div>
 
     <!-- CHAT — TAB 3 -->
-    <div id="s1-chat" class="scr" style="background:#07071A;">
+    <div id="s1-chat" class="scr" style="background:#07071A;overflow-x:hidden;">
       <!-- Header -->
       <div style="padding:10px 14px 0;background:rgba(14,14,30,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
         <div style="display:flex;align-items:center;gap:11px;margin-bottom:10px;">
@@ -645,9 +645,9 @@ body.desktop-mode #s1-sidebar {
       </div>
 
       <!-- GROUP CHAT PANEL -->
-      <div id="chat-group-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div id="chat-group-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden;overflow-x:hidden;">
         <!-- Pinned message -->
-        <div id="pinned-msg" style="background:rgba(10,132,255,0.08);border-bottom:0.5px solid rgba(10,132,255,0.12);padding:8px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;">
+        <div id="pinned-msg" style="background:rgba(10,132,255,0.08);border-bottom:0.5px solid rgba(10,132,255,0.12);padding:8px 14px;display:none;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;">
           <div style="width:3px;height:28px;background:#0A84FF;border-radius:2px;flex-shrink:0;"></div>
           <div style="flex:1;overflow:hidden;">
             <div style="color:#0A84FF;font-size:10px;font-weight:600;margin-bottom:1px;">📌 Pinned Message</div>
@@ -655,7 +655,7 @@ body.desktop-mode #s1-sidebar {
           </div>
         </div>
         <!-- Messages -->
-        <div class="scroll" style="flex:1;padding:10px 0 8px;background:#07071A;" id="msgs1">
+        <div class="scroll" style="flex:1;padding:10px 0 8px;background:#07071A;overflow-x:hidden;" id="msgs1">
           <div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:60px;flex-direction:column;gap:10px;">
             <div style="font-size:36px;opacity:0.2;">💬</div>
             <div style="color:rgba(245,245,247,0.3);font-size:13px;text-align:center;">No messages yet — say hello!</div>
@@ -692,7 +692,7 @@ body.desktop-mode #s1-sidebar {
           </div>
         </div>
         <!-- Input bar (group) — Professional design with separate mic + send -->
-        <div style="padding:8px 12px 12px;background:rgba(14,14,28,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
+        <div style="padding:8px 12px calc(12px + env(safe-area-inset-bottom));background:rgba(14,14,28,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
           <input type="file" id="fi-chat-grp" style="display:none" accept="image/*,.pdf,.doc,.docx,.mp4,.mov" onchange="handleChatFileUpload(this,'group')">
           <div style="display:flex;align-items:center;gap:8px;">
             <!-- Attach -->
@@ -763,7 +763,7 @@ body.desktop-mode #s1-sidebar {
     </div>
 
     <!-- ── DM CHAT OVERLAY (full screen) ── -->
-    <div id="dm-chat-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:#07071A;flex-direction:column;">
+    <div id="dm-chat-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:#07071A;flex-direction:column;overflow-x:hidden;">
       <!-- DM Header -->
       <div style="padding:10px 14px;background:rgba(14,14,30,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;display:flex;align-items:center;gap:12px;border-bottom:0.5px solid rgba(255,255,255,0.08);">
         <button onclick="closeDmChat()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(245,245,247,0.6);">
@@ -801,7 +801,7 @@ body.desktop-mode #s1-sidebar {
         <span id="dm-vrec-timer" style="color:rgba(245,245,247,0.45);font-size:12px;font-family:monospace;">0:00</span>
       </div>
       <!-- DM Input bar — Professional design with separate mic + send -->
-      <div style="padding:8px 12px 14px;background:rgba(14,14,28,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
+      <div style="padding:8px 12px calc(14px + env(safe-area-inset-bottom));background:rgba(14,14,28,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;border-top:0.5px solid rgba(255,255,255,0.07);">
         <input type="file" id="fi-chat-dm" style="display:none" accept="image/*,.pdf,.doc,.docx,.mp4,.mov" onchange="handleChatFileUpload(this,'dm')">
         <div style="display:flex;align-items:center;gap:8px;">
           <!-- Attach -->
@@ -3425,7 +3425,8 @@ async function loadDmMemberList(){
       var avHtml = _mAvSrc
         ? '<img src="'+_mAvSrc+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
         : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
-      var n = escHtml(m.name||''), ph = escHtml(m.photo_url||''), bn = escHtml(m.brand_name||''), des = escHtml(m.designation||m.role||'');
+      var _dmPh = m.photo_data || m.photo_url || '';
+      var n = escHtml(m.name||''), ph = escHtml(_dmPh), bn = escHtml(m.brand_name||''), des = escHtml(m.designation||m.role||'');
       return '<div onclick="closeDmList();openDmChat('+m.id+',\''+n+'\',\''+ph+'\',\''+bn+'\',\''+init+'\')" style="display:flex;align-items:center;gap:13px;padding:12px 16px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.05);active-background:#2A3942;">'
         +avHtml
         +'<div style="flex:1;"><div style="color:#E8E8E8;font-size:14px;font-weight:400;">'+n+'</div>'
@@ -3480,7 +3481,8 @@ async function loadDmConversations(){
         var avHtml = _mAvSrc
           ? '<img src="'+_mAvSrc+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"><div style="display:none;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>'
           : '<div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
-        var n = escHtml(m.name||''), ph = escHtml(m.photo_url||''), bn = escHtml(m.brand_name||'');
+        var _dmPh2 = m.photo_data || m.photo_url || '';
+        var n = escHtml(m.name||''), ph = escHtml(_dmPh2), bn = escHtml(m.brand_name||'');
         var conv = convMap[m.id];
         var subText, unread = 0;
         if(conv){
@@ -3525,7 +3527,8 @@ async function openDmChat(userId, userName, userPhoto, brandName, initLetter){
   if(nm) nm.textContent = userName;
   if(av){
     if(userPhoto){
-      av.innerHTML = '<img src="'+API_URL+userPhoto+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">';
+      var _dmAvSrc = (userPhoto.indexOf('data:')===0 || userPhoto.indexOf('http')===0) ? userPhoto : API_URL+userPhoto;
+      av.innerHTML = '<img src="'+_dmAvSrc+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML=\'<div style=&quot;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;&quot;>'+(initLetter||(userName||'?').charAt(0).toUpperCase())+'</div>\'">';
       av.style.background = 'none';
     } else {
       av.innerHTML = initLetter || (userName||'?').charAt(0).toUpperCase();
@@ -4855,27 +4858,17 @@ async function loadMySalary(){
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">OT hrs</div><div style="color:#0A84FF;font-size:14px;font-weight:500;">'+otHours.toFixed(1)+'</div></div>'
         +'</div>'
       +'</div>'
-      // ── Breakdown ──
-      +'<div class="g" style="padding:13px;margin-bottom:10px;">'
-        +'<div style="color:rgba(245,245,247,0.5);font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;">Breakdown</div>'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Base Salary</span><span style="font-family:monospace;font-size:13px;color:#fff;font-weight:500;">₹'+fmt(baseSalary)+'</span></div>'
-        +(otAmount>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">OT Pay <span style="color:rgba(245,245,247,0.3);font-size:10px;">('+otHours.toFixed(1)+' hrs)</span></span><span style="font-family:monospace;font-size:13px;color:#0A84FF;font-weight:500;">+₹'+fmt2(otAmount)+'</span></div>' : '')
-        +(incentiveAmt>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Incentive 🎯</span><span style="font-family:monospace;font-size:13px;color:#30D158;font-weight:500;">+₹'+fmt2(incentiveAmt)+'</span></div>' : '')
-        +(allowanceAmt>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Allowance'+(allowanceNote?' <span style="font-size:10px;color:rgba(191,95,255,0.6);">· '+allowanceNote+'</span>':'')+'</span><span style="font-family:monospace;font-size:13px;color:#BF5FFF;font-weight:500;">+₹'+fmt2(allowanceAmt)+'</span></div>' : '')
-        +(lateDeduction>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Late Cut <span style="background:rgba(255,159,10,0.12);color:#FF9F0A;padding:1px 5px;border-radius:5px;font-size:9px;margin-left:3px;">'+lateDays+'d</span></span><span style="font-family:monospace;font-size:13px;color:#FF453A;font-weight:500;">−₹'+fmt2(lateDeduction)+'</span></div>' : '')
-        +(absentDeduction>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent Cut <span style="background:rgba(255,69,58,0.12);color:#FF453A;padding:1px 5px;border-radius:5px;font-size:9px;margin-left:3px;">'+absentDays+'d</span></span><span style="font-family:monospace;font-size:13px;color:#FF453A;font-weight:500;">−₹'+fmt2(absentDeduction)+'</span></div>' : '')
-        +(advDeduction>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Recovery</span><span style="font-family:monospace;font-size:13px;color:#FF453A;font-weight:500;">−₹'+fmt2(advDeduction)+'</span></div>' : '')
-        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;">'
-          +'<span style="color:#fff;font-size:13px;font-weight:600;">Net Pay</span>'
-          +'<span style="font-family:monospace;font-size:16px;color:#30D158;font-weight:700;">₹'+fmt(netSalary)+'</span>'
-        +'</div>'
+      // ── Work & Attendance Rules ──
+      +'<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
+        +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
+        +(settings.work_start_time||settings.work_end_time ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Work Hours</span><span style="color:rgba(245,245,247,0.7);font-size:11px;font-family:monospace;">'+(settings.work_start_time||'09:00')+' – '+(settings.work_end_time||'18:00')+'</span></div>' : '')
+        +(settings.working_days_month ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Working Days / Month</span><span style="color:rgba(245,245,247,0.7);font-size:11px;">'+settings.working_days_month+' days</span></div>' : '')
+        +(settings.work_week ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Work Days</span><span style="color:rgba(245,245,247,0.7);font-size:11px;">'+settings.work_week+'</span></div>' : '')
+        +(parseInt(settings.late_grace_minutes||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Late Grace Period</span><span style="color:#30D158;font-size:11px;">'+settings.late_grace_minutes+' min</span></div>' : '')
+        +(parseFloat(settings.late_deduction_per_min||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Late Deduction</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">₹'+parseFloat(settings.late_deduction_per_min)+'/min</span></div>' : '')
+        +(parseFloat(settings.late_max_per_day||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Max Late Cut / Day</span><span style="color:#FF9F0A;font-size:11px;font-family:monospace;">₹'+parseFloat(settings.late_max_per_day)+'</span></div>' : '')
+        +(settings.ot_enabled ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Overtime</span><span style="color:#0A84FF;font-size:11px;">'+parseFloat(settings.ot_rate_multiplier||1.5)+'× pay after '+(settings.ot_after_hours||0)+'h</span></div>' : '')
       +'</div>'
-      // ── Attendance Rules (no grace period — doesn't apply here) ──
-      +((parseFloat(settings.late_deduction_per_min||0)>0 || parseFloat(settings.late_max_per_day||0)>0) ? '<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
-        +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Attendance Rules</div>'
-        +(parseFloat(settings.late_deduction_per_min||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Late deduction</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">₹'+parseFloat(settings.late_deduction_per_min)+'/min</span></div>' : '')
-        +(parseFloat(settings.late_max_per_day||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Max late cut/day</span><span style="color:#FF9F0A;font-size:11px;font-family:monospace;">₹'+parseFloat(settings.late_max_per_day)+'</span></div>' : '')
-      +'</div>' : '')
       +(isCurrMonth ? '<div style="text-align:center;padding:8px 0 4px;color:rgba(245,245,247,0.25);font-size:10px;">Live estimate — final amount set by admin after payroll processing</div>' : '');
 
     el.innerHTML = html;
@@ -6679,7 +6672,7 @@ function renderS1Tasks(tasks){
     var tickBtn=done
       ?'<div onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'in_progress\')" title="Reopen" style="width:22px;height:22px;border-radius:50%;background:#30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 0 8px rgba(48,209,88,0.4);"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
       :'<div onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'done\')" title="Mark done" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.04);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(48,209,88,0.18)\';this.style.borderColor=\'rgba(48,209,88,0.5)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.04)\';this.style.borderColor=\'rgba(255,255,255,0.2)\'"></div>';
-    return '<div class="gs" style="padding:12px;margin-bottom:8px;border-left:2px solid '+(prC[pr]||'#0A84FF')+';'+(done?'opacity:0.55;':'')+';">'
+    return '<div class="gs" style="padding:12px;margin-bottom:8px;border-left:2px solid '+(prC[pr]||'#0A84FF')+';'+(done?'opacity:0.55;':'')+';cursor:pointer;" onclick="openS1TaskDetail('+t.id+')">'
       +'<div style="display:flex;align-items:flex-start;gap:8px;">'
       +tickBtn
       +'<div style="flex:1;min-width:0;">'
@@ -6694,6 +6687,85 @@ function renderS1Tasks(tasks){
       +'</div>';
   }).join('');
   startS1Countdowns();
+}
+
+/* ── Task Detail Bottom Sheet ── */
+function openS1TaskDetail(taskId){
+  var t = _s1Tasks.find(function(x){ return String(x.id)===String(taskId); });
+  if(!t) return;
+  var prC={high:'#FF453A',medium:'#FF9F0A',low:'#30D158'};
+  var pr = t.priority||'medium';
+  var done = t.status==='done';
+  var pct = parseInt(t.progress_percent)||(done?100:0);
+
+  var dueHtml = '';
+  if(t.due_date){
+    var ds=t.due_date.slice(0,10);
+    var ts=t.due_time?' at '+t.due_time.slice(0,5):'';
+    var today=new Date().toISOString().slice(0,10);
+    var dl=ds===today?'Today':ds;
+    dueHtml='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.07);">'
+      +'<span style="color:rgba(245,245,247,0.45);font-size:12px;">Due Date</span>'
+      +'<span style="color:#FF9F0A;font-size:12px;font-family:monospace;">📅 '+dl+ts+'</span>'
+      +'</div>';
+  }
+
+  var statusLabel = done ? '✅ Done' : t.status==='in_progress' ? '🔵 In Progress' : '⭕ To Do';
+  var statusColor = done ? '#30D158' : t.status==='in_progress' ? '#0A84FF' : 'rgba(245,245,247,0.5)';
+
+  var html = '<div style="width:38px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;">'
+      +'<div style="flex:1;">'
+        +'<div style="font-size:16px;font-weight:600;color:#F5F5F7;line-height:1.4;margin-bottom:4px;">'+escHtml(t.title||'Task')+'</div>'
+        +(t.brand_name?'<div style="color:rgba(245,245,247,0.4);font-size:11px;">'+escHtml(t.brand_name)+(t.category?' · '+t.category:'')+'</div>':'')
+      +'</div>'
+      +'<span style="background:'+prC[pr]+'18;color:'+prC[pr]+';border:0.5px solid '+prC[pr]+'44;border-radius:6px;padding:3px 9px;font-size:10px;flex-shrink:0;">'+(pr.charAt(0).toUpperCase()+pr.slice(1))+'</span>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:10px 12px;margin-bottom:12px;">'
+      +(pct>0?'<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Progress</span><span style="color:#0A84FF;font-size:11px;font-weight:500;">'+pct+'%</span></div><div style="background:rgba(255,255,255,0.07);border-radius:3px;height:5px;overflow:hidden;"><div style="background:linear-gradient(90deg,#0A84FF,#5E5CE6);width:'+pct+'%;height:100%;border-radius:3px;"></div></div></div>':'')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:'+(pct>0?'8px 0 0':'0')+'">'
+        +'<span style="color:rgba(245,245,247,0.45);font-size:12px;">Status</span>'
+        +'<span style="color:'+statusColor+';font-size:12px;">'+statusLabel+'</span>'
+      +'</div>'
+      +dueHtml
+    +'</div>'
+    +(t.description?'<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:10px 12px;margin-bottom:12px;">'
+      +'<div style="color:rgba(245,245,247,0.4);font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">Description</div>'
+      +'<div style="color:rgba(245,245,247,0.75);font-size:13px;line-height:1.55;">'+escHtml(t.description)+'</div>'
+    +'</div>':'')
+    +(t.notes?'<div style="background:rgba(255,159,10,0.06);border:0.5px solid rgba(255,159,10,0.15);border-radius:12px;padding:10px 12px;margin-bottom:12px;">'
+      +'<div style="color:#FF9F0A;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">📝 Notes</div>'
+      +'<div style="color:rgba(245,245,247,0.65);font-size:12px;line-height:1.5;">'+escHtml(t.notes)+'</div>'
+    +'</div>':'')
+    +(done
+      ? '<button onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'in_progress\');closeS1TaskDetail();" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px;color:rgba(245,245,247,0.6);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">↩ Reopen Task</button>'
+      : '<button onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'done\');closeS1TaskDetail();" style="width:100%;background:linear-gradient(135deg,rgba(48,209,88,0.18),rgba(48,209,88,0.12));border:0.5px solid rgba(48,209,88,0.35);border-radius:12px;padding:13px;color:#30D158;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✓ Mark as Done</button>'
+    );
+
+  var sheet = document.getElementById('s1-task-detail-sheet');
+  var overlay = document.getElementById('s1-task-detail-overlay');
+  if(!sheet){
+    overlay = document.createElement('div');
+    overlay.id = 's1-task-detail-overlay';
+    overlay.onclick = closeS1TaskDetail;
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:850;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);';
+    document.body.appendChild(overlay);
+
+    sheet = document.createElement('div');
+    sheet.id = 's1-task-detail-sheet';
+    sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:851;background:rgba(16,16,30,0.98);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:0.5px solid rgba(255,255,255,0.1);border-bottom:none;border-radius:20px 20px 0 0;padding:14px 16px calc(20px + env(safe-area-inset-bottom));max-height:82vh;overflow-y:auto;';
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = html;
+  overlay.style.display = 'block';
+  sheet.style.display = 'block';
+}
+
+function closeS1TaskDetail(){
+  var overlay = document.getElementById('s1-task-detail-overlay');
+  var sheet = document.getElementById('s1-task-detail-sheet');
+  if(overlay) overlay.style.display = 'none';
+  if(sheet) sheet.style.display = 'none';
 }
 
 function startS1Countdowns(){
