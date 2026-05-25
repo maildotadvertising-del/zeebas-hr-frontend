@@ -8359,8 +8359,11 @@ async function loadBackupStatus(){
 }
 
 function _fmtISTDate(d){
-  // d is a Date object (from DB, UTC stored — show as IST)
-  var ist = new Date(d.getTime() + (5*60+30)*60000);
+  // d may be a Date object or a string — normalize first
+  var ts = (typeof d === 'string') ? d.replace(' ','T') : d;
+  var dt = (ts instanceof Date) ? ts : new Date(ts);
+  if(isNaN(dt.getTime())) return '—';
+  var ist = new Date(dt.getTime() + (5*60+30)*60000);
   var day = ist.getUTCDate(), mon = ist.getUTCMonth(), yr = ist.getUTCFullYear();
   var hr  = ist.getUTCHours(), mn = ist.getUTCMinutes();
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -8378,7 +8381,11 @@ async function runManualBackup(){
     var d   = await res.json();
     if(d.success){
       showToast('✅ Backup complete — '+d.sizeKb+'KB uploaded to Drive');
-      loadBackupStatus();
+      // Update cards immediately with response data
+      var se=document.getElementById('bk-last-status'); if(se) se.innerHTML='<span style="color:#30D158;font-size:22px;">✅</span>';
+      var te=document.getElementById('bk-last-time');   if(te) te.textContent=_fmtISTDate(new Date());
+      var ze=document.getElementById('bk-last-size');   if(ze) ze.textContent=(d.sizeKb||0)+' KB';
+      setTimeout(loadBackupStatus, 1500);
     } else {
       showToast('❌ Backup failed — '+(d.message||'check config'),'error');
     }
