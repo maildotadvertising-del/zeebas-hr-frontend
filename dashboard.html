@@ -9785,6 +9785,9 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +'<div style="display:flex;align-items:center;gap:5px;justify-content:center;flex-wrap:wrap;">'
+      +(r.check_in && r.break_checkout && !r.check_out
+        ? '<button onclick="markInOffice('+i+')" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Mark as back in office">✓ In Office</button>'
+        : '')
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
       +'<button onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>'
       +'</div>'
