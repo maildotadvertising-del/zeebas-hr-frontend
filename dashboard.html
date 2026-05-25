@@ -8291,15 +8291,17 @@ async function loadBackupStatus(){
     // not-configured / not-authorized notice
     var notCfg = document.getElementById('backup-not-cfg');
     if(notCfg){
-      if(!d.configured){
-        notCfg.style.display = 'block';
-        notCfg.innerHTML = '<div style="font-size:13px;font-weight:500;color:#FF9F0A;margin-bottom:4px;">⚠️ Google Drive Not Configured</div>'
-          +'<div style="font-size:11px;color:rgba(245,245,247,0.5);line-height:1.6;">Set <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_CLIENT_ID</code>, <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_CLIENT_SECRET</code> and <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_DRIVE_FOLDER_ID</code> on Render.</div>';
-      } else if(!d.authorized && d.auth_url){
+      if(d.auth_url){
+        // Credentials set but not yet authorized — show Connect button
         notCfg.style.display = 'block';
         notCfg.innerHTML = '<div style="font-size:13px;font-weight:500;color:#FF9F0A;margin-bottom:8px;">⚠️ Google Drive Authorization Required</div>'
           +'<a href="'+d.auth_url+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:9px;padding:9px 16px;color:#fff;font-size:12px;font-weight:500;text-decoration:none;">🔗 Connect Google Drive</a>'
-          +'<div style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:8px;">Click to authorize — one-time setup. After authorizing, come back and click Backup Now.</div>';
+          +'<div style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:8px;">Click → Google account-ல allow பண்ணுங்க → திரும்பி வந்து Backup Now click பண்ணுங்க.</div>';
+      } else if(!d.authorized){
+        // No credentials set at all
+        notCfg.style.display = 'block';
+        notCfg.innerHTML = '<div style="font-size:13px;font-weight:500;color:#FF9F0A;margin-bottom:4px;">⚠️ Google Drive Not Configured</div>'
+          +'<div style="font-size:11px;color:rgba(245,245,247,0.5);line-height:1.6;">Set <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_CLIENT_ID</code>, <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_CLIENT_SECRET</code> and <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_DRIVE_FOLDER_ID</code> on Render.</div>';
       } else {
         notCfg.style.display = 'none';
       }
