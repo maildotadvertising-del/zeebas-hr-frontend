@@ -1830,7 +1830,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         </div>
         <input type="hidden" id="att-filter-date">
         <button class="btn-g" onclick="loadAttendancePage()">↺ Refresh</button>
-        <button class="btn-g" id="reset-not-in-office-btn" onclick="resetAllInOffice()" title="Clear 'Not in office' for all staff who are actually in office" style="background:rgba(255,159,10,0.15);border-color:rgba(255,159,10,0.3);color:#FF9F0A;">📶 Fix WiFi</button>
         <button class="btn-g" onclick="openManualAttModal()" style="background:rgba(48,209,88,0.15);border-color:rgba(48,209,88,0.3);color:#30D158;">+ Add</button>
       </div>
     </div>
@@ -5536,12 +5535,8 @@ async function wifiCheckAndCheckout(silent){
 
 var _attAutoRefreshTimer = null;
 function _startWifiAutoCheck(){
+  // Auto-timers disabled — all staff use GPS now; manual Refresh button available
   _stopWifiAutoCheck();
-  // WiFi sync: run immediately then every 5 minutes
-  wifiCheckAndCheckout(true);
-  _wifiAutoTimer = setInterval(function(){ wifiCheckAndCheckout(true); }, 5 * 60 * 1000);
-  // Table auto-refresh every 2 minutes
-  _attAutoRefreshTimer = setInterval(function(){ loadAttendancePage(); }, 2 * 60 * 1000);
 }
 function _stopWifiAutoCheck(){
   if(_wifiAutoTimer){ clearInterval(_wifiAutoTimer); _wifiAutoTimer = null; }
