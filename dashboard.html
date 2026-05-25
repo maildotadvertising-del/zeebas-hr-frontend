@@ -3675,6 +3675,33 @@ async function openEdit(staffId){
             +'<input type="hidden" id="ef-beta-tester" value="'+(p.beta_tester?'1':'0')+'">'
             +'</div>';
         })()
+      // ── Attendance Mode section (admin/owner only) ──
+      +(function(){
+          var _ms={}; try{_ms=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
+          if(!(_ms.is_owner||_ms.role==='admin')) return '';
+          var mode = p.attendance_mode || 'gps';
+          return '<div style="background:rgba(255,159,10,0.05);border:0.5px solid rgba(255,159,10,0.2);border-radius:12px;padding:11px 14px;margin-top:4px;">'
+            +'<div style="font-size:12px;font-weight:500;color:#FF9F0A;margin-bottom:6px;">📡 Attendance Mode</div>'
+            +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:9px;">GPS for all staff • WiFi for office-only staff (e.g. Zeebas)</div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+            +'<div id="ef-attmode-gps" onclick="efSetAttMode(\'gps\')" style="cursor:pointer;border-radius:10px;padding:9px 10px;text-align:center;transition:all 0.15s;'
+              +(mode==='gps'?'background:rgba(48,209,88,0.18);border:1px solid rgba(48,209,88,0.5);':'background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);')
+              +'">'
+              +'<div style="font-size:16px;margin-bottom:3px;">📍</div>'
+              +'<div style="font-size:12px;font-weight:600;color:'+(mode==='gps'?'#30D158':'rgba(245,245,247,0.5)')+';"> GPS</div>'
+              +'<div style="font-size:9px;color:rgba(245,245,247,0.3);margin-top:1px;">Location-based</div>'
+            +'</div>'
+            +'<div id="ef-attmode-wifi" onclick="efSetAttMode(\'wifi\')" style="cursor:pointer;border-radius:10px;padding:9px 10px;text-align:center;transition:all 0.15s;'
+              +(mode==='wifi'?'background:rgba(10,132,255,0.18);border:1px solid rgba(10,132,255,0.5);':'background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);')
+              +'">'
+              +'<div style="font-size:16px;margin-bottom:3px;">📶</div>'
+              +'<div style="font-size:12px;font-weight:600;color:'+(mode==='wifi'?'#0A84FF':'rgba(245,245,247,0.5)')+';"> WiFi</div>'
+              +'<div style="font-size:9px;color:rgba(245,245,247,0.3);margin-top:1px;">Office network</div>'
+            +'</div>'
+            +'</div>'
+            +'<input type="hidden" id="ef-attendance-mode" value="'+mode+'">'
+            +'</div>';
+        })()
       // ── Working Hours section ──
       +(function(){
           var _ms={}; try{_ms=JSON.parse(localStorage.getItem('zhr_staff')||'{}');}catch(e){}
@@ -3770,6 +3797,24 @@ function efToggleBeta(){
   tg.querySelector('div').style.left = on ? '21px' : '3px';
 }
 
+function efSetAttMode(mode){
+  var inp = document.getElementById('ef-attendance-mode');
+  if(!inp) return;
+  inp.value = mode;
+  var gpsCard  = document.getElementById('ef-attmode-gps');
+  var wifiCard = document.getElementById('ef-attmode-wifi');
+  if(gpsCard){
+    gpsCard.style.background  = mode==='gps' ? 'rgba(48,209,88,0.18)' : 'rgba(255,255,255,0.04)';
+    gpsCard.style.border      = mode==='gps' ? '1px solid rgba(48,209,88,0.5)' : '0.5px solid rgba(255,255,255,0.1)';
+    gpsCard.querySelector('div:nth-child(2)').style.color = mode==='gps' ? '#30D158' : 'rgba(245,245,247,0.5)';
+  }
+  if(wifiCard){
+    wifiCard.style.background = mode==='wifi' ? 'rgba(10,132,255,0.18)' : 'rgba(255,255,255,0.04)';
+    wifiCard.style.border     = mode==='wifi' ? '1px solid rgba(10,132,255,0.5)' : '0.5px solid rgba(255,255,255,0.1)';
+    wifiCard.querySelector('div:nth-child(2)').style.color = mode==='wifi' ? '#0A84FF' : 'rgba(245,245,247,0.5)';
+  }
+}
+
 async function saveEdit(){
   if(!_editStaffId){ showToast('❌ No staff selected'); return; }
   var name    = (document.getElementById('ef-name')||{}).value||'';
@@ -3810,6 +3855,8 @@ async function saveEdit(){
     fd.append('allowance_enabled', allowanceEnabledEl ? allowanceEnabledEl.value : '0');
     var betaTesterEl = document.getElementById('ef-beta-tester');
     if(betaTesterEl) fd.append('beta_tester', betaTesterEl.value);
+    var attModeEl = document.getElementById('ef-attendance-mode');
+    if(attModeEl) fd.append('attendance_mode', attModeEl.value || 'gps');
     // Per-staff working hours (blank = use default)
     var wstartEl = document.getElementById('ef-wstart');
     var wendEl   = document.getElementById('ef-wend');
