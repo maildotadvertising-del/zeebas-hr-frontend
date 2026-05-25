@@ -9109,11 +9109,17 @@ function _renderAdvTable(rows){
 function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _cap(s){ s=String(s||'').trim(); return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 
+// Global store — belt-and-suspenders so staff_id survives any DOM reset
+var _advCurrStaffId = null;
+
 // Pre-filled advance modal for a specific staff (called from payroll row 💳 button)
 function openAddAdvanceForStaff(staffId, name, designation){
+  var sid = parseInt(staffId, 10);
+  _advCurrStaffId = (sid > 0) ? sid : null;  // store BEFORE any reset
   openAddAdvance();
-  // Pre-select the staff member — photo resolved from avatar cache
-  _advSelectStaff(staffId, name, designation, _getAvatar(staffId, null, null) || null);
+  // Re-apply after openAddAdvance reset
+  _advCurrStaffId = (sid > 0) ? sid : null;
+  _advSelectStaff(sid, name, designation, _getAvatar(sid, null, null) || null);
 }
 
 // Open advance detail for an existing active advance (called from payroll row 💳 ₹X badge)
@@ -9131,6 +9137,7 @@ async function openAdvanceDetail(advId){
     document.getElementById('adv-reason').value= adv.reason||'';
     document.getElementById('adv-notes').value = adv.notes||'';
     advShowNotice(adv.total_amount||'');
+    _advCurrStaffId = parseInt(adv.staff_id, 10) || null;
     _advSelectStaff(adv.staff_id, adv.staff_name||'', adv.designation||'',
       _getAvatar(adv.staff_id, adv.photo_url, adv.photo_data));
   } catch(e){ showToast('Error loading advance'); }
@@ -9152,12 +9159,15 @@ function openAddAdvance(){
 
 function closeAddAdvance(){
   document.getElementById('adv-modal').style.display = 'none';
+  _advCurrStaffId = null;
 }
 
 /* ── Advance Staff Display (readonly — always pre-selected from payroll row) ── */
 
 function _advResetStaffDisplay(){
-  document.getElementById('adv-staff-id').value = '';
+  _advCurrStaffId = null;
+  var el = document.getElementById('adv-staff-id');
+  if(el) el.value = '';
   var av = document.getElementById('adv-staff-avatar');
   var lb = document.getElementById('adv-staff-label');
   if(av){ av.innerHTML = '👤'; av.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;'; }
@@ -9166,7 +9176,9 @@ function _advResetStaffDisplay(){
 
 function _advSelectStaff(id, name, designation, photoSrc){
   var numId = parseInt(id, 10);
-  document.getElementById('adv-staff-id').value = (numId > 0) ? numId : '';
+  if(numId > 0) _advCurrStaffId = numId;  // always keep global in sync
+  var el = document.getElementById('adv-staff-id');
+  if(el) el.value = (numId > 0) ? numId : '';
   var av = document.getElementById('adv-staff-avatar');
   var lb = document.getElementById('adv-staff-label');
   if(av){
@@ -9198,13 +9210,13 @@ function advShowNotice(val){
 
 async function saveAdvance(){
   var id         = (document.getElementById('adv-edit-id').value || '').trim();
-  var staff_id   = (document.getElementById('adv-staff-id').value || '').trim();
+  // Read staff_id from global (most reliable) or DOM as fallback
+  var staff_id_num = _advCurrStaffId || parseInt((document.getElementById('adv-staff-id').value||'').trim(), 10) || 0;
   var total      = (document.getElementById('adv-total').value || '').trim();
   var date       = document.getElementById('adv-date').value;
   var reason     = document.getElementById('adv-reason').value.trim();
   var notes      = document.getElementById('adv-notes').value.trim();
 
-  var staff_id_num = parseInt(staff_id, 10);
   var total_num    = parseFloat(total);
 
   if(!id && !(staff_id_num > 0)) return showToast('Please select a staff member','error');
