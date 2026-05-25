@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260525b -->
+<!-- v20260525c -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8722,11 +8722,11 @@ function prViewRow(r,i){
         : '<span style="color:rgba(255,255,255,0.2);font-size:10px;">Process first</span>')
       // Advance button — shows balance if active advance exists
       +(function(){
-        var adv = (window._advancesMap||{})[r.staff_id];
+        var adv = (window._advancesMap||{})[r.id];
         if(adv){
           return '<button onclick="openAdvanceDetail('+adv.id+')" title="Active advance: ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+' · click to manage" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;white-space:nowrap;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>';
         }
-        return '<button onclick="openAddAdvanceForStaff('+r.staff_id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
+        return '<button onclick="openAddAdvanceForStaff('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
       })()
       +'</div>'
     +'</td></tr>';
