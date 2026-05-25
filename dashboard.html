@@ -2198,21 +2198,9 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         <div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Staff Member</div>
           <input type="hidden" id="adv-staff-id">
-          <div style="position:relative;">
-            <div id="adv-staff-trigger" onclick="toggleAdvStaffDd()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 12px;cursor:pointer;display:flex;align-items:center;gap:9px;min-height:44px;user-select:none;">
-              <div id="adv-staff-avatar" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
-              <span id="adv-staff-label" style="flex:1;font-size:13px;color:rgba(245,245,247,0.4);">Select staff…</span>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="rgba(245,245,247,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div id="adv-staff-dd" style="display:none;position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:600;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.14);border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.75);overflow:hidden;">
-              <div style="padding:7px 8px;border-bottom:0.5px solid rgba(255,255,255,0.07);">
-                <input type="text" id="adv-staff-search" autocomplete="off" spellcheck="false"
-                  placeholder="🔍 Search name or role…"
-                  oninput="renderAdvStaffList(this.value)"
-                  style="width:100%;background:rgba(255,255,255,0.07);border:none;outline:none;border-radius:8px;padding:7px 10px;color:#F5F5F7;font-size:12px;font-family:inherit;">
-              </div>
-              <div id="adv-staff-list" style="max-height:220px;overflow-y:auto;padding:4px;"></div>
-            </div>
+          <div id="adv-staff-display" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:9px;min-height:44px;">
+            <div id="adv-staff-avatar" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+            <span id="adv-staff-label" style="flex:1;font-size:13px;color:rgba(245,245,247,0.5);">—</span>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -8735,11 +8723,10 @@ function prViewRow(r,i){
       // Advance button — shows balance if active advance exists
       +(function(){
         var adv = (window._advancesMap||{})[r.staff_id];
-        var pSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
         if(adv){
           return '<button onclick="openAdvanceDetail('+adv.id+')" title="Active advance: ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+' · click to manage" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;white-space:nowrap;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>';
         }
-        return '<button onclick="openAddAdvanceForStaff('+r.staff_id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\',\''+(pSrc||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
+        return '<button onclick="openAddAdvanceForStaff('+r.staff_id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
       })()
       +'</div>'
     +'</td></tr>';
@@ -9123,13 +9110,10 @@ function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function _cap(s){ s=String(s||'').trim(); return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 
 // Pre-filled advance modal for a specific staff (called from payroll row 💳 button)
-async function openAddAdvanceForStaff(staffId, name, designation, photoSrc){
-  await openAddAdvance();
-  // Pre-select the staff member (photoSrc already resolved — no API prefix needed)
-  _advSelectStaff(staffId, name, designation, photoSrc || null);
-  // Lock staff picker (can't change when opened from a row)
-  var trigger = document.getElementById('adv-staff-trigger');
-  if(trigger) trigger.style.pointerEvents = 'none';
+function openAddAdvanceForStaff(staffId, name, designation){
+  openAddAdvance();
+  // Pre-select the staff member — photo resolved from avatar cache
+  _advSelectStaff(staffId, name, designation, _getAvatar(staffId, null, null) || null);
 }
 
 // Open advance detail for an existing active advance (called from payroll row 💳 ₹X badge)
@@ -9139,23 +9123,21 @@ async function openAdvanceDetail(advId){
     var d   = await res.json();
     var adv = (d.data||[]).find(function(a){ return a.id === advId; });
     if(!adv){ showToast('Advance not found'); return; }
-    // Populate modal for editing
+    openAddAdvance();
     document.getElementById('adv-edit-id').value = adv.id;
     document.getElementById('adv-modal-title').textContent = 'Salary Advance';
     document.getElementById('adv-total').value = adv.total_amount||'';
     document.getElementById('adv-date').value  = adv.given_date ? adv.given_date.slice(0,10) : '';
     document.getElementById('adv-reason').value= adv.reason||'';
     document.getElementById('adv-notes').value = adv.notes||'';
-    _advSelectStaff(adv.staff_id, adv.staff_name||'', adv.designation||'', adv.photo_data || (adv.photo_url ? API+adv.photo_url : null));
-    var trigger = document.getElementById('adv-staff-trigger');
-    if(trigger) trigger.style.pointerEvents = 'none';
-    var modal = document.getElementById('adv-modal');
-    modal.style.display = 'flex';
+    advShowNotice(adv.total_amount||'');
+    _advSelectStaff(adv.staff_id, adv.staff_name||'', adv.designation||'',
+      _getAvatar(adv.staff_id, adv.photo_url, adv.photo_data));
   } catch(e){ showToast('Error loading advance'); }
 }
 
-async function openAddAdvance(){
-  // reset modal
+function openAddAdvance(){
+  // Reset all fields
   document.getElementById('adv-edit-id').value = '';
   document.getElementById('adv-modal-title').textContent = 'New Advance';
   document.getElementById('adv-total').value = '';
@@ -9164,44 +9146,32 @@ async function openAddAdvance(){
   document.getElementById('adv-notes').value = '';
   var notice = document.getElementById('adv-auto-notice');
   if(notice) notice.style.display = 'none';
-  // reset custom staff picker
-  _advResetStaffPicker();
-  // populate staff list
-  try {
-    var res = await fetch(API+'/api/staff', { headers: zHdr() });
-    var d = await res.json();
-    _advStaffCache = (d.data||d||[]).filter(function(s){ return s.active !== 0; });
-  } catch(e){ _advStaffCache = []; }
-  var trigger = document.getElementById('adv-staff-trigger');
-  if(trigger) trigger.style.pointerEvents = '';
-  var modal = document.getElementById('adv-modal');
-  modal.style.display = 'flex';
+  _advResetStaffDisplay();
+  document.getElementById('adv-modal').style.display = 'flex';
 }
 
 function closeAddAdvance(){
   document.getElementById('adv-modal').style.display = 'none';
-  var trigger = document.getElementById('adv-staff-trigger');
-  if(trigger) trigger.style.pointerEvents = ''; // unlock
 }
 
-/* ── Advance Staff Custom Dropdown ── */
-var _advStaffCache = [];
+/* ── Advance Staff Display (readonly — always pre-selected from payroll row) ── */
 
-function _advResetStaffPicker(){
+function _advResetStaffDisplay(){
   document.getElementById('adv-staff-id').value = '';
   var av = document.getElementById('adv-staff-avatar');
   var lb = document.getElementById('adv-staff-label');
   if(av){ av.innerHTML = '👤'; av.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;'; }
-  if(lb){ lb.textContent = 'Select staff…'; lb.style.color = 'rgba(245,245,247,0.4)'; }
+  if(lb){ lb.textContent = '—'; lb.style.color = 'rgba(245,245,247,0.4)'; }
 }
 
 function _advSelectStaff(id, name, designation, photoSrc){
-  document.getElementById('adv-staff-id').value = parseInt(id,10) || '';
+  var numId = parseInt(id, 10);
+  document.getElementById('adv-staff-id').value = (numId > 0) ? numId : '';
   var av = document.getElementById('adv-staff-avatar');
   var lb = document.getElementById('adv-staff-label');
   if(av){
     if(photoSrc){
-      av.innerHTML = '<img src="'+photoSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">';
+      av.innerHTML = '<img src="'+photoSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\'">';
       av.style.background = 'transparent';
     } else {
       var init = (name||'?')[0].toUpperCase();
@@ -9209,71 +9179,7 @@ function _advSelectStaff(id, name, designation, photoSrc){
       av.style.background = 'transparent';
     }
   }
-  if(lb){ lb.textContent = name + (designation ? ' — '+designation : ''); lb.style.color = '#F5F5F7'; }
-  var dd = document.getElementById('adv-staff-dd');
-  if(dd) dd.style.display = 'none';
-}
-
-function toggleAdvStaffDd(){
-  var dd = document.getElementById('adv-staff-dd');
-  if(!dd) return;
-  if(dd.style.display === 'block'){ dd.style.display='none'; return; }
-  var srch = document.getElementById('adv-staff-search');
-  if(srch) srch.value = '';
-  renderAdvStaffList('');
-  dd.style.display = 'block';
-  setTimeout(function(){ if(srch) srch.focus(); }, 50);
-  setTimeout(function(){
-    function outsideAdv(e){
-      var d2 = document.getElementById('adv-staff-dd');
-      var tr = document.getElementById('adv-staff-trigger');
-      if(d2 && !d2.contains(e.target) && tr && !tr.contains(e.target)){
-        d2.style.display='none';
-        document.removeEventListener('mousedown', outsideAdv);
-      }
-    }
-    document.addEventListener('mousedown', outsideAdv);
-  }, 0);
-}
-
-function renderAdvStaffList(q){
-  var list = document.getElementById('adv-staff-list');
-  if(!list) return;
-  var query = (q||'').toLowerCase().trim();
-  var staff = _advStaffCache.filter(function(s){
-    return !query
-      || (s.name||'').toLowerCase().indexOf(query) !== -1
-      || (s.designation||'').toLowerCase().indexOf(query) !== -1
-      || (s.brand_name||'').toLowerCase().indexOf(query) !== -1;
-  });
-  if(!staff.length){
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(245,245,247,0.3);font-size:12px;">No match</div>';
-    return;
-  }
-  list.innerHTML = staff.map(function(s){
-    var init = (s.name||'?')[0].toUpperCase();
-    var photoSrc = s.photo_data || (s.photo_url ? API+s.photo_url : '');
-    var photo = photoSrc
-      ? '<img src="'+photoSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
-      : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
-    return '<div onclick="_advSelectStaffById('+s.id+')" '
-      +'style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background 0.1s;" '
-      +'onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" '
-      +'onmouseout="this.style.background=\'transparent\'">'
-      +photo
-      +'<div>'
-        +'<div style="font-size:13px;font-weight:500;color:#F5F5F7;">'+_esc(s.name||'')+'</div>'
-        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);">'+_esc(s.designation||s.brand_name||'')+'</div>'
-      +'</div></div>';
-  }).join('');
-}
-
-function _advSelectStaffById(id){
-  var numId = parseInt(id, 10);
-  var s = (_advStaffCache||[]).find(function(x){ return parseInt(x.id,10) === numId; });
-  if(!s) return;
-  var photoSrc = s.photo_data || (s.photo_url ? API+s.photo_url : '');
-  _advSelectStaff(numId, s.name||'', s.designation||'', photoSrc);
+  if(lb){ lb.textContent = (name||'') + (designation ? ' — '+designation : ''); lb.style.color = '#F5F5F7'; }
 }
 
 function advShowNotice(val){
@@ -9301,7 +9207,7 @@ async function saveAdvance(){
   var staff_id_num = parseInt(staff_id, 10);
   var total_num    = parseFloat(total);
 
-  if(!id && (isNaN(staff_id_num) || staff_id_num <= 0)) return showToast('Please select a staff member','error');
+  if(!id && !(staff_id_num > 0)) return showToast('Please select a staff member','error');
   if(isNaN(total_num) || total_num <= 0) return showToast('Enter a valid advance amount','error');
 
   var body = {
@@ -9340,11 +9246,8 @@ function editAdvance(id){
   document.getElementById('adv-notes').value = r.notes||'';
   // show auto-deduct notice
   advShowNotice(r.total_amount||'');
-  // staff picker — show selected staff with photo, disable changing on edit
-  _advResetStaffPicker();
-  _advSelectStaff(r.staff_id, r.staff_name||'', r.designation||'', r.photo_data||r.photo_url||'');
-  var trigger = document.getElementById('adv-staff-trigger');
-  if(trigger) trigger.style.pointerEvents = 'none';
+  _advSelectStaff(r.staff_id, r.staff_name||'', r.designation||'',
+    _getAvatar(r.staff_id, r.photo_url, r.photo_data));
   document.getElementById('adv-modal').style.display = 'flex';
 }
 
