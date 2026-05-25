@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260521t -->
+<!-- v20260525a -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -6554,7 +6554,7 @@ function renderSubTasks(){
       +'<div style="display:flex;align-items:center;gap:8px;">'
       +'<div class="st-drag-handle" data-stid="'+st.id+'" title="Drag to reorder" style="cursor:grab;color:rgba(255,255,255,0.2);font-size:15px;line-height:1;flex-shrink:0;padding:0 2px;user-select:none;touch-action:none;" onmousedown="stTouchInit(event,\''+st.id+'\')">⠿</div>'
       +'<div class="st-check" data-stid="'+st.id+'" onclick="toggleStDone(\''+st.id+'\')" style="width:20px;height:20px;border-radius:6px;border:1.5px solid '+doneC+';background:'+doneBg+';display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:11px;color:#30D158;">'+(done?'✓':'')+'</div>'
-      +'<input type="text" id="st_title_'+st.id+'" placeholder="Subtask title…" value="'+escHtml(st.title||'')+'" oninput="stSet(\''+st.id+'\',\'title\',this.value)" spellcheck="true" style="flex:1;background:transparent;border:none;outline:none;font-size:13px;'+textStyle+'font-family:inherit;">'
+      +'<input type="text" id="st_title_'+st.id+'" placeholder="Subtask title…" value="'+escHtml(st.title||'')+'" oninput="stSet(\''+st.id+'\',\'title\',this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addSubTask();}" spellcheck="true" style="flex:1;background:transparent;border:none;outline:none;font-size:13px;'+textStyle+'font-family:inherit;">'
       +'<button type="button" onclick="toggleStExpand(\''+st.id+'\')" title="Add description / file" style="background:none;border:none;color:rgba(245,245,247,0.25);cursor:pointer;font-size:13px;padding:0 3px;line-height:1;" >⌄</button>'
       +'<button type="button" onclick="removeSubTask(\''+st.id+'\')" style="background:none;border:none;color:rgba(255,69,58,0.45);cursor:pointer;font-size:17px;padding:0 2px;line-height:1;">×</button>'
       +'</div>'
@@ -9785,9 +9785,7 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;"><span style="background:'+col+'22;color:'+col+';border:0.5px solid '+col+'44;border-radius:6px;padding:3px 10px;font-size:10px;white-space:nowrap;">'+lbl+'</span></td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
       +'<div style="display:flex;align-items:center;gap:5px;justify-content:center;flex-wrap:wrap;">'
-      +(r.check_in && r.break_checkout && !r.check_out
-        ? '<button onclick="markInOffice('+i+')" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Mark as back in office">✓ In Office</button>'
-        : '')
+      +''
       +'<button onclick="attStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
       +'<button onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>'
       +'</div>'
@@ -10053,7 +10051,7 @@ async function attSaveEdit(i){
       window._attRows[i] = Object.assign({}, r, {
         check_in:  isAbsent ? null : (ciRaw ? window._attDate+'T'+ciRaw+':00' : r.check_in),
         check_out: isAbsent ? null : (coRaw ? window._attDate+'T'+coRaw+':00' : null),
-        break_checkout: isAbsent ? 0 : r.break_checkout,
+        break_checkout: 0,
         type: payload.type, late_minutes: payload.late_minutes, status: payload.status
       });
       var row = document.getElementById('att-row-'+i);
