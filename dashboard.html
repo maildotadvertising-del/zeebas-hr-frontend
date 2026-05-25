@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260525a -->
+<!-- v20260525b -->
 <html lang="en"><head>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2187,7 +2187,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
   <select id="adv-filter-status" style="display:none;"><option value="">All</option><option value="active">Active</option></select>
 
   <!-- ── ADD/EDIT ADVANCE MODAL ── -->
-  <div id="adv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:500;align-items:center;justify-content:center;">
+  <div id="adv-modal" data-sid="" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:500;align-items:center;justify-content:center;">
     <div style="background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.12);border-radius:20px;padding:24px;width:92%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,0.7);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div style="font-size:15px;font-weight:600;" id="adv-modal-title">New Advance</div>
@@ -9115,10 +9115,18 @@ var _advCurrStaffId = null;
 // Pre-filled advance modal for a specific staff (called from payroll row 💳 button)
 function openAddAdvanceForStaff(staffId, name, designation){
   var sid = parseInt(staffId, 10);
-  _advCurrStaffId = (sid > 0) ? sid : null;  // store BEFORE any reset
+  if(!(sid > 0)){ showToast('Invalid staff ID','error'); return; }
+  // Store in global BEFORE any reset
+  _advCurrStaffId = sid;
   openAddAdvance();
-  // Re-apply after openAddAdvance reset
-  _advCurrStaffId = (sid > 0) ? sid : null;
+  // Re-apply after openAddAdvance (which calls _advResetStaffDisplay)
+  _advCurrStaffId = sid;
+  // Also write to the modal data-sid attribute — survives any DOM/scope issue
+  var modal = document.getElementById('adv-modal');
+  if(modal) modal.setAttribute('data-sid', sid);
+  // Also write to the hidden input explicitly
+  var hiddenEl = document.getElementById('adv-staff-id');
+  if(hiddenEl) hiddenEl.value = sid;
   _advSelectStaff(sid, name, designation, _getAvatar(sid, null, null) || null);
 }
 
@@ -9138,6 +9146,8 @@ async function openAdvanceDetail(advId){
     document.getElementById('adv-notes').value = adv.notes||'';
     advShowNotice(adv.total_amount||'');
     _advCurrStaffId = parseInt(adv.staff_id, 10) || null;
+    var _advModal2 = document.getElementById('adv-modal');
+    if(_advModal2 && _advCurrStaffId) _advModal2.setAttribute('data-sid', _advCurrStaffId);
     _advSelectStaff(adv.staff_id, adv.staff_name||'', adv.designation||'',
       _getAvatar(adv.staff_id, adv.photo_url, adv.photo_data));
   } catch(e){ showToast('Error loading advance'); }
@@ -9158,7 +9168,8 @@ function openAddAdvance(){
 }
 
 function closeAddAdvance(){
-  document.getElementById('adv-modal').style.display = 'none';
+  var modal = document.getElementById('adv-modal');
+  if(modal){ modal.style.display = 'none'; modal.setAttribute('data-sid',''); }
   _advCurrStaffId = null;
 }
 
@@ -9166,6 +9177,8 @@ function closeAddAdvance(){
 
 function _advResetStaffDisplay(){
   _advCurrStaffId = null;
+  var modal = document.getElementById('adv-modal');
+  if(modal) modal.setAttribute('data-sid', '');
   var el = document.getElementById('adv-staff-id');
   if(el) el.value = '';
   var av = document.getElementById('adv-staff-avatar');
@@ -9176,9 +9189,13 @@ function _advResetStaffDisplay(){
 
 function _advSelectStaff(id, name, designation, photoSrc){
   var numId = parseInt(id, 10);
-  if(numId > 0) _advCurrStaffId = numId;  // always keep global in sync
+  if(numId > 0){
+    _advCurrStaffId = numId;  // global
+    var modal = document.getElementById('adv-modal');
+    if(modal) modal.setAttribute('data-sid', numId);  // DOM attribute
+  }
   var el = document.getElementById('adv-staff-id');
-  if(el) el.value = (numId > 0) ? numId : '';
+  if(el) el.value = (numId > 0) ? numId : '';  // hidden input
   var av = document.getElementById('adv-staff-avatar');
   var lb = document.getElementById('adv-staff-label');
   if(av){
@@ -9210,8 +9227,13 @@ function advShowNotice(val){
 
 async function saveAdvance(){
   var id         = (document.getElementById('adv-edit-id').value || '').trim();
-  // Read staff_id from global (most reliable) or DOM as fallback
-  var staff_id_num = _advCurrStaffId || parseInt((document.getElementById('adv-staff-id').value||'').trim(), 10) || 0;
+  // Read staff_id from THREE independent sources — global, DOM attribute, hidden input
+  var modal      = document.getElementById('adv-modal');
+  var fromGlobal = parseInt(_advCurrStaffId) || 0;
+  var fromAttr   = parseInt((modal ? modal.getAttribute('data-sid') : '') || '') || 0;
+  var fromInput  = parseInt((document.getElementById('adv-staff-id').value||'').trim(), 10) || 0;
+  var staff_id_num = fromGlobal || fromAttr || fromInput;
+  console.log('[saveAdvance] staff_id sources — global:'+fromGlobal+' attr:'+fromAttr+' input:'+fromInput+' → used:'+staff_id_num);
   var total      = (document.getElementById('adv-total').value || '').trim();
   var date       = document.getElementById('adv-date').value;
   var reason     = document.getElementById('adv-reason').value.trim();
