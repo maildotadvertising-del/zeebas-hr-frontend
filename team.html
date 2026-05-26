@@ -5157,19 +5157,55 @@ async function loadMySalary(){
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">OT hrs</div><div style="color:#0A84FF;font-size:14px;font-weight:500;">'+otHours.toFixed(1)+'</div></div>'
         +'</div>'
       +'</div>'
-      // ── Salary Breakdown ──
-      +(otAmount>0||incentiveAmt>0||allowanceAmt>0||advDeduction>0||lateDeduction>0||absentDeduction>0
-        ?'<div class="g" style="padding:11px 13px;margin-bottom:10px;">'
-          +'<div style="color:rgba(245,245,247,0.45);font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Breakdown</div>'
-          +(otAmount>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">OT Pay <span style="font-size:9px;color:rgba(245,245,247,0.3);">('+otHours.toFixed(1)+'h)</span></span><span style="color:#0A84FF;font-size:11px;font-family:monospace;">+₹'+otAmount.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
-          +(incentiveAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Incentive 🎯</span><span style="color:#30D158;font-size:11px;font-family:monospace;">+₹'+incentiveAmt.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
-          +(allowanceAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Allowance'+(allowanceNote?' · <span style="font-size:9px;">'+allowanceNote+'</span>':'')+'</span><span style="color:#BF5FFF;font-size:11px;font-family:monospace;">+₹'+allowanceAmt.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
-          +(lateDeduction>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Late Cut <span style="background:rgba(255,159,10,0.12);color:#FF9F0A;padding:1px 4px;border-radius:4px;font-size:9px;">'+lateDays+'d</span></span><span style="color:#FF453A;font-size:11px;font-family:monospace;">−₹'+lateDeduction.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
-          +(absentDeduction>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Absent Cut <span style="background:rgba(255,69,58,0.1);color:#FF453A;padding:1px 4px;border-radius:4px;font-size:9px;">'+absentDays+'d</span></span><span style="color:#FF453A;font-size:11px;font-family:monospace;">−₹'+absentDeduction.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
-          +(advDeduction>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);"><span style="color:rgba(245,245,247,0.45);font-size:11px;">Advance Recovery 💳</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">−₹'+advDeduction.toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0})+'</span></div>':'')
-          +'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0 2px;"><span style="color:#fff;font-size:12px;font-weight:600;">Net Pay</span><span style="color:#30D158;font-size:15px;font-weight:700;font-family:monospace;">₹'+fmt(netSalary)+'</span></div>'
-        +'</div>':''
-      )
+      // ── Salary Breakdown (always shown) ──
+      +(function(){
+        var presentEarned = daysWorked * dailyRate;
+        var bRow = function(label, sub, val, color){
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+            +'<div>'
+              +'<div style="color:rgba(245,245,247,0.7);font-size:12px;">'+label+'</div>'
+              +(sub?'<div style="color:rgba(245,245,247,0.3);font-size:10px;margin-top:1px;">'+sub+'</div>':'')
+            +'</div>'
+            +'<div style="color:'+color+';font-size:13px;font-weight:600;font-family:monospace;">'+val+'</div>'
+          +'</div>';
+        };
+        return '<div class="g" style="padding:13px 14px;margin-bottom:10px;">'
+          +'<div style="color:rgba(245,245,247,0.5);font-size:10px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:4px;">Salary Breakdown</div>'
+          // Base Salary
+          +bRow('Base Salary', 'Monthly fixed', '₹'+fmt(baseSalary), 'rgba(245,245,247,0.55)')
+          // Present earnings
+          +bRow('Present Salary', daysWorked+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN'), '+₹'+fmt(presentEarned), '#30D158')
+          // Absent deduction
+          +(absentDays>0
+            ? bRow('Absent Deduction', absentDays+' day'+(absentDays>1?'s':'')+' × ₹'+Math.round(dailyRate).toLocaleString('en-IN'), '−₹'+fmt(absentDeduction), '#FF453A')
+            : bRow('Absent Deduction', '0 days', '−₹0', 'rgba(245,245,247,0.22)'))
+          // Late deduction
+          +(lateDeduction>0
+            ? bRow('Late Deduction', lateDays+' late day'+(lateDays>1?'s':''), '−₹'+fmt(lateDeduction), '#FF9F0A')
+            : bRow('Late Deduction', 'No late deductions', '−₹0', 'rgba(245,245,247,0.22)'))
+          // OT Pay
+          +(otHours>0
+            ? bRow('OT Pay', otHours.toFixed(1)+' hrs overtime', '+₹'+fmt(otAmount), '#0A84FF')
+            : bRow('OT Pay', 'No overtime', '+₹0', 'rgba(245,245,247,0.22)'))
+          // Allowance
+          +(allowanceAmt>0
+            ? bRow('Allowance', allowanceNote||'Monthly allowance', '+₹'+fmt(allowanceAmt), '#BF5FFF')
+            : bRow('Allowance', 'Not applicable', '+₹0', 'rgba(245,245,247,0.22)'))
+          // Incentive
+          +(incentiveAmt>0
+            ? bRow('Incentive 🎯', 'Performance bonus', '+₹'+fmt(incentiveAmt), '#FF9F0A')
+            : bRow('Incentive 🎯', 'Not applicable', '+₹0', 'rgba(245,245,247,0.22)'))
+          // Advance recovery
+          +(advDeduction>0
+            ? bRow('Advance Recovery', 'Monthly recovery', '−₹'+fmt(advDeduction), '#FF453A')
+            : '')
+          // Total
+          +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 2px;margin-top:2px;">'
+            +'<div style="color:#fff;font-size:13px;font-weight:600;">Total Salary'+(isCurrMonth?' (This Month)':' · '+periodLabel)+'</div>'
+            +'<div style="color:#30D158;font-size:17px;font-weight:700;font-family:monospace;">₹'+fmt(netSalary)+'</div>'
+          +'</div>'
+        +'</div>';
+      })()
       // ── Work & Attendance Rules ──
       +'<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
         +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
