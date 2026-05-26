@@ -4152,7 +4152,7 @@ function initDashChat(){
   // Clear red dot when chat is opened
   var dot = document.getElementById('chat-nav-dot');
   if(dot) dot.style.display = 'none';
-  var bnDot = document.getElementById('bn-chat-dot');
+  var bnDot = document.getElementById('more-chat-dot');
   if(bnDot) bnDot.style.display = 'none';
   loadDashMessages();
   loadChatMembers();
@@ -4900,7 +4900,7 @@ function moreGo(page){
 function toggleSidebar(){ toggleMoreSheet(); }
 // Sync bottom nav highlight when showPage is called
 (function(){
-  var _bnMap = { dashboard:'bn-dashboard', attendance:'bn-attendance', approvals:'bn-approvals', 'team-chat':'bn-team-chat' };
+  var _bnMap = { dashboard:'bn-dashboard', attendance:'bn-attendance', approvals:'bn-approvals', tasks:'bn-tasks' };
   var _origSP2 = window.showPage;
   window.showPage = function(page, el){
     if(_origSP2) _origSP2(page, el);
@@ -6265,6 +6265,10 @@ async function loadAttendancePage(){
       'onsite_approved':'Onsite ✓','late_pending':'Late ⏳','onsite_pending':'Onsite ⏳'};
 
     window._attRows = rows; window._attDate = dateEl.value;
+    // Wait for avatar cache before rendering so photos don't flash missing
+    if(!window._avatarCacheReady && window._avatarCachePromise){
+      await Promise.race([window._avatarCachePromise, new Promise(function(r){ setTimeout(r,1500); })]);
+    }
     tbody.innerHTML=rows.map(function(r,i){
       return attViewRow(r,i);
     }).join('');
@@ -6343,13 +6347,18 @@ function _getAvatar(staffId, photoUrl, photoData){
   if(photoUrl)  return API+photoUrl;
   return window._avatarMap[staffId] || null;
 }
-// Pre-load avatar cache once on startup (non-blocking)
-(function(){
-  fetch(API+'/api/staff',{headers:zHdr()}).then(function(r){return r.json();}).then(function(d){
-    var list = d.data||[];
-    _staffCache = list;
-    _cacheAvatarsFromList(list);
-  }).catch(function(){});
+// Pre-load avatar cache once on startup — returns a promise attendance can await
+window._avatarCacheReady = false;
+window._avatarCachePromise = (function(){
+  return fetch(API+'/api/staff',{headers:zHdr()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var list = d.data||[];
+      _staffCache = list;
+      _cacheAvatarsFromList(list);
+      window._avatarCacheReady = true;
+    })
+    .catch(function(){ window._avatarCacheReady = true; });
 })();
 
 var CATEGORY_LABELS = {
@@ -6515,6 +6524,8 @@ function _renderTasks(allTasks){
 
   var badge = document.getElementById('tasks-badge');
   if(badge){ badge.textContent=pending; badge.style.display=pending>0?'inline':'none'; }
+  var bnTDot = document.getElementById('bn-tasks-dot');
+  if(bnTDot) bnTDot.style.display = pending>0?'block':'none';
   var subLabel = isTodayDone
     ? groupedCompleted.length+' completed today'
     : groupedActive.length+' task'+(groupedActive.length!==1?'s':'')+' · '+pending+' pending'+(groupedCompleted.length?' · '+groupedCompleted.length+' done':'');
@@ -9901,10 +9912,10 @@ function attViewRow(r,i){
   }
   var init=(r.name||'?').charAt(0).toUpperCase();
   var avSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
+  var fallbackAv='<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>';
   var avatar = avSrc
-    ? '<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'
-      +'<div style="display:none;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>'
-    : '<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;">'+init+'</div>';
+    ? '<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\''+fallbackAv.replace(/'/g,"\\'")+'\'">'
+    : fallbackAv;
   var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
   // Determine check-out display
   // IMPORTANT: check break_checkout FIRST — break_checkout=1 means staff is mid-break,
@@ -10571,10 +10582,10 @@ async function submitManualAtt(){
     <div id="bn-approvals-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;top:6px;right:calc(50% - 14px);box-shadow:0 0 5px rgba(255,69,58,0.7);"></div>
     <span>Approvals</span>
   </div>
-  <div class="bn-item" id="bn-team-chat" onclick="showPage('team-chat',null);bnActive('bn-team-chat')" style="position:relative;">
-    <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>
-    <div id="bn-chat-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;top:6px;right:calc(50% - 14px);box-shadow:0 0 5px rgba(255,69,58,0.7);"></div>
-    <span>Chat</span>
+  <div class="bn-item" id="bn-tasks" onclick="showPage('tasks',null);bnActive('bn-tasks')" style="position:relative;">
+    <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div id="bn-tasks-dot" style="display:none;width:7px;height:7px;background:#FF9F0A;border-radius:50%;position:absolute;top:6px;right:calc(50% - 14px);box-shadow:0 0 5px rgba(255,159,10,0.7);"></div>
+    <span>Tasks</span>
   </div>
   <div class="bn-item" id="bn-more" onclick="toggleMoreSheet()">
     <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -10606,14 +10617,19 @@ async function submitManualAtt(){
 
     <!-- Content -->
     <div style="font-size:9px;color:rgba(245,245,247,0.28);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;padding-left:4px;">Content</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;">
-      <div onclick="moreGo('announcements')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;display:flex;align-items:center;gap:9px;cursor:pointer;">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);flex-shrink:0;"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-        <div style="color:#fff;font-size:12px;">Announcements</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px;">
+      <div onclick="moreGo('announcements')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <div style="color:#fff;font-size:11px;margin-top:5px;">Announcements</div>
       </div>
-      <div onclick="moreGo('tasks')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;display:flex;align-items:center;gap:9px;cursor:pointer;">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);flex-shrink:0;"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div style="color:#fff;font-size:12px;">Tasks</div>
+      <div onclick="moreGo('tasks')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="color:#fff;font-size:11px;margin-top:5px;">Tasks</div>
+      </div>
+      <div onclick="moreGo('team-chat')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;position:relative;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>
+        <div id="more-chat-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;top:8px;right:calc(50% - 16px);box-shadow:0 0 5px rgba(255,69,58,0.7);"></div>
+        <div style="color:#fff;font-size:11px;margin-top:5px;">Team Chat</div>
       </div>
     </div>
 
