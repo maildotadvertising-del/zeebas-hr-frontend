@@ -397,16 +397,16 @@ body.desktop-mode #s1-sidebar {
       <div class="scroll" style="padding:12px 13px 8px;">
         <!-- Profile banner -->
         <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));cursor:pointer;" onclick="go1('s1-profile')">
-          <div style="display:flex;align-items:center;gap:11px;">
+          <div style="display:flex;align-items:flex-end;gap:11px;">
             <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
             <div style="flex:1;min-width:0;">
               <!-- Name row: staff name left, DOT logo right -->
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
                 <div id="s1-name" style="color:#fff;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Welcome</div>
-                <span id="s1-brand" style="display:inline-flex;align-items:center;flex-shrink:0;"><img src="dot-logo.png" alt="DOT Advertising" style="height:30px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
+                <span id="s1-brand" style="display:inline-flex;align-items:center;flex-shrink:0;"><img src="dot-logo.png" alt="DOT Advertising" style="height:42px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
               </div>
-              <!-- Role badge row below -->
-              <div style="margin-top:5px;">
+              <!-- Role badge row below — aligned to bottom of avatar -->
+              <div style="margin-top:4px;">
                 <span id="s1-desig" style="background:rgba(255,159,10,0.2);border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:2px 7px;font-size:10px;color:#FF9F0A;font-weight:500;"></span>
               </div>
             </div>
@@ -453,8 +453,8 @@ body.desktop-mode #s1-sidebar {
           <!-- Monthly Balance Row -->
           <div id="s1-balance-row" style="display:none;margin-top:6px;background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 12px;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:6px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              <span style="color:rgba(245,245,247,0.4);font-size:9px;">This Month Balance</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Hrs Left This Month</span>
             </div>
             <div id="s1-balance-val" style="font-size:12px;font-weight:600;">—</div>
           </div>
@@ -6163,34 +6163,45 @@ async function homeSmartCheckin(){
 // Legacy alias kept for any other references
 async function homeWifiCheckin(){ return homeSmartCheckin(); }
 
-// ── Monthly Balance Fetch & Display ──
+// ── Monthly Remaining Hours Fetch & Display ──
 async function fetchMonthlyBalance(){
   try{
-    // Use IST month (UTC+5:30) to avoid UTC/IST date mismatch
-    var istNow = new Date(Date.now() + (5*60+30)*60000);
-    var istMonth = istNow.getUTCFullYear()+'-'+String(istNow.getUTCMonth()+1).padStart(2,'0');
-    var r = await fetch(API_URL+'/api/attendance/monthly-balance?month='+istMonth, {headers: zHead()});
-    var d = await r.json();
-    if(!d.success) return;
     var balRow = document.getElementById('s1-balance-row');
     var balVal = document.getElementById('s1-balance-val');
     if(!balRow || !balVal) return;
 
-    // Only show if there's something to display
-    if(d.total_deficit_mins === 0 && d.total_extra_mins === 0){ balRow.style.display='none'; return; }
+    // Fetch payroll settings for hours_per_day
+    var sRes = await fetch(API_URL+'/api/settings/payroll', {headers: zHead()});
+    var sData = await sRes.json();
+    var ps = sData.data || {};
+
+    // Per-staff hours override if set
+    var staffInfo = zStaff() || {};
+    var effHours = parseFloat(ps.hours_per_day) || 11;
+    if(staffInfo.work_start_time && staffInfo.work_end_time){
+      var _ssh = staffInfo.work_start_time.split(':').map(Number);
+      var _seh = staffInfo.work_end_time.split(':').map(Number);
+      var _staffMins = (_seh[0]*60+_seh[1]) - (_ssh[0]*60+_ssh[1]);
+      if(_staffMins > 0) effHours = _staffMins / 60;
+    }
+
+    // Count remaining working days (Mon–Sat, Sunday = leave) from tomorrow to month-end (IST)
+    var istNow = new Date(Date.now() + (5*60+30)*60000);
+    var yr = istNow.getUTCFullYear(), mo = istNow.getUTCMonth(), tod = istNow.getUTCDate();
+    var lastDay = new Date(Date.UTC(yr, mo+1, 0)).getUTCDate();
+    var remDays = 0;
+    for(var dd = tod + 1; dd <= lastDay; dd++){
+      if(new Date(Date.UTC(yr, mo, dd)).getUTCDay() !== 0) remDays++;
+    }
+
+    if(remDays <= 0){ balRow.style.display='none'; return; }
+
+    var remH = effHours * remDays;
+    var rh = Math.floor(remH), rm = Math.round((remH - rh) * 60);
+    var hStr = rh > 0 ? (rh+'h'+(rm>0?' '+rm+'m':'')) : (rm+'m');
 
     balRow.style.display = 'flex';
-    var bal = d.balance_mins;
-    if(bal >= 0){
-      var bh = Math.floor(bal/60), bm = bal%60;
-      var bStr = bh > 0 ? (bh+'h '+bm+'m') : (bm+'m');
-      balVal.innerHTML = '<span style="color:#30D158;">+'+bStr+' ahead</span>';
-    } else {
-      var def = Math.abs(bal);
-      var dh = Math.floor(def/60), dm = def%60;
-      var dStr = dh > 0 ? (dh+'h '+dm+'m') : (dm+'m');
-      balVal.innerHTML = '<span style="color:#FF453A;">'+dStr+' deficit</span>';
-    }
+    balVal.innerHTML = '<span style="color:#64D2FF;">'+remDays+' days · '+hStr+'</span>';
   }catch(e){}
 }
 
