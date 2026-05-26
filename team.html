@@ -5200,16 +5200,32 @@ async function loadMySalary(){
         +'</div>';
       })()
       // ── Work & Attendance Rules ──
-      +'<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
-        +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
-        +(settings.work_start_time||settings.work_end_time ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Work Hours</span><span style="color:rgba(245,245,247,0.7);font-size:11px;font-family:monospace;">'+(settings.work_start_time||'09:00')+' – '+(settings.work_end_time||'18:00')+'</span></div>' : '')
-        +(settings.working_days_month ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Working Days / Month</span><span style="color:rgba(245,245,247,0.7);font-size:11px;">'+settings.working_days_month+' days</span></div>' : '')
-        +(settings.work_week ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Work Days</span><span style="color:rgba(245,245,247,0.7);font-size:11px;">'+settings.work_week+'</span></div>' : '')
-        +(parseInt(settings.late_grace_minutes||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Late Grace Period</span><span style="color:#30D158;font-size:11px;">'+settings.late_grace_minutes+' min</span></div>' : '')
-        +(parseFloat(settings.late_deduction_per_min||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Late Deduction</span><span style="color:#FF453A;font-size:11px;font-family:monospace;">₹'+parseFloat(settings.late_deduction_per_min)+'/min</span></div>' : '')
-        +(parseFloat(settings.late_max_per_day||0)>0 ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Max Late Cut / Day</span><span style="color:#FF9F0A;font-size:11px;font-family:monospace;">₹'+parseFloat(settings.late_max_per_day)+'</span></div>' : '')
-        +(settings.ot_enabled ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Overtime</span><span style="color:#0A84FF;font-size:11px;">'+parseFloat(settings.ot_rate_multiplier||1.5)+'× pay after '+(settings.ot_after_hours||0)+'h</span></div>' : '')
-      +'</div>'
+      +(function(){
+        // Convert "HH:MM" 24hr → "H:MM AM/PM"
+        var to12 = function(t){
+          if(!t) return '';
+          var p = t.split(':'), h = parseInt(p[0]), m = p[1]||'00';
+          var a = h >= 12 ? 'PM' : 'AM';
+          h = h % 12 || 12;
+          return h + ':' + m + ' ' + a;
+        };
+        var wRule = function(label, val, color){
+          return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+            +'<span style="color:rgba(245,245,247,0.4);font-size:11px;">'+label+'</span>'
+            +'<span style="color:'+(color||'rgba(245,245,247,0.7)')+';font-size:11px;">'+val+'</span>'
+          +'</div>';
+        };
+        return '<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
+          +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
+          +(settings.work_start_time||settings.work_end_time ? wRule('Work Hours', to12(settings.work_start_time||'09:00')+' – '+to12(settings.work_end_time||'18:00')) : '')
+          +(settings.working_days_month ? wRule('Working Days / Month', settings.working_days_month+' days') : '')
+          +wRule('Leave', 'Sunday', '#30D158')
+          +(parseInt(settings.late_grace_minutes||0)>0 ? wRule('Late Grace Period', settings.late_grace_minutes+' min', '#30D158') : '')
+          +(parseFloat(settings.late_deduction_per_min||0)>0 ? wRule('Late Deduction', '₹'+parseFloat(settings.late_deduction_per_min)+'/min', '#FF453A') : '')
+          +(parseFloat(settings.late_max_per_day||0)>0 ? wRule('Max Late Cut / Day', '₹'+parseFloat(settings.late_max_per_day), '#FF9F0A') : '')
+          +(settings.ot_enabled ? wRule('Overtime', parseFloat(settings.ot_rate_multiplier||1.5)+'× pay after '+(settings.ot_after_hours||0)+'h', '#0A84FF') : '')
+        +'</div>';
+      })()
       +(isCurrMonth ? '<div style="text-align:center;padding:8px 0 4px;color:rgba(245,245,247,0.25);font-size:10px;">Live estimate — final amount set by admin after payroll processing</div>' : '');
 
     el.innerHTML = html;
