@@ -983,27 +983,6 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
           </div>
         </div>
 
-        <!-- Auto Clock-Out -->
-        <div class="sec g" style="margin-bottom:14px;">
-          <div class="sh"><span class="st">🕐 Auto Clock-Out</span></div>
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;">
-              <div>
-                <div style="font-size:13px;font-weight:500;">Enable Auto Clock-Out</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:3px;">Team auto checkout at set time if not done manually</div>
-              </div>
-              <div class="tg" id="tg-auto-checkout" onclick="gpsToggle('auto-checkout')"><div class="tg-th"></div></div>
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Auto Clock-Out Time</div>
-              <input class="inp" type="time" id="gps-auto-checkout-time" value="19:00">
-              <div style="font-size:11px;color:rgba(255,159,10,0.7);margin-top:7px;background:rgba(255,159,10,0.07);border:0.5px solid rgba(255,159,10,0.2);border-radius:8px;padding:8px 10px;">
-                ⚠️ Team members who haven't checked out by this time will be auto clocked out
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- WiFi Auto Attendance -->
         <div class="sec g" style="margin-bottom:14px;">
           <div class="sh"><span class="st">📶 WiFi Auto Attendance</span></div>
@@ -3381,7 +3360,7 @@ async function loadGPSSettings(){
     set('gps-grace-inp',   s.late_grace_minutes != null ? s.late_grace_minutes : 0);
     set('gps-grace-slider',s.late_grace_minutes != null ? s.late_grace_minutes : 0);
     set('gps-halfday',     s.half_day_hours||4);
-    set('gps-auto-checkout-time', s.auto_checkout_time||'19:00');
+    // auto_checkout_time removed from global GPS settings (now per-staff)
     set('gps-office-ip',   s.office_ip||'');
     set('gps-break-mins',  s.wifi_break_minutes||40);
     // Toggles
@@ -3389,7 +3368,7 @@ async function loadGPSSettings(){
     gpsSetToggle('site',     s.allow_site!==0);
     gpsSetToggle('approval', s.require_approval!==0);
     gpsSetToggle('capture',  s.capture_gps!==0);
-    gpsSetToggle('auto-checkout', s.auto_checkout_enabled==1);
+    // auto_checkout_enabled removed from global GPS settings (now per-staff)
     gpsSetToggle('wifi',     s.wifi_enabled==1);
     // Update displays
     updateGPSRadiusDisplay(s.radius||300);
@@ -3679,8 +3658,7 @@ async function saveGPS(){
     office_start_time:    get('gps-start-time')||'09:00',
     late_grace_minutes:   (function(v){ var n=parseInt(v); return isNaN(n)?0:n; })(get('gps-grace-inp')),
     half_day_hours:       parseInt(get('gps-halfday'))||4,
-    auto_checkout_enabled: tgOn('auto-checkout'),
-    auto_checkout_time:   get('gps-auto-checkout-time')||'19:00',
+    // auto_checkout_enabled / auto_checkout_time removed (now per-staff)
     office_ip:            (get('gps-office-ip')||'').trim()||null,
     wifi_enabled:         tgOn('wifi'),
     wifi_break_minutes:   parseInt(get('gps-break-mins'))||40,
