@@ -5227,7 +5227,7 @@ async function loadMySalary(){
         return '<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
           +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
           +(settings.work_start_time||settings.work_end_time ? wRule('Work Hours', to12(settings.work_start_time||'09:00')+' – '+to12(settings.work_end_time||'18:00')) : '')
-          +(settings.working_days_month ? wRule('Working Days / Month', settings.working_days_month+' days') : '')
+          +wRule('Working Days / Month', wdFull+' days')
           +wRule('Leave', 'Sunday', '#30D158')
           +(parseInt(settings.late_grace_minutes||0)>0 ? wRule('Late Grace Period', settings.late_grace_minutes+' min', '#30D158') : '')
           +(parseFloat(settings.late_deduction_per_min||0)>0 ? wRule('Late Deduction', '₹'+parseFloat(settings.late_deduction_per_min)+'/min', '#FF453A') : '')
