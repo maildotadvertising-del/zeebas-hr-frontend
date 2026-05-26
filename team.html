@@ -5242,16 +5242,18 @@ async function loadMySalary(){
           +(parseFloat(settings.late_deduction_per_min||0)>0 ? wRule('Late Deduction', '₹'+parseFloat(settings.late_deduction_per_min)+'/min', '#FF453A') : '')
           +(parseFloat(settings.late_max_per_day||0)>0 ? wRule('Max Late Cut / Day', '₹'+parseFloat(settings.late_max_per_day), '#FF9F0A') : '')
           +(settings.ot_enabled ? (function(){
-            // OT per-hour rate = dailyRate ÷ effectiveHoursPerDay
+            // OT effective hourly rate = (dailyRate ÷ hoursPerDay) × ot_rate_multiplier
             var effH   = parseFloat(settings.hours_per_day) || 11;
-            var otRate = Math.round(dailyRate / effH);
-            // OT threshold = work hours + 40-min buffer
+            var multi  = parseFloat(settings.ot_rate_multiplier) || 1.0;
+            var baseHr = dailyRate / effH;
+            var otRate = Math.round(baseHr * multi);
+            // OT threshold = shift duration + 40-min buffer
             var startH = settings.work_start_time ? parseInt((settings.work_start_time||'10:00').split(':')[0]) : 10;
             var startM = settings.work_start_time ? parseInt((settings.work_start_time||'10:00').split(':')[1]||0) : 0;
             var endH   = settings.work_end_time   ? parseInt((settings.work_end_time||'21:00').split(':')[0])   : 21;
             var endM   = settings.work_end_time   ? parseInt((settings.work_end_time||'21:00').split(':')[1]||0): 0;
-            var totalMins  = (endH*60+endM) - (startH*60+startM); // total shift minutes
-            var threshMins = totalMins + 40; // +40 min buffer
+            var totalMins  = (endH*60+endM) - (startH*60+startM);
+            var threshMins = totalMins + 40;
             var thH = Math.floor(threshMins/60), thM = threshMins%60;
             var thLabel = thH+'h'+(thM>0?' '+thM+'min':'');
             return wRule('Overtime', '₹'+otRate+'/hr · after '+thLabel, '#0A84FF');
