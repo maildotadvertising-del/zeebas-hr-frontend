@@ -593,19 +593,21 @@ body.desktop-mode #s1-sidebar {
       <div id="n1-tasks" class="bnav"></div>
     </div>
 
-    <!-- EOD WORK REPORT MODAL — shown when work day ends -->
+    <!-- EOD WORK REPORT MODAL — shown when work day ends (or next-day pending) -->
     <div id="ov-eod" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(4,4,8,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-direction:column;overflow-y:auto;">
       <div style="flex:1;display:flex;flex-direction:column;padding:28px 18px 32px;max-width:430px;margin:0 auto;width:100%;">
-        <!-- Header -->
+        <!-- Header — updated dynamically by showEodPopup / showPendingEodPopup -->
         <div style="text-align:center;margin-bottom:24px;">
-          <div style="font-size:36px;margin-bottom:8px;">🎉</div>
-          <div style="font-size:18px;font-weight:600;color:#fff;margin-bottom:4px;">Work Day Complete!</div>
+          <div id="eod-emoji" style="font-size:36px;margin-bottom:8px;">🎉</div>
+          <div id="eod-title" style="font-size:18px;font-weight:600;color:#fff;margin-bottom:4px;">Work Day Complete!</div>
           <div id="eod-date-lbl" style="font-size:12px;color:rgba(245,245,247,0.4);"></div>
-          <div style="margin-top:10px;font-size:13px;color:rgba(245,245,247,0.6);line-height:1.5;">Share what you worked on today.<br>Your report will go to admin for review.</div>
+          <div id="eod-subtitle" style="margin-top:10px;font-size:13px;color:rgba(245,245,247,0.6);line-height:1.5;">Share what you worked on today.<br>Your report will go to admin for review.</div>
+          <!-- Shown only in pending mode -->
+          <div id="eod-pending-warning" style="display:none;margin-top:10px;font-size:12px;color:rgba(255,159,10,0.85);background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:10px;padding:9px 12px;line-height:1.5;">⚠️ You were auto-checked out yesterday.<br>Submit your EOD to unlock today's check-in.</div>
         </div>
 
         <!-- Work items list -->
-        <div style="font-size:11px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Today's Work</div>
+        <div id="eod-items-label" style="font-size:11px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Today's Work</div>
         <div id="eod-items-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
 
         <!-- Add item button -->
@@ -613,7 +615,7 @@ body.desktop-mode #s1-sidebar {
 
         <!-- Submit -->
         <button id="eod-submit-btn" onclick="eodSubmit()" style="width:100%;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);margin-bottom:10px;">Submit &amp; Check Out →</button>
-        <div style="text-align:center;font-size:10px;color:rgba(245,245,247,0.25);">You must submit your work report to check out.</div>
+        <div id="eod-bottom-note" style="text-align:center;font-size:10px;color:rgba(245,245,247,0.25);">You must submit your work report to check out.</div>
       </div>
     </div>
 
@@ -2041,7 +2043,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); }
+  if(id==='s1-home'){ checkPendingEod(); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
@@ -5543,6 +5545,7 @@ async function doAllowNotif(){
 // ══════════════════════════════════════════
 var _eodItems = [];
 var _eodTriggered = false;
+var _eodPendingDate = null; // set when showing yesterday's pending EOD
 var _eodCats = ['Design','Video','Content','Social Media','Meeting','Admin','Other'];
 
 function eodAddItem(text, link){
@@ -5630,66 +5633,132 @@ function renderEodItems(){
 function showEodPopup(){
   if(_eodTriggered) return;
   _eodTriggered = true;
+  _eodPendingDate = null; // normal checkout mode
   _eodItems = [];
-  // Add one empty item to start
   _eodItems.push({ id: Date.now(), text: '', link: '', cat:'', status:'done' });
   renderEodItems();
-  // Set date label
-  var lbl = document.getElementById('eod-date-lbl');
-  if(lbl){
-    var now = new Date();
-    lbl.textContent = now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  }
+  // Normal mode header
+  var now = new Date();
+  var _s = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  _s('eod-emoji', '🎉');
+  _s('eod-title', 'Work Day Complete!');
+  _s('eod-date-lbl', now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'}));
+  var sub = document.getElementById('eod-subtitle');
+  if(sub){ sub.style.display='block'; sub.innerHTML='Share what you worked on today.<br>Your report will go to admin for review.'; }
+  var warn = document.getElementById('eod-pending-warning');
+  if(warn) warn.style.display='none';
+  var lbl = document.getElementById('eod-items-label');
+  if(lbl) lbl.textContent = "Today's Work";
+  var btn = document.getElementById('eod-submit-btn');
+  if(btn) btn.textContent = 'Submit & Check Out →';
+  var note = document.getElementById('eod-bottom-note');
+  if(note){ note.style.display='block'; note.textContent='You must submit your work report to check out.'; }
   var ov = document.getElementById('ov-eod');
-  if(ov){ ov.style.display='flex'; }
+  if(ov) ov.style.display='flex';
+}
+
+// ── Pending EOD popup — shown when auto-checkout happened without EOD ──
+function showPendingEodPopup(dateStr){
+  _eodTriggered = true;
+  _eodPendingDate = dateStr;
+  _eodItems = [];
+  _eodItems.push({ id: Date.now(), text: '', link: '', cat:'', status:'done' });
+  renderEodItems();
+  // Format date for display
+  var d = new Date(dateStr + 'T00:00:00');
+  var dateFmt = d.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  var _s = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  _s('eod-emoji', '📋');
+  _s('eod-title', "Yesterday's Work Report");
+  _s('eod-date-lbl', dateFmt);
+  var sub = document.getElementById('eod-subtitle');
+  if(sub) sub.style.display='none';
+  var warn = document.getElementById('eod-pending-warning');
+  if(warn) warn.style.display='block';
+  var lbl = document.getElementById('eod-items-label');
+  if(lbl) lbl.textContent = "Yesterday's Work";
+  var btn = document.getElementById('eod-submit-btn');
+  if(btn) btn.textContent = 'Submit EOD →';
+  var note = document.getElementById('eod-bottom-note');
+  if(note){ note.style.display='block'; note.textContent='Submit to unlock today\'s check-in.'; }
+  var ov = document.getElementById('ov-eod');
+  if(ov) ov.style.display='flex';
 }
 
 async function eodSubmit(){
   var btn = document.getElementById('eod-submit-btn');
+  var isPending = !!_eodPendingDate; // true = yesterday's pending EOD, false = normal checkout
+  var origBtnText = isPending ? 'Submit EOD →' : 'Submit & Check Out →';
   if(btn){ btn.textContent='Submitting…'; btn.disabled=true; }
-  var checkoutAt = new Date().toISOString(); // capture EXACT button-click time
+  var checkoutAt = new Date().toISOString();
   try{
     var items = _eodItems.filter(function(i){ return (i.text||'').trim(); }).map(function(i){
       return { text: (i.text||'').trim(), link: (i.link||'').trim(), category: i.cat||'', status: i.status||'done' };
     });
     if(!items.length){
-      if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
+      if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
       showToast('⚠️ Add at least one work item!');
       return;
+    }
+    var payload = { items: items };
+    if(isPending){
+      payload.date = _eodPendingDate; // past date — no checkout trigger
+    } else {
+      payload.checkout_at = checkoutAt;
     }
     var r = await fetch(API_URL+'/api/eod/submit', {
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'}, zHead()),
-      body: JSON.stringify({ items: items, checkout_at: checkoutAt })
+      body: JSON.stringify(payload)
     });
     var d = await r.json();
     if(d.success){
       var ov = document.getElementById('ov-eod');
       if(ov) ov.style.display='none';
-      stopWorkTimer();
-      // Show checkout success screen
-      var successOv = document.createElement('div');
-      successOv.style.cssText='position:fixed;inset:0;background:rgba(4,4,8,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:10px;padding:28px;';
-      successOv.innerHTML=
-        '<div style="font-size:60px;margin-bottom:4px;">👋</div>'
-        +'<div style="color:#30D158;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Checked Out!</div>'
-        +'<div style="color:rgba(245,245,247,0.5);font-size:14px;margin-top:2px;">Work report submitted ✓</div>'
-        +'<div style="color:rgba(245,245,247,0.35);font-size:13px;">Have a great evening! 🌙</div>'
-        +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:20px;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:13px 36px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);">Back to Home</button>';
-      document.body.appendChild(successOv);
-      setTimeout(function(){ var b=successOv.querySelector('button'); if(b) b.click(); }, 3000);
-      // Update home attendance card to show Day Complete state
-      updateAttendanceCard(false, null, null, null, checkoutAt, true);
-      // Refresh home data
-      setTimeout(function(){ wifiCheckAndAct(); loadHomeWeekAndLeave(); }, 800);
+      _eodPendingDate = null;
+      _eodTriggered = false;
+
+      if(isPending){
+        // ── Pending EOD submitted → show brief success then refresh home (check-in now available) ──
+        showToast('✅ EOD submitted! Check-in unlocked.');
+        setTimeout(function(){ wifiCheckAndAct(); }, 600);
+      } else {
+        // ── Normal checkout ──
+        stopWorkTimer();
+        var successOv = document.createElement('div');
+        successOv.style.cssText='position:fixed;inset:0;background:rgba(4,4,8,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:10px;padding:28px;';
+        successOv.innerHTML=
+          '<div style="font-size:60px;margin-bottom:4px;">👋</div>'
+          +'<div style="color:#30D158;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Checked Out!</div>'
+          +'<div style="color:rgba(245,245,247,0.5);font-size:14px;margin-top:2px;">Work report submitted ✓</div>'
+          +'<div style="color:rgba(245,245,247,0.35);font-size:13px;">Have a great evening! 🌙</div>'
+          +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:20px;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:13px 36px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);">Back to Home</button>';
+        document.body.appendChild(successOv);
+        setTimeout(function(){ var b=successOv.querySelector('button'); if(b) b.click(); }, 3000);
+        updateAttendanceCard(false, null, null, null, checkoutAt, true);
+        setTimeout(function(){ wifiCheckAndAct(); loadHomeWeekAndLeave(); }, 800);
+      }
     } else {
       showToast('❌ '+(d.message||'Could not submit'));
-      if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
+      if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
     }
   }catch(e){
     showToast('❌ Network error');
-    if(btn){ btn.textContent='Submit & Check Out →'; btn.disabled=false; }
+    if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
   }
+}
+
+// ── Check for pending EOD from a previous day (auto-checkout without EOD) ──
+// Called on home screen load. If pending, shows EOD popup before check-in is available.
+async function checkPendingEod(){
+  try{
+    var r = await fetch(API_URL+'/api/eod/pending', {headers: zHead()});
+    var d = await r.json();
+    if(d.pending && d.date){
+      // Show pending EOD overlay — blocks check-in until submitted
+      setTimeout(function(){ showPendingEodPopup(d.date); }, 600);
+    }
+  } catch(e){ /* non-critical — skip silently */ }
 }
 
 function sendNotif(title, body){
@@ -7651,7 +7720,7 @@ window.addEventListener('load',function(){
   var s=zStaff();
   if(zToken()&&s){
     if(s.role==='admin'){ populateAdmin(s); fetchAdminStats(); }
-    else { populateStaff(s); fetchMyTasks(s.id); setTimeout(wifiCheckAndAct, 800); syncNotifCard(); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); setTimeout(loadMissedAnnouncements, 2500); }
+    else { populateStaff(s); fetchMyTasks(s.id); checkPendingEod(); setTimeout(wifiCheckAndAct, 800); syncNotifCard(); requestNotifPermission(); startBreakPoller(); listenBreakApproval(); setTimeout(function(){ swStoreAuth(); registerSW(); }, 1000); setTimeout(loadMySalary, 2000); setTimeout(loadMissedAnnouncements, 2500); }
   }
 });
 
