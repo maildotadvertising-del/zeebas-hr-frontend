@@ -3035,6 +3035,7 @@ function connectStaffSocket(){
   });
   staffSocket.on('message-pinned', function(){ loadStaff1Pinned(); });
   staffSocket.on('message-deleted', function(data){ removeChatMsg1(data.message_id); });
+  staffSocket.on('chat-refresh', function(){ loadStaff1Messages(); });
   staffSocket.on('reaction-update', function(data){
     var row = document.getElementById('rrow-'+data.message_id); if(!row) return;
     row.innerHTML = '';
