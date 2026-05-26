@@ -3994,21 +3994,30 @@ async function loadAdminAttendance(){
         var st=(r.status||'absent').toLowerCase();
         var col=st==='present'?'#30D158':st==='late'?'#FF9F0A':st==='onsite_approved'?'#BF5FFF':st==='on_leave'?'#0A84FF':'#FF453A';
         var lbl={'present':'Present','late':'Late','absent':'Absent','on_leave':'Leave','onsite_approved':'Onsite','onsite_pending':'Onsite?','break_return_pending':'On Break'}[st]||'Absent';
-        var bg=st==='present'?'rgba(48,209,88,0.12)':st==='late'?'rgba(255,159,10,0.12)':st==='onsite_approved'?'rgba(191,95,255,0.12)':st==='on_leave'?'rgba(10,132,255,0.12)':'rgba(255,69,58,0.12)';
         var fmtTime=function(dt){if(!dt)return'—';var d=new Date(dt),h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap;};
         var ci=fmtTime(r.check_in); var co=fmtTime(r.check_out);
-        var avBg=st==='present'?'rgba(48,209,88,0.2)':st==='late'?'rgba(255,159,10,0.2)':st==='on_leave'?'rgba(10,132,255,0.2)':'rgba(255,69,58,0.2)';
-        return'<div class="gs" style="padding:11px 12px;display:flex;align-items:center;gap:10px;">'
-          +'<div style="width:36px;height:36px;background:'+avBg+';border-radius:10px;display:flex;align-items:center;justify-content:center;color:'+col+';font-size:14px;font-weight:600;flex-shrink:0;">'+(r.name||'?').charAt(0).toUpperCase()+'</div>'
-          +'<div style="flex:1;min-width:0;">'
-            +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.name||'—')+'</div>'
-            +'<div style="color:rgba(245,245,247,0.38);font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.designation||'—')+'</div>'
+        var init=(r.name||'?').charAt(0).toUpperCase();
+        var avBg=st==='present'?'rgba(48,209,88,0.18)':st==='late'?'rgba(255,159,10,0.18)':st==='on_leave'?'rgba(10,132,255,0.18)':'rgba(255,69,58,0.18)';
+        var avSrc = r.photo_data || (r.photo_url ? API_URL+r.photo_url : null);
+        var avatar = avSrc
+          ? '<img src="'+avSrc+'" style="width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<div style=&quot;width:38px;height:38px;border-radius:10px;background:'+avBg+';display:flex;align-items:center;justify-content:center;color:'+col+';font-size:14px;font-weight:600;flex-shrink:0;&quot;>'+init+'</div>\'">'
+          : '<div style="width:38px;height:38px;border-radius:10px;background:'+avBg+';display:flex;align-items:center;justify-content:center;color:'+col+';font-size:14px;font-weight:600;flex-shrink:0;">'+init+'</div>';
+        return'<div class="gs" style="padding:11px 12px;">'
+          // ── Row 1: Photo + Full Name + Designation + Status badge ──
+          +'<div style="display:flex;align-items:center;gap:10px;">'
+            +avatar
+            +'<div style="flex:1;min-width:0;overflow:hidden;">'
+              +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.name||'—')+'</div>'
+              +'<div style="color:rgba(245,245,247,0.38);font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.designation||'—')+'</div>'
+            +'</div>'
+            +'<div style="background:'+col+'20;color:'+col+';border:0.5px solid '+col+'40;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:500;white-space:nowrap;flex-shrink:0;">'+lbl+'</div>'
           +'</div>'
-          +'<div style="text-align:right;flex-shrink:0;">'
-            +'<div style="display:flex;align-items:center;gap:5px;justify-content:flex-end;margin-bottom:3px;"><span style="color:rgba(48,209,88,0.6);font-size:10px;">▶</span><span style="color:rgba(245,245,247,0.7);font-size:11px;font-weight:400;">'+ci+'</span></div>'
-            +'<div style="display:flex;align-items:center;gap:5px;justify-content:flex-end;"><span style="color:rgba(255,69,58,0.6);font-size:10px;">■</span><span style="color:rgba(245,245,247,0.45);font-size:11px;font-weight:400;">'+co+'</span></div>'
+          // ── Row 2: Check-in → Check-out times ──
+          +'<div style="display:flex;align-items:center;gap:10px;margin-top:7px;padding-left:48px;">'
+            +'<div style="display:flex;align-items:center;gap:4px;"><span style="color:rgba(48,209,88,0.65);font-size:9px;">▶</span><span style="color:rgba(245,245,247,0.7);font-size:11px;">'+ci+'</span></div>'
+            +'<span style="color:rgba(255,255,255,0.18);font-size:11px;">→</span>'
+            +'<div style="display:flex;align-items:center;gap:4px;"><span style="color:rgba(255,69,58,0.65);font-size:9px;">■</span><span style="color:rgba(245,245,247,0.45);font-size:11px;">'+co+'</span></div>'
           +'</div>'
-          +'<div style="background:'+col+'20;color:'+col+';border:0.5px solid '+col+'40;border-radius:7px;padding:4px 8px;font-size:10px;font-weight:500;white-space:nowrap;flex-shrink:0;margin-left:2px;">'+lbl+'</div>'
           +'</div>';
       }).join('');
     }
