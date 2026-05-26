@@ -5589,6 +5589,7 @@ async function doAllowNotif(){
 var _eodItems = [];
 var _eodTriggered = false;
 var _eodPendingDate = null; // set when showing yesterday's pending EOD
+var _pendingEodChecked = false; // once checked per session — don't repeat
 var _eodCats = ['Design','Video','Content','Social Media','Meeting','Admin','Other'];
 
 function eodAddItem(text, link){
@@ -5794,6 +5795,8 @@ async function eodSubmit(){
 // ── Check for pending EOD from a previous day (auto-checkout without EOD) ──
 // Called on home screen load. If pending, shows EOD popup before check-in is available.
 async function checkPendingEod(){
+  if(_pendingEodChecked) return; // already checked this session — don't repeat
+  _pendingEodChecked = true;
   try{
     var r = await fetch(API_URL+'/api/eod/pending', {headers: zHead()});
     var d = await r.json();
@@ -6953,6 +6956,7 @@ async function testBiometricConnection(btn){
 
 /* ── POPULATE STAFF UI ── */
 function populateStaff(s){
+  _pendingEodChecked = false; // reset on fresh login so one check runs per session
   var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
   set('s1-name', s.name||'Staff');
   set('s1-desig', s.designation||'Staff');
