@@ -5134,13 +5134,6 @@ async function loadMySalary(){
     var statusBadge  = '<span style="background:'+statusBg+';color:'+statusColor+';font-size:9px;padding:2px 8px;border-radius:8px;font-weight:500;">'+statusLabel+'</span>';
 
     var html = ''
-      // ── Payroll status banner (shown prominently when processed) ──
-      +(isProcessed ? '<div style="background:'+(status==='paid'?'rgba(48,209,88,0.08)':'rgba(255,159,10,0.08)')+';border:0.5px solid '+(status==='paid'?'rgba(48,209,88,0.2)':'rgba(255,159,10,0.2)')+';border-radius:13px;padding:10px 13px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">'
-        +'<div style="font-size:20px;">'+(status==='paid'?'✅':'⏳')+'</div>'
-        +'<div>'
-          +'<div style="color:'+(status==='paid'?'#30D158':'#FF9F0A')+';font-size:12px;font-weight:600;">'+periodLabel+' · '+(status==='paid'?'Salary Paid':'Salary Pending')+'</div>'
-          +'<div style="color:rgba(245,245,247,0.38);font-size:10px;margin-top:1px;">'+(status==='paid'?'Admin has processed and marked your salary as paid':'Admin has processed your payroll — awaiting payment')+'</div>'
-        +'</div></div>' : '')
       // ── Net pay card ──
       +'<div style="background:linear-gradient(135deg,rgba(10,80,180,0.55),rgba(80,10,140,0.45));border:0.5px solid rgba(255,255,255,0.12);border-radius:18px;padding:16px;margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
