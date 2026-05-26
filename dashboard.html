@@ -395,10 +395,29 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
   /* ── Prevent page-level horizontal scroll (tables scroll inside their containers) ── */
   body, .main { overflow-x:hidden !important; max-width:100vw !important; }
 
-  /* ── Team Chat: fill available viewport, no page scroll (only when active) ── */
-  #page-team-chat.active { display:flex; flex-direction:column; height:calc(100dvh - 52px - 76px); overflow:hidden; }
+  /* ── Team Chat: fixed overlay so .main scroll doesn't affect it ── */
+  #page-team-chat.active {
+    display:flex !important; flex-direction:column;
+    position:fixed !important; inset:0;
+    top:52px !important; bottom:calc(76px + env(safe-area-inset-bottom)) !important;
+    z-index:200; overflow:hidden;
+    background:#07071A;
+  }
   #page-team-chat .topbar { flex-shrink:0; }
-  #chat-layout { flex:1 !important; height:auto !important; min-height:0; }
+  #chat-layout { flex:1 !important; height:auto !important; min-height:0; overflow:hidden; }
+
+  /* ── More bottom sheet ── */
+  #more-sheet-overlay {
+    display:none; position:fixed; inset:0; z-index:500;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(6px);
+  }
+  #more-sheet {
+    position:absolute; bottom:calc(76px + env(safe-area-inset-bottom)); left:0; right:0;
+    background:rgba(12,12,24,0.98); border:0.5px solid rgba(255,255,255,0.1);
+    border-radius:20px 20px 0 0; padding:16px 14px 10px;
+    animation:slideUp 0.22s ease;
+  }
+  @keyframes slideUp{ from{transform:translateY(100%)} to{transform:translateY(0)} }
 
   /* ══ SINGLE-COLUMN LAYOUT — every 2-col grid becomes 1-col ══ */
 
@@ -4861,6 +4880,24 @@ function bnActive(itemId){
   var el = document.getElementById(itemId);
   if(el) el.classList.add('active');
 }
+
+// ── More bottom sheet ──
+function toggleMoreSheet(){
+  var ov = document.getElementById('more-sheet-overlay');
+  if(!ov) return;
+  if(ov.style.display === 'flex'){ closeMoreSheet(); }
+  else { ov.style.display = 'flex'; bnActive('bn-more'); }
+}
+function closeMoreSheet(){
+  var ov = document.getElementById('more-sheet-overlay');
+  if(ov) ov.style.display = 'none';
+}
+function moreGo(page){
+  closeMoreSheet();
+  showPage(page, null);
+}
+// Legacy alias
+function toggleSidebar(){ toggleMoreSheet(); }
 // Sync bottom nav highlight when showPage is called
 (function(){
   var _bnMap = { dashboard:'bn-dashboard', attendance:'bn-attendance', approvals:'bn-approvals', 'team-chat':'bn-team-chat' };
@@ -10539,11 +10576,74 @@ async function submitManualAtt(){
     <div id="bn-chat-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;top:6px;right:calc(50% - 14px);box-shadow:0 0 5px rgba(255,69,58,0.7);"></div>
     <span>Chat</span>
   </div>
-  <div class="bn-item" id="bn-more" onclick="toggleSidebar()">
+  <div class="bn-item" id="bn-more" onclick="toggleMoreSheet()">
     <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
     <span>More</span>
   </div>
 </nav>
+
+<!-- ── MORE BOTTOM SHEET ── -->
+<div id="more-sheet-overlay" onclick="closeMoreSheet()">
+  <div id="more-sheet" onclick="event.stopPropagation()">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>
+
+    <!-- Team Management -->
+    <div style="font-size:9px;color:rgba(245,245,247,0.28);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;padding-left:4px;">Team Management</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px;">
+      <div onclick="moreGo('staff')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <div style="color:#fff;font-size:11px;margin-top:5px;">Team</div>
+      </div>
+      <div onclick="moreGo('payroll')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.3"/></svg>
+        <div style="color:#fff;font-size:11px;margin-top:5px;">Payroll</div>
+      </div>
+      <div onclick="moreGo('admin-overview')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="12" cy="5" r="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        <div style="color:#fff;font-size:11px;margin-top:5px;">Admin View</div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div style="font-size:9px;color:rgba(245,245,247,0.28);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;padding-left:4px;">Content</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;">
+      <div onclick="moreGo('announcements')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;display:flex;align-items:center;gap:9px;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);flex-shrink:0;"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <div style="color:#fff;font-size:12px;">Announcements</div>
+      </div>
+      <div onclick="moreGo('tasks')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;display:flex;align-items:center;gap:9px;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);flex-shrink:0;"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="color:#fff;font-size:12px;">Tasks</div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div style="font-size:9px;color:rgba(245,245,247,0.28);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;padding-left:4px;">Settings</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+      <div onclick="moreGo('gps-settings')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:#30D158;flex-shrink:0;"><circle cx="8" cy="7" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v1M8 13v1M1 8h1M14 8h1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">GPS Settings</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">Office location & radius</div></div>
+        <svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="rgba(245,245,247,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div onclick="moreGo('payroll-settings')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:#FF9F0A;flex-shrink:0;"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">Payroll Settings</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">Salary rules & deductions</div></div>
+        <svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="rgba(245,245,247,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div onclick="moreGo('biometric')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:#BF5FFF;flex-shrink:0;"><rect x="2" y="4" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        <div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">Biometric Device</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">Hardware attendance</div></div>
+        <svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="rgba(245,245,247,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <!-- Sign Out -->
+    <div onclick="closeMoreSheet();dashLogout();" style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:12px;padding:12px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style="color:#FF453A;flex-shrink:0;"><path d="M10 2H13a1 1 0 011 1v10a1 1 0 01-1 1H10M7 11l3-3-3-3M10 8H3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="color:#FF453A;font-size:12px;font-weight:500;">Sign Out</div>
+    </div>
+  </div>
+</div>
 
 <!-- ── @ MENTION POPUP ── -->
 <div id="mention-popup" style="display:none;position:fixed;z-index:9999;background:#1C1C1E;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:5px;box-shadow:0 20px 60px rgba(0,0,0,0.75);min-width:220px;max-height:260px;overflow-y:auto;">
