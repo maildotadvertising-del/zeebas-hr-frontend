@@ -1,4 +1,4 @@
-<!-- v20260526c -->
+<!-- v20260526d -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -6289,7 +6289,22 @@ async function wifiCheckAndAct(){
 
     if(!d.wifiEnabled){
       wifiBanner(false);
-      stopWorkTimer();
+      // Even when WiFi is disabled, restore check-in state so the card is correct on app open
+      if(d.alreadyCheckedIn && d.checkedOut){
+        _appJustOpened = false;
+        stopWorkTimer();
+        updateAttendanceCard(false, d.checkInTime, d.source||null, null, d.checkOutTime||null, true);
+      } else if(d.alreadyCheckedIn && !d.checkedOut){
+        _appJustOpened = false;
+        var stLblNw = d.lateMinutes>0?'Late — '+d.lateMinutes+' min':'Present ✓';
+        updateAttendanceCard(true, d.checkInTime, d.source||'gps', stLblNw, null);
+        var ciElNw=document.getElementById('s1-checkin');
+        if(ciElNw && d.checkInTime){ var cgnw=new Date(d.checkInTime),hgnw=cgnw.getHours(),mgnw=cgnw.getMinutes(),agnw=hgnw>=12?'PM':'AM'; hgnw=hgnw%12||12; ciElNw.textContent=hgnw+':'+(mgnw<10?'0':'')+mgnw+' '+agnw; }
+        if(d.officeEndTime) startWorkTimer(d.checkInTime, d.officeEndTime, d.lateMinutes||0);
+        showLateBadge(d.lateMinutes||0);
+      } else {
+        stopWorkTimer();
+      }
       return;
     }
 
