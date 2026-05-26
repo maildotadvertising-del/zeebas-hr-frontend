@@ -834,7 +834,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="#30D158" stroke-width="1.4"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="#30D158" stroke-width="1.4" stroke-linecap="round"/></svg>
                 <span id="gps-detect-lbl">📍 My Location</span>
               </button>
-              <button onclick="openGmapsForPin()" style="flex:1;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:11px;padding:11px;color:#0A84FF;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;">
+              <button onclick="openGmapsForPin('gps-lat','gps-lng','gps-link-status-dash')" style="flex:1;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:11px;padding:11px;color:#0A84FF;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;">
                 🗺️ Google Maps
               </button>
             </div>
@@ -875,6 +875,18 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             <div class="gs" style="padding:6px 14px;cursor:pointer;font-size:12px;border-radius:20px;" onclick="setGPSRadius(300)">300m</div>
             <div class="gs" style="padding:6px 14px;cursor:pointer;font-size:12px;border-radius:20px;" onclick="setGPSRadius(500)">500m</div>
             <div class="gs" style="padding:6px 14px;cursor:pointer;font-size:12px;border-radius:20px;" onclick="setGPSRadius(1000)">1km</div>
+          </div>
+        </div>
+
+        <!-- Site Locations -->
+        <div class="sec g" style="margin-bottom:14px;">
+          <div class="sh" style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="st">📍 Site Locations</span>
+            <button onclick="addSiteRow()" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:8px;padding:5px 13px;color:#0A84FF;font-size:12px;cursor:pointer;font-family:inherit;">+ Add Site</button>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Staff can check-in from any site listed here. Useful for client visits, shoot locations, etc.</div>
+          <div id="gps-sites-list" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0;">No sites added yet</div>
           </div>
         </div>
 
@@ -3363,7 +3375,75 @@ async function loadGPSSettings(){
     // Update displays
     updateGPSRadiusDisplay(s.radius||300);
     updateGracePreview();
+    // Load site locations
+    _gpsSites = Array.isArray(s.site_locations) ? s.site_locations : [];
+    renderSites();
   } catch(e){ console.error('GPS load error:', e); }
+}
+
+// ── Site Locations ──
+var _gpsSites = [];
+function renderSites(){
+  var el = document.getElementById('gps-sites-list');
+  if(!el) return;
+  if(!_gpsSites.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0;">No sites added yet — click "+ Add Site"</div>'; return; }
+  el.innerHTML = _gpsSites.map(function(site, i){
+    return '<div class="gs" style="padding:12px;display:flex;flex-direction:column;gap:8px;" data-site-idx="'+i+'">'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<input class="inp" placeholder="Site Name (e.g. Client Office, Shoot Location)" value="'+escH(site.name||'')+'" oninput="_gpsSites['+i+'].name=this.value" style="flex:1;padding:8px 11px;font-size:12px;">'
+      +'<button onclick="deleteSite('+i+')" style="flex-shrink:0;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:8px;padding:7px 10px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">✕</button>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 90px;gap:8px;">'
+      +'<div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Latitude</div><input class="inp" type="number" step="0.0000001" placeholder="11.1085" value="'+(site.lat||'')+'" oninput="_gpsSites['+i+'].lat=this.value" style="padding:7px 10px;font-size:12px;"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Longitude</div><input class="inp" type="number" step="0.0000001" placeholder="79.6478" value="'+(site.lng||'')+'" oninput="_gpsSites['+i+'].lng=this.value" style="padding:7px 10px;font-size:12px;"></div>'
+      +'<div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Radius (m)</div><input class="inp" type="number" placeholder="300" value="'+(site.radius||300)+'" oninput="_gpsSites['+i+'].radius=parseInt(this.value)||300" style="padding:7px 10px;font-size:12px;"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:7px;">'
+      +'<button onclick="openGmapsForPin(\'site-lat-'+i+'\',\'site-lng-'+i+'\',\'site-st-'+i+'\')" data-lat-id="site-lat-'+i+'" data-lng-id="site-lng-'+i+'" style="flex:1;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:8px;padding:6px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">🗺️ Google Maps</button>'
+      +'<button onclick="pasteSiteLink('+i+')" style="flex:1;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px;color:rgba(245,245,247,0.6);font-size:11px;cursor:pointer;font-family:inherit;">📋 Paste Link</button>'
+      +'</div>'
+      +'<div id="site-st-'+i+'" style="font-size:11px;color:var(--muted);min-height:14px;"></div>'
+      +'</div>';
+  }).join('');
+  // Sync hidden inputs for openGmapsForPin lat/lng
+  _gpsSites.forEach(function(site, i){
+    // Create hidden inputs for openGmapsForPin to read
+    var latId='site-lat-'+i, lngId='site-lng-'+i;
+    if(!document.getElementById(latId)){
+      var lEl=document.createElement('input'); lEl.id=latId; lEl.type='hidden'; lEl.value=site.lat||''; document.body.appendChild(lEl);
+    } else { document.getElementById(latId).value = site.lat||''; }
+    if(!document.getElementById(lngId)){
+      var lEl2=document.createElement('input'); lEl2.id=lngId; lEl2.type='hidden'; lEl2.value=site.lng||''; document.body.appendChild(lEl2);
+    } else { document.getElementById(lngId).value = site.lng||''; }
+  });
+}
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function addSiteRow(){
+  _gpsSites.push({ name:'', lat:'', lng:'', radius:300 });
+  renderSites();
+}
+function deleteSite(i){
+  _gpsSites.splice(i, 1);
+  renderSites();
+}
+async function pasteSiteLink(idx){
+  var raw = prompt('Paste Google Maps link or coordinates (e.g. 11.1083, 79.6622):');
+  if(!raw) return;
+  raw = raw.trim();
+  var lat=null, lng=null;
+  var m0=raw.match(/^(-?\d{1,3}\.\d+)\s*[,\s]\s*(-?\d{1,3}\.\d+)$/); if(m0){ lat=parseFloat(m0[1]); lng=parseFloat(m0[2]); }
+  if(!lat){ var m1=raw.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m1){ lat=parseFloat(m1[1]); lng=parseFloat(m1[2]); } }
+  if(!lat){ var m2=raw.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m2){ lat=parseFloat(m2[1]); lng=parseFloat(m2[2]); } }
+  if(!lat){ var m3=raw.match(/\/place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m3){ lat=parseFloat(m3[1]); lng=parseFloat(m3[2]); } }
+  if(!lat){ var m4=raw.match(/[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m4){ lat=parseFloat(m4[1]); lng=parseFloat(m4[2]); } }
+  if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
+    _gpsSites[idx].lat = lat.toFixed(7);
+    _gpsSites[idx].lng = lng.toFixed(7);
+    renderSites();
+    var st=document.getElementById('site-st-'+idx); if(st){ st.style.color='#30D158'; st.textContent='✅ '+lat.toFixed(5)+', '+lng.toFixed(5); }
+  } else {
+    alert('❌ Coordinates parse ஆகல. Google Maps share link paste பண்ணுங்க.');
+  }
 }
 
 /* ── Detect office IP ── */
@@ -3500,12 +3580,17 @@ async function detectOfficeLocation(){
   );
 }
 
-function openGmapsForPin(){
-  var lat = parseFloat(document.getElementById('gps-lat').value) || 11.1083520;
-  var lng = parseFloat(document.getElementById('gps-lng').value) || 79.6622848;
-  window.open('https://www.google.com/maps/@'+lat+','+lng+',18z','_blank');
-  var st = document.getElementById('gps-link-status-dash');
-  if(st){ st.style.color='var(--muted)'; st.textContent='Google Maps-ல pin drop → Share → Copy link → இங்க paste பண்ணுங்க'; }
+function openGmapsForPin(latId, lngId, statusId){
+  var latEl = document.getElementById(latId||'gps-lat');
+  var lngEl = document.getElementById(lngId||'gps-lng');
+  var lat = parseFloat(latEl&&latEl.value) || 11.1083520;
+  var lng = parseFloat(lngEl&&lngEl.value) || 79.6622848;
+  var a = document.createElement('a');
+  a.href = 'https://www.google.com/maps/@'+lat+','+lng+',18z';
+  a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  var st = document.getElementById(statusId||'gps-link-status-dash');
+  if(st){ st.style.color='var(--muted)'; st.textContent='Google Maps-ல pin drop → Share → Copy link → paste பண்ணுங்க'; }
 }
 
 function setFromMapsLinkDash(){
@@ -3579,7 +3664,8 @@ async function saveGPS(){
     auto_checkout_time:   get('gps-auto-checkout-time')||'19:00',
     office_ip:            (get('gps-office-ip')||'').trim()||null,
     wifi_enabled:         tgOn('wifi'),
-    wifi_break_minutes:   parseInt(get('gps-break-mins'))||40
+    wifi_break_minutes:   parseInt(get('gps-break-mins'))||40,
+    site_locations:       _gpsSites
   };
   if(!body.office_name){ showToast('⚠️ Office name required'); return; }
   try{
