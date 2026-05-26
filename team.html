@@ -1,4 +1,4 @@
-<!-- v20260526a -->
+<!-- v20260526b -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -1762,7 +1762,20 @@ body.desktop-mode #s1-sidebar {
             <div style="flex:1;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Longitude</div><input id="gps-lng" class="inp" type="number" step="0.0000001" placeholder="79.6478000" style="margin-bottom:0;"></div>
           </div>
           <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Radius (meters)</div><input id="gps-radius" class="inp" type="number" placeholder="300" style="margin-bottom:0;"></div>
-          <button onclick="useMyLocation()" style="background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:9px;padding:9px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;width:100%;">📍 Use My Current Location</button>
+          <!-- Location picker buttons -->
+          <div style="display:flex;gap:7px;">
+            <button onclick="useMyLocation()" style="flex:1;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:9px;padding:9px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">📍 My Location</button>
+            <button onclick="openGoogleMapsForPin()" style="flex:1;background:rgba(52,199,89,0.1);border:0.5px solid rgba(52,199,89,0.22);border-radius:9px;padding:9px;color:#34C759;font-size:11px;cursor:pointer;font-family:inherit;">🗺️ Google Maps</button>
+          </div>
+          <!-- Paste Google Maps link -->
+          <div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:10px;border:0.5px solid rgba(255,255,255,0.08);">
+            <div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:6px;">📋 Paste Google Maps link or coordinates</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input id="gps-maps-link" class="inp" placeholder="https://maps.google.com/... or 11.1083, 79.6622" style="margin-bottom:0;font-size:11px;padding:9px 11px;">
+              <button onclick="setFromMapsLink()" style="flex-shrink:0;background:rgba(52,199,89,0.15);border:0.5px solid rgba(52,199,89,0.28);border-radius:9px;padding:9px 11px;color:#34C759;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;">Set ✓</button>
+            </div>
+            <div id="gps-link-status" style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:5px;min-height:14px;"></div>
+          </div>
         </div>
         <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Work Timing</div>
         <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
@@ -6525,6 +6538,55 @@ function useMyLocation(){
     var st=document.getElementById('gps-save-status');
     if(st){ st.style.color='#30D158'; st.textContent='📍 Location captured!'; setTimeout(function(){st.textContent='';},2000); }
   },function(){ alert('Could not get location. Check GPS permissions.'); });
+}
+
+function openGoogleMapsForPin(){
+  // Get current lat/lng from inputs (or default to India center)
+  var latEl=document.getElementById('gps-lat');
+  var lngEl=document.getElementById('gps-lng');
+  var lat=parseFloat(latEl&&latEl.value)||11.1083520;
+  var lng=parseFloat(lngEl&&lngEl.value)||79.6622848;
+  // Open Google Maps at current coords — user can drop a pin, then share/copy the link
+  var url='https://www.google.com/maps/@'+lat+','+lng+',18z';
+  window.open(url,'_blank');
+  // Show instruction
+  var st=document.getElementById('gps-link-status');
+  if(st){ st.style.color='rgba(245,245,247,0.5)'; st.textContent='Google Maps-ல pin drop பண்ணி → Share → Copy Link → இங்க paste பண்ணுங்க'; }
+}
+
+function setFromMapsLink(){
+  var input=document.getElementById('gps-maps-link');
+  var st=document.getElementById('gps-link-status');
+  if(!input||!input.value.trim()){ if(st){st.style.color='#FF453A';st.textContent='⚠️ Link or coordinates paste பண்ணுங்க';} return; }
+  var raw=input.value.trim();
+  var lat=null, lng=null;
+
+  // 1. Try plain coordinates: "11.1083520, 79.6622848" or "11.1083520,79.6622848"
+  var coordMatch=raw.match(/^(-?\d{1,3}\.\d+)\s*[,\s]\s*(-?\d{1,3}\.\d+)$/);
+  if(coordMatch){ lat=parseFloat(coordMatch[1]); lng=parseFloat(coordMatch[2]); }
+
+  // 2. Google Maps @lat,lng format (e.g. /maps/@11.108,79.662,18z)
+  if(!lat){ var m=raw.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m){ lat=parseFloat(m[1]); lng=parseFloat(m[2]); } }
+
+  // 3. ?q=lat,lng format (e.g. maps?q=11.108,79.662)
+  if(!lat){ var m2=raw.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m2){ lat=parseFloat(m2[1]); lng=parseFloat(m2[2]); } }
+
+  // 4. /place/ URL with coordinates: /place/Name/@lat,lng
+  if(!lat){ var m3=raw.match(/\/place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m3){ lat=parseFloat(m3[1]); lng=parseFloat(m3[2]); } }
+
+  // 5. ll= parameter format
+  if(!lat){ var m4=raw.match(/[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m4){ lat=parseFloat(m4[1]); lng=parseFloat(m4[2]); } }
+
+  if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180){
+    var latEl=document.getElementById('gps-lat');
+    var lngEl=document.getElementById('gps-lng');
+    if(latEl) latEl.value=lat.toFixed(7);
+    if(lngEl) lngEl.value=lng.toFixed(7);
+    if(st){ st.style.color='#34C759'; st.textContent='✅ Location set: '+lat.toFixed(5)+', '+lng.toFixed(5)+' — Save பண்ண மறக்காதீங்க!'; }
+    input.value='';
+  } else {
+    if(st){ st.style.color='#FF453A'; st.textContent='❌ Coordinates parse ஆகல. Google Maps-ல pin drop பண்ணி Share link copy பண்ணுங்க.'; }
+  }
 }
 
 async function saveGpsSettings(btn){
