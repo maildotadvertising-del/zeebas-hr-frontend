@@ -454,6 +454,19 @@ body.desktop-mode #s1-sidebar {
             </div>
             <div id="s1-balance-val" style="font-size:12px;font-weight:600;">—</div>
           </div>
+          <!-- Leave & Advance Info Strip -->
+          <div id="s1-leave-adv-row" style="display:none;margin-top:6px;background:rgba(255,255,255,0.04);border-radius:9px;padding:7px 12px;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="display:flex;align-items:center;gap:5px;cursor:pointer;" onclick="go1('s1-leave')">
+              <span style="font-size:10px;">🌴</span>
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Leave</span>
+              <span id="s1-leave-bal-val" style="color:#0A84FF;font-size:10px;font-weight:600;">—</span>
+            </div>
+            <div id="s1-adv-strip" style="display:none;display:flex;align-items:center;gap:5px;cursor:pointer;" onclick="go1('s1-salary')">
+              <span style="font-size:10px;">💳</span>
+              <span style="color:rgba(245,245,247,0.4);font-size:9px;">Advance</span>
+              <span id="s1-adv-val" style="color:#FF453A;font-size:10px;font-weight:600;">—</span>
+            </div>
+          </div>
         </div>
 
         <!-- WiFi Attendance Banner -->
@@ -1429,9 +1442,11 @@ body.desktop-mode #s1-sidebar {
         </button>
         <div style="color:#fff;font-size:17px;font-weight:500;">Approvals</div>
       </div>
-      <div style="display:flex;gap:7px;padding:10px 13px 0;flex-shrink:0;">
-        <button id="s2-appr-tab-leave" onclick="s2ApprTab('leave')" style="background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.3);border-radius:14px;padding:5px 13px;font-size:11px;color:#FF9F0A;cursor:pointer;font-family:inherit;">Leave</button>
-        <button id="s2-appr-tab-onsite" onclick="s2ApprTab('onsite')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;">Onsite</button>
+      <div style="display:flex;gap:7px;padding:10px 13px 0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+        <button id="s2-appr-tab-leave" onclick="s2ApprTab('leave')" style="background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.3);border-radius:14px;padding:5px 13px;font-size:11px;color:#FF9F0A;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Leave</button>
+        <button id="s2-appr-tab-onsite" onclick="s2ApprTab('onsite')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Onsite</button>
+        <button id="s2-appr-tab-late" onclick="s2ApprTab('late')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Late</button>
+        <button id="s2-appr-tab-extratime" onclick="s2ApprTab('extratime')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Extra Time</button>
       </div>
       <div class="scroll" style="padding:10px 13px 8px;">
         <div id="s2-appr-list" style="display:flex;flex-direction:column;gap:9px;">
@@ -1531,6 +1546,40 @@ body.desktop-mode #s1-sidebar {
       <div id="n2-tasks" class="bnav"></div>
     </div>
 
+    <!-- ADVANCES (Admin) -->
+    <div id="s2-advances" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Advances</div>
+        <div id="s2-adv-total" style="color:rgba(245,245,247,0.35);font-size:11px;"></div>
+      </div>
+      <div class="scroll" style="padding:10px 13px 8px;" id="s2-advances-list">
+        <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS (Admin) -->
+    <div id="s2-announcements" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">Announcements</div>
+        <button onclick="s2ToggleAnnForm()" style="background:rgba(10,132,255,0.14);border:0.5px solid rgba(10,132,255,0.25);border-radius:9px;padding:7px 12px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">+ New</button>
+      </div>
+      <!-- Compose form -->
+      <div id="s2-ann-form" style="display:none;padding:10px 13px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <input id="s2-ann-title" placeholder="Title (optional)" class="inp" style="margin-bottom:7px;">
+        <textarea id="s2-ann-msg" placeholder="Message…" class="inp" style="height:68px;resize:none;margin-bottom:8px;"></textarea>
+        <button onclick="s2SendAnnouncement()" class="btn-p" style="padding:11px;">📢 Send to All Staff</button>
+      </div>
+      <div class="scroll" style="padding:10px 13px 8px;" id="s2-ann-list">
+        <div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">Loading…</div>
+      </div>
+    </div>
+
     <!-- MORE -->
     <div id="s2-more" class="scr" style="overflow:hidden;">
       <div style="padding:14px 13px 0;flex-shrink:0;">
@@ -1562,11 +1611,25 @@ body.desktop-mode #s1-sidebar {
             <div style="flex:1;"><div style="color:#fff;font-size:13px;">Attendance</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Full log</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
-          <div onclick="go2('s2-payroll')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
+          <div onclick="go2('s2-payroll')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
             <div style="width:34px;height:34px;background:rgba(48,209,88,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#30D158" stroke-width="1.3"/><path d="M2 7h12" stroke="#30D158" stroke-width="1.3"/><path d="M6 10.5h4" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
             <div style="flex:1;"><div style="color:#fff;font-size:13px;">Payroll</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Monthly salary</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-advances');loadS2Advances();" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(255,69,58,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="#FF453A" stroke-width="1.3"/><path d="M2 7h12M6 10h4" stroke="#FF453A" stroke-width="1.3" stroke-linecap="round"/><path d="M5 3V2M11 3V2" stroke="#FF453A" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Advances</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Salary advances</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div onclick="go2('s2-announcements');loadS2Announcements();" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;">
+            <div style="width:34px;height:34px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 3L4 6H2a1 1 0 000 2h.5v2H4l1 2h1l1-2h1l8 3V3z" stroke="#0A84FF" stroke-width="1.3" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">Announcements</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Send to all staff</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
         </div>
@@ -1846,6 +1909,7 @@ var adminTabs=[
 ];
 var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
 var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[], _s2TasksCache=null;
+var _s2ApprLeaves=[], _s2ApprOnsites=[], _s2ApprLates=[], _s2ApprExtraTime=[];
 
 function makeNav(tabs,scrs,active,prefix){
   return tabs.map(function(x,i){
@@ -1942,7 +2006,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); }
+  if(id==='s1-home'){ setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
@@ -1960,7 +2024,7 @@ function go1(id){
 }
 
 function go2(id){
-  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings'];
+  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings','s2-advances','s2-announcements'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=adminScrs.indexOf(id);if(idx>=0)initNavs2(idx);
@@ -3908,7 +3972,6 @@ async function loadAdminAttendance(){
 }
 
 // ── Approvals Page ──
-var _s2ApprLeaves=[], _s2ApprOnsites=[];
 async function loadAdminApprovals(){
   var listEl=document.getElementById('s2-appr-list');
   if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
@@ -3918,21 +3981,33 @@ async function loadAdminApprovals(){
     _s2ApprLeaves=(ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
     var ar=await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
     var ad=await ar.json();
-    _s2ApprOnsites=ad.data||[];
+    var allPending=ad.data||[];
+    _s2ApprOnsites=allPending.filter(function(x){return x.status==='onsite_pending';});
+    _s2ApprLates=allPending.filter(function(x){return x.status==='late_pending';});
+    try{
+      var er=await fetch(API_URL+'/api/tasks/extra-time-requests',{headers:zHead()});
+      var ed=await er.json();
+      _s2ApprExtraTime=ed.data||[];
+    }catch(e2){ _s2ApprExtraTime=[]; }
     s2ApprTab(_s2ApprTab);
   }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
 }
 
 function s2ApprTab(tab){
   _s2ApprTab=tab;
-  var tl=document.getElementById('s2-appr-tab-leave');
-  var to=document.getElementById('s2-appr-tab-onsite');
-  var activeStyle='background:rgba(255,159,10,0.18);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;';
-  var inactStyle='background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);';
-  if(tl){ tl.style.cssText=(tab==='leave'?activeStyle:inactStyle)+'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;'; }
-  if(to){ to.style.cssText=(tab==='onsite'?'background:rgba(191,95,255,0.18);border:0.5px solid rgba(191,95,255,0.3);color:#BF5FFF;':inactStyle)+'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;'; }
+  var tabs={leave:'rgba(255,159,10',onsite:'rgba(191,95,255',late:'rgba(255,69,58',extratime:'rgba(10,132,255'};
+  ['leave','onsite','late','extratime'].forEach(function(t){
+    var el=document.getElementById('s2-appr-tab-'+t);
+    if(!el) return;
+    var active=t===tab;
+    el.style.cssText=(active?'background:'+tabs[t]+',0.18);border:0.5px solid '+tabs[t]+',0.3);color:'+
+      (t==='leave'?'#FF9F0A':t==='onsite'?'#BF5FFF':t==='late'?'#FF453A':'#0A84FF')+';':
+      'background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);')+
+      'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
+  });
   var listEl=document.getElementById('s2-appr-list');
   if(!listEl) return;
+  var _apprBtn='<div style="display:flex;gap:8px;">';
   if(tab==='leave'){
     if(!_s2ApprLeaves.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">🌴</div>No pending leave requests</div>'; return; }
     listEl.innerHTML=_s2ApprLeaves.map(function(l){
@@ -3952,7 +4027,7 @@ function s2ApprTab(tab){
         +'<button onclick="s2ActLeave('+l.id+',\'rejected\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
         +'</div></div>';
     }).join('');
-  } else {
+  } else if(tab==='onsite'){
     if(!_s2ApprOnsites.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">📍</div>No pending onsite requests</div>'; return; }
     listEl.innerHTML=_s2ApprOnsites.map(function(o){
       return'<div class="g" style="padding:12px;" data-oid="'+o.id+'">'
@@ -3965,6 +4040,40 @@ function s2ApprTab(tab){
         +'<div style="display:flex;gap:8px;">'
         +'<button onclick="s2ActOnsite('+o.id+',\'approved\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
         +'<button onclick="s2ActOnsite('+o.id+',\'rejected\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div></div>';
+    }).join('');
+  } else if(tab==='late'){
+    if(!_s2ApprLates.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">⏱</div>No pending late check-ins</div>'; return; }
+    listEl.innerHTML=_s2ApprLates.map(function(o){
+      var lateMin=o.late_minutes||o.check_in_late_minutes||0;
+      return'<div class="g" style="padding:12px;" data-lateid="'+o.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
+        +'<div style="width:34px;height:34px;background:rgba(255,69,58,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">⏱</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(o.staff_name||'Staff')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Late check-in · '+(o.date||'Today')+'</div></div>'
+        +'<span style="background:rgba(255,69,58,0.14);color:#FF453A;border:0.5px solid rgba(255,69,58,0.28);border-radius:6px;padding:2px 6px;font-size:9px;">+'+lateMin+'m</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 10px;margin-bottom:9px;display:flex;gap:10px;">'
+        +'<span style="color:rgba(245,245,247,0.4);font-size:10px;">Check-in</span><span style="color:#fff;font-size:10px;">'+(o.check_in||'—')+'</span>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="s2ActLate('+o.id+',\'approve\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
+        +'<button onclick="s2ActLate('+o.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div></div>';
+    }).join('');
+  } else {
+    if(!_s2ApprExtraTime.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">⌛</div>No extra time requests</div>'; return; }
+    listEl.innerHTML=_s2ApprExtraTime.map(function(t){
+      return'<div class="g" style="padding:12px;" data-etid="'+t.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'
+        +'<div style="width:34px;height:34px;background:rgba(10,132,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">⌛</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(t.staff_name||'Staff')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Extra time · '+escHtml(t.title||'Task')+'</div></div>'
+        +'<span style="background:rgba(10,132,255,0.14);color:#0A84FF;border:0.5px solid rgba(10,132,255,0.28);border-radius:6px;padding:2px 6px;font-size:9px;">+'+(t.extra_time_minutes||30)+'m</span>'
+        +'</div>'
+        +(t.extra_time_reason?'<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 10px;margin-bottom:9px;"><span style="color:rgba(245,245,247,0.4);font-size:10px;">Reason: </span><span style="color:rgba(245,245,247,0.7);font-size:10px;">'+escHtml(t.extra_time_reason)+'</span></div>':'')
+        +(t.due_date?'<div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:9px;">📅 Due '+t.due_date+(t.due_time?' '+t.due_time:'')+'</div>':'')
+        +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="s2ActExtraTime('+t.id+',\'approve\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
+        +'<button onclick="s2ActExtraTime('+t.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
         +'</div></div>';
     }).join('');
   }
@@ -3993,6 +4102,28 @@ async function s2ActOnsite(id,action,btn){
     var d=await r.json();
     if(d.success){ showToast1(apiAction==='approve'?'✅ Onsite approved':'Onsite rejected'); _s2ApprOnsites=_s2ApprOnsites.filter(function(o){return o.id!==id;}); s2ApprTab('onsite'); }
     else { if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
+}
+
+async function s2ActLate(id,action,btn){
+  var card=btn.closest('[data-lateid]');
+  if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  try{
+    var r=await fetch(API_URL+'/api/attendance/approve-late/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({action:action})});
+    var d=await r.json();
+    if(d.success){ showToast1(action==='approve'?'✅ Late approved':'❌ Late rejected'); _s2ApprLates=_s2ApprLates.filter(function(x){return x.id!==id;}); s2ApprTab('late'); }
+    else{ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
+}
+
+async function s2ActExtraTime(id,action,btn){
+  var card=btn.closest('[data-etid]');
+  if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  try{
+    var r=await fetch(API_URL+'/api/tasks/'+id+'/approve-extra-time',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({action:action})});
+    var d=await r.json();
+    if(d.success){ showToast1(action==='approve'?'✅ Extra time approved':'❌ Request rejected'); _s2ApprExtraTime=_s2ApprExtraTime.filter(function(x){return x.id!==id;}); s2ApprTab('extratime'); }
+    else{ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
   }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
 }
 
@@ -4042,13 +4173,18 @@ function s2TaskTab(tab){
     var tickBtn=done
       ?'<div onclick="event.stopPropagation();s2UpdateTaskStatus('+t.id+',\'pending\')" title="Reopen" style="width:22px;height:22px;border-radius:50%;background:#30D158;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 0 8px rgba(48,209,88,0.4);"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
       :'<div onclick="event.stopPropagation();s2UpdateTaskStatus('+t.id+',\'done\')" title="Mark done" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.04);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(48,209,88,0.18)\';this.style.borderColor=\'rgba(48,209,88,0.5)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.04)\';this.style.borderColor=\'rgba(255,255,255,0.2)\'"></div>';
+    var etBadge=t.extra_time_status==='pending'?'<span onclick="event.stopPropagation();s2ApprTab(\'extratime\');go2(\'s2-approvals\');" style="background:rgba(10,132,255,0.14);color:#0A84FF;border:0.5px solid rgba(10,132,255,0.28);border-radius:5px;padding:1px 5px;font-size:9px;cursor:pointer;white-space:nowrap;">+Time ⏳</span>':'';
     return'<div class="gs" style="padding:11px;margin-bottom:7px;opacity:'+(done?0.6:1)+';">'
       +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;">'
       +tickBtn
       +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;'+(done?'text-decoration:line-through;color:rgba(245,245,247,0.5);':'')+'">'+escHtml(t.title||'Task')+'</div>'
       +(t.assigned_name?'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">👤 '+escHtml(t.assigned_name)+'</div>':'')
       +'</div>'
+      +'<div style="display:flex;align-items:center;gap:5px;">'
+      +(etBadge)
       +'<span style="background:'+prColor[pr]+'22;color:'+prColor[pr]+';border:0.5px solid '+prColor[pr]+'44;border-radius:5px;padding:1px 7px;font-size:9px;white-space:nowrap;">'+(pr.charAt(0).toUpperCase()+pr.slice(1))+'</span>'
+      +'<div onclick="event.stopPropagation();s2DeleteTask('+t.id+')" title="Delete" style="width:26px;height:26px;border-radius:8px;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4M10 4l-.7 7H4.7L4 4" stroke="#FF453A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      +'</div>'
       +'</div>'
       +(t.due_date?'<div style="color:rgba(245,245,247,0.3);font-size:9px;">📅 Due '+t.due_date+'</div>':'')
       +'</div>';
@@ -4066,6 +4202,19 @@ async function s2UpdateTaskStatus(id,status){
     var d=await r.json();
     if(d.success){ showToast1(status==='done'?'✅ Task done!':status==='pending'?'↩ Task reopened':'▶ Task started'); }
     else{ showToast1('❌ '+(d.message||'Failed')); loadAdminTasks(); }
+  }catch(e){ showToast1('❌ Network error'); loadAdminTasks(); }
+}
+
+async function s2DeleteTask(id){
+  if(!confirm('Delete this task?')) return;
+  _s2AllTasks=_s2AllTasks.filter(function(x){return String(x.id)!==String(id);});
+  if(_s2TasksCache) _s2TasksCache=_s2TasksCache.filter(function(x){return String(x.id)!==String(id);});
+  s2TaskTab(_s2TaskTab);
+  try{
+    var r=await fetch(API_URL+'/api/tasks/'+id,{method:'DELETE',headers:zHead()});
+    var d=await r.json();
+    if(d.success){ showToast1('🗑 Task deleted'); }
+    else{ showToast1('❌ '+(d.message||'Delete failed')); loadAdminTasks(); }
   }catch(e){ showToast1('❌ Network error'); loadAdminTasks(); }
 }
 
@@ -4110,6 +4259,95 @@ async function s2CreateTask(){
       loadAdminTasks();
     } else showToast1('❌ '+(d.message||'Failed'));
   }catch(e){ showToast1('❌ Network error'); }
+}
+
+// ── Advances (Admin) ──
+async function loadS2Advances(){
+  var listEl=document.getElementById('s2-advances-list');
+  var totEl=document.getElementById('s2-adv-total');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var r=await fetch(API_URL+'/api/advances',{headers:zHead()});
+    var d=await r.json();
+    var adv=Array.isArray(d)?d:(d.data||d.advances||[]);
+    var active=adv.filter(function(a){return a.status!=='closed';});
+    var totalOut=active.reduce(function(s,a){return s+parseFloat(a.remaining_amount||a.amount||0);},0);
+    if(totEl) totEl.textContent='₹'+totalOut.toLocaleString('en-IN')+' outstanding';
+    if(!adv.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:28px;margin-bottom:8px;opacity:0.3;">💳</div>No advances yet</div>'; return; }
+    listEl.innerHTML=adv.map(function(a){
+      var closed=a.status==='closed';
+      var remaining=parseFloat(a.remaining_amount||0);
+      var total=parseFloat(a.amount||0);
+      var pct=total>0?Math.round((1-remaining/total)*100):100;
+      return'<div class="g" style="padding:12px;margin-bottom:8px;opacity:'+(closed?0.55:1)+';">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+        +'<div style="width:34px;height:34px;border-radius:10px;background:rgba(255,69,58,0.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💳</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(a.staff_name||'Staff')+'</div>'
+        +(a.designation?'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+escHtml(a.designation)+'</div>':'')+'</div>'
+        +(closed?'<span style="background:rgba(48,209,88,0.1);color:#30D158;border:0.5px solid rgba(48,209,88,0.2);border-radius:6px;padding:2px 7px;font-size:9px;">Closed</span>'
+        :'<span style="background:rgba(255,69,58,0.1);color:#FF453A;border:0.5px solid rgba(255,69,58,0.2);border-radius:6px;padding:2px 7px;font-size:9px;">Active</span>')
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
+        +'<span style="color:rgba(245,245,247,0.4);font-size:10px;">₹'+total.toLocaleString('en-IN')+' advance</span>'
+        +'<span style="color:'+(closed?'#30D158':'#FF453A')+';font-size:10px;font-weight:500;">₹'+remaining.toLocaleString('en-IN')+' left</span>'
+        +'</div>'
+        +'<div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-bottom:6px;">'
+        +'<div style="height:100%;width:'+pct+'%;background:#30D158;border-radius:2px;transition:width 0.4s;"></div></div>'
+        +(a.monthly_recovery?'<div style="color:rgba(245,245,247,0.3);font-size:9px;">₹'+parseFloat(a.monthly_recovery).toLocaleString('en-IN')+'/mo recovery'+(a.reason?' · '+escHtml(a.reason):'')+'</div>':'')
+        +'</div>';
+    }).join('');
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+// ── Announcements (Admin) ──
+var _s2AnnFormOpen=false;
+function s2ToggleAnnForm(){
+  _s2AnnFormOpen=!_s2AnnFormOpen;
+  var f=document.getElementById('s2-ann-form');
+  if(f) f.style.display=_s2AnnFormOpen?'block':'none';
+}
+
+async function loadS2Announcements(){
+  var listEl=document.getElementById('s2-ann-list');
+  if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
+  try{
+    var r=await fetch(API_URL+'/api/announcements',{headers:zHead()});
+    var d=await r.json();
+    var anns=Array.isArray(d)?d:(d.data||d.announcements||[]);
+    if(!anns.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:28px;margin-bottom:8px;opacity:0.3;">📢</div>No announcements yet</div>'; return; }
+    listEl.innerHTML=anns.map(function(a){
+      var dt=a.created_at?new Date(a.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'';
+      return'<div class="g" style="padding:12px;margin-bottom:8px;">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+        +'<div style="width:30px;height:30px;border-radius:9px;background:rgba(10,132,255,0.14);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📢</div>'
+        +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+(a.title?escHtml(a.title):'Announcement')+'</div>'
+        +(dt?'<div style="color:rgba(245,245,247,0.3);font-size:9px;margin-top:1px;">'+dt+'</div>':'')+'</div>'
+        +'</div>'
+        +(a.message?'<div style="color:rgba(245,245,247,0.65);font-size:11px;line-height:1.5;">'+escHtml(a.message)+'</div>':'')
+        +'</div>';
+    }).join('');
+  }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
+}
+
+async function s2SendAnnouncement(){
+  var title=(document.getElementById('s2-ann-title').value||'').trim();
+  var msg=(document.getElementById('s2-ann-msg').value||'').trim();
+  if(!msg){ showToast1('⚠️ Message required'); return; }
+  var btn=document.querySelector('#s2-ann-form .btn-p');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    var fd=new FormData(); if(title) fd.append('title',title); fd.append('message',msg); fd.append('recipients','all');
+    var r=await fetch(API_URL+'/api/announcements',{method:'POST',headers:{'Authorization':'Bearer '+zToken()},body:fd});
+    var d=await r.json();
+    if(d.success){
+      showToast1('📢 Announcement sent!');
+      document.getElementById('s2-ann-title').value='';
+      document.getElementById('s2-ann-msg').value='';
+      s2ToggleAnnForm();
+      loadS2Announcements();
+    } else { showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ showToast1('❌ Network error'); }
+  finally{ if(btn){btn.disabled=false;btn.textContent='📢 Send to All Staff';} }
 }
 
 // ── Staff List (tappable → profile) ──
@@ -5752,6 +5990,52 @@ async function fetchMonthlyBalance(){
       var dStr = dh > 0 ? (dh+'h '+dm+'m') : (dm+'m');
       balVal.innerHTML = '<span style="color:#FF453A;">'+dStr+' deficit</span>';
     }
+  }catch(e){}
+}
+
+async function fetchHomeLeaveAndAdvance(){
+  try{
+    var row=document.getElementById('s1-leave-adv-row');
+    var leaveEl=document.getElementById('s1-leave-bal-val');
+    var advStrip=document.getElementById('s1-adv-strip');
+    var advEl=document.getElementById('s1-adv-val');
+    if(!row) return;
+
+    // Leaves: get policy (quota) + my approved leaves this year
+    var visible=false;
+    try{
+      var pr=await fetch(API_URL+'/api/settings/payroll',{headers:zHead()});
+      var pd=await pr.json();
+      var casual=parseInt((pd.data||{}).casual_leaves_year)||0;
+      var sick=parseInt((pd.data||{}).sick_leaves_year)||0;
+      var totalQuota=casual+sick;
+      var lr=await fetch(API_URL+'/api/leave/my',{headers:zHead()});
+      var ld=await lr.json();
+      var curYear=new Date().getFullYear();
+      var taken=(ld.data||[]).filter(function(l){
+        return l.status==='approved' && (l.from_date||'').startsWith(curYear);
+      }).reduce(function(s,l){return s+(parseInt(l.days_count)||1);},0);
+      var remaining=Math.max(0,totalQuota-taken);
+      if(leaveEl) leaveEl.textContent=remaining+' day'+(remaining!==1?'s':'')+' left';
+      visible=true;
+    }catch(e2){}
+
+    // Advances: check if staff has active advance
+    try{
+      var ar=await fetch(API_URL+'/api/advances',{headers:zHead()});
+      var ad=await ar.json();
+      var active=(ad.data||[]).filter(function(a){return a.status!=='closed';});
+      var outstanding=active.reduce(function(s,a){return s+parseFloat(a.amount_remaining||a.remaining_amount||0);},0);
+      if(outstanding>0){
+        if(advEl) advEl.textContent='₹'+outstanding.toLocaleString('en-IN')+' due';
+        if(advStrip){ advStrip.style.display='flex'; }
+        visible=true;
+      } else {
+        if(advStrip){ advStrip.style.display='none'; }
+      }
+    }catch(e3){}
+
+    if(visible && row) row.style.display='flex';
   }catch(e){}
 }
 
