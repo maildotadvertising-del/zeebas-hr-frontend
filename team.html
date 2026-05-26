@@ -1849,7 +1849,7 @@ body.desktop-mode #s1-sidebar {
         <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Work Schedule</div>
         <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
           <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Work Days Per Month</div><input id="ps-workdays" class="inp" type="number" placeholder="26" style="margin-bottom:0;"></div>
-          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Work Hours Per Day</div><input id="ps-hours" class="inp" type="number" step="0.5" placeholder="9" style="margin-bottom:0;"></div>
+          <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Total Work Hours/Day <span style="color:rgba(245,245,247,0.25);font-size:9px;">(incl. break)</span></div><input id="ps-hours" class="inp" type="number" step="0.5" placeholder="11" style="margin-bottom:0;"></div>
           <div><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">Work Week</div><input id="ps-workweek" class="inp" placeholder="Mon,Tue,Wed,Thu,Fri,Sat" style="margin-bottom:0;"></div>
         </div>
         <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Late &amp; Absent Deductions</div>
@@ -1871,8 +1871,16 @@ body.desktop-mode #s1-sidebar {
             <div style="color:#fff;font-size:12px;">Enable Overtime Pay</div>
             <label style="position:relative;display:inline-block;width:40px;height:24px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="ps-ot-enabled" style="opacity:0;width:0;height:0;"><span style="position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);transition:0.25s;"></span></label>
           </div>
-          <div style="padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">OT After (hrs/day)</div><input id="ps-ot-after" class="inp" type="number" step="0.5" placeholder="9" style="margin-bottom:0;"></div>
-          <div style="padding:11px 0;"><div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:5px;">OT Rate Multiplier (e.g. 1.5)</div><input id="ps-ot-rate" class="inp" type="number" step="0.1" placeholder="1.5" style="margin-bottom:0;"></div>
+          <div style="padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:2px;">OT Threshold (hrs/day)</div>
+            <div style="color:rgba(245,245,247,0.25);font-size:9px;margin-bottom:5px;">OT starts after shift ends + 40 min buffer</div>
+            <input id="ps-ot-after" class="inp" type="number" step="0.5" placeholder="11" style="margin-bottom:0;">
+          </div>
+          <div style="padding:11px 0;">
+            <div style="color:rgba(245,245,247,0.42);font-size:10px;margin-bottom:2px;">OT Rate Multiplier</div>
+            <div style="color:rgba(245,245,247,0.25);font-size:9px;margin-bottom:5px;">1.0 = same hourly rate (₹/hr per day salary)</div>
+            <input id="ps-ot-rate" class="inp" type="number" step="0.1" placeholder="1.0" style="margin-bottom:0;">
+          </div>
         </div>
         <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Leave Allowance (Per Year)</div>
         <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
@@ -6848,15 +6856,15 @@ async function loadPayrollSettings(){
     var v=function(id,val){ var el=document.getElementById(id); if(el) el.value=(val!==undefined&&val!==null)?val:''; };
     var c=function(id,val){ var el=document.getElementById(id); if(el) el.checked=!!val; };
     v('ps-workdays',     p.working_days_month||26);
-    v('ps-hours',        p.hours_per_day||9);
+    v('ps-hours',        p.hours_per_day||11);
     v('ps-workweek',     p.work_week||'Mon,Tue,Wed,Thu,Fri,Sat');
     v('ps-grace',        p.late_grace_minutes||15);
     v('ps-late-per-min', p.late_deduction_per_min||2);
     v('ps-late-max',     p.late_max_per_day||200);
     v('ps-absent-type',  p.absent_deduction_type||'per_day_salary');
     v('ps-absent-flat',  p.absent_flat_amount||500);
-    v('ps-ot-after',     p.ot_after_hours||9);
-    v('ps-ot-rate',      p.ot_rate_multiplier||1.5);
+    v('ps-ot-after',     p.ot_after_hours||11);
+    v('ps-ot-rate',      p.ot_rate_multiplier||1.0);
     v('ps-paid-leave',   p.paid_leaves_year||12);
     v('ps-sick-leave',   p.sick_leaves_year||6);
     v('ps-casual-leave', p.casual_leaves_year||6);
@@ -6870,7 +6878,7 @@ async function savePayrollSettings(btn){
     var g=function(id){ return document.getElementById(id); };
     var payload={
       working_days_month:    parseInt(g('ps-workdays').value)||26,
-      hours_per_day:         parseFloat(g('ps-hours').value)||9,
+      hours_per_day:         parseFloat(g('ps-hours').value)||11,
       work_week:             g('ps-workweek').value||'Mon,Tue,Wed,Thu,Fri,Sat',
       late_grace_minutes:    parseInt(g('ps-grace').value)||15,
       late_deduction_per_min:parseFloat(g('ps-late-per-min').value)||2,
@@ -6878,8 +6886,8 @@ async function savePayrollSettings(btn){
       absent_deduction_type: g('ps-absent-type').value,
       absent_flat_amount:    parseInt(g('ps-absent-flat').value)||500,
       ot_enabled:            g('ps-ot-enabled').checked?1:0,
-      ot_after_hours:        parseFloat(g('ps-ot-after').value)||9,
-      ot_rate_multiplier:    parseFloat(g('ps-ot-rate').value)||1.5,
+      ot_after_hours:        parseFloat(g('ps-ot-after').value)||11,
+      ot_rate_multiplier:    parseFloat(g('ps-ot-rate').value)||1.0,
       paid_leaves_year:      parseInt(g('ps-paid-leave').value)||12,
       sick_leaves_year:      parseInt(g('ps-sick-leave').value)||6,
       casual_leaves_year:    parseInt(g('ps-casual-leave').value)||6
