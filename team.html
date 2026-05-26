@@ -1,4 +1,4 @@
-<!-- v20260526b -->
+<!-- v20260526c -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -1776,6 +1776,15 @@ body.desktop-mode #s1-sidebar {
             </div>
             <div id="gps-link-status" style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:5px;min-height:14px;"></div>
           </div>
+        </div>
+        <!-- SITE LOCATIONS -->
+        <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Site Locations</div>
+        <div class="g" style="padding:13px;margin-bottom:11px;">
+          <div style="color:rgba(245,245,247,0.35);font-size:10px;margin-bottom:10px;">Staff can check-in from any site listed here. Add client locations, shoot spots, etc.</div>
+          <div id="s2-gps-sites-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+            <div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:10px 0;">No sites added yet</div>
+          </div>
+          <button onclick="addS2Site()" style="width:100%;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.22);border-radius:9px;padding:9px;color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;">+ Add Site</button>
         </div>
         <div style="color:rgba(245,245,247,0.3);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:7px;">Work Timing</div>
         <div class="g" style="padding:13px;margin-bottom:11px;display:flex;flex-direction:column;gap:10px;">
@@ -6495,6 +6504,61 @@ async function wifiCheckoutPrompt(){
    ══════════════════════════════════════════ */
 
 /* ── GPS SETTINGS ── */
+var _s2Sites = [];
+
+function _escH2(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function renderS2Sites(){
+  var el=document.getElementById('s2-gps-sites-list');
+  if(!el) return;
+  if(!_s2Sites.length){ el.innerHTML='<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:10px 0;">No sites added yet</div>'; return; }
+  el.innerHTML=_s2Sites.map(function(site,i){
+    return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:7px;">'
+      +'<div style="display:flex;align-items:center;gap:7px;">'
+      +'<input class="inp" placeholder="Site name (e.g. Client Office)" value="'+_escH2(site.name||'')+'" oninput="_s2Sites['+i+'].name=this.value" style="flex:1;margin-bottom:0;font-size:11px;padding:8px 10px;">'
+      +'<button onclick="deleteS2Site('+i+')" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;width:28px;height:28px;color:#FF453A;cursor:pointer;flex-shrink:0;font-size:14px;display:flex;align-items:center;justify-content:center;">×</button>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;">'
+      +'<div style="flex:1;"><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-bottom:3px;">Latitude</div><input class="inp" type="number" step="0.0000001" placeholder="11.1085" value="'+_escH2(site.lat||'')+'" oninput="_s2Sites['+i+'].lat=this.value" style="margin-bottom:0;font-size:11px;padding:7px 9px;"></div>'
+      +'<div style="flex:1;"><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-bottom:3px;">Longitude</div><input class="inp" type="number" step="0.0000001" placeholder="79.6478" value="'+_escH2(site.lng||'')+'" oninput="_s2Sites['+i+'].lng=this.value" style="margin-bottom:0;font-size:11px;padding:7px 9px;"></div>'
+      +'<div style="width:70px;"><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-bottom:3px;">Radius (m)</div><input class="inp" type="number" placeholder="300" value="'+_escH2(site.radius||300)+'" oninput="_s2Sites['+i+'].radius=parseInt(this.value)||300" style="margin-bottom:0;font-size:11px;padding:7px 9px;"></div>'
+      +'</div>'
+      +'<button onclick="pasteS2SiteLink('+i+')" style="background:rgba(52,199,89,0.08);border:0.5px solid rgba(52,199,89,0.18);border-radius:8px;padding:7px;color:#34C759;font-size:10px;cursor:pointer;font-family:inherit;">📋 Paste Google Maps link</button>'
+      +'</div>';
+  }).join('');
+}
+
+function addS2Site(){
+  _s2Sites.push({name:'',lat:'',lng:'',radius:300});
+  renderS2Sites();
+}
+
+function deleteS2Site(i){
+  _s2Sites.splice(i,1);
+  renderS2Sites();
+}
+
+function pasteS2SiteLink(idx){
+  var raw=prompt('Google Maps link or coordinates paste பண்ணுங்க:');
+  if(!raw||!raw.trim()) return;
+  raw=raw.trim();
+  var lat=null, lng=null;
+  var m=raw.match(/^(-?\d{1,3}\.\d+)\s*[,\s]\s*(-?\d{1,3}\.\d+)$/);
+  if(m){ lat=parseFloat(m[1]); lng=parseFloat(m[2]); }
+  if(!lat){ var m2=raw.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m2){ lat=parseFloat(m2[1]); lng=parseFloat(m2[2]); } }
+  if(!lat){ var m3=raw.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m3){ lat=parseFloat(m3[1]); lng=parseFloat(m3[2]); } }
+  if(!lat){ var m4=raw.match(/\/place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m4){ lat=parseFloat(m4[1]); lng=parseFloat(m4[2]); } }
+  if(!lat){ var m5=raw.match(/[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/); if(m5){ lat=parseFloat(m5[1]); lng=parseFloat(m5[2]); } }
+  if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
+    _s2Sites[idx].lat=lat.toFixed(7);
+    _s2Sites[idx].lng=lng.toFixed(7);
+    renderS2Sites();
+    showToast1('✅ Location set: '+lat.toFixed(5)+', '+lng.toFixed(5));
+  } else {
+    showToast1('❌ Coordinates parse ஆகல. Google Maps pin share link copy பண்ணி try பண்ணுங்க.');
+  }
+}
+
 async function loadGpsSettings(){
   try{
     var r=await fetch(API_URL+'/api/settings/gps',{headers:zHead()});
@@ -6525,6 +6589,9 @@ async function loadGpsSettings(){
     // show/hide time row
     var row=document.getElementById('gps-checkout-time-row');
     if(row) row.style.display=g.auto_checkout_enabled?'flex':'none';
+    // Site locations
+    _s2Sites = Array.isArray(g.site_locations) ? g.site_locations : [];
+    renderS2Sites();
   } catch(e){ console.log('loadGpsSettings err',e); }
 }
 
@@ -6541,15 +6608,14 @@ function useMyLocation(){
 }
 
 function openGoogleMapsForPin(){
-  // Get current lat/lng from inputs (or default to India center)
   var latEl=document.getElementById('gps-lat');
   var lngEl=document.getElementById('gps-lng');
   var lat=parseFloat(latEl&&latEl.value)||11.1083520;
   var lng=parseFloat(lngEl&&lngEl.value)||79.6622848;
-  // Open Google Maps at current coords — user can drop a pin, then share/copy the link
-  var url='https://www.google.com/maps/@'+lat+','+lng+',18z';
-  window.open(url,'_blank');
-  // Show instruction
+  var a=document.createElement('a');
+  a.href='https://www.google.com/maps/@'+lat+','+lng+',18z';
+  a.target='_blank'; a.rel='noopener noreferrer';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   var st=document.getElementById('gps-link-status');
   if(st){ st.style.color='rgba(245,245,247,0.5)'; st.textContent='Google Maps-ல pin drop பண்ணி → Share → Copy Link → இங்க paste பண்ணுங்க'; }
 }
@@ -6609,7 +6675,8 @@ async function saveGpsSettings(btn){
       allow_office:    g('gps-allow-office').checked?1:0,
       allow_site:      g('gps-allow-site').checked?1:0,
       require_approval:g('gps-require-approval').checked?1:0,
-      capture_gps:     g('gps-capture').checked?1:0
+      capture_gps:     g('gps-capture').checked?1:0,
+      site_locations:  _s2Sites
     };
     var r=await fetch(API_URL+'/api/settings/gps',{method:'PUT',headers:zHead(),body:JSON.stringify(payload)});
     var d=await r.json();
