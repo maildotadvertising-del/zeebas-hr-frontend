@@ -1,4 +1,4 @@
-<!-- v20260511d -->
+<!-- v20260526a -->
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -456,12 +456,12 @@ body.desktop-mode #s1-sidebar {
           </div>
           <!-- Leave & Advance Info Strip -->
           <div id="s1-leave-adv-row" style="display:none;margin-top:6px;background:rgba(255,255,255,0.04);border-radius:9px;padding:7px 12px;align-items:center;justify-content:space-between;gap:10px;">
-            <div style="display:flex;align-items:center;gap:5px;cursor:pointer;" onclick="go1('s1-leave')">
+            <div style="display:flex;align-items:center;gap:5px;cursor:pointer;" onclick="event.stopPropagation();go1('s1-leave')">
               <span style="font-size:10px;">🌴</span>
               <span style="color:rgba(245,245,247,0.4);font-size:9px;">Leave</span>
               <span id="s1-leave-bal-val" style="color:#0A84FF;font-size:10px;font-weight:600;">—</span>
             </div>
-            <div id="s1-adv-strip" style="display:none;display:flex;align-items:center;gap:5px;cursor:pointer;" onclick="go1('s1-salary')">
+            <div id="s1-adv-strip" style="display:none;align-items:center;gap:5px;cursor:pointer;" onclick="event.stopPropagation();go1('s1-salary')">
               <span style="font-size:10px;">💳</span>
               <span style="color:rgba(245,245,247,0.4);font-size:9px;">Advance</span>
               <span id="s1-adv-val" style="color:#FF453A;font-size:10px;font-weight:600;">—</span>
@@ -531,6 +531,19 @@ body.desktop-mode #s1-sidebar {
               <button onclick="wifiCheckoutPrompt()" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);border-radius:12px;padding:12px 8px;color:#FF453A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
                 🚪 Check Out
               </button>
+            </div>
+          </div>
+
+          <!-- State C: Checked out — day complete -->
+          <div id="s1-att-doneforday" style="display:none;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%);border:1px solid rgba(255,255,255,0.1);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:38px;height:38px;background:rgba(255,255,255,0.07);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3a7 7 0 100 14A7 7 0 0010 3z" stroke="rgba(245,245,247,0.4)" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="rgba(245,245,247,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div>
+                <div style="color:rgba(245,245,247,0.6);font-size:13px;font-weight:600;">Day Complete 🎉</div>
+                <div id="s1-att-done-times" style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">Checked out for today</div>
+              </div>
             </div>
           </div>
         </div>
@@ -5643,8 +5656,8 @@ async function eodSubmit(){
         +'<button onclick="this.parentNode.remove();go1(\'s1-home\')" style="margin-top:20px;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:13px 36px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);">Back to Home</button>';
       document.body.appendChild(successOv);
       setTimeout(function(){ var b=successOv.querySelector('button'); if(b) b.click(); }, 3000);
-      // Update home attendance card to show Checked Out state
-      updateAttendanceCard(false, null, null, null, null);
+      // Update home attendance card to show Day Complete state
+      updateAttendanceCard(false, null, null, null, checkoutAt, true);
       // Refresh home data
       setTimeout(function(){ wifiCheckAndAct(); loadHomeWeekAndLeave(); }, 800);
     } else {
@@ -5856,9 +5869,10 @@ function showLateBadge(lateMinutes){
 }
 
 // ── Attendance Card State on Home Page ──
-function updateAttendanceCard(checkedIn, checkInTime, source, statusText, checkOutTime){
+function updateAttendanceCard(checkedIn, checkInTime, source, statusText, checkOutTime, doneForDay){
   var cardA = document.getElementById('s1-att-notchecked');
   var cardB = document.getElementById('s1-att-checkedin');
+  var cardC = document.getElementById('s1-att-doneforday');
   if(!cardA || !cardB) return;
   function fmtTs(ts){
     if(!ts) return '--:--';
@@ -5867,8 +5881,23 @@ function updateAttendanceCard(checkedIn, checkInTime, source, statusText, checkO
     var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';
     h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+ap;
   }
-  if(checkedIn){
+  if(doneForDay){
+    // State C: checked out for the day
+    cardA.style.display='none'; cardB.style.display='none';
+    if(cardC) cardC.style.display='block';
+    var doneEl=document.getElementById('s1-att-done-times');
+    if(doneEl && checkInTime && checkOutTime){
+      doneEl.textContent='In '+fmtTs(checkInTime)+' → Out '+fmtTs(checkOutTime);
+    } else if(doneEl && checkInTime){
+      doneEl.textContent='Checked in at '+fmtTs(checkInTime)+' · Checked out';
+    }
+    var coEl0=document.getElementById('s1-checkout');
+    if(coEl0 && checkOutTime) coEl0.textContent=fmtTs(checkOutTime);
+    var ciEl0=document.getElementById('s1-checkin');
+    if(ciEl0 && checkInTime) ciEl0.textContent=fmtTs(checkInTime);
+  } else if(checkedIn){
     cardA.style.display='none'; cardB.style.display='block';
+    if(cardC) cardC.style.display='none';
     var ciTime = document.getElementById('s1-att-ci-time');
     var srcBadge = document.getElementById('s1-att-src-badge');
     var stRow = document.getElementById('s1-att-status-row');
@@ -5883,6 +5912,7 @@ function updateAttendanceCard(checkedIn, checkInTime, source, statusText, checkO
     if(coEl) coEl.textContent = checkOutTime ? fmtTs(checkOutTime) : '--:--';
   } else {
     cardA.style.display='block'; cardB.style.display='none';
+    if(cardC) cardC.style.display='none';
     var coEl2 = document.getElementById('s1-checkout');
     if(coEl2) coEl2.textContent = '--:--';
   }
@@ -5915,6 +5945,12 @@ async function homeSmartCheckin(){
       var stMap={'present':'Present ✓','late':'Late','late_pending':'Late — Pending'};
       updateAttendanceCard(true,rs.checkInTime,rs.source,stMap[rs.status]||'Present ✓',null);
       showToast1('Already checked in ✓');
+      setBtnState('✅ Check In', false); return;
+    }
+
+    // Already checked out for the day
+    if(rs.alreadyCheckedIn && rs.checkedOut){
+      showToast1('✅ Day complete — already checked out');
       setBtnState('✅ Check In', false); return;
     }
 
@@ -6424,14 +6460,10 @@ async function wifiCheckAndAct(){
         wifiBanner(true,'rgba(255,255,255,0.04)','rgba(235,235,245,0.35)','📶 Not on Office WiFi','Connect to office WiFi for auto check-in',false);
         setTimeout(function(){ wifiBanner(false); }, 4000);
       } else {
-        // Checked out — show checkout time if available
+        // Checked out for the day — show "Day Complete" state
         _appJustOpened = false;
         stopWorkTimer();
-        updateAttendanceCard(false,null,null,null,null);
-        if(d.checkInTime){
-          var ciElCo=document.getElementById('s1-checkin');
-          if(ciElCo){ var cico=new Date(d.checkInTime),hco=cico.getHours(),mco=cico.getMinutes(),aco=hco>=12?'PM':'AM'; hco=hco%12||12; ciElCo.textContent=hco+':'+(mco<10?'0':'')+mco+' '+aco; }
-        }
+        updateAttendanceCard(false, d.checkInTime, d.source||null, null, d.checkOutTime||null, true);
         wifiBanner(false);
       }
     }
