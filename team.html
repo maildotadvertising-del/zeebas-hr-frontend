@@ -397,17 +397,17 @@ body.desktop-mode #s1-sidebar {
       <div class="scroll" style="padding:12px 13px 8px;">
         <!-- Profile banner -->
         <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));cursor:pointer;" onclick="go1('s1-profile')">
-          <div style="display:flex;align-items:flex-end;gap:11px;">
-            <div id="s1-avatar" style="width:44px;height:44px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:16px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div id="s1-avatar" style="width:58px;height:58px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:15px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:20px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
             <div style="flex:1;min-width:0;">
-              <!-- Name row: staff name left, DOT logo right -->
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                <div id="s1-name" style="color:#fff;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Welcome</div>
-                <span id="s1-brand" style="display:inline-flex;align-items:center;flex-shrink:0;"><img src="dot-logo.png" alt="DOT Advertising" style="height:42px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
+              <!-- Name row -->
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                <div id="s1-name" style="color:#fff;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:2px;">Welcome</div>
+                <span id="s1-brand" style="display:inline-flex;align-items:center;flex-shrink:0;"><img src="dot-logo.png" alt="DOT Advertising" style="height:52px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
               </div>
-              <!-- Role badge row below — aligned to bottom of avatar -->
-              <div style="margin-top:4px;">
-                <span id="s1-desig" style="background:rgba(255,159,10,0.2);border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:2px 7px;font-size:10px;color:#FF9F0A;font-weight:500;"></span>
+              <!-- Designation badge -->
+              <div style="margin-top:5px;">
+                <span id="s1-desig" style="background:rgba(255,159,10,0.2);border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:11px;color:#FF9F0A;font-weight:500;"></span>
               </div>
             </div>
           </div>
