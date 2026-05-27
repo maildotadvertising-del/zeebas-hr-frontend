@@ -1921,7 +1921,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         </div>
       </div>
       <div class="sec g" style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <table style="width:100%;min-width:780px;border-collapse:collapse;font-size:12px;">
+        <table style="width:100%;min-width:860px;border-collapse:collapse;font-size:12px;">
           <thead>
             <tr style="background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.08);">
               <th style="padding:10px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;">Staff</th>
@@ -1931,6 +1931,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
               <th style="padding:10px 8px;text-align:center;color:#30D158;font-weight:500;font-size:11px;">Worked</th>
               <th style="padding:10px 8px;text-align:center;color:#FF9F0A;font-weight:500;font-size:11px;">Required</th>
               <th style="padding:10px 8px;text-align:center;color:#FF9F0A;font-weight:500;font-size:11px;">Late</th>
+              <th style="padding:10px 8px;text-align:center;color:#0A84FF;font-weight:500;font-size:11px;">OT hrs</th>
               <th style="padding:10px 8px;text-align:center;color:#FF453A;font-weight:500;font-size:11px;">Deficit</th>
               <th style="padding:10px 8px;text-align:center;color:#30D158;font-weight:500;font-size:11px;">Extra</th>
               <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:500;font-size:11px;">Balance</th>
@@ -1938,7 +1939,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             </tr>
           </thead>
           <tbody id="mb-tbody">
-            <tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);">Select a month to view</td></tr>
+            <tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted);">Select a month to view</td></tr>
           </tbody>
         </table>
       </div>
@@ -7871,7 +7872,7 @@ async function loadMonthlyBalance(){
     var res=await fetch(API+'/api/attendance/monthly-balance-all?month='+month,{headers:zHdr()});
     var d=await res.json();
     if(!d.success||!d.data||!d.data.length){
-      tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);">No data for this month</td></tr>';
+      tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted);">No data for this month</td></tr>';
       return;
     }
 
@@ -7902,6 +7903,7 @@ async function loadMonthlyBalance(){
       var presentD   = parseInt(r.present_days)||0;
       var absentD    = parseInt(r.absent_days)||0;
       var leaveD     = parseInt(r.leave_days)||0;
+      var otHrs      = parseFloat(r.total_ot_hours)||0;
 
       // Worked hours progress bar (worked vs required)
       var workedPct  = reqMins > 0 ? Math.min(100, Math.round(workedM / reqMins * 100)) : 0;
@@ -7948,6 +7950,7 @@ async function loadMonthlyBalance(){
         +'<td style="'+td+'text-align:center;">'+workedCell+'</td>'
         +'<td style="'+td+'text-align:center;color:rgba(255,159,10,0.6);font-size:11px;">'+reqStr+'</td>'
         +'<td style="'+td+'text-align:center;font-size:11px;">'+lateStr+'</td>'
+        +'<td style="'+td+'text-align:center;color:#0A84FF;font-size:12px;font-weight:500;">'+(otHrs>0?otHrs.toFixed(1)+'h':'<span style="color:var(--muted);">—</span>')+'</td>'
         +'<td style="'+td+'text-align:center;color:#FF453A;font-size:12px;font-weight:500;">'+minsToHM(deficit)+'</td>'
         +'<td style="'+td+'text-align:center;color:#30D158;font-size:12px;font-weight:500;">'+minsToHM(extra)+'</td>'
         +'<td style="'+td+'text-align:center;color:'+balCol+';font-size:12px;font-weight:600;">'+balStr+'</td>'
@@ -7955,12 +7958,12 @@ async function loadMonthlyBalance(){
         +'</tr>';
     });
     // Footer info row
-    html += '<tr><td colspan="11" style="padding:8px 14px;font-size:10px;color:rgba(245,245,247,0.3);border-top:0.5px solid rgba(255,255,255,0.05);">'
-      +'Working days counted so far: '+wdSoFar+' · Deficit = Required hours not worked (absent days included) · Extra = Surplus hours across all days'
+    html += '<tr><td colspan="12" style="padding:8px 14px;font-size:10px;color:rgba(245,245,247,0.3);border-top:0.5px solid rgba(255,255,255,0.05);">'
+      +'Working days counted so far: '+wdSoFar+' · OT hrs = overtime from checkout · Deficit = Required hours not worked · Extra = Surplus worked time'
       +'</td></tr>';
     tbody.innerHTML=html;
   }catch(e){
-    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);">Error loading balance</td></tr>';
+    tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted);">Error loading balance</td></tr>';
     console.error('monthly balance error',e);
   }
 }
@@ -7974,7 +7977,7 @@ function initMbLazyLoad(){
   if(!sec) return;
   // Show placeholder so user knows it will load
   var tbody = document.getElementById('mb-tbody');
-  if(tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Scroll down to load monthly balance…</td></tr>';
+  if(tbody) tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Scroll down to load monthly balance…</td></tr>';
   // Disconnect previous observer if any
   if(_mbObserver){ _mbObserver.disconnect(); _mbObserver = null; }
   _mbObserver = new IntersectionObserver(function(entries){
