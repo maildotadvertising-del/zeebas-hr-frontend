@@ -5242,11 +5242,9 @@ async function loadMySalary(){
           +(parseFloat(settings.late_deduction_per_min||0)>0 ? wRule('Late Deduction', '₹'+parseFloat(settings.late_deduction_per_min)+'/min', '#FF453A') : '')
           +(parseFloat(settings.late_max_per_day||0)>0 ? wRule('Max Late Cut / Day', '₹'+parseFloat(settings.late_max_per_day), '#FF9F0A') : '')
           +(settings.ot_enabled ? (function(){
-            // OT effective hourly rate = (dailyRate ÷ hoursPerDay) × ot_rate_multiplier
+            // OT hourly rate = dailyRate ÷ hoursPerDay (no multiplier)
             var effH   = parseFloat(settings.hours_per_day) || 11;
-            var multi  = parseFloat(settings.ot_rate_multiplier) || 1.0;
-            var baseHr = dailyRate / effH;
-            var otRate = Math.round(baseHr * multi);
+            var otRate = Math.round(dailyRate / effH);
             // OT threshold = shift duration + 40-min buffer
             var startH = settings.work_start_time ? parseInt((settings.work_start_time||'10:00').split(':')[0]) : 10;
             var startM = settings.work_start_time ? parseInt((settings.work_start_time||'10:00').split(':')[1]||0) : 0;
