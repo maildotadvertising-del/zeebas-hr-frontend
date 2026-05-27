@@ -1662,6 +1662,13 @@ body.desktop-mode #s1-sidebar {
             <div style="flex:1;"><div style="color:#fff;font-size:13px;">Payroll Settings</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Deductions &amp; overtime rules</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
+          <div onclick="go2('s2-ot-rules')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+            <div style="width:34px;height:34px;background:rgba(100,210,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#64D2FF" stroke-width="1.3"/><path d="M8 5v3l2 2" stroke="#64D2FF" stroke-width="1.3" stroke-linecap="round"/><path d="M11 2l2 2M5 2L3 4" stroke="#64D2FF" stroke-width="1.1" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;"><div style="color:#fff;font-size:13px;">OT Rules</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">Per-staff overtime rates & thresholds</div></div>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
           <div onclick="go2('s2-biometric-settings')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
             <div style="width:34px;height:34px;background:rgba(10,132,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 8c0-1.66 1.34-3 3-3s3 1.34 3 3" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M3 8c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><path d="M1 8c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#0A84FF" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="8" r="1" fill="#0A84FF"/></svg>
@@ -1927,6 +1934,21 @@ body.desktop-mode #s1-sidebar {
       </div>
     </div>
 
+    <!-- OT RULES -->
+    <div id="s2-ot-rules" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 0;flex-shrink:0;">
+        <button onclick="go2('s2-more')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:17px;font-weight:500;flex:1;">OT Rules</div>
+        <button onclick="loadOTRules()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:7px 12px;color:rgba(245,245,247,0.55);font-size:11px;cursor:pointer;font-family:inherit;">↻ Refresh</button>
+      </div>
+      <div id="ot-rules-meta" style="padding:8px 13px 0;font-size:10px;color:rgba(245,245,247,0.3);flex-shrink:0;"></div>
+      <div class="scroll" style="padding:10px 13px 20px;" id="ot-rules-body">
+        <div style="text-align:center;color:rgba(245,245,247,0.3);font-size:12px;padding:40px 0;">Loading…</div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -2067,7 +2089,7 @@ function go1(id){
 }
 
 function go2(id){
-  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings','s2-advances','s2-announcements'];
+  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings','s2-advances','s2-announcements','s2-ot-rules'];
   all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
   var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
   var idx=adminScrs.indexOf(id);if(idx>=0)initNavs2(idx);
@@ -2081,6 +2103,7 @@ function go2(id){
   if(id==='s2-gps-settings')      { loadGpsSettings(); }
   if(id==='s2-payroll-settings')  { loadPayrollSettings(); }
   if(id==='s2-biometric-settings'){ loadBiometricSettings(); }
+  if(id==='s2-ot-rules')          { loadOTRules(); }
 }
 
 /* staffLogin() — handled by API script */
@@ -7000,6 +7023,68 @@ async function testBiometricConnection(btn){
     setTimeout(function(){if(st)st.textContent='';},4000);
   }
   btn.textContent=orig; btn.disabled=false;
+}
+
+/* ── OT RULES ── */
+async function loadOTRules(){
+  var body=document.getElementById('ot-rules-body');
+  var meta=document.getElementById('ot-rules-meta');
+  if(body) body.innerHTML='<div style="text-align:center;color:rgba(245,245,247,0.3);font-size:12px;padding:40px 0;">Loading…</div>';
+  try{
+    var r=await fetch(API_URL+'/api/staff/ot-rules',{headers:zHead()});
+    var d=await r.json();
+    if(!d.success||!d.data){
+      if(body) body.innerHTML='<div style="text-align:center;color:#FF453A;font-size:12px;padding:30px 0;">Failed to load</div>';
+      return;
+    }
+    var list=d.data;
+    if(meta) meta.textContent='Working days: '+d.working_days+'/mo · Global shift: '+d.global_hours+'h · '+list.length+' staff';
+    if(!list.length){
+      if(body) body.innerHTML='<div style="text-align:center;color:rgba(245,245,247,0.3);font-size:12px;padding:30px 0;">No staff found</div>';
+      return;
+    }
+    // Table header
+    var html='<div class="g" style="padding:0;overflow:hidden;">';
+    html+='<div style="display:grid;grid-template-columns:1fr 60px 70px 60px 80px;gap:0;background:rgba(255,255,255,0.04);border-bottom:0.5px solid rgba(255,255,255,0.08);padding:8px 11px;">';
+    html+='<div style="font-size:10px;color:rgba(245,245,247,0.38);font-weight:500;">Staff</div>';
+    html+='<div style="font-size:10px;color:rgba(245,245,247,0.38);text-align:center;">Shift</div>';
+    html+='<div style="font-size:10px;color:rgba(245,245,247,0.38);text-align:right;">Daily Rate</div>';
+    html+='<div style="font-size:10px;color:rgba(245,245,247,0.38);text-align:right;">OT/hr</div>';
+    html+='<div style="font-size:10px;color:rgba(245,245,247,0.38);text-align:right;">After</div>';
+    html+='</div>';
+    list.forEach(function(s,i){
+      var borderB=i<list.length-1?'border-bottom:0.5px solid rgba(255,255,255,0.05);':'';
+      var otBadge=s.ot_enabled
+        ?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#30D158;margin-right:4px;vertical-align:middle;"></span>'
+        :'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);margin-right:4px;vertical-align:middle;"></span>';
+      var srcTag=s.source==='staff'
+        ?'<span style="font-size:8px;color:#0A84FF;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.22);border-radius:4px;padding:1px 4px;margin-left:3px;">custom</span>'
+        :'';
+      // threshold display
+      var thH=Math.floor(s.threshold/60), thM=s.threshold%60;
+      var thStr=thH>0?(thH+'h '+(thM?thM+'m':'')):thM+'m';
+      html+='<div style="display:grid;grid-template-columns:1fr 60px 70px 60px 80px;gap:0;padding:9px 11px;align-items:center;'+borderB+'">';
+      html+='<div style="min-width:0;">';
+      html+='<div style="font-size:12px;color:#f5f5f7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+otBadge+(s.name||'—')+'</div>';
+      html+='<div style="font-size:9px;color:rgba(245,245,247,0.35);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.designation||s.brand||'')+''+srcTag+'</div>';
+      html+='</div>';
+      html+='<div style="text-align:center;font-size:11px;color:rgba(245,245,247,0.6);">'+(s.shift_hours||s.work_hours||'—')+'h</div>';
+      html+='<div style="text-align:right;font-size:11px;color:rgba(245,245,247,0.7);">₹'+Math.round(s.daily_rate||0)+'</div>';
+      html+='<div style="text-align:right;font-size:12px;color:'+(s.ot_enabled?'#FFD60A':'rgba(245,245,247,0.25)')+';font-weight:500;">'+( s.ot_enabled?'₹'+Math.round(s.ot_rate||0):'—')+'</div>';
+      html+='<div style="text-align:right;font-size:10px;color:rgba(245,245,247,0.45);">'+(s.ot_enabled?thStr:'—')+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+    // Legend
+    html+='<div style="margin-top:10px;display:flex;align-items:center;gap:14px;padding:0 2px;">';
+    html+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(245,245,247,0.35);"><span style="width:6px;height:6px;border-radius:50%;background:#30D158;display:inline-block;"></span>OT enabled</div>';
+    html+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(245,245,247,0.35);"><span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-block;"></span>OT disabled</div>';
+    html+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(245,245,247,0.35);"><span style="font-size:8px;color:#0A84FF;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.22);border-radius:4px;padding:1px 4px;">custom</span>Per-staff hours</div>';
+    html+='</div>';
+    if(body) body.innerHTML=html;
+  } catch(e){
+    if(body) body.innerHTML='<div style="text-align:center;color:#FF453A;font-size:12px;padding:30px 0;">Error: '+e.message+'</div>';
+  }
 }
 
 /* ── POPULATE STAFF UI ── */
