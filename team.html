@@ -5235,23 +5235,28 @@ async function loadMySalary(){
         };
         return '<div style="background:rgba(10,132,255,0.07);border:0.5px solid rgba(10,132,255,0.14);border-radius:13px;padding:11px 13px;margin-bottom:10px;">'
           +'<div style="color:#0A84FF;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:9px;">📋 Work Rules</div>'
-          +(settings.work_start_time||settings.work_end_time ? wRule('Work Hours', to12(settings.work_start_time||'09:00')+' – '+to12(settings.work_end_time||'18:00')) : '')
+          +(function(){
+            // Work Hours: per-staff override if set, else global settings
+            var wsStart = staffInfo.work_start_time || settings.work_start_time || '';
+            var wsEnd   = staffInfo.work_end_time   || settings.work_end_time   || '';
+            return (wsStart||wsEnd) ? wRule('Work Hours', to12(wsStart||'09:00')+' – '+to12(wsEnd||'18:00')) : '';
+          })()
           +wRule('Working Days / Month', wdFull+' days')
           +wRule('Leave', 'Sunday', '#30D158')
           +(parseInt(settings.late_grace_minutes||0)>0 ? wRule('Late Grace Period', settings.late_grace_minutes+' min', '#30D158') : '')
           +(parseFloat(settings.late_deduction_per_min||0)>0 ? wRule('Late Deduction', '₹'+parseFloat(settings.late_deduction_per_min)+'/min', '#FF453A') : '')
           +(parseFloat(settings.late_max_per_day||0)>0 ? wRule('Max Late Cut / Day', '₹'+parseFloat(settings.late_max_per_day), '#FF9F0A') : '')
           +(settings.ot_enabled ? (function(){
-            // OT hourly rate = dailyRate ÷ hoursPerDay (no multiplier)
-            var effH   = parseFloat(settings.hours_per_day) || 11;
+            // Per-staff hours: use staff's own work times if set, else global hours_per_day
+            var _wsStart = staffInfo.work_start_time || settings.work_start_time || '10:00';
+            var _wsEnd   = staffInfo.work_end_time   || settings.work_end_time   || '21:00';
+            var _sArr = _wsStart.split(':').map(Number);
+            var _eArr = _wsEnd.split(':').map(Number);
+            var _shiftMins = (_eArr[0]*60+_eArr[1]) - (_sArr[0]*60+_sArr[1]);
+            var effH = _shiftMins > 0 ? _shiftMins/60 : (parseFloat(settings.hours_per_day)||11);
             var otRate = Math.round(dailyRate / effH);
             // OT threshold = shift duration + 40-min buffer
-            var startH = settings.work_start_time ? parseInt((settings.work_start_time||'10:00').split(':')[0]) : 10;
-            var startM = settings.work_start_time ? parseInt((settings.work_start_time||'10:00').split(':')[1]||0) : 0;
-            var endH   = settings.work_end_time   ? parseInt((settings.work_end_time||'21:00').split(':')[0])   : 21;
-            var endM   = settings.work_end_time   ? parseInt((settings.work_end_time||'21:00').split(':')[1]||0): 0;
-            var totalMins  = (endH*60+endM) - (startH*60+startM);
-            var threshMins = totalMins + 40;
+            var threshMins = _shiftMins + 40;
             var thH = Math.floor(threshMins/60), thM = threshMins%60;
             var thLabel = thH+'h'+(thM>0?' '+thM+'min':'');
             return wRule('Overtime', '₹'+otRate+'/hr · after '+thLabel, '#0A84FF');
