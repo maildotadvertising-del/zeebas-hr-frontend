@@ -594,6 +594,7 @@ body.desktop-mode #s1-sidebar {
         </div>
       </div>
       <div id="s1-tasks-list" class="scroll" style="padding:4px 13px 8px;"></div>
+      <div id="s1-eod-section" style="padding:0 13px 10px;flex-shrink:0;"></div>
       <div id="n1-tasks" class="bnav"></div>
     </div>
 
@@ -5650,6 +5651,7 @@ async function doAllowNotif(){
 var _eodItems = [];
 var _eodTriggered = false;
 var _eodPendingDate = null; // set when showing yesterday's pending EOD
+var _eodStandalone = false; // true when opened from Task page (no checkout)
 var _pendingEodChecked = false; // once checked per session — don't repeat
 var _eodCats = ['Design','Video','Content','Social Media','Meeting','Admin','Other'];
 
@@ -5790,6 +5792,48 @@ function showPendingEodPopup(dateStr){
   if(ov) ov.style.display='flex';
 }
 
+// ── Standalone EOD from Tasks page (no checkout) ──
+function openStandaloneEodModal(){
+  _eodStandalone = true;
+  _eodTriggered = true;
+  _eodPendingDate = new Date().toISOString().slice(0,10); // today — triggers isPending path (no checkout)
+  _eodItems = [];
+  _eodItems.push({ id: Date.now(), text: '', link: '', cat:'', status:'done' });
+  renderEodItems();
+  var now = new Date();
+  var _si = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  _si('eod-emoji', '📋');
+  _si('eod-title', 'Daily Work Report');
+  _si('eod-date-lbl', now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'}));
+  var sub = document.getElementById('eod-subtitle');
+  if(sub){ sub.style.display='block'; sub.innerHTML='What did you work on today?<br>Your report will go to admin for review.'; }
+  var warn = document.getElementById('eod-pending-warning');
+  if(warn) warn.style.display='none';
+  var lbl = document.getElementById('eod-items-label');
+  if(lbl) lbl.textContent = "Today's Work";
+  var btn = document.getElementById('eod-submit-btn');
+  if(btn){ btn.textContent = '📤 Submit Report →'; }
+  var note = document.getElementById('eod-bottom-note');
+  if(note) note.style.display='none';
+  var ov = document.getElementById('ov-eod');
+  if(ov) ov.style.display='flex';
+}
+
+function renderTasksEodCard(){
+  var el = document.getElementById('s1-eod-section');
+  if(!el) return;
+  el.innerHTML = '<div class="gs" style="padding:13px 14px;">'
+    +'<div style="display:flex;align-items:center;gap:12px;">'
+      +'<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(10,132,255,0.22),rgba(94,92,230,0.22));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">📋</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="color:#fff;font-size:13px;font-weight:500;">Daily Work Report</div>'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">Submit your end-of-day work summary</div>'
+      +'</div>'
+      +'<button onclick="openStandaloneEodModal()" style="background:linear-gradient(135deg,rgba(10,132,255,0.2),rgba(94,92,230,0.18));border:0.5px solid rgba(10,132,255,0.35);border-radius:10px;padding:8px 14px;color:#0A84FF;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Submit EOD →</button>'
+    +'</div>'
+  +'</div>';
+}
+
 async function eodSubmit(){
   var btn = document.getElementById('eod-submit-btn');
   var isPending = !!_eodPendingDate; // true = yesterday's pending EOD, false = normal checkout
@@ -5824,9 +5868,16 @@ async function eodSubmit(){
       _eodTriggered = false;
 
       if(isPending){
-        // ── Pending EOD submitted → show brief success then refresh home (check-in now available) ──
-        showToast('✅ EOD submitted! Check-in unlocked.');
-        setTimeout(function(){ wifiCheckAndAct(); }, 600);
+        if(_eodStandalone){
+          // ── Standalone EOD from Tasks page — no checkout, just report ──
+          _eodStandalone = false;
+          showToast1('✅ Daily report submitted!');
+          renderTasksEodCard(); // refresh card to show "submitted" state
+        } else {
+          // ── Pending EOD submitted → show brief success then refresh home (check-in now available) ──
+          showToast('✅ EOD submitted! Check-in unlocked.');
+          setTimeout(function(){ wifiCheckAndAct(); }, 600);
+        }
       } else {
         // ── Normal checkout ──
         stopWorkTimer();
@@ -7350,9 +7401,11 @@ async function loadStaffTasks(){
     if(cntEl) cntEl.textContent=open;
     updateTaskRemaining(open);
     s1TaskTab(_s1TaskTab);
+    renderTasksEodCard();
   }catch(e){
     if(!_s1TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
   }
+  renderTasksEodCard();
 }
 
 function s1TaskTab(tab){
@@ -7467,6 +7520,10 @@ function openS1TaskDetail(taskId){
   var statusLabel = done ? '✅ Done' : t.status==='in_progress' ? '🔵 In Progress' : '⭕ To Do';
   var statusColor = done ? '#30D158' : t.status==='in_progress' ? '#0A84FF' : 'rgba(245,245,247,0.5)';
 
+  // Countdown / overdue + extension button for detail sheet
+  var _cdRaw = !done ? s1CountdownHtml(t) : '';
+  var _cdWrapper = _cdRaw ? '<div style="margin-bottom:12px;">'+_cdRaw+'</div>' : '';
+
   var html = '<div style="width:38px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
     +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;">'
       +'<div style="flex:1;">'
@@ -7491,6 +7548,7 @@ function openS1TaskDetail(taskId){
       +'<div style="color:#FF9F0A;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">📝 Notes</div>'
       +'<div style="color:rgba(245,245,247,0.65);font-size:12px;line-height:1.5;">'+escHtml(t.notes)+'</div>'
     +'</div>':'')
+    +_cdWrapper
     +(done
       ? '<button onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'in_progress\');closeS1TaskDetail();" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px;color:rgba(245,245,247,0.6);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">↩ Reopen Task</button>'
       : '<button onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'done\');closeS1TaskDetail();" style="width:100%;background:linear-gradient(135deg,rgba(48,209,88,0.18),rgba(48,209,88,0.12));border:0.5px solid rgba(48,209,88,0.35);border-radius:12px;padding:13px;color:#30D158;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✓ Mark as Done</button>'
