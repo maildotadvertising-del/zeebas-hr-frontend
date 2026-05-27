@@ -9927,9 +9927,9 @@ function attViewRow(r,i){
   }
 
   return '<tr id="att-row-'+i+'" style="background:'+(i%2===0?'transparent':'rgba(255,255,255,0.015)')+';">'
-    +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
-      +'<div><div style="font-size:12px;font-weight:500;">'+r.name+'</div>'
-      +'<div class="muted-desig" style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div></div></div></td>'
+    +'<td style="'+td+'padding-left:14px;white-space:nowrap;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
+      +'<div style="min-width:0;"><div style="font-size:12px;font-weight:500;white-space:nowrap;">'+r.name+'</div>'
+      +'<div class="muted-desig" style="font-size:10px;color:var(--muted);white-space:nowrap;">'+(r.designation||'')+'</div></div></div></td>'
     +'<td style="'+td+'font-size:11px;color:var(--muted);">'+(r.brand_name||'—')+'</td>'
     +'<td style="'+td+'text-align:center;font-family:monospace;font-size:12px;color:#30D158;">'+fmtTime(r.check_in)+'</td>'
     +'<td style="'+td+'text-align:center;">'+coDisplay+'</td>'
