@@ -5718,11 +5718,11 @@ function renderEodItems(){
 
       // ── Title ──
       +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:5px;font-weight:500;">TASK TITLE</div>'
-      +'<input id="eod-text-'+item.id+'" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="e.g. Designed social media banner for DOT…" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:13px;font-family:inherit;outline:none;padding:9px 11px;box-sizing:border-box;margin-bottom:10px;">'
+      +'<input id="eod-text-'+item.id+'" autocomplete="off" value="'+escHtml(item.text||'')+'" oninput="_eodItems['+idx+'].text=this.value" placeholder="e.g. Designed social media banner for DOT…" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:13px;font-family:inherit;outline:none;padding:9px 11px;box-sizing:border-box;margin-bottom:10px;">'
 
       // ── Description ──
       +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:5px;font-weight:500;">DESCRIPTION <span style="color:rgba(245,245,247,0.2);font-weight:400;">(optional)</span></div>'
-      +'<textarea id="eod-desc-'+item.id+'" oninput="eodSetDesc('+item.id+',this.value)" placeholder="Any extra details, notes, or links…" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:12px;font-family:inherit;outline:none;padding:9px 11px;box-sizing:border-box;resize:none;line-height:1.5;margin-bottom:10px;">'+escHtml(item.link||'')+'</textarea>'
+      +'<textarea id="eod-desc-'+item.id+'" autocomplete="off" oninput="eodSetDesc('+item.id+',this.value)" placeholder="Any extra details, notes, or links…" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:12px;font-family:inherit;outline:none;padding:9px 11px;box-sizing:border-box;resize:none;line-height:1.5;margin-bottom:10px;">'+escHtml(item.link||'')+'</textarea>'
 
       // ── Category ──
       +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:7px;font-weight:500;">CATEGORY</div>'
