@@ -5859,12 +5859,26 @@ async function eodSubmit(){
     } else {
       payload.checkout_at = checkoutAt;
     }
-    var r = await fetch(API_URL+'/api/eod/submit', {
-      method:'POST',
-      headers:Object.assign({'Content-Type':'application/json'}, zHead()),
-      body: JSON.stringify(payload)
-    });
-    var d = await r.json();
+    // Fetch with auto-retry: Render server may be waking up from sleep (30–60s cold start).
+    // Attempt 1 → if fails, show "Reconnecting…" and retry once after 6 seconds.
+    var fetchPayload = JSON.stringify(payload);
+    var doFetch = function(){
+      return fetch(API_URL+'/api/eod/submit', {
+        method:'POST',
+        headers:Object.assign({'Content-Type':'application/json'}, zHead()),
+        body: fetchPayload
+      });
+    };
+    var resp;
+    try {
+      resp = await doFetch();
+    } catch(netErr1) {
+      // First attempt failed — server may be waking up. Retry after 6s.
+      if(btn){ btn.textContent='Reconnecting… (1/2)'; btn.disabled=true; }
+      await new Promise(function(res){ setTimeout(res, 6000); });
+      resp = await doFetch(); // throws → caught by outer catch
+    }
+    var d = await resp.json();
     if(d.success){
       var ov = document.getElementById('ov-eod');
       if(ov) ov.style.display='none';
@@ -5903,7 +5917,7 @@ async function eodSubmit(){
       if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
     }
   }catch(e){
-    showToast('❌ Network error');
+    showToast('❌ Connection failed — please try again');
     if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
   }
 }
