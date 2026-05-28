@@ -664,11 +664,7 @@ body.desktop-mode #s1-sidebar {
             <div id="dm-badge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:#FF453A;border-radius:50%;border:1.5px solid rgba(14,14,30,1);"></div>
           </button>
         </div>
-        <!-- Tab strip -->
-        <div style="display:flex;gap:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
-          <button id="tab-group" onclick="switchChatTab('group')" style="flex:1;padding:9px 0;background:none;border:none;border-bottom:2px solid #0A84FF;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">💬 Group</button>
-          <button id="tab-dms" onclick="switchChatTab('dms')" style="flex:1;padding:9px 0;background:none;border:none;border-bottom:2px solid transparent;color:rgba(245,245,247,0.35);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">👤 Direct Messages</button>
-        </div>
+        <!-- Tab strip — Group only (DM tab removed) -->
       </div>
 
       <!-- GROUP CHAT PANEL -->
@@ -3196,6 +3192,7 @@ function appendStaffMsg1(msg, doScroll){
   wrap.style.cssText = 'margin-bottom:4px;padding:0 10px;';
 
   var msgContent = renderMsgContent(msg);
+  if(!msgContent && !msg.message) return; // skip empty messages (e.g. dot-logo image with no text)
   if(isMe){
     wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;flex-direction:row-reverse;">'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;max-width:78%;">'
@@ -3355,22 +3352,13 @@ function insertMention(name, staffId){
   hideMentionPopup();
 }
 
-// ── Chat tab switch ──
+// ── Chat tab switch — DM tab removed, always show group ──
 function switchChatTab(tab){
   var gp = document.getElementById('chat-group-panel');
   var dp = document.getElementById('chat-dms-panel');
-  var tg = document.getElementById('tab-group'), td = document.getElementById('tab-dms');
-  if(tab==='group'){
-    gp.style.display='flex'; dp.style.display='none';
-    tg.style.borderBottomColor='#0A84FF'; tg.style.color='#0A84FF';
-    td.style.borderBottomColor='transparent'; td.style.color='rgba(245,245,247,0.35)';
-  } else {
-    gp.style.display='none'; dp.style.display='flex';
-    td.style.borderBottomColor='#0A84FF'; td.style.color='#0A84FF';
-    tg.style.borderBottomColor='transparent'; tg.style.color='rgba(245,245,247,0.35)';
-    loadDmConversations();
-    showDmBadge(false);
-  }
+  // Always show group panel; DM panel handled via openDmList() from member icon
+  if(gp) gp.style.display='flex';
+  if(dp) dp.style.display='none';
 }
 
 // ── Voice Recording (MediaRecorder) ──
@@ -3500,6 +3488,9 @@ function renderMsgContent(msg){
   var type = msg.message_type || 'text';
   var url = msg.file_url ? API_URL + msg.file_url : '';
   if(type==='image' && url){
+    // Skip DOT logo images — they should not appear as chat messages
+    var _ul = url.toLowerCase();
+    if(_ul.indexOf('dot-logo') !== -1 || _ul.indexOf('dot_logo') !== -1) return '';
     return '<img src="'+url+'" style="max-width:200px;border-radius:12px;display:block;margin-bottom:4px;cursor:pointer;" onclick="window.open(\''+url+'\',\'_blank\')">'
       +(msg.message?'<div>'+escHtml(msg.message)+'</div>':'');
   }
