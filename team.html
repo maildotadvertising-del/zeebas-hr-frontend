@@ -5890,43 +5890,79 @@ async function viewTodayEod(){
   }catch(e){ showToast1('❌ Could not load report'); }
 }
 
-function openNeedTimeDialog(taskId, taskTitle){
+function openNeedTimeDialog(taskId, taskTitle, currentDueDate, currentDueTime){
+  // Default new date = tomorrow, time = same as current or 17:00
+  var today = new Date();
+  var defDate = new Date(today); defDate.setDate(defDate.getDate()+1);
+  var defDateStr = defDate.toISOString().split('T')[0];
+  var defTime = (currentDueTime||'').slice(0,5) || '17:00';
+
+  // Show current due date label
+  var curLabel = '';
+  if(currentDueDate){
+    var cdParts = (currentDueDate||'').slice(0,10);
+    curLabel = cdParts + (currentDueTime ? ' at ' + (currentDueTime||'').slice(0,5) : '');
+  }
+
   var ov = document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;';
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
-  ov.innerHTML='<div style="background:rgba(16,16,30,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px calc(28px + env(safe-area-inset-bottom));width:100%;max-width:480px;max-height:70vh;overflow-y:auto;">'
-    +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 18px;"></div>'
-    +'<div style="font-size:18px;text-align:center;margin-bottom:6px;">⏳</div>'
-    +'<div style="color:#fff;font-size:15px;font-weight:600;text-align:center;margin-bottom:4px;">Need More Time?</div>'
-    +'<div style="color:rgba(245,245,247,0.45);font-size:12px;text-align:center;margin-bottom:18px;">'+escHtml(taskTitle)+'</div>'
-    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:6px;">Reason (why you need more time)</div>'
-    +'<textarea id="need-time-reason" autocomplete="off" placeholder="e.g. Client feedback pending, need 2 more days…" rows="4" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-size:13px;font-family:inherit;outline:none;padding:10px 12px;box-sizing:border-box;resize:none;line-height:1.5;margin-bottom:14px;"></textarea>'
-    +'<button onclick="submitNeedTime('+taskId+',this.closest(\'div[style*=fixed]\'))" style="width:100%;background:linear-gradient(135deg,rgba(255,159,10,0.85),rgba(200,110,0,0.9));border:none;border-radius:13px;padding:13px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Send Request →</button>'
+  ov.innerHTML='<div style="background:rgba(16,16,30,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px calc(28px + env(safe-area-inset-bottom));width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">'
+    +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
+    +'<div style="font-size:20px;text-align:center;margin-bottom:6px;">⏳</div>'
+    +'<div style="color:#fff;font-size:15px;font-weight:600;text-align:center;margin-bottom:3px;">Request More Time</div>'
+    +'<div style="color:rgba(245,245,247,0.4);font-size:12px;text-align:center;margin-bottom:18px;">'+escHtml(taskTitle)+'</div>'
+
+    // Current deadline (read-only)
+    +(curLabel?'<div style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px 13px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">'
+      +'<span style="color:rgba(245,245,247,0.5);font-size:11px;">Current Deadline</span>'
+      +'<span style="color:#FF453A;font-size:12px;font-weight:500;">📅 '+escHtml(curLabel)+'</span>'
+    +'</div>':'')
+
+    // New date
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">New Deadline</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:14px;">'
+      +'<input type="date" id="need-time-date" value="'+defDateStr+'" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:11px;color:#fff;font-size:14px;font-family:inherit;outline:none;padding:11px 13px;box-sizing:border-box;">'
+      +'<input type="time" id="need-time-time" value="'+defTime+'" autocomplete="off" style="width:120px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:11px;color:#fff;font-size:14px;font-family:inherit;outline:none;padding:11px 13px;box-sizing:border-box;">'
+    +'</div>'
+
+    // Reason
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">Reason <span style="color:rgba(245,245,247,0.3);font-weight:400;text-transform:none;">(required)</span></div>'
+    +'<textarea id="need-time-reason" autocomplete="off" placeholder="Why do you need more time? (e.g. client feedback pending, complex revisions…)" rows="3" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:11px;color:#fff;font-size:13px;font-family:inherit;outline:none;padding:10px 12px;box-sizing:border-box;resize:none;line-height:1.5;margin-bottom:16px;"></textarea>'
+
+    // Buttons
+    +'<div style="display:flex;gap:8px;">'
+      +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px;color:rgba(245,245,247,0.55);font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>'
+      +'<button onclick="submitNeedTime('+taskId+',this.closest(\'div[style*=fixed]\'))" style="flex:2;background:linear-gradient(135deg,rgba(255,159,10,0.9),rgba(200,100,0,0.95));border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">📤 Send Request</button>'
+    +'</div>'
   +'</div>';
   document.body.appendChild(ov);
-  setTimeout(function(){ var ta=document.getElementById('need-time-reason'); if(ta) ta.focus(); }, 300);
 }
 
 async function submitNeedTime(taskId, container){
-  var reason = (document.getElementById('need-time-reason').value||'').trim();
+  var reason  = (document.getElementById('need-time-reason').value||'').trim();
+  var newDate = (document.getElementById('need-time-date').value||'').trim();
+  var newTime = (document.getElementById('need-time-time').value||'').trim();
   if(!reason){ showToast1('⚠️ Please enter a reason'); return; }
+  if(!newDate){ showToast1('⚠️ Please select a new deadline date'); return; }
   var btn = container.querySelector('button:last-child');
   if(btn){ btn.textContent='Sending…'; btn.disabled=true; }
   try{
     var r = await fetch(API_URL+'/api/tasks/'+taskId+'/request-extra-time', {
-      method:'POST', headers:zHead(), body:JSON.stringify({reason:reason, minutes:0})
+      method:'POST', headers:zHead(),
+      body:JSON.stringify({ reason:reason, new_due_date:newDate, new_due_time:newTime||null, minutes:0 })
     });
     var d = await r.json();
     if(d.success){
       container.remove();
-      showToast1('✅ Request sent! Admin will review and update the date.');
+      showToast1('✅ Request sent to admin!');
     } else {
       showToast1('❌ '+(d.message||'Could not send request'));
-      if(btn){ btn.textContent='Send Request →'; btn.disabled=false; }
+      if(btn){ btn.textContent='📤 Send Request'; btn.disabled=false; }
     }
   }catch(e){
     showToast1('❌ Connection error. Try again.');
-    if(btn){ btn.textContent='Send Request →'; btn.disabled=false; }
+    if(btn){ btn.textContent='📤 Send Request'; btn.disabled=false; }
   }
 }
 
@@ -7671,7 +7707,7 @@ function openS1TaskDetail(taskId){
       ? '<button onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'in_progress\');closeS1TaskDetail();" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px;color:rgba(245,245,247,0.6);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">↩ Reopen Task</button>'
       : '<div style="display:flex;gap:8px;">'
         +'<button onclick="event.stopPropagation();s1UpdateTask('+t.id+',\'done\');closeS1TaskDetail();" style="flex:1;background:linear-gradient(135deg,rgba(48,209,88,0.18),rgba(48,209,88,0.12));border:0.5px solid rgba(48,209,88,0.35);border-radius:12px;padding:13px;color:#30D158;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✓ Mark as Done</button>'
-        +'<button onclick="event.stopPropagation();openNeedTimeDialog('+t.id+',\''+escHtml(t.title||'')+'\');" style="flex:0 0 auto;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);border-radius:12px;padding:13px 14px;color:#FF9F0A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">⏳ Need Time</button>'
+        +'<button onclick="event.stopPropagation();openNeedTimeDialog('+t.id+',\''+escHtml(t.title||'')+'\',\''+escHtml((t.due_date||'').slice(0,10))+'\',\''+escHtml((t.due_time||'').slice(0,5))+'\');" style="flex:0 0 auto;background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);border-radius:12px;padding:13px 14px;color:#FF9F0A;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">⏳ Need Time</button>'
       +'</div>'
     );
 

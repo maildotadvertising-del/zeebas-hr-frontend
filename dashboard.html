@@ -6573,19 +6573,21 @@ async function loadExtraTimeRequests(){
       var av=avSrc
         ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
         :'<div style="width:34px;height:34px;border-radius:10px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
-      var dueLbl=r.due_date?r.due_date.slice(0,10):'—';
+      var dueLbl = r.due_date ? r.due_date.slice(0,10)+(r.due_time?' at '+r.due_time.slice(0,5):'') : '—';
+      var newDueLbl = r.extra_time_new_date ? r.extra_time_new_date.slice(0,10)+(r.extra_time_new_time?' at '+r.extra_time_new_time.slice(0,5):'') : '';
       return '<div style="background:rgba(255,159,10,0.05);border:0.5px solid rgba(255,159,10,0.2);border-radius:14px;padding:14px;margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
         +av
         +'<div style="flex:1;min-width:0;">'
         +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.title)+'</div>'
-        +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+escHtml(r.staff_name)+' · was due: '+dueLbl+'</div>'
+        +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+escHtml(r.staff_name)+' · Current: '+dueLbl+'</div>'
+        +(newDueLbl?'<div style="color:#FF9F0A;font-size:11px;margin-top:2px;font-weight:500;">📅 Requesting: '+escHtml(newDueLbl)+'</div>':'')
         +'</div>'
         +'</div>'
         +(r.extra_time_reason?'<div style="color:rgba(245,245,247,0.55);font-size:12px;font-style:italic;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;">"'+escHtml(r.extra_time_reason)+'"</div>':'')
         +'<div style="display:flex;gap:8px;">'
         +'<button onclick="approveExtraTime('+r.id+',\'reject\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
-        +'<button onclick="openEditTaskForDeadline('+r.id+')" style="flex:2;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✏️ Edit Task & Change Date</button>'
+        +'<button onclick="openEditTaskForDeadline('+r.id+',\''+escHtml(r.extra_time_new_date||'')+'\',\''+escHtml(r.extra_time_new_time||'')+'\')" style="flex:2;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✏️ Edit & Update Date</button>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -6608,9 +6610,9 @@ async function approveExtraTime(taskId, action){
   }catch(e){ showToast('Server error'); }
 }
 
-// Open task edit form for changing deadline — also marks extra-time request as approved on save
-async function openEditTaskForDeadline(taskId){
-  // Mark as approved (so the request disappears after editing)
+// Open task edit form — pre-fills requested new date, marks request approved on save
+async function openEditTaskForDeadline(taskId, newDate, newTime){
+  // Mark as approved (request disappears from list)
   try{
     await fetch(API+'/api/tasks/'+taskId+'/approve-extra-time',{
       method:'POST',
@@ -6618,9 +6620,17 @@ async function openEditTaskForDeadline(taskId){
       body:JSON.stringify({action:'approve'})
     });
   }catch(e){}
-  // Open the full task edit modal so admin can change the due date
+  // Open task edit modal
   await openEditTask(taskId);
-  // Refresh extra time list after edit modal is dismissed
+  // Pre-fill the requested new due date in the form if provided
+  if(newDate){
+    var dateEl = document.getElementById('task-due-date');
+    if(dateEl) dateEl.value = newDate;
+  }
+  if(newTime){
+    var timeEl = document.getElementById('task-due-time');
+    if(timeEl) timeEl.value = newTime;
+  }
   loadExtraTimeRequests();
 }
 
