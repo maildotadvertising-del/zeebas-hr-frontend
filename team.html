@@ -5876,6 +5876,14 @@ async function eodSubmit(){
       _eodPendingDate = null;
       _eodTriggered = false;
 
+      // checkout_done=false means no attendance record was found (edge case: auto-checkout on wrong date)
+      if(!isPending && d.checkout_done === false){
+        showToast('⚠️ Work report saved. Check in again to reset your attendance.');
+        if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
+        setTimeout(function(){ wifiCheckAndAct(); }, 600);
+        return;
+      }
+
       if(isPending){
         if(_eodStandalone){
           // ── Standalone EOD from Tasks page — no checkout, just report ──
