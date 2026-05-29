@@ -3057,6 +3057,8 @@ function connectStaffSocket(){
     // Skip self-sent messages — already appended optimistically
     var me = zStaff() || {};
     if(msg.staff_id === me.id) return;
+    // Skip image-only messages with no text (e.g. accidentally uploaded logo)
+    if(msg.message_type === 'image' && !msg.message) return;
     appendStaffMsg1(msg);
   });
   staffSocket.on('online-count', function(n){
@@ -3126,7 +3128,15 @@ async function loadStaffMessages(){
       return;
     }
     msgs.innerHTML = '';
-    d.data.forEach(function(m){ appendStaffMsg1(m, false); });
+    // Filter out image-only messages with no text (e.g. accidentally uploaded DOT logo)
+    var filtered = d.data.filter(function(m){
+      return !(m.message_type === 'image' && !m.message);
+    });
+    if(!filtered.length){
+      msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;"><div style="font-size:28px;opacity:0.3;">💬</div><div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">No messages yet — say hello!</div></div>';
+      return;
+    }
+    filtered.forEach(function(m){ appendStaffMsg1(m, false); });
     msgs.scrollTop = msgs.scrollHeight;
   }catch(e){
     console.error('loadStaffMessages:', e);
