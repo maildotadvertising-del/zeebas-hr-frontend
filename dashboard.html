@@ -1241,10 +1241,19 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="topbar">
       <div><div class="ptitle">Tasks</div><div class="psub" id="tasks-sub">Assign and track work across all brands</div></div>
       <div style="display:flex;gap:10px;">
-        <button class="btn-g" onclick="exportTasks()">Export</button>
-        <button class="btn" onclick="openAddTask()">+ Assign Task</button>
+        <button class="btn-g" id="tasks-export-btn" onclick="exportTasks()">Export</button>
+        <button class="btn" id="tasks-assign-btn" onclick="openAddTask()">+ Assign Task</button>
       </div>
     </div>
+
+    <!-- Top-level section switcher -->
+    <div style="display:flex;gap:8px;margin-bottom:18px;border-bottom:0.5px solid rgba(255,255,255,0.07);padding-bottom:0;">
+      <button id="task-section-tab-assigned" onclick="switchTaskSection('assigned')" style="padding:9px 18px;background:none;border:none;border-bottom:2px solid #0A84FF;color:#0A84FF;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:-0.5px;">📌 Assigned Tasks</button>
+      <button id="task-section-tab-eod" onclick="switchTaskSection('eod')" style="padding:9px 18px;background:none;border:none;border-bottom:2px solid transparent;color:rgba(245,245,247,0.4);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:-0.5px;">📋 Daily Work Reports</button>
+    </div>
+
+    <!-- ── SECTION: Assigned Tasks ── -->
+    <div id="task-section-assigned">
 
     <!-- Filter bar -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
@@ -1304,6 +1313,37 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         <div>Loading tasks…</div>
       </div>
     </div>
+
+    </div><!-- end #task-section-assigned -->
+
+    <!-- ── SECTION: Daily Work Reports (EOD) ── -->
+    <div id="task-section-eod" style="display:none;">
+      <!-- Date filter -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;">
+          <button class="task-tab active" id="eod-filter-today" onclick="setEodFilter('today',this)">Today</button>
+          <button class="task-tab" id="eod-filter-yesterday" onclick="setEodFilter('yesterday',this)">Yesterday</button>
+          <button class="task-tab" id="eod-filter-week" onclick="setEodFilter('week',this)">This Week</button>
+        </div>
+        <input type="date" id="eod-date-picker" class="inp" style="width:auto;padding:7px 12px;font-size:12px;" onchange="setEodFilter('date',this)" title="Pick a date">
+        <select id="eod-filter-staff" class="inp" style="width:auto;padding:7px 12px;font-size:12px;" onchange="loadEodReports()">
+          <option value="">All Staff</option>
+        </select>
+        <select id="eod-filter-status" class="inp" style="width:auto;padding:7px 12px;font-size:12px;" onchange="loadEodReports()">
+          <option value="">All Status</option>
+          <option value="pending">⏳ Pending Review</option>
+          <option value="approved">✅ Approved</option>
+          <option value="rejected">✕ Rejected</option>
+        </select>
+      </div>
+      <div id="eod-reports-grid" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="text-align:center;padding:60px;color:var(--muted);">
+          <div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📋</div>
+          <div>Loading reports…</div>
+        </div>
+      </div>
+    </div><!-- end #task-section-eod -->
+
   </div>
 
   <!-- ── ADD / EDIT TASK PANEL ── -->
@@ -6305,7 +6345,7 @@ window.showPage = function(page, el){
   if(page==='dashboard')      { applyDashWidgets(); setTimeout(loadDashStats, 100); }
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(initMbLazyLoad, 200); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
-  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); }
+  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); switchTaskSection(_currentTaskSection||'assigned'); }
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
   if(page==='admin-overview') setTimeout(function(){ loadAdminOverview(); loadDailyLogs(); }, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
@@ -6365,6 +6405,156 @@ var STATUS_COLOR   = { pending:'#FF9F0A', in_progress:'#0A84FF', done:'#30D158' 
 
 /* ── Load Tasks ── */
 /* ── Extra Time Requests ── */
+/* ── Task Page Section Switcher ── */
+var _currentTaskSection = 'assigned';
+function switchTaskSection(section){
+  _currentTaskSection = section;
+  var aTab = document.getElementById('task-section-tab-assigned');
+  var eTab = document.getElementById('task-section-tab-eod');
+  var aDiv = document.getElementById('task-section-assigned');
+  var eDiv = document.getElementById('task-section-eod');
+  var assignBtn = document.getElementById('tasks-assign-btn');
+  var exportBtn = document.getElementById('tasks-export-btn');
+  if(section === 'assigned'){
+    aTab.style.borderBottomColor='#0A84FF'; aTab.style.color='#0A84FF';
+    eTab.style.borderBottomColor='transparent'; eTab.style.color='rgba(245,245,247,0.4)';
+    aDiv.style.display='block'; eDiv.style.display='none';
+    if(assignBtn) assignBtn.style.display='';
+    if(exportBtn) exportBtn.style.display='';
+  } else {
+    eTab.style.borderBottomColor='#0A84FF'; eTab.style.color='#0A84FF';
+    aTab.style.borderBottomColor='transparent'; aTab.style.color='rgba(245,245,247,0.4)';
+    aDiv.style.display='none'; eDiv.style.display='block';
+    if(assignBtn) assignBtn.style.display='none';
+    if(exportBtn) exportBtn.style.display='none';
+    loadEodReports();
+    _populateEodStaffFilter();
+  }
+}
+
+async function _populateEodStaffFilter(){
+  var sel = document.getElementById('eod-filter-staff');
+  if(!sel || sel.options.length > 1) return; // already populated
+  try{
+    var r = await fetch(API+'/api/staff',{headers:zHdr()});
+    var d = await r.json();
+    (d.data||[]).forEach(function(s){
+      var o = document.createElement('option');
+      o.value = s.id; o.textContent = s.name;
+      sel.appendChild(o);
+    });
+  }catch(e){}
+}
+
+var _eodDateFilter = 'today';
+function setEodFilter(type, target){
+  if(type==='today'||type==='yesterday'||type==='week'){
+    _eodDateFilter = type;
+    document.getElementById('eod-date-picker').value = '';
+    ['today','yesterday','week'].forEach(function(k){
+      var btn = document.getElementById('eod-filter-'+k);
+      if(btn){ var active=(k===type); btn.style.background=active?'rgba(10,132,255,0.18)':'rgba(255,255,255,0.05)'; btn.style.borderColor=active?'rgba(10,132,255,0.35)':'rgba(255,255,255,0.1)'; btn.style.color=active?'#0A84FF':'var(--muted)'; }
+    });
+  } else if(type==='date'){
+    _eodDateFilter = target.value || 'today';
+    ['today','yesterday','week'].forEach(function(k){
+      var btn = document.getElementById('eod-filter-'+k);
+      if(btn){ btn.style.background='rgba(255,255,255,0.05)'; btn.style.borderColor='rgba(255,255,255,0.1)'; btn.style.color='var(--muted)'; }
+    });
+  }
+  loadEodReports();
+}
+
+async function loadEodReports(){
+  var grid = document.getElementById('eod-reports-grid');
+  if(!grid) return;
+  grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;opacity:0.3;">📋</div><div>Loading…</div></div>';
+  try{
+    var today = new Date();
+    var dateParam;
+    if(_eodDateFilter==='today'){
+      dateParam = today.toISOString().split('T')[0];
+    } else if(_eodDateFilter==='yesterday'){
+      var y=new Date(today); y.setDate(y.getDate()-1); dateParam=y.toISOString().split('T')[0];
+    } else if(_eodDateFilter==='week'){
+      var mon=new Date(today); mon.setDate(today.getDate()-((today.getDay()+6)%7)); dateParam='week:'+mon.toISOString().split('T')[0];
+    } else {
+      dateParam = _eodDateFilter; // specific date
+    }
+    var staffId = (document.getElementById('eod-filter-staff')||{}).value||'';
+    var status  = (document.getElementById('eod-filter-status')||{}).value||'';
+    var params  = '?date='+dateParam+(staffId?'&staff_id='+staffId:'')+(status?'&status='+status:'');
+    var r = await fetch(API+'/api/eod/admin'+params,{headers:zHdr()});
+    var d = await r.json();
+    var reports = d.data||[];
+    if(!reports.length){
+      grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:40px;margin-bottom:12px;opacity:0.3;">📋</div><div>No work reports for this period.</div></div>';
+      return;
+    }
+    grid.innerHTML = reports.map(function(rep){
+      var items = [];
+      try{ items = JSON.parse(rep.items||'[]'); }catch(e){}
+      var avSrc=_getAvatar(rep.staff_id, rep.photo_url, rep.photo_data);
+      var init=(rep.staff_name||'?').charAt(0).toUpperCase();
+      var av=avSrc
+        ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:36px;height:36px;border-radius:10px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:15px;flex-shrink:0;">'+init+'</div>';
+      var statusClr = rep.status==='approved'?'#30D158':rep.status==='rejected'?'#FF453A':'#FF9F0A';
+      var statusLbl = rep.status==='approved'?'✅ Approved':rep.status==='rejected'?'✕ Rejected':'⏳ Pending';
+      var dateStr = rep.date ? new Date(rep.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) : '—';
+      var subAt = rep.submitted_at ? new Date(rep.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) : '';
+      var itemsHtml = items.map(function(it,i){
+        var catBadge = it.category?'<span style="background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.2);border-radius:20px;padding:1px 7px;font-size:10px;color:#0A84FF;margin-left:6px;">'+escHtml(it.category)+'</span>':'';
+        var stBadge = '<span style="background:'+(it.status==='done'?'rgba(48,209,88,0.1)':'rgba(255,159,10,0.1)')+';border:0.5px solid '+(it.status==='done'?'rgba(48,209,88,0.25)':'rgba(255,159,10,0.25)')+';border-radius:20px;padding:1px 7px;font-size:10px;color:'+(it.status==='done'?'#30D158':'#FF9F0A')+';margin-left:6px;">'+(it.status==='done'?'✅':'⏳')+'</span>';
+        return '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;'+(i>0?'border-top:0.5px solid rgba(255,255,255,0.05);':'') +'">'
+          +'<div style="width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(245,245,247,0.4);flex-shrink:0;margin-top:1px;">'+(i+1)+'</div>'
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="color:rgba(245,245,247,0.85);font-size:13px;line-height:1.4;">'+escHtml(it.text||'')+'</div>'
+            +(it.link?'<div style="color:#0A84FF;font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🔗 '+escHtml(it.link)+'</div>':'')
+            +'<div style="margin-top:4px;">'+catBadge+stBadge+'</div>'
+          +'</div>'
+        +'</div>';
+      }).join('');
+      return '<div style="background:var(--card);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;transition:border-color 0.2s;" onmouseover="this.style.borderColor=\'rgba(255,255,255,0.15)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.08)\'">'
+        // Header
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'
+          +av
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="color:#fff;font-size:14px;font-weight:500;">'+escHtml(rep.staff_name||'—')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+dateStr+(subAt?' · Submitted '+subAt:'')+'</div>'
+          +'</div>'
+          +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">'
+            +'<span style="color:'+statusClr+';background:rgba(255,255,255,0.05);border:0.5px solid '+statusClr.replace(')',',0.25)').replace('rgb','rgba')+';border-radius:8px;padding:3px 9px;font-size:11px;font-weight:500;">'+statusLbl+'</span>'
+            +(rep.status==='pending'
+              ?'<div style="display:flex;gap:5px;">'
+                +'<button onclick="reviewEodReport('+rep.id+',\'rejected\')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:7px;padding:4px 10px;color:#FF453A;font-size:11px;cursor:pointer;font-family:inherit;">✕</button>'
+                +'<button onclick="reviewEodReport('+rep.id+',\'approved\')" style="background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:7px;padding:4px 10px;color:#30D158;font-size:11px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
+              +'</div>'
+              :'')
+          +'</div>'
+        +'</div>'
+        // Work items
+        +'<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:8px 10px;">'
+          +itemsHtml
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }catch(e){ if(grid) grid.innerHTML='<div style="color:var(--muted);text-align:center;padding:40px;">Could not load reports.</div>'; }
+}
+
+async function reviewEodReport(eodId, action){
+  try{
+    var r=await fetch(API+'/api/eod/'+eodId+'/review',{
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({status:action}) // backend expects 'status' field
+    });
+    var d=await r.json();
+    if(d.success){ showToast(action==='approved'?'✅ Report approved':'✕ Report rejected'); loadEodReports(); }
+    else showToast(d.message||'Failed');
+  }catch(e){ showToast('Server error'); }
+}
+
 async function loadExtraTimeRequests(){
   try{
     var res=await fetch(API+'/api/tasks/extra-time-requests',{headers:zHdr()});
