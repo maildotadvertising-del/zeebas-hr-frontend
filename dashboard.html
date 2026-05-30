@@ -4477,7 +4477,7 @@ async function dmSend(){
   _renderDmMsgs();
   // Send via socket or HTTP
   if(dashSocket && dashSocket.connected){
-    dashSocket.emit('send-dm', {receiver_id:_dmPeerId, message:txt, message_type:'text'});
+    dashSocket.emit('send-dm', {sender_id:me.id, receiver_id:_dmPeerId, message:txt, message_type:'text'});
   } else {
     try{
       await fetch(API+'/api/chat/dm/'+_dmPeerId,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({message:txt,message_type:'text'})});
