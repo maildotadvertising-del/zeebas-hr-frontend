@@ -5904,7 +5904,9 @@ async function viewEodHistory(){
       return;
     }
     el.innerHTML = reports.map(function(rep){
-      var items=[]; try{ items=JSON.parse(rep.items||'[]'); }catch(e){}
+      // Backend already returns items as parsed array — handle both string and array
+      var items = Array.isArray(rep.items) ? rep.items
+        : (typeof rep.items==='string' ? (function(){ try{return JSON.parse(rep.items);}catch(e){return[];} })() : []);
       // MySQL returns date as object or 'YYYY-MM-DD' string — normalize to string first
       var rawDate = rep.date;
       if(rawDate && typeof rawDate !== 'string'){
