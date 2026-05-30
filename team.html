@@ -5905,16 +5905,23 @@ async function viewEodHistory(){
     }
     el.innerHTML = reports.map(function(rep){
       var items=[]; try{ items=JSON.parse(rep.items||'[]'); }catch(e){}
-      var dateStr = rep.date ? new Date(rep.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) : '—';
+      // MySQL returns date as object or 'YYYY-MM-DD' string — normalize to string first
+      var rawDate = rep.date;
+      if(rawDate && typeof rawDate !== 'string'){
+        try{ rawDate = (rawDate.toISOString ? rawDate.toISOString() : String(rawDate)).slice(0,10); }catch(e){ rawDate = null; }
+      }
+      if(rawDate && rawDate.length > 10) rawDate = rawDate.slice(0,10);
+      var dateStr = rawDate ? new Date(rawDate+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) : '—';
       var subAt = rep.submitted_at ? new Date(rep.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) : '';
       var stColor = rep.status==='approved'?'#30D158':rep.status==='rejected'?'#FF453A':'#FF9F0A';
       var stLabel = rep.status==='approved'?'✅ Approved':rep.status==='rejected'?'✕ Rejected':'⏳ Pending';
       var itemsHtml = items.map(function(it,i){
         return '<div style="padding:5px 0;'+(i>0?'border-top:0.5px solid rgba(255,255,255,0.05);':'')+'">'
-          +'<div style="color:rgba(245,245,247,0.85);font-size:13px;">'+escHtml(it.text||'')+'</div>'
+          +'<div style="color:rgba(245,245,247,0.85);font-size:13px;font-weight:500;">'+escHtml(it.text||'')+'</div>'
+          +(it.link?'<div style="color:#0A84FF;font-size:11px;margin-top:2px;">🔗 '+escHtml(it.link)+'</div>':'')
           +(it.category?'<span style="background:rgba(10,132,255,0.1);border-radius:20px;padding:1px 7px;font-size:10px;color:#0A84FF;margin-top:3px;display:inline-block;">'+escHtml(it.category)+'</span>':'')
         +'</div>';
-      }).join('');
+      }).join('') || '<div style="color:rgba(245,245,247,0.3);font-size:12px;">No items</div>';
       return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px 14px;margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
           +'<div>'
@@ -5923,7 +5930,7 @@ async function viewEodHistory(){
           +'</div>'
           +'<span style="color:'+stColor+';background:rgba(255,255,255,0.05);border:0.5px solid '+stColor+';border-radius:8px;padding:3px 9px;font-size:11px;">'+stLabel+'</span>'
         +'</div>'
-        +'<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:8px 10px;">'+itemsHtml+'</div>'
+        +(items.length?'<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:8px 10px;">'+itemsHtml+'</div>':'')
       +'</div>';
     }).join('');
   }catch(e){ var el2=document.getElementById('eod-hist-list'); if(el2) el2.innerHTML='<div style="color:rgba(255,69,58,0.7);text-align:center;padding:30px;">Could not load history.</div>'; }
