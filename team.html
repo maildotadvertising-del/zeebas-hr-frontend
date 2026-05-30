@@ -3054,11 +3054,12 @@ function connectStaffSocket(){
     if(sub) sub.textContent = 'Live';
   });
   staffSocket.on('new-message', function(msg){
-    // Skip self-sent messages — already appended optimistically
     var me = zStaff() || {};
-    if(msg.staff_id === me.id) return;
-    // Skip image-only messages with no text (e.g. accidentally uploaded logo)
-    if(msg.message_type === 'image' && !msg.message) return;
+    if(msg.staff_id === me.id) return; // skip own messages (already appended optimistically)
+    // Skip file-only messages with no caption (covers DOT logo regardless of message_type)
+    if(msg.file_url && !(msg.message||'').trim()) return;
+    // Skip messages from DOT logo account with file
+    if(msg.file_url && (msg.photo_url||'').toLowerCase().indexOf('dot-logo') !== -1) return;
     appendStaffMsg1(msg);
   });
   staffSocket.on('online-count', function(n){
@@ -3128,9 +3129,17 @@ async function loadStaffMessages(){
       return;
     }
     msgs.innerHTML = '';
-    // Filter out image-only messages with no text (e.g. accidentally uploaded DOT logo)
+    // Filter out: any message with file_url and no text (covers DOT logo regardless of message_type)
+    // Also filter image-type messages with empty/whitespace-only text
     var filtered = d.data.filter(function(m){
-      return !(m.message_type === 'image' && !m.message);
+      var hasFile = !!(m.file_url);
+      var hasText = !!(m.message||'').trim();
+      if(hasFile && !hasText) return false; // skip file-only messages with no caption
+      if(m.message_type === 'image' && !hasText) return false; // skip image with no text
+      // Skip messages from DOT logo account with any file attachment
+      var ph = (m.photo_url||'').toLowerCase();
+      if(ph.indexOf('dot-logo') !== -1 && hasFile) return false;
+      return true;
     });
     if(!filtered.length){
       msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;"><div style="font-size:28px;opacity:0.3;">💬</div><div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">No messages yet — say hello!</div></div>';
