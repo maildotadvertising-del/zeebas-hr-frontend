@@ -3908,7 +3908,10 @@ async function initAdminChat2(){
     var d=await res.json();
     msgs.innerHTML='';
     if(d.success&&d.data&&d.data.length){
-      d.data.forEach(function(m){appendAdminMsg2(m);});
+      // Filter image-only messages (no text) — removes DOT logo
+      var msgs2Data = d.data.filter(function(m){ return !(m.message_type==='image' && !m.message); });
+      if(msgs2Data.length){ msgs2Data.forEach(function(m){appendAdminMsg2(m);}); }
+      else { msgs.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.22);font-size:11px;"><div style="font-size:22px;margin-bottom:8px;opacity:0.3;">💬</div>No messages yet</div>'; }
     } else {
       msgs.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.22);font-size:11px;"><div style="font-size:22px;margin-bottom:8px;opacity:0.3;">💬</div>No messages yet</div>';
     }
