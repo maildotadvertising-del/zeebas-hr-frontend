@@ -618,8 +618,9 @@ body.desktop-mode #s1-sidebar {
         <!-- Add item button -->
         <button onclick="eodAddItem()" style="width:100%;background:rgba(255,255,255,0.05);border:0.5px dashed rgba(255,255,255,0.2);border-radius:12px;padding:11px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:20px;">+ Add Work Item</button>
 
-        <!-- Submit -->
+        <!-- Submit + Later -->
         <button id="eod-submit-btn" onclick="eodSubmit()" style="width:100%;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);margin-bottom:10px;">Submit &amp; Check Out →</button>
+        <button id="eod-later-btn" onclick="eodLater()" style="width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px;color:rgba(245,245,247,0.45);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:8px;">⏰ Later — Remind me when I reopen</button>
         <div id="eod-bottom-note" style="text-align:center;font-size:10px;color:rgba(245,245,247,0.25);">You must submit your work report to check out.</div>
       </div>
     </div>
@@ -2068,7 +2069,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ checkPendingEod(); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
+  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
@@ -5794,7 +5795,9 @@ function showEodPopup(){
   var lbl = document.getElementById('eod-items-label');
   if(lbl) lbl.textContent = "Today's Work";
   var btn = document.getElementById('eod-submit-btn');
-  if(btn){ btn.textContent = 'Submit & Check Out →'; btn.disabled = false; } // always re-enable on popup open
+  if(btn){ btn.textContent = 'Submit & Check Out →'; btn.disabled = false; }
+  var laterBtn = document.getElementById('eod-later-btn');
+  if(laterBtn) laterBtn.style.display = 'block'; // show Later for normal checkout
   var note = document.getElementById('eod-bottom-note');
   if(note){ note.style.display='block'; note.textContent='You must submit your work report to check out.'; }
   var ov = document.getElementById('ov-eod');
@@ -5823,6 +5826,8 @@ function showPendingEodPopup(dateStr){
   if(lbl) lbl.textContent = "Yesterday's Work";
   var btn = document.getElementById('eod-submit-btn');
   if(btn){ btn.textContent = 'Submit EOD →'; btn.disabled = false; }
+  var laterBtn = document.getElementById('eod-later-btn');
+  if(laterBtn) laterBtn.style.display = 'none'; // no snooze for pending EOD
   var note = document.getElementById('eod-bottom-note');
   if(note){ note.style.display='block'; note.textContent='Submit to unlock today\'s check-in.'; }
   var ov = document.getElementById('ov-eod');
@@ -6105,6 +6110,7 @@ async function eodSubmit(){
       if(ov) ov.style.display='none';
       _eodPendingDate = null;
       _eodTriggered = false;
+      try{ localStorage.removeItem('zhr_eod_pending_later'); }catch(e){} // clear snooze flag
 
       // checkout_done=false means no attendance record was found (edge case: auto-checkout on wrong date)
       if(!isPending && d.checkout_done === false){
@@ -6149,6 +6155,26 @@ async function eodSubmit(){
     showToast('❌ Connection failed — please try again');
     if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
   }
+}
+
+// ── EOD Later — snooze until next app open ──
+function _checkEodLaterFlag(){
+  try{
+    if(localStorage.getItem('zhr_eod_pending_later') !== '1') return;
+    // Show EOD popup again after 800ms (let home screen load first)
+    setTimeout(function(){
+      if(!_eodTriggered) showEodPopup();
+    }, 800);
+  }catch(e){}
+}
+
+function eodLater(){
+  var ov = document.getElementById('ov-eod');
+  if(ov) ov.style.display = 'none';
+  _eodTriggered = false; // allow re-opening
+  // Set flag so popup shows again on next home screen load
+  try{ localStorage.setItem('zhr_eod_pending_later','1'); }catch(e){}
+  showToast('⏰ Reminder set — will show when you reopen');
 }
 
 // ── Check for pending EOD from a previous day (auto-checkout without EOD) ──
