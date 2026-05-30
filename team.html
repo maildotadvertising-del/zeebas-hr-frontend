@@ -5229,10 +5229,10 @@ async function loadMySalary(){
           +(lateDeduction>0
             ? bRow('Late Deduction', lateDays+' late day'+(lateDays>1?'s':''), '−₹'+fmt(lateDeduction), '#FF9F0A')
             : bRow('Late Deduction', 'No late deductions', '−₹0', 'rgba(245,245,247,0.22)'))
-          // OT Pay
-          +(otHours>0
+          // OT Pay — only show when otAmount > 0 (hide if 0 even if otHours recorded)
+          +(otAmount>0
             ? bRow('OT Pay', otHours.toFixed(1)+' hrs overtime', '+₹'+fmt(otAmount), '#0A84FF')
-            : bRow('OT Pay', 'No overtime', '+₹0', 'rgba(245,245,247,0.22)'))
+            : '')
           // Allowance
           +(allowanceAmt>0
             ? bRow('Allowance', allowanceNote||'Monthly allowance', '+₹'+fmt(allowanceAmt), '#BF5FFF')
@@ -5349,9 +5349,9 @@ async function loadAttHistory(){
         {label:'✅ Present', val: sum.days_present||0, color:'#30D158'},
         {label:'⏰ Late',    val: sum.days_late||0,    color:'#FF9F0A'},
         {label:'❌ Absent',  val: sum.days_absent||0,  color:'#FF453A'},
-        {label:'⚡ OT hrs',  val: parseFloat(sum.total_ot_hours||0).toFixed(1), color:'#0A84FF'}
+        {label:'⚡ OT hrs',  val: parseFloat(sum.total_ot_hours||0).toFixed(1), color:'#0A84FF', hide: parseFloat(sum.total_ot_hours||0)===0}
       ];
-      sumEl.innerHTML = chips.map(function(c){
+      sumEl.innerHTML = chips.filter(function(c){ return !c.hide; }).map(function(c){
         return '<div style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.09);border-radius:20px;padding:4px 10px;white-space:nowrap;display:flex;align-items:center;gap:4px;">'
           +'<span style="font-size:10px;color:rgba(245,245,247,0.45);">'+c.label+'</span>'
           +'<span style="font-size:12px;font-weight:600;color:'+c.color+';">'+c.val+'</span>'
@@ -5849,7 +5849,7 @@ async function renderTasksEodCard(){
           +'<div style="color:#30D158;font-size:13px;font-weight:500;">Daily Work Report</div>'
           +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">Submitted — pending admin review</div>'
         +'</div>'
-        +'<button onclick="viewTodayEod()" style="background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.3);border-radius:10px;padding:8px 14px;color:#30D158;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">View →</button>'
+        +'<button onclick="viewEodHistory()" style="background:rgba(48,209,88,0.1);border:0.5px solid rgba(48,209,88,0.3);border-radius:10px;padding:8px 14px;color:#30D158;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">View History →</button>'
       +'</div>'
     +'</div>';
   } else {
@@ -5860,10 +5860,64 @@ async function renderTasksEodCard(){
           +'<div style="color:#fff;font-size:13px;font-weight:500;">Daily Work Report</div>'
           +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">Submit your end-of-day work summary</div>'
         +'</div>'
+        +'<div style="display:flex;gap:6px;">'
+        +'<button onclick="viewEodHistory()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 10px;color:rgba(245,245,247,0.5);font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">History</button>'
         +'<button onclick="openStandaloneEodModal()" style="background:linear-gradient(135deg,rgba(10,132,255,0.2),rgba(94,92,230,0.18));border:0.5px solid rgba(10,132,255,0.35);border-radius:10px;padding:8px 14px;color:#0A84FF;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Submit EOD →</button>'
+        +'</div>'
       +'</div>'
     +'</div>';
   }
+}
+
+async function viewEodHistory(){
+  var ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(4,4,8,0.98);display:flex;flex-direction:column;';
+  ov.innerHTML='<div style="padding:16px 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid rgba(255,255,255,0.07);">'
+    +'<button onclick="this.parentNode.parentNode.remove()" style="background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;width:34px;height:34px;color:rgba(245,245,247,0.7);font-size:18px;cursor:pointer;font-family:inherit;flex-shrink:0;">←</button>'
+    +'<div style="flex:1;">'
+      +'<div style="color:#fff;font-size:15px;font-weight:600;">Daily Work Reports</div>'
+      +'<div style="color:rgba(245,245,247,0.4);font-size:11px;">Your submitted EOD history</div>'
+    +'</div>'
+  +'</div>'
+  +'<div id="eod-hist-list" style="flex:1;overflow-y:auto;padding:14px 18px;">'
+    +'<div style="text-align:center;padding:40px;color:rgba(245,245,247,0.3);">Loading…</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  // Fetch last 30 days of EOD reports
+  try{
+    var r = await fetch(API_URL+'/api/eod/my-history', {headers:zHead()});
+    var d = await r.json();
+    var el = document.getElementById('eod-hist-list');
+    if(!el) return;
+    var reports = d.data||[];
+    if(!reports.length){
+      el.innerHTML='<div style="text-align:center;padding:60px;color:rgba(245,245,247,0.3);"><div style="font-size:36px;margin-bottom:10px;opacity:0.4;">📋</div><div>No work reports submitted yet.</div></div>';
+      return;
+    }
+    el.innerHTML = reports.map(function(rep){
+      var items=[]; try{ items=JSON.parse(rep.items||'[]'); }catch(e){}
+      var dateStr = rep.date ? new Date(rep.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) : '—';
+      var subAt = rep.submitted_at ? new Date(rep.submitted_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) : '';
+      var stColor = rep.status==='approved'?'#30D158':rep.status==='rejected'?'#FF453A':'#FF9F0A';
+      var stLabel = rep.status==='approved'?'✅ Approved':rep.status==='rejected'?'✕ Rejected':'⏳ Pending';
+      var itemsHtml = items.map(function(it,i){
+        return '<div style="padding:5px 0;'+(i>0?'border-top:0.5px solid rgba(255,255,255,0.05);':'')+'">'
+          +'<div style="color:rgba(245,245,247,0.85);font-size:13px;">'+escHtml(it.text||'')+'</div>'
+          +(it.category?'<span style="background:rgba(10,132,255,0.1);border-radius:20px;padding:1px 7px;font-size:10px;color:#0A84FF;margin-top:3px;display:inline-block;">'+escHtml(it.category)+'</span>':'')
+        +'</div>';
+      }).join('');
+      return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px 14px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+          +'<div>'
+            +'<div style="color:#fff;font-size:13px;font-weight:500;">'+dateStr+'</div>'
+            +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;">Submitted '+subAt+'</div>'
+          +'</div>'
+          +'<span style="color:'+stColor+';background:rgba(255,255,255,0.05);border:0.5px solid '+stColor+';border-radius:8px;padding:3px 9px;font-size:11px;">'+stLabel+'</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:8px 10px;">'+itemsHtml+'</div>'
+      +'</div>';
+    }).join('');
+  }catch(e){ var el2=document.getElementById('eod-hist-list'); if(el2) el2.innerHTML='<div style="color:rgba(255,69,58,0.7);text-align:center;padding:30px;">Could not load history.</div>'; }
 }
 
 async function viewTodayEod(){
