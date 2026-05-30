@@ -6157,24 +6157,29 @@ async function eodSubmit(){
   }
 }
 
-// ── EOD Later — snooze until next app open ──
+// ── EOD Later — snooze until next FRESH APP OPEN (page reload) ──
+// _freshAppOpen is true only on initial page load (resets with each reload).
+// Navigation between screens (go1) does NOT count as fresh open.
+var _freshAppOpen = true; // true only on first load, set to false after first home screen visit
+
 function _checkEodLaterFlag(){
   try{
+    if(!_freshAppOpen) return; // only trigger on fresh app open, not every home navigation
+    _freshAppOpen = false;     // mark as checked — won't trigger again this session
     if(localStorage.getItem('zhr_eod_pending_later') !== '1') return;
-    // Show EOD popup again after 800ms (let home screen load first)
+    // Show EOD popup after 1.5s so home screen fully loads first
     setTimeout(function(){
       if(!_eodTriggered) showEodPopup();
-    }, 800);
+    }, 1500);
   }catch(e){}
 }
 
 function eodLater(){
   var ov = document.getElementById('ov-eod');
   if(ov) ov.style.display = 'none';
-  _eodTriggered = false; // allow re-opening
-  // Set flag so popup shows again on next home screen load
+  _eodTriggered = false;
   try{ localStorage.setItem('zhr_eod_pending_later','1'); }catch(e){}
-  showToast('⏰ Reminder set — will show when you reopen');
+  showToast('⏰ Reminder set — will show next time you open the app');
 }
 
 // ── Check for pending EOD from a previous day (auto-checkout without EOD) ──
