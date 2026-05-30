@@ -5238,10 +5238,10 @@ async function loadMySalary(){
           +(lateDeduction>0
             ? bRow('Late Deduction', lateDays+' late day'+(lateDays>1?'s':''), '−₹'+fmt(lateDeduction), '#FF9F0A')
             : bRow('Late Deduction', 'No late deductions', '−₹0', 'rgba(245,245,247,0.22)'))
-          // OT Pay — only show when otAmount > 0 (hide if 0 even if otHours recorded)
+          // OT Pay — always show row; amount 0 when no overtime
           +(otAmount>0
             ? bRow('OT Pay', otHours.toFixed(1)+' hrs overtime', '+₹'+fmt(otAmount), '#0A84FF')
-            : '')
+            : bRow('OT Pay', 'No overtime this month', '+₹0', 'rgba(245,245,247,0.22)'))
           // Allowance
           +(allowanceAmt>0
             ? bRow('Allowance', allowanceNote||'Monthly allowance', '+₹'+fmt(allowanceAmt), '#BF5FFF')
