@@ -3102,6 +3102,21 @@ function connectStaffSocket(){
     var sub = document.getElementById('chat1-sub');
     if(sub) sub.textContent = 'Reconnecting…';
   });
+  // Task updated by admin — reload tasks so due date / status shows immediately
+  staffSocket.on('task-updated', function(data){
+    showToast1('📋 Task updated by admin');
+    // Reload tasks if on tasks screen
+    if(typeof loadStaffTasks === 'function') loadStaffTasks();
+    // Also refresh home screen task count
+    if(typeof syncNotifCard === 'function') syncNotifCard();
+  });
+  // Task date extension approved — reload tasks
+  staffSocket.on('task-extra-time-response', function(data){
+    if(data.action === 'approve'){
+      showToast1('✅ Due date updated: '+((data.newDueDate||'').slice(0,10)));
+      if(typeof loadStaffTasks === 'function') loadStaffTasks();
+    }
+  });
 }
 
 var _staffMsgRetryTimer = null;
