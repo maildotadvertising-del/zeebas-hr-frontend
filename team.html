@@ -2079,7 +2079,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
+  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(_checkOverdueTaskAlert, 1000); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
@@ -6167,6 +6167,39 @@ async function eodSubmit(){
   }
 }
 
+// ── Task Due Alert — show popup when task deadline has arrived ──
+var _taskAlertShown = false; // show once per session
+async function _checkOverdueTaskAlert(){
+  if(_taskAlertShown) return;
+  try{
+    var r = await fetch(API_URL+'/api/tasks/overdue-check', {headers:zHead()});
+    var d = await r.json();
+    if(!d.success || !d.blocked || !d.tasks || !d.tasks.length) return;
+    _taskAlertShown = true;
+    // Show highlighted popup for overdue tasks
+    _showTaskDueAlert(d.tasks);
+  }catch(e){}
+}
+
+function _showTaskDueAlert(tasks){
+  var existing = document.getElementById('task-due-alert-banner');
+  if(existing) existing.remove();
+  var names = tasks.map(function(t){ return escHtml(t.title||''); }).join(', ');
+  var banner = document.createElement('div');
+  banner.id = 'task-due-alert-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:800;background:linear-gradient(135deg,rgba(255,69,58,0.95),rgba(200,20,10,0.97));padding:14px 16px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(255,69,58,0.4);';
+  banner.innerHTML = '<div style="font-size:22px;flex-shrink:0;">⚠️</div>'
+    +'<div style="flex:1;">'
+      +'<div style="color:#fff;font-size:13px;font-weight:700;">Task Deadline Reached!</div>'
+      +'<div style="color:rgba(255,255,255,0.8);font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+names+'</div>'
+    +'</div>'
+    +'<button onclick="this.parentNode.remove();go1(\'s1-tasks\')" style="background:rgba(255,255,255,0.2);border:0.5px solid rgba(255,255,255,0.4);border-radius:8px;padding:7px 12px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;">View →</button>';
+  // Insert after the top status bar area
+  document.body.appendChild(banner);
+  // Auto-dismiss after 8s
+  setTimeout(function(){ if(banner.parentNode) banner.remove(); }, 8000);
+}
+
 // ── EOD Later — snooze until next FRESH APP OPEN (page reload) ──
 // _freshAppOpen is true only on initial page load (resets with each reload).
 // Navigation between screens (go1) does NOT count as fresh open.
@@ -6847,6 +6880,16 @@ async function wifiCheckAndAct(){
       _appJustOpened = false;
 
       if(!d.alreadyCheckedIn){
+        // ── Check for overdue tasks before WiFi auto check-in ──
+        try{
+          var ocW=await fetch(API_URL+'/api/tasks/overdue-check',{headers:zHead()});
+          var ocWD=await ocW.json();
+          if(ocWD.success && ocWD.blocked){
+            wifiBanner(false);
+            showOverduePopup(ocWD.tasks, function(){ wifiCheckAndAct(); });
+            return;
+          }
+        }catch(e2){}
         // ── Not checked in → auto check-in ──
         _wifiOffSince = null;
         wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 Office WiFi Detected — Checking in…','Please wait…',false);
