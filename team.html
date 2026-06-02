@@ -2018,7 +2018,15 @@ function initNavs1(active){
   });
 }
 function initNavs2(active){
-  ['home','attendance','approvals','chat','more','tasks'].forEach(function(k){var n=document.getElementById('n2-'+k);if(n)n.innerHTML=makeNav(adminTabs,adminScrs,active,'n2');});
+  var keys=['home','attendance','approvals','chat','tasks','more'];
+  var reorder=[0,1,2,3,5,4]; // map adminScrs index to nav key index
+  keys.forEach(function(k,i){
+    var n=document.getElementById('n2-'+k);
+    if(n){
+      n.innerHTML=makeNav(adminTabs,adminScrs,active,'n2');
+      if(reorder[i]===active){ n.style.animation='tabPop 0.35s cubic-bezier(0.36,0.07,0.19,0.97)'; setTimeout(function(){ n.style.animation=''; },400); }
+    }
+  });
 }
 initNavs1(0);initNavs2(0);
 
@@ -2134,10 +2142,27 @@ function go1(id){
   if(id==='s1-profile'){ setTimeout(loadProfile, 100); }
 }
 
+var _adminNavOrder = ['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
+var _s2CurrentScreen = 's2-home';
 function go2(id){
   var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings','s2-advances','s2-announcements','s2-ot-rules'];
-  all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
-  var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
+  // Directional slide based on bottom nav order
+  var fromIdx = _adminNavOrder.indexOf(_s2CurrentScreen);
+  var toIdx   = _adminNavOrder.indexOf(id);
+  var slideClass = '';
+  if(fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx){
+    slideClass = toIdx > fromIdx ? 'slide-in-right' : 'slide-in-left';
+  }
+  all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on','slide-in-right','slide-in-left');e.style.display='none';}});
+  var el=document.getElementById(id);
+  if(el){
+    el.style.display='flex';
+    setTimeout(function(){
+      el.classList.add('on');
+      if(slideClass){ el.classList.add(slideClass); setTimeout(function(){ el.classList.remove(slideClass); },300); }
+    },10);
+  }
+  _s2CurrentScreen = id;
   var idx=adminScrs.indexOf(id);if(idx>=0)initNavs2(idx);
   if(id==='s2-home')         { loadAdminHome(); }
   if(id==='s2-attendance')   { loadAdminAttendance(); }

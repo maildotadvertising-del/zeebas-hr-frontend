@@ -31,8 +31,24 @@ body{min-height:100vh;background:#050508;background-image:radial-gradient(ellips
 .sb-bot{padding:14px;border-top:0.5px solid rgba(255,255,255,0.06);}
 
 .main{margin-left:210px;flex:1;padding:18px 20px 32px;position:relative;z-index:1;}
-.page{display:none;animation:fu 0.22s ease;}
+.page{display:none;will-change:transform,opacity;}
 .page.active{display:block;}
+/* ── Dashboard directional slide transitions ── */
+@keyframes pgSlideRight{from{transform:translateX(60px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes pgSlideLeft{from{transform:translateX(-60px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes pgFadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.page.active{animation:pgFadeUp 0.22s ease forwards;}
+.page.slide-right{animation:pgSlideRight 0.25s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
+.page.slide-left{animation:pgSlideLeft 0.25s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
+/* ── Touch bounce for dashboard cards ── */
+@keyframes dashBounce{0%{transform:scale(1);}40%{transform:scale(0.97);}70%{transform:scale(1.01);}100%{transform:scale(1);}}
+.tap-bounce{animation:dashBounce 0.25s cubic-bezier(0.36,0.07,0.19,0.97)!important;}
+/* ── Sidebar nav item pop ── */
+@keyframes niPop{0%{transform:translateX(0) scale(1);}40%{transform:translateX(3px) scale(1.04);}100%{transform:translateX(0) scale(1);}}
+.ni.active{animation:niPop 0.3s cubic-bezier(0.25,0.46,0.45,0.94);}
+/* ── Section fade-in stagger (cards animate in sequence) ── */
+@keyframes sectionIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.sec,.gs{animation:sectionIn 0.3s ease both;}
 @keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes recPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
@@ -2831,17 +2847,30 @@ window.addEventListener('popstate', function(e) {
   _zhrNavInPopstate = false;
 });
 
+// Nav order for directional slides (left sidebar top-to-bottom)
+var _dashNavOrder = ['home','attendance','approvals','tasks','leave','payroll','staff','chat','announcements','advances','settings'];
+var _dashCurrentPage = 'home';
 function showPage(name, el){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  var pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
+  var fromIdx = _dashNavOrder.indexOf(_dashCurrentPage);
+  var toIdx   = _dashNavOrder.indexOf(name);
+  var slideClass = (fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx)
+    ? (toIdx > fromIdx ? 'slide-right' : 'slide-left') : '';
+  document.querySelectorAll('.page').forEach(function(p){
+    p.classList.remove('active','slide-right','slide-left');
+  });
+  var pg=document.getElementById('page-'+name);
+  if(pg){
+    pg.classList.add('active');
+    if(slideClass){ pg.classList.add(slideClass); setTimeout(function(){ pg.classList.remove(slideClass); },300); }
+  }
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
-  // Highlight correct nav item
   if(el){ el.classList.add('active'); }
   else {
     document.querySelectorAll('.ni').forEach(function(n){
       if(n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'"+name+"'")!==-1) n.classList.add('active');
     });
   }
+  _dashCurrentPage = name;
   // Auto WiFi check — start when on attendance page, stop when leaving
   if(name === 'attendance'){
     var today = _localDateStr(new Date());
@@ -9024,6 +9053,16 @@ function saveCompanyDetails(){
 }
 // Load on page ready
 document.addEventListener('DOMContentLoaded', function(){ loadCompanyDetails(); });
+
+/* ── Touch bounce feedback for dashboard cards & buttons ── */
+(function addDashTouchBounce(){
+  document.addEventListener('touchstart', function(e){
+    var el = e.target.closest('.sec, .gs, .btn, .btn-g, .btn-red, .mc, .ni, button');
+    if(!el || el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.tagName==='SELECT') return;
+    el.classList.add('tap-bounce');
+    el.addEventListener('animationend', function rem(){ el.classList.remove('tap-bounce'); el.removeEventListener('animationend',rem); },{once:true});
+  },{passive:true});
+})();
 </script>
 
 <!-- ── Payroll JS ── -->
