@@ -5469,14 +5469,41 @@ function fmtTime(dt){
 }
 
 /* ── LOAD DASHBOARD STATS ── */
+// ── Dashboard stats cache (stale-while-revalidate, 3 min TTL) ──
+var _dashCache = {}, _dashCacheTs = {}, _DASH_TTL = 3 * 60 * 1000;
+function _dGet(k){ return (Date.now()-(_dashCacheTs[k]||0) < _DASH_TTL) ? _dashCache[k] : null; }
+function _dSet(k,v){ _dashCache[k]=v; _dashCacheTs[k]=Date.now(); }
+
 async function loadDashStats(){
   try{
     var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+    var now = new Date();
+    var month = now.getMonth()+1, year = now.getFullYear();
+
+    // ── PARALLEL fetch: all 4 calls at once instead of sequential ──
+    var cached_att  = _dGet('att');
+    var cached_task = _dGet('tasks');
+    var cached_pay  = _dGet('pay_'+month+'_'+year);
+    var cached_ann  = _dGet('ann');
+
+    var [attRes, taskRes, payRes, annRes] = await Promise.all([
+      cached_att  ? Promise.resolve(null) : fetch(API+'/api/attendance/today',{headers:zHdr()}),
+      cached_task ? Promise.resolve(null) : fetch(API+'/api/tasks',{headers:zHdr()}),
+      cached_pay  ? Promise.resolve(null) : fetch(API+'/api/payroll/salary-preview?month='+month+'&year='+year,{headers:zHdr()}),
+      cached_ann  ? Promise.resolve(null) : fetch(API+'/api/announcements?limit=3',{headers:zHdr()})
+    ]);
+
+    var d        = cached_att  || (attRes  ? await attRes.json()  : {});
+    var td       = cached_task || (taskRes ? await taskRes.json() : {});
+    var pd       = cached_pay  || (payRes  ? await payRes.json()  : {});
+    var ad       = cached_ann  || (annRes  ? await annRes.json()  : {});
+
+    if(!cached_att)  _dSet('att',  d);
+    if(!cached_task) _dSet('tasks', td);
+    if(!cached_pay)  _dSet('pay_'+month+'_'+year, pd);
+    if(!cached_ann)  _dSet('ann', ad);
 
     // ── Attendance ──
-    var res = await fetch(API+'/api/attendance/today', { headers: zHdr() });
-    var d = await res.json();
-    // Exclude admin/editor accounts from attendance stats — staff only
     var rows = (d.data || []).filter(function(r){ return r.role!=='admin'&&r.role!=='editor'; });
     var p=0,a=0,l=0,lp=0,op=0,lv=0;
     rows.forEach(function(r){
@@ -5500,10 +5527,8 @@ async function loadDashStats(){
     var pc=document.getElementById('present-count');
     if(pc) pc.textContent=p+' present today';
 
-    // ── Tasks count ──
+    // ── Tasks count (already fetched in parallel above) ──
     try{
-      var tres = await fetch(API+'/api/tasks', { headers: zHdr() });
-      var td = await tres.json();
       var allTasks = td.data || td || [];
       var openTasks = allTasks.filter(function(t){ return (t.status||'').toLowerCase()!=='done'; });
       var doneTasks = allTasks.filter(function(t){ return (t.status||'').toLowerCase()==='done'; });
@@ -5522,11 +5547,8 @@ async function loadDashStats(){
       }
     }catch(e2){ console.log('dash tasks stat error',e2); }
 
-    // ── Payroll this month ──
+    // ── Payroll this month (already fetched in parallel above) ──
     try{
-      var now = new Date();
-      var pr = await fetch(API+'/api/payroll/salary-preview?month='+(now.getMonth()+1)+'&year='+now.getFullYear(), { headers: zHdr() });
-      var pd = await pr.json();
       var prRows = pd.data || pd || [];
       var totalNet = prRows.reduce(function(s,r){ return s + parseFloat(r.net_salary||r.net_pay||0); }, 0);
       var payEl = document.getElementById('dash-payroll');
@@ -5540,14 +5562,13 @@ async function loadDashStats(){
         }
       }
       set('dash-payroll-sub', 'Net · '+(now.toLocaleString('en-IN',{month:'short',year:'numeric'})));
+      _dSet('pay_'+month+'_'+year, pd); // ensure cached
     }catch(e3){ console.log('dash payroll stat error',e3); }
 
-    // ── Announcements widget ──
+    // ── Announcements widget (already fetched in parallel above) ──
     try{
       var arel = document.getElementById('dash-ann-quick');
       if(arel && document.getElementById('dw-announcements') && document.getElementById('dw-announcements').style.display!=='none'){
-        var ar = await fetch(API+'/api/announcements?limit=3', { headers: zHdr() });
-        var ad = await ar.json();
         var anns = (ad.data||ad||[]).slice(0,3);
         if(anns.length){
           arel.innerHTML = anns.map(function(a){
@@ -6380,7 +6401,9 @@ window.showPage = function(page, el){
   var _ucPop=document.getElementById('ucal-popup'); if(_ucPop) _ucPop.style.display='none';
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
-  if(page==='dashboard')      { applyDashWidgets(); setTimeout(loadDashStats, 100); }
+  if(page==='dashboard')      { applyDashWidgets(); loadDashStats(); }
+  // Clear attendance cache when viewing attendance page (data may have changed)
+  if(page==='attendance')     { _dSet('att', null); _dashCacheTs['att'] = 0; }
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(initMbLazyLoad, 200); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
   if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); switchTaskSection(_currentTaskSection||'assigned'); }
