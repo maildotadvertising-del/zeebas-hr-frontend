@@ -1065,7 +1065,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="sec g" style="margin-bottom:14px;">
       <div class="sh">
         <span class="st">⏰ Late Check-in Requests</span>
-        <span id="late-approval-count" class="po" style="font-size:11px;padding:3px 9px;"></span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="late-approval-count" class="po" style="font-size:11px;padding:3px 9px;"></span>
+          <button id="late-accept-all-btn" onclick="acceptAllLate()" style="display:none;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Accept All</button>
+        </div>
       </div>
       <div id="late-approvals-list">
         <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
@@ -1075,7 +1078,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="sec g" style="margin-bottom:14px;">
       <div class="sh">
         <span class="st">🏗️ Onsite Attendance Requests</span>
-        <span id="onsite-approval-count" class="pb" style="font-size:11px;padding:3px 9px;"></span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="onsite-approval-count" class="pb" style="font-size:11px;padding:3px 9px;"></span>
+          <button id="onsite-accept-all-btn" onclick="acceptAllOnsite()" style="display:none;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Accept All</button>
+        </div>
       </div>
       <div id="onsite-approvals-list">
         <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
@@ -1127,7 +1133,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="sec g" style="margin-bottom:14px;">
       <div class="sh">
         <span class="st">🏖️ Leave Requests</span>
-        <span id="leave-approval-count" class="pp" style="font-size:11px;padding:3px 9px;"></span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="leave-approval-count" class="pp" style="font-size:11px;padding:3px 9px;"></span>
+          <button id="leave-accept-all-btn" onclick="acceptAllLeave()" style="display:none;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Accept All</button>
+        </div>
       </div>
       <div id="approvals-page-content">
         <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
@@ -8222,11 +8231,18 @@ async function loadApprovals(){
     var lateCnt = document.getElementById('late-approval-count');
     if(lateCnt) lateCnt.textContent = lateRows.length ? lateRows.length+' pending' : '0 pending';
     if(lateEl) lateEl.innerHTML = lateRows.length ? lateRows.map(function(r){ return approvalCard(r,'late'); }).join('') : empty;
+    var lateAllBtn = document.getElementById('late-accept-all-btn');
+    if(lateAllBtn) lateAllBtn.style.display = lateRows.length > 1 ? '' : 'none';
+    // Store IDs for bulk accept
+    window._pendingLateIds = lateRows.map(function(r){ return r.id; });
 
     // Onsite
     var onsiteCnt = document.getElementById('onsite-approval-count');
     if(onsiteCnt) onsiteCnt.textContent = onsiteRows.length ? onsiteRows.length+' pending' : '0 pending';
     if(onsiteEl) onsiteEl.innerHTML = onsiteRows.length ? onsiteRows.map(function(r){ return approvalCard(r,'onsite'); }).join('') : empty;
+    var onsiteAllBtn = document.getElementById('onsite-accept-all-btn');
+    if(onsiteAllBtn) onsiteAllBtn.style.display = onsiteRows.length > 1 ? '' : 'none';
+    window._pendingOnsiteIds = onsiteRows.map(function(r){ return r.id; });
 
     // WiFi Late Returns
     var lrEl = document.getElementById('late-returns-list');
@@ -8360,6 +8376,9 @@ async function loadApprovals(){
     var leaveRows = (leaveD.success && leaveD.data) ? leaveD.data : [];
     var leaveCnt = document.getElementById('leave-approval-count');
     if(leaveCnt) leaveCnt.textContent = leaveRows.length ? leaveRows.length+' pending' : '0 pending';
+    var leaveAllBtn = document.getElementById('leave-accept-all-btn');
+    if(leaveAllBtn) leaveAllBtn.style.display = leaveRows.length > 1 ? '' : 'none';
+    window._pendingLeaveIds = leaveRows.map(function(r){ return r.id; });
 
     // Total badge
     var total = lateRows.length + onsiteRows.length + leaveRows.length + lateReturnRows.length + earlyExitRows.length + officeWorkReqs.length + (attD.break_overtime_requests||[]).length;
@@ -8514,6 +8533,46 @@ async function approveLeave(id, action){
     if(d.success){ showToast(action==='approve'?'✅ Leave approved':'✅ Leave rejected'); loadApprovals(); }
     else showToast('❌ '+(d.message||'Failed'));
   }catch(e){ showToast('❌ Server error'); }
+}
+
+// ── Accept All helpers ──
+async function acceptAllLate(){
+  var ids = window._pendingLateIds||[];
+  if(!ids.length) return;
+  var btn = document.getElementById('late-accept-all-btn');
+  if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
+  var done=0;
+  for(var i=0;i<ids.length;i++){
+    try{ var r=await fetch(API+'/api/attendance/approve/'+ids[i],{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
+  }
+  showToast('✅ Accepted '+done+' of '+ids.length+' late check-ins');
+  loadApprovals();
+}
+
+async function acceptAllOnsite(){
+  var ids = window._pendingOnsiteIds||[];
+  if(!ids.length) return;
+  var btn = document.getElementById('onsite-accept-all-btn');
+  if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
+  var done=0;
+  for(var i=0;i<ids.length;i++){
+    try{ var r=await fetch(API+'/api/attendance/approve/'+ids[i],{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
+  }
+  showToast('✅ Accepted '+done+' of '+ids.length+' onsite requests');
+  loadApprovals();
+}
+
+async function acceptAllLeave(){
+  var ids = window._pendingLeaveIds||[];
+  if(!ids.length) return;
+  var btn = document.getElementById('leave-accept-all-btn');
+  if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
+  var done=0;
+  for(var i=0;i<ids.length;i++){
+    try{ var r=await fetch(API+'/api/leave/'+ids[i]+'/approve',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
+  }
+  showToast('✅ Approved '+done+' of '+ids.length+' leave requests');
+  loadApprovals();
 }
 
 // ── EOD Reports (Admin) ──
