@@ -29,8 +29,23 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .orb2{position:absolute;width:140px;height:140px;background:radial-gradient(circle,rgba(191,95,255,0.1),transparent 70%);bottom:80px;right:-20px;z-index:0;border-radius:50%;}
 
 /* SCREEN */
-.scr{position:absolute;inset:0;display:none;flex-direction:column;opacity:0;transition:opacity 0.28s;z-index:1;}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;opacity:0;z-index:1;will-change:transform,opacity;}
 .scr.on{display:flex;opacity:1;}
+/* ── Page slide-in animations ── */
+@keyframes slideInRight{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes slideInLeft{from{transform:translateX(-100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.scr.slide-in-right{animation:slideInRight 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
+.scr.slide-in-left{animation:slideInLeft 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
+/* ── Home page avatar + logo pulse animation every 15s ── */
+@keyframes subtlePulse{0%,87%,100%{transform:scale(1);}89%{transform:scale(1.06);}92%{transform:scale(0.97);}95%{transform:scale(1.04);}98%{transform:scale(0.99);}}
+@keyframes logoPulse{0%,87%,100%{filter:drop-shadow(0 0 6px rgba(255,255,255,0.2)) brightness(1);}92%{filter:drop-shadow(0 0 14px rgba(255,255,255,0.5)) brightness(1.15);}97%{filter:drop-shadow(0 0 6px rgba(255,255,255,0.2)) brightness(1);}}
+.home-avatar-pulse{animation:subtlePulse 15s ease-in-out infinite;}
+.home-logo-pulse{animation:logoPulse 15s ease-in-out infinite;}
+/* ── Touch bounce feedback for cards ── */
+@keyframes cardBounce{0%{transform:scale(1);}40%{transform:scale(0.96);}70%{transform:scale(1.02);}100%{transform:scale(1);}}
+.tap-bounce{animation:cardBounce 0.3s cubic-bezier(0.36,0.07,0.19,0.97)!important;}
+/* ── Bottom nav tab active pulse ── */
+@keyframes tabPop{0%{transform:translateY(0) scale(1);}40%{transform:translateY(-3px) scale(1.1);}100%{transform:translateY(0) scale(1);}}
 .scroll{flex:1;overflow-y:auto;}
 
 /* GLASS */
@@ -398,7 +413,7 @@ body.desktop-mode #s1-sidebar {
         <!-- Profile banner -->
         <div class="g" style="padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(10,80,180,0.5),rgba(80,10,140,0.4));cursor:pointer;" onclick="go1('s1-profile')">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div id="s1-avatar" style="width:58px;height:58px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:15px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:20px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
+            <div id="s1-avatar" class="home-avatar-pulse" style="width:58px;height:58px;background:linear-gradient(145deg,#1A3A5C,#0D2440);border:1.5px solid rgba(90,171,240,0.35);border-radius:15px;display:flex;align-items:center;justify-content:center;color:#5AABF0;font-size:20px;font-weight:500;flex-shrink:0;overflow:hidden;">—</div>
             <div style="flex:1;min-width:0;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
               <!-- Name + Designation stacked in left column — no gap -->
               <div style="min-width:0;">
@@ -408,7 +423,7 @@ body.desktop-mode #s1-sidebar {
                 </div>
               </div>
               <!-- DOT logo → opens Chat page -->
-              <span id="s1-brand" onclick="go1('s1-chat')" style="display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;"><img src="dot-logo.png" alt="DOT Advertising" style="height:52px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
+              <span id="s1-brand" onclick="go1('s1-chat')" style="display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;"><img src="dot-logo.png" alt="DOT Advertising" class="home-logo-pulse" style="height:52px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
             </div>
           </div>
           <div style="height:0.5px;background:rgba(255,255,255,0.08);margin:12px 0;"></div>
@@ -1993,7 +2008,15 @@ function makeNav(tabs,scrs,active,prefix){
   }).join('');
 }
 function initNavs1(active){
-  staffScrs.forEach(function(_,i){var n=document.getElementById('n1-'+['home','tasks','chat','salary','profile'][i]);if(n)n.innerHTML=makeNav(staffTabs,staffScrs,active,'n1');});
+  var keys=['home','tasks','chat','salary','profile'];
+  staffScrs.forEach(function(_,i){
+    var n=document.getElementById('n1-'+keys[i]);
+    if(n){
+      n.innerHTML=makeNav(staffTabs,staffScrs,active,'n1');
+      // Tab pop animation on active tab
+      if(i===active){ n.style.animation='tabPop 0.35s cubic-bezier(0.36,0.07,0.19,0.97)'; setTimeout(function(){ n.style.animation=''; },400); }
+    }
+  });
 }
 function initNavs2(active){
   ['home','attendance','approvals','chat','more','tasks'].forEach(function(k){var n=document.getElementById('n2-'+k);if(n)n.innerHTML=makeNav(adminTabs,adminScrs,active,'n2');});
@@ -2063,10 +2086,26 @@ window.addEventListener('popstate', function(e) {
   _s1NavInPopstate = false;
 });
 
+// Bottom nav order for directional slide animation
+var _navOrder = ['s1-home','s1-tasks','s1-chat','s1-salary','s1-profile'];
 function go1(id){
   var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory'];
-  all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on');e.style.display='none';}});
-  var el=document.getElementById(id);if(el){el.style.display='flex';setTimeout(function(){el.classList.add('on');},10);}
+  // Determine slide direction based on bottom nav order
+  var fromIdx = _navOrder.indexOf(_s1CurrentScreen||'');
+  var toIdx   = _navOrder.indexOf(id);
+  var slideClass = '';
+  if(fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx){
+    slideClass = toIdx > fromIdx ? 'slide-in-right' : 'slide-in-left';
+  }
+  all.forEach(function(s){var e=document.getElementById(s);if(e){e.classList.remove('on','slide-in-right','slide-in-left');e.style.display='none';}});
+  var el=document.getElementById(id);
+  if(el){
+    el.style.display='flex';
+    setTimeout(function(){
+      el.classList.add('on');
+      if(slideClass){ el.classList.add(slideClass); setTimeout(function(){ el.classList.remove(slideClass); },300); }
+    },10);
+  }
   _s1CurrentScreen = id;
   // Push history for app screens so Android back navigates within app
   if (!_s1NavInPopstate && _S1_APP_SCREENS.includes(id)) {
@@ -8290,6 +8329,18 @@ function checkDeviceMode() {
 
 // Detect on load + on resize
 document.addEventListener('DOMContentLoaded', checkDeviceMode);
+
+/* ── Touch bounce feedback — applied to all .gs cards and buttons ── */
+(function addTouchBounce(){
+  document.addEventListener('touchstart', function(e){
+    var el = e.target.closest('.gs, button.btn, button.btn-g, button.btn-red, .ni, [class*="card"]');
+    if(!el) el = e.target.closest('[onclick]');
+    if(!el || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return;
+    // Only apply to meaningful tap targets (not deeply nested content)
+    el.classList.add('tap-bounce');
+    el.addEventListener('animationend', function rem(){ el.classList.remove('tap-bounce'); el.removeEventListener('animationend',rem); }, {once:true});
+  }, {passive:true});
+})();
 window.addEventListener('resize', checkDeviceMode);
 
 /* ── AUTO SESSION RESTORE ── */
