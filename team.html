@@ -2627,6 +2627,9 @@ async function loadLeavePolicy(){
 async function loadMyLeaves(){
   var listEl = document.getElementById('leave-past-list');
   if(!listEl) return;
+  // ── Cache ──
+  var lvCache = _cacheGet('leaves');
+  if(lvCache) listEl.innerHTML = lvCache;
   try{
     var res = await fetch(API_URL+'/api/leave/my',{headers:zHead()});
     var d = await res.json();
@@ -2636,7 +2639,7 @@ async function loadMyLeaves(){
       return;
     }
     var statusMap={'pending':['#FF9F0A','Pending'],'approved':['#30D158','Approved'],'rejected':['#FF453A','Rejected']};
-    listEl.innerHTML = leaves.slice(0,8).map(function(l){
+    var lvHtml = leaves.slice(0,8).map(function(l){
       var sc = statusMap[l.status]||['#888','—'];
       var fd = l.from_date ? l.from_date.substring(0,10) : '—';
       var td = l.to_date   ? l.to_date.substring(0,10)   : '—';
@@ -2647,8 +2650,10 @@ async function loadMyLeaves(){
         +'<span style="background:'+sc[0]+'22;color:'+sc[0]+';border:0.5px solid '+sc[0]+'44;border-radius:6px;padding:2px 8px;font-size:10px;white-space:nowrap;">'+sc[1]+'</span>'
         +'</div>';
     }).join('');
+    listEl.innerHTML = lvHtml;
+    _cacheSet('leaves', lvHtml); // cache for instant next visit
   }catch(e){
-    listEl.innerHTML='<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:12px 0;">Could not load</div>';
+    if(!lvCache) listEl.innerHTML='<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:12px 0;">Could not load</div>';
   }
 }
 
@@ -5230,7 +5235,12 @@ async function loadMySalary(){
 
   var el = document.getElementById('my-pay-content');
   if(!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.3);font-size:13px;">⏳ Loading…</div>';
+
+  // ── Cache: show cached HTML instantly, refresh silently in background ──
+  var cacheKey = 'salary_'+myPayMonth+'_'+myPayYear;
+  var cachedHtml = _cacheGet(cacheKey);
+  if(cachedHtml){ el.innerHTML = cachedHtml; } // instant!
+  else { el.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.3);font-size:13px;">⏳ Loading…</div>'; }
 
   try{
     // Fetch payroll data + settings in parallel
@@ -5399,12 +5409,13 @@ async function loadMySalary(){
       +(isCurrMonth ? '<div style="text-align:center;padding:8px 0 4px;color:rgba(245,245,247,0.25);font-size:10px;">Live estimate — final amount set by admin after payroll processing</div>' : '');
 
     el.innerHTML = html;
+    _cacheSet(cacheKey, html); // cache rendered HTML for instant next visit
     // Also update home screen net pay badge
     var hpEl = document.getElementById('s1-home-netpay');
     if(hpEl) hpEl.textContent = '₹'+fmt(netSalary);
 
   } catch(e){
-    if(el) el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load salary data</div>';
+    if(el && !cachedHtml) el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load salary data</div>';
   }
 }
 
@@ -5433,7 +5444,16 @@ async function loadAttHistory(){
   var listEl  = document.getElementById('ath-list');
   var sumEl   = document.getElementById('ath-summary');
   if(labelEl) labelEl.textContent = _athMonthNames[_athMonth-1] + ' ' + _athYear;
-  if(listEl)  listEl.innerHTML = '<div style="text-align:center;padding:50px 0;color:rgba(245,245,247,0.25);font-size:12px;">Loading…</div>';
+
+  // ── Cache: instant load if available ──
+  var athKey = 'att_'+_athMonth+'_'+_athYear;
+  var athCache = _cacheGet(athKey);
+  if(athCache){
+    if(listEl) listEl.innerHTML = athCache.listHtml;
+    if(sumEl)  sumEl.innerHTML  = athCache.sumHtml;
+  } else {
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:50px 0;color:rgba(245,245,247,0.25);font-size:12px;">Loading…</div>';
+  }
 
   try{
     var res = await fetch(API_URL+'/api/attendance/my?month='+_athMonth+'&year='+_athYear, {headers:zHead()});
@@ -5556,8 +5576,10 @@ async function loadAttHistory(){
     }).join('');
 
     if(listEl) listEl.innerHTML = html;
+    // Save to cache for instant next visit
+    _cacheSet(athKey, { listHtml: html, sumHtml: sumEl ? sumEl.innerHTML : '' });
   }catch(e){
-    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load history</div>';
+    if(listEl && !athCache) listEl.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load history</div>';
   }
 }
 
@@ -6184,6 +6206,7 @@ async function eodSubmit(){
       _eodPendingDate = null;
       _eodTriggered = false;
       try{ localStorage.removeItem('zhr_eod_pending_later'); }catch(e){} // clear snooze flag
+      _cacheClearAll(); // salary/attendance data changed after checkout
 
       // checkout_done=false means no attendance record was found (edge case: auto-checkout on wrong date)
       if(!isPending && d.checkout_done === false){
@@ -6229,6 +6252,18 @@ async function eodSubmit(){
     if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
   }
 }
+
+// ── Page Data Cache — stale-while-revalidate (instant load, silent refresh) ──
+// Once a page loads its data, it's cached for CACHE_TTL ms.
+// Next visit: show cached data INSTANTLY, then silently refresh in background.
+var _pageDataCache = {};
+var _pageDataCacheTs = {};
+var _PAGE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function _cacheGet(key){ var ts = _pageDataCacheTs[key]||0; return (Date.now()-ts < _PAGE_CACHE_TTL) ? _pageDataCache[key] : null; }
+function _cacheSet(key, data){ _pageDataCache[key]=data; _pageDataCacheTs[key]=Date.now(); }
+function _cacheClear(key){ delete _pageDataCache[key]; delete _pageDataCacheTs[key]; }
+function _cacheClearAll(){ _pageDataCache={}; _pageDataCacheTs={}; } // call after check-in/out
 
 // ── Task Due Alert — show popup when task deadline has arrived ──
 var _taskAlertShown = false; // show once per session
