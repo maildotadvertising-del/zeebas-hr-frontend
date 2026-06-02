@@ -4472,7 +4472,7 @@ async function loadS2Advances(){
       var pct=total>0?Math.round((1-remaining/total)*100):100;
       return'<div class="g" style="padding:12px;margin-bottom:8px;opacity:'+(closed?0.55:1)+';">'
         +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
-        +'<div style="width:34px;height:34px;border-radius:10px;background:rgba(255,69,58,0.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💳</div>'
+        +'<div style="width:34px;height:34px;border-radius:50%;background:rgba(255,69,58,0.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💳</div>'
         +'<div style="flex:1;"><div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(a.staff_name||'Staff')+'</div>'
         +(a.designation?'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+escHtml(a.designation)+'</div>':'')+'</div>'
         +(closed?'<span style="background:rgba(48,209,88,0.1);color:#30D158;border:0.5px solid rgba(48,209,88,0.2);border-radius:6px;padding:2px 7px;font-size:9px;">Closed</span>'
@@ -5971,7 +5971,7 @@ async function renderTasksEodCard(){
   if(submitted){
     el.innerHTML = '<div class="gs" style="padding:13px 14px;">'
       +'<div style="display:flex;align-items:center;gap:12px;">'
-        +'<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(48,209,88,0.22),rgba(48,209,88,0.15));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">✅</div>'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(48,209,88,0.22),rgba(48,209,88,0.15));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">✅</div>'
         +'<div style="flex:1;min-width:0;">'
           +'<div style="color:#30D158;font-size:13px;font-weight:500;">Daily Work Report</div>'
           +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">Submitted — pending admin review</div>'
@@ -5982,7 +5982,7 @@ async function renderTasksEodCard(){
   } else {
     el.innerHTML = '<div class="gs" style="padding:13px 14px;">'
       +'<div style="display:flex;align-items:center;gap:12px;">'
-        +'<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(10,132,255,0.22),rgba(94,92,230,0.22));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">📋</div>'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.22),rgba(94,92,230,0.22));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">📋</div>'
         +'<div style="flex:1;min-width:0;">'
           +'<div style="color:#fff;font-size:13px;font-weight:500;">Daily Work Report</div>'
           +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:2px;">Submit your end-of-day work summary</div>'

@@ -2183,7 +2183,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       <div id="dm-chat-area" style="display:none;" class="g" style="display:flex;flex-direction:column;overflow:hidden;padding:0;">
         <!-- DM header -->
         <div style="padding:14px 18px;border-bottom:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <div id="dm-peer-avatar" style="width:36px;height:36px;border-radius:10px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0A84FF;flex-shrink:0;">?</div>
+          <div id="dm-peer-avatar" style="width:36px;height:36px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0A84FF;flex-shrink:0;">?</div>
           <div style="flex:1;">
             <div id="dm-peer-name" style="font-size:14px;font-weight:500;color:#fff;">—</div>
             <div id="dm-peer-desig" style="font-size:11px;color:var(--muted);margin-top:1px;">—</div>
@@ -3271,8 +3271,8 @@ function saSelectMember(id){
 
   var init=(s.name||'?').charAt(0).toUpperCase();
   var avatar=s.photo_url
-    ?'<img src="'+API+s.photo_url+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';">'
-    :'<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
+    ?'<img src="'+API+s.photo_url+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';">'
+    :'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
 
   var empColor=s.employment_type==='part_time'?'#30D158'
     :s.employment_type==='daily_wage'?'#FF9F0A'
@@ -3382,7 +3382,7 @@ async function psLoadSalaryPreview(){
       var tdStyleL = tdStyle.replace('text-align:right','text-align:left');
       var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
       var avatar = avSrc
-        ? '<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+        ? '<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
         : '<div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#0A84FF,#5E5CE6);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
       var timeCut = parseFloat(r.late_deduction||0);
       var extraCr = parseFloat(r.time_credit||0);
@@ -4364,8 +4364,8 @@ async function loadChatMembers(){
       var init=(m.name||'?').charAt(0).toUpperCase();
       var avSrc=m.photo_data||(m.photo_url?API+m.photo_url:null);
       var av=avSrc
-        ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0;">'
-        :'<div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">'+init+'</div>';
+        ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">'+init+'</div>';
       var roleBadge=m.role==='admin'?'<span style="background:rgba(191,95,255,0.15);color:#BF5FFF;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">ADMIN</span>':m.role==='editor'?'<span style="background:rgba(255,159,10,0.15);color:#FF9F0A;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">EDITOR</span>':'';
       return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);">'
         +av+'<div><div style="font-size:12px;font-weight:400;">'+m.name+roleBadge+'</div>'
@@ -4395,7 +4395,7 @@ async function openDmList(){
       var init = (m.name||'?').charAt(0).toUpperCase();
       var avSrc = m.photo_data||(m.photo_url ? API+m.photo_url : null);
       var av = avSrc
-        ? '<img src="'+avSrc+'" style="width:38px;height:38px;border-radius:11px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+        ? '<img src="'+avSrc+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
         : '<div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
       var roleColor = m.role==='admin'?'#BF5FFF':m.role==='editor'?'#FF9F0A':m.role==='team_leader'?'#0A84FF':'#636366';
       var roleLabel = m.role==='admin'?'Admin':m.role==='editor'?'Editor':m.role==='team_leader'?'Team Leader':'Staff';
@@ -4431,7 +4431,7 @@ async function openDmWith(peerId, peerName, peerDesig, peerAvSrc){
   if(desigEl) desigEl.textContent = peerDesig||'';
   if(avEl){
     if(peerAvSrc){
-      avEl.innerHTML = '<img src="'+peerAvSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;" onerror="this.parentNode.innerHTML=\''+((peerName||'?')[0].toUpperCase())+'\'">';
+      avEl.innerHTML = '<img src="'+peerAvSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.parentNode.innerHTML=\''+((peerName||'?')[0].toUpperCase())+'\'">';
       avEl.style.background = 'transparent';
     } else {
       avEl.innerHTML = (peerName||'?').charAt(0).toUpperCase();
@@ -4588,7 +4588,7 @@ function appendDashMsg(msg, doScroll){
   var avSrc=msg.photo_data||(msg.photo_url?API+msg.photo_url:null);
   var avFbStyle='width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(10,132,255,0.4),rgba(94,92,230,0.5));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;';
   var av=avSrc
-    ?'<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
+    ?'<img src="'+avSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyle+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
     :'<div style="'+avFbStyle+'">'+init+'</div>';
   var t=msg.created_at?fmtTime(msg.created_at):(function(){var n=new Date(),h=n.getHours(),m=n.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
   var bubbleStyle=isMe
@@ -5580,7 +5580,7 @@ async function loadDashStats(){
           // Use id-based img to avoid quote-escaping issues in onerror
           var avId='dav'+Math.random().toString(36).slice(2,7);
           var avatar = avSrcM
-            ? '<img id="'+avId+'" src="'+avSrcM+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" onload="this.style.display=\'block\'" onerror="var d=document.getElementById(\''+avId+'\');if(d){var r=document.createElement(\'div\');r.className=\'av\';r.style=\'width:30px;height:30px;font-size:11px;background:rgba(10,30,60,0.7);flex-shrink:0;\';r.textContent=\''+init+'\';d.parentNode.replaceChild(r,d);}">'
+            ? '<img id="'+avId+'" src="'+avSrcM+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;" onload="this.style.display=\'block\'" onerror="var d=document.getElementById(\''+avId+'\');if(d){var r=document.createElement(\'div\');r.className=\'av\';r.style=\'width:30px;height:30px;font-size:11px;background:rgba(10,30,60,0.7);flex-shrink:0;\';r.textContent=\''+init+'\';d.parentNode.replaceChild(r,d);}">'
             : '<div class="av" style="width:30px;height:30px;font-size:11px;background:rgba(10,30,60,0.7);flex-shrink:0;">'+init+'</div>';
           var ci=fmtTime(r.check_in);
           var type=r.type==='onsite'?'Onsite':r.type==='office'?'Office':'—';
@@ -5819,7 +5819,7 @@ function buildAnnCard(a){
   var avSrc = a.sent_by_photo_data||(a.sent_by_photo?API+a.sent_by_photo:null);
   var init  = (a.sent_by_name||'?').charAt(0).toUpperCase();
   var av    = avSrc
-    ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
+    ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
     :'<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,159,10,0.18);display:flex;align-items:center;justify-content:center;color:#FF9F0A;font-weight:600;font-size:15px;flex-shrink:0;">'+init+'</div>';
   var ts = a.created_at ? new Date(a.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
   var recLabel = a.recipients==='selected'?'<span style="background:rgba(10,132,255,0.12);color:#0A84FF;border:0.5px solid rgba(10,132,255,0.2);border-radius:6px;padding:1px 7px;font-size:9px;margin-left:6px;">Selected</span>':'<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.2);border-radius:6px;padding:1px 7px;font-size:9px;margin-left:6px;">All Staff</span>';
@@ -6136,8 +6136,8 @@ async function loadDailyLogs(){
       var init = (g.name||'?').charAt(0).toUpperCase();
       var avSrc = _getAvatar(g.staff_id||g.id, g.photo_url, g.photo_data);
       var avHtml = avSrc
-        ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
-        : '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.3));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
+        ? '<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        : '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.3));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
       var brandDot = g.brand_color
         ? '<span style="width:7px;height:7px;border-radius:50%;background:'+g.brand_color+';display:inline-block;margin-right:4px;"></span>'
         : '';
@@ -6535,8 +6535,8 @@ async function loadEodReports(){
       var avSrc=_getAvatar(rep.staff_id, rep.photo_url, rep.photo_data);
       var init=(rep.staff_name||'?').charAt(0).toUpperCase();
       var av=avSrc
-        ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
-        :'<div style="width:36px;height:36px;border-radius:10px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:15px;flex-shrink:0;">'+init+'</div>';
+        ?'<img src="'+avSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:36px;height:36px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:15px;flex-shrink:0;">'+init+'</div>';
       var statusClr = rep.status==='approved'?'#30D158':rep.status==='rejected'?'#FF453A':'#FF9F0A';
       var statusLbl = rep.status==='approved'?'✅ Approved':rep.status==='rejected'?'✕ Rejected':'⏳ Pending';
       var dateStr = rep.date ? new Date(rep.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) : '—';
@@ -6609,8 +6609,8 @@ async function loadExtraTimeRequests(){
       var avSrc=_getAvatar(r.staff_id, r.photo_url, r.photo_data);
       var init=(r.staff_name||'?').charAt(0).toUpperCase();
       var av=avSrc
-        ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:10px;object-fit:cover;flex-shrink:0;">'
-        :'<div style="width:34px;height:34px;border-radius:10px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
+        ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:34px;height:34px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;color:#0A84FF;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
       var dueLbl = r.due_date ? r.due_date.slice(0,10)+(r.due_time?' at '+r.due_time.slice(0,5):'') : '—';
       var newDueLbl = r.extra_time_new_date ? r.extra_time_new_date.slice(0,10)+(r.extra_time_new_time?' at '+r.extra_time_new_time.slice(0,5):'') : '';
       return '<div style="background:rgba(255,159,10,0.05);border:0.5px solid rgba(255,159,10,0.2);border-radius:14px;padding:14px;margin-bottom:10px;">'
@@ -8306,8 +8306,8 @@ async function loadApprovals(){
         ? earlyExitRows.map(function(e){
             var init=(e.staff_name||'?').charAt(0).toUpperCase();
             var av=e.photo_data||(e.photo_url?API+e.photo_url:null);
-            var avEl=av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;">'
-              :'<div style="width:32px;height:32px;border-radius:9px;background:rgba(255,159,10,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
+            var avEl=av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
+              :'<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,159,10,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
             var exitTime=e.early_exit_at?new Date(e.early_exit_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—';
             return '<div style="background:rgba(255,159,10,0.06);border:0.5px solid rgba(255,159,10,0.18);border-radius:11px;padding:11px 13px;margin-bottom:8px;">'
               +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">'+avEl
@@ -8334,8 +8334,8 @@ async function loadApprovals(){
         ? officeWorkReqs.map(function(o){
             var av = o.photo_data||(o.photo_url?API+o.photo_url:null);
             var init = (o.staff_name||'S').charAt(0).toUpperCase();
-            var avEl = av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;">'
-              :'<div style="width:32px;height:32px;border-radius:9px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#0A84FF;">'+init+'</div>';
+            var avEl = av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
+              :'<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#0A84FF;">'+init+'</div>';
             var awayMins = parseInt(o.office_work_mins)||0;
             var reason = o.office_work_reason||'No reason provided';
             return '<div style="background:rgba(10,132,255,0.06);border:0.5px solid rgba(10,132,255,0.2);border-radius:11px;padding:11px 13px;margin-bottom:8px;">'
@@ -8366,8 +8366,8 @@ async function loadApprovals(){
         ? allBreakItems.map(function(b){
             var av = b.photo_data||(b.photo_url?API+b.photo_url:null);
             var init = (b.staff_name||'S').charAt(0).toUpperCase();
-            var avEl = av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:9px;object-fit:cover;">'
-              :'<div style="width:32px;height:32px;border-radius:9px;background:rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
+            var avEl = av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
+              :'<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
             var ciTime = b.check_in?new Date(b.check_in).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—';
             if(b.is_break_ot){
               var exMins = parseInt(b.excess_mins)||0;
@@ -8621,9 +8621,9 @@ async function loadEodAdmin(){
     sec.innerHTML = reports.map(function(rpt){
       var init = (rpt.staff_name||'?').charAt(0).toUpperCase();
       var avHtml = rpt.photo_data
-        ? '<img src="'+rpt.photo_data+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+        ? '<img src="'+rpt.photo_data+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
         : (rpt.photo_url
-          ? '<img src="'+API+rpt.photo_url+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+          ? '<img src="'+API+rpt.photo_url+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
           : '<div style="width:32px;height:32px;border-radius:8px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>');
       var items = Array.isArray(rpt.items) ? rpt.items : JSON.parse(rpt.items||'[]');
       var itemsHtml = items.map(function(it,ii){
@@ -10218,7 +10218,7 @@ function attViewRow(r,i){
   var avId='atr'+i+'_'+r.id;
   var fallbackStyle='width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(10,132,255,0.25),rgba(94,92,230,0.25));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(245,245,247,0.6);flex-shrink:0;';
   var avatar = avSrc
-    ? '<img id="'+avId+'" src="'+avSrc+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="var _e=document.getElementById(\''+avId+'\');if(_e){var _d=document.createElement(\'div\');_d.style.cssText=\''+fallbackStyle+'\';_d.textContent=\''+init+'\';_e.parentNode.replaceChild(_d,_e);}">'
+    ? '<img id="'+avId+'" src="'+avSrc+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="var _e=document.getElementById(\''+avId+'\');if(_e){var _d=document.createElement(\'div\');_d.style.cssText=\''+fallbackStyle+'\';_d.textContent=\''+init+'\';_e.parentNode.replaceChild(_d,_e);}">'
     : '<div style="'+fallbackStyle+'">'+init+'</div>';
   var td='padding:9px 10px;border-bottom:0.5px solid rgba(255,255,255,0.04);';
   // Determine check-out display
