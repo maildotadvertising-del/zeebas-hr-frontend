@@ -6280,22 +6280,44 @@ async function _checkOverdueTaskAlert(){
 }
 
 function _showTaskDueAlert(tasks){
-  var existing = document.getElementById('task-due-alert-banner');
+  var existing = document.getElementById('task-due-alert-popup');
   if(existing) existing.remove();
-  var names = tasks.map(function(t){ return escHtml(t.title||''); }).join(', ');
-  var banner = document.createElement('div');
-  banner.id = 'task-due-alert-banner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:800;background:linear-gradient(135deg,rgba(255,69,58,0.95),rgba(200,20,10,0.97));padding:14px 16px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(255,69,58,0.4);';
-  banner.innerHTML = '<div style="font-size:22px;flex-shrink:0;">⚠️</div>'
-    +'<div style="flex:1;">'
-      +'<div style="color:#fff;font-size:13px;font-weight:700;">Task Deadline Reached!</div>'
-      +'<div style="color:rgba(255,255,255,0.8);font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+names+'</div>'
-    +'</div>'
-    +'<button onclick="this.parentNode.remove();go1(\'s1-tasks\')" style="background:rgba(255,255,255,0.2);border:0.5px solid rgba(255,255,255,0.4);border-radius:8px;padding:7px 12px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;">View →</button>';
-  // Insert after the top status bar area
-  document.body.appendChild(banner);
-  // Auto-dismiss after 8s
-  setTimeout(function(){ if(banner.parentNode) banner.remove(); }, 8000);
+
+  // Build task list HTML
+  var taskList = tasks.map(function(t){
+    var dueDateStr = t.due_date ? new Date((t.due_date+'').slice(0,10)+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
+    return '<div style="background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px 12px;margin-bottom:6px;text-align:left;">'
+      +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(t.title||'')+'</div>'
+      +(dueDateStr?'<div style="color:rgba(255,69,58,0.8);font-size:11px;margin-top:2px;">⏰ Due: '+dueDateStr+'</div>':'')
+      +'</div>';
+  }).join('');
+
+  var ov = document.createElement('div');
+  ov.id = 'task-due-alert-popup';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+
+  ov.innerHTML =
+    '<div style="background:linear-gradient(145deg,rgba(18,8,28,0.99),rgba(10,10,22,0.99));border:0.5px solid rgba(255,69,58,0.3);border-radius:28px;padding:30px 24px 24px;text-align:center;max-width:300px;width:88%;position:relative;animation:celeIn 0.45s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(255,69,58,0.1);">'
+      // Badge
+      +'<div style="font-size:44px;display:block;margin-bottom:12px;animation:badgePop 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.25s both;">⏰</div>'
+      // Title
+      +'<div style="color:#FF453A;font-size:19px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px;">Deadline Reached!</div>'
+      +'<div style="color:rgba(245,245,247,0.45);font-size:12px;margin-bottom:18px;">The following task'+(tasks.length>1?'s are':'is')+' past due</div>'
+      // Task list
+      +'<div style="max-height:180px;overflow-y:auto;margin-bottom:18px;">'
+        +taskList
+      +'</div>'
+      // Buttons
+      +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="document.getElementById(\'task-due-alert-popup\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px;color:rgba(245,245,247,0.55);font-size:13px;cursor:pointer;font-family:inherit;">Later</button>'
+        +'<button onclick="document.getElementById(\'task-due-alert-popup\').remove();go1(\'s1-tasks\')" style="flex:2;background:linear-gradient(135deg,rgba(255,69,58,0.85),rgba(200,20,10,0.9));border:none;border-radius:14px;padding:12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,69,58,0.3);">View Tasks →</button>'
+      +'</div>'
+    +'</div>';
+
+  document.body.appendChild(ov);
+  // Auto-dismiss after 12s
+  setTimeout(function(){ if(ov.parentNode) ov.remove(); }, 12000);
 }
 
 // ── EOD Later — snooze until next FRESH APP OPEN (page reload) ──
