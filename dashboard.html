@@ -8632,8 +8632,9 @@ async function acceptAllLate(){
   var btn = document.getElementById('late-accept-all-btn');
   if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
   var done=0;
+  // Late check-ins use /approve-late/ endpoint (not /approve/)
   for(var i=0;i<ids.length;i++){
-    try{ var r=await fetch(API+'/api/attendance/approve/'+ids[i],{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
+    try{ var r=await fetch(API+'/api/attendance/approve-late/'+ids[i],{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
   }
   showToast('✅ Accepted '+done+' of '+ids.length+' late check-ins');
   loadApprovals();
