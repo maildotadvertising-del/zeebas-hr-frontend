@@ -2925,7 +2925,7 @@ function tick(){
   var el=document.getElementById('dclock');
   if(el)el.textContent=day+', '+date+' '+month+' '+year+'  ·  '+h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;
 }
-tick();setInterval(tick,1000);
+tick(); var _dashClockTimer = setInterval(tick, 1000); // stored for potential cleanup
 
 // GPS
 function updateRadius(){var v=parseInt(document.getElementById('radius-inp').value)||300;document.getElementById('radius-slider').value=Math.min(v,1000);syncDisplay(v);}

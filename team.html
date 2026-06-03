@@ -2171,7 +2171,7 @@ function go1(id){
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
-  if(id==='s1-salary'){ initNavs1(3); loadMySalary(); }
+  if(id==='s1-salary'){ initNavs1(3); myPayMonth=_getCurrMonth(); myPayYear=_getCurrYear(); loadMySalary(); }
   if(id==='s1-gps'){
     var btn=document.getElementById('att-btn');
     if(btn){ btn.disabled=false; }
@@ -2222,7 +2222,9 @@ function go2(id){
 /* staffLogin() — handled by API script */
 
 // Clock
-function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;['c1','c2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});}tick();setInterval(tick,1000);
+var _clockTimer = null;
+function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),a=h>=12?'PM':'AM';h=h%12||12;var t=h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+a;['c1','c2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});}
+tick(); _clockTimer = setInterval(tick, 1000);
 
 // GPS Attendance
 var myLat = null, myLng = null, gpsOfficeLat = null, gpsOfficeLng = null, gpsRadius = 300;
@@ -2613,7 +2615,7 @@ async function submitLeave(){
     setTimeout(function(){ wifiBanner(false); },3000);
     return;
   }
-  if(new Date(toDate)<new Date(fromDate)){
+  if(new Date(toDate+'T00:00:00')<new Date(fromDate+'T00:00:00')){
     wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','⚠️ Invalid Dates','To date must be after from date',false);
     setTimeout(function(){ wifiBanner(false); },3000);
     return;
@@ -2630,8 +2632,10 @@ async function submitLeave(){
     var d = await res.json();
     if(d.success){
       // Clear form
-      var setV = function(id,v){ var el=document.getElementById(id); if(el) el.value=v; };
-      setV('leave-from',''); setV('leave-to',''); setV('leave-reason',''); setV('leave-handover','');
+      // Reset all leave form fields
+      ['leave-type','leave-from','leave-to','leave-reason','leave-handover'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.value='';
+      });
       wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','✅ Leave Requested','Admin will review your request shortly',false);
       setTimeout(function(){ wifiBanner(false); },4000);
       loadMyLeaves(); // refresh past list
@@ -3986,10 +3990,11 @@ function sendAdmin(){
     staffSocket.emit('send-message',payload);
     appendAdminMsg2(Object.assign({staff_id:staff.id,staff_name:staff.name,photo_url:staff.photo_url,message:txt,message_type:'text',created_at:new Date(),reactions:[]},reply));
   } else {
+    var _inp2 = document.getElementById('ci2');
     fetch(API_URL+'/api/chat/messages',{method:'POST',headers:zHead(),body:JSON.stringify(payload)})
       .then(function(r){return r.json();})
       .then(function(d){if(d.success)appendAdminMsg2(d.data);})
-      .catch(function(){showToast1('❌ Send failed');});
+      .catch(function(){ showToast1('❌ Send failed — try again'); if(_inp2) _inp2.value=txt; });
   }
 }
 document.getElementById('ci2').addEventListener('keydown',function(e){if(e.key==='Enter')sendAdmin();});
@@ -4588,7 +4593,8 @@ async function s2SendAnnouncement(){
   var msg=(document.getElementById('s2-ann-msg').value||'').trim();
   if(!msg){ showToast1('⚠️ Message required'); return; }
   var btn=document.querySelector('#s2-ann-form .btn-p');
-  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  if(btn){ if(btn.disabled) return; // prevent double-submit
+    btn.disabled=true; btn.textContent='Sending…'; }
   try{
     var fd=new FormData(); if(title) fd.append('title',title); fd.append('message',msg); fd.append('recipients','all');
     var r=await fetch(API_URL+'/api/announcements',{method:'POST',headers:{'Authorization':'Bearer '+zToken()},body:fd});
@@ -5279,8 +5285,11 @@ async function staffLogin(){
 }
 
 /* ── MY SALARY ── */
-var myPayMonth = new Date().getMonth() + 1;
-var myPayYear  = new Date().getFullYear();
+// Refresh month/year dynamically — prevents stale values after midnight
+function _getCurrMonth(){ return new Date().getMonth() + 1; }
+function _getCurrYear() { return new Date().getFullYear(); }
+var myPayMonth = _getCurrMonth();
+var myPayYear  = _getCurrYear();
 var myPayMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function myPayPrev(){
