@@ -5207,6 +5207,9 @@ document.addEventListener('DOMContentLoaded', function(){
     history.replaceState({ page: page, _sentinel: true }, '', '#' + page);
     showPage(page, null);
 
+    // Update nav badges immediately (Tasks + Approvals counts)
+    setTimeout(_updateNavBadges, 800);
+
   } catch(e){ showOverlay(); }
 });
 
@@ -5473,6 +5476,41 @@ function fmtTime(dt){
 var _dashCache = {}, _dashCacheTs = {}, _DASH_TTL = 3 * 60 * 1000;
 function _dGet(k){ return (Date.now()-(_dashCacheTs[k]||0) < _DASH_TTL) ? _dashCache[k] : null; }
 function _dSet(k,v){ _dashCache[k]=v; _dashCacheTs[k]=Date.now(); }
+
+// ── Fast badge update — runs on every page load, lightweight ──
+async function _updateNavBadges(){
+  try{
+    // Tasks pending badge
+    var cachedT = _dGet('tasks');
+    var td = cachedT;
+    if(!td){
+      var tr = await fetch(API+'/api/tasks', {headers:zHdr()});
+      td = await tr.json();
+      _dSet('tasks', td);
+    }
+    var allT = td.data || td || [];
+    var pending = allT.filter(function(t){ return (t.status||'').toLowerCase()!=='done'; }).length;
+    var tb = document.getElementById('tasks-badge');
+    if(tb){ tb.textContent=pending; tb.style.display=pending>0?'inline':'none'; }
+    var btd = document.getElementById('bn-tasks-dot');
+    if(btd) btd.style.display = pending>0?'block':'none';
+  }catch(e){}
+  try{
+    // Approvals badge — attendance pending + leave pending
+    var [attR, lvR] = await Promise.all([
+      fetch(API+'/api/attendance/pending-approvals',{headers:zHdr()}),
+      fetch(API+'/api/leave/pending',{headers:zHdr()})
+    ]);
+    var attD = await attR.json(); var lvD = await lvR.json();
+    var attPending = ((attD.data||[]).length) + ((attD.late_returns||[]).length);
+    var lvPending = (lvD.data||[]).length;
+    var total = attPending + lvPending;
+    var ab = document.getElementById('approvals-badge');
+    if(ab){ ab.textContent=total; ab.style.display=total>0?'inline':'none'; }
+    var bad = document.getElementById('bn-approvals-dot');
+    if(bad) bad.style.display = total>0?'block':'none';
+  }catch(e){}
+}
 
 async function loadDashStats(){
   try{
@@ -6401,7 +6439,7 @@ window.showPage = function(page, el){
   var _ucPop=document.getElementById('ucal-popup'); if(_ucPop) _ucPop.style.display='none';
   if(_origShowPage) _origShowPage(page, el);
   if(page==='staff')          setTimeout(loadStaffList, 100);
-  if(page==='dashboard')      { applyDashWidgets(); loadDashStats(); }
+  if(page==='dashboard')      { applyDashWidgets(); loadDashStats(); setTimeout(_updateNavBadges, 500); }
   // Clear attendance cache when viewing attendance page (data may have changed)
   if(page==='attendance')     { _dSet('att', null); _dashCacheTs['att'] = 0; }
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(initMbLazyLoad, 200); }
