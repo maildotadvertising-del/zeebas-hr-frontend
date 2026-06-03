@@ -38,13 +38,14 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .scr.slide-in-left{animation:slideInLeft 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
 /* ── Home page avatar + logo pulse animation every 15s ── */
 @keyframes subtlePulse{0%,87%,100%{transform:scale(1);}89%{transform:scale(1.06);}92%{transform:scale(0.97);}95%{transform:scale(1.04);}98%{transform:scale(0.99);}}
-/* Logo bounce + white glow loop */
+/* Logo bounce — white glow appears only at zoom-in peak, on the red sphere */
 @keyframes logoBounceGlow{
-  0%,100%{ transform:scale(1);    filter:drop-shadow(0 0 0px rgba(255,255,255,0)) brightness(1); }
-  30%    { transform:scale(1.06); filter:drop-shadow(0 0 6px rgba(255,255,255,0.4)) brightness(1.1); }
-  50%    { transform:scale(0.96); filter:drop-shadow(0 0 10px rgba(255,255,255,0.6)) brightness(1.15); }
-  70%    { transform:scale(1.04); filter:drop-shadow(0 0 6px rgba(255,255,255,0.4)) brightness(1.1); }
-  85%    { transform:scale(0.99); filter:drop-shadow(0 0 2px rgba(255,255,255,0.15)) brightness(1.02); }
+  0%,100%{ transform:scale(1);    filter:none; }
+  35%    { transform:scale(1.05); filter:drop-shadow(0 0 3px rgba(255,240,220,0.3)) brightness(1.05); }
+  55%    { transform:scale(1.10); filter:drop-shadow(0 0 0px rgba(255,255,255,0)) drop-shadow(0 2px 8px rgba(255,255,255,0.7)) brightness(1.18); }
+  70%    { transform:scale(1.04); filter:drop-shadow(0 0 3px rgba(255,240,220,0.25)) brightness(1.06); }
+  82%    { transform:scale(0.96); filter:none; }
+  91%    { transform:scale(1.02); filter:none; }
 }
 .logo-shimmer-wrap{
   position:relative;
@@ -52,7 +53,7 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
   align-items:center;
 }
 .home-avatar-pulse{animation:subtlePulse 15s ease-in-out infinite;}
-.home-logo-pulse{animation:logoBounceGlow 3s cubic-bezier(0.36,0.07,0.19,0.97) infinite;}
+.home-logo-pulse{animation:logoBounceGlow 3s cubic-bezier(0.34,1.56,0.64,1) infinite;}
 /* ── Touch bounce feedback for cards ── */
 @keyframes cardBounce{0%{transform:scale(1);}40%{transform:scale(0.96);}70%{transform:scale(1.02);}100%{transform:scale(1);}}
 .tap-bounce{animation:cardBounce 0.3s cubic-bezier(0.36,0.07,0.19,0.97)!important;}
