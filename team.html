@@ -550,25 +550,28 @@ body.desktop-mode #s1-sidebar {
 
           <!-- State B: Checked in → time + Break + Check Out -->
           <div id="s1-att-checkedin" style="display:none;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,rgba(48,209,88,0.15) 0%,rgba(48,209,88,0.05) 100%);border:1px solid rgba(48,209,88,0.32);">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-              <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-              <div>
-                <div style="color:#30D158;font-size:13px;font-weight:600;">Checked In</div>
-                <div style="display:flex;align-items:center;gap:5px;margin-top:2px;">
-                  <span style="color:rgba(245,245,247,0.45);font-size:10px;">at</span>
-                  <span id="s1-att-ci-time" style="color:#fff;font-size:11px;font-weight:500;font-family:monospace;">--:--</span>
-                  <span id="s1-att-src-badge" style="font-size:9px;color:rgba(245,245,247,0.35);"></span>
+            <!-- Header: click → attendance history -->
+            <div onclick="go1('s1-atthistory')" style="cursor:pointer;-webkit-tap-highlight-color:transparent;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <div style="width:38px;height:38px;background:rgba(48,209,88,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#30D158" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div>
+                  <div style="color:#30D158;font-size:13px;font-weight:600;">Checked In</div>
+                  <div style="display:flex;align-items:center;gap:5px;margin-top:2px;">
+                    <span style="color:rgba(245,245,247,0.45);font-size:10px;">at</span>
+                    <span id="s1-att-ci-time" style="color:#fff;font-size:11px;font-weight:500;font-family:monospace;">--:--</span>
+                    <span id="s1-att-src-badge" style="font-size:9px;color:rgba(245,245,247,0.35);"></span>
+                  </div>
                 </div>
               </div>
+              <div id="s1-att-status-row" style="color:rgba(245,245,247,0.4);font-size:10px;margin-bottom:10px;"></div>
             </div>
-            <div id="s1-att-status-row" style="color:rgba(245,245,247,0.4);font-size:10px;margin-bottom:10px;"></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button onclick="attActionBreak()" style="background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.35);border-radius:12px;padding:12px 8px;color:#FF9F0A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+              <button onclick="event.stopPropagation();attActionBreak()" style="background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.35);border-radius:12px;padding:12px 8px;color:#FF9F0A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
                 ☕ Break
               </button>
-              <button onclick="wifiCheckoutPrompt()" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);border-radius:12px;padding:12px 8px;color:#FF453A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+              <button onclick="event.stopPropagation();wifiCheckoutPrompt()" style="background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.35);border-radius:12px;padding:12px 8px;color:#FF453A;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
                 🚪 Check Out
               </button>
             </div>
