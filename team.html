@@ -38,16 +38,26 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .scr.slide-in-left{animation:slideInLeft 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
 /* ── Home page avatar + logo pulse animation every 15s ── */
 @keyframes subtlePulse{0%,87%,100%{transform:scale(1);}89%{transform:scale(1.06);}92%{transform:scale(0.97);}95%{transform:scale(1.04);}98%{transform:scale(0.99);}}
-/* Red ball flare: sweeping light reflection on the red ball, loops every 5s */
-@keyframes ballFlare{
-  0%,100%{filter:brightness(1) drop-shadow(0 0 0px rgba(255,60,0,0));}
-  30%{filter:brightness(1.08) drop-shadow(1px -2px 6px rgba(255,120,30,0.55));}
-  50%{filter:brightness(1.18) drop-shadow(2px -3px 10px rgba(255,80,0,0.8)) drop-shadow(-1px 1px 4px rgba(255,200,100,0.4));}
-  70%{filter:brightness(1.08) drop-shadow(1px -1px 6px rgba(255,100,20,0.5));}
-  85%{filter:brightness(1) drop-shadow(0 0 0px rgba(255,60,0,0));}
+/* Red ball rotating highlight: specular glint orbits the ball surface (3D rotation illusion) */
+/* The glint div is added by JS — positioned over the red ball, orbiting in an ellipse */
+@keyframes ballGlintOrbit{
+  0%  { transform:translate(-50%,-50%) translate(0px,-6px) scale(1);   opacity:0.9; }
+  25% { transform:translate(-50%,-50%) translate(5px,-2px) scale(0.7); opacity:0.5; }
+  50% { transform:translate(-50%,-50%) translate(0px, 5px) scale(0.4); opacity:0.2; }
+  75% { transform:translate(-50%,-50%) translate(-5px,-2px) scale(0.7);opacity:0.5; }
+  100%{ transform:translate(-50%,-50%) translate(0px,-6px) scale(1);   opacity:0.9; }
+}
+.ball-glint{
+  position:absolute;
+  width:7px; height:7px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,240,200,0.95) 0%,rgba(255,220,180,0.6) 50%,transparent 80%);
+  pointer-events:none;
+  animation:ballGlintOrbit 2s linear infinite;
+  z-index:2;
 }
 .home-avatar-pulse{animation:subtlePulse 15s ease-in-out infinite;}
-.home-logo-pulse{animation:ballFlare 5s ease-in-out infinite;}
+.home-logo-pulse{ /* class kept for JS targeting, no filter animation */ }
 /* ── Touch bounce feedback for cards ── */
 @keyframes cardBounce{0%{transform:scale(1);}40%{transform:scale(0.96);}70%{transform:scale(1.02);}100%{transform:scale(1);}}
 .tap-bounce{animation:cardBounce 0.3s cubic-bezier(0.36,0.07,0.19,0.97)!important;}
@@ -429,8 +439,8 @@ body.desktop-mode #s1-sidebar {
                   <span id="s1-desig" style="background:rgba(255,159,10,0.2);border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:11px;color:#FF9F0A;font-weight:500;"></span>
                 </div>
               </div>
-              <!-- DOT logo → opens Chat page -->
-              <span id="s1-brand" onclick="go1('s1-chat')" style="display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;"><img src="dot-logo.png" alt="DOT Advertising" class="home-logo-pulse" style="height:52px;width:auto;opacity:1;display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));" onerror="this.style.display='none'"></span>
+              <!-- DOT logo → opens Chat page. Glint overlay added by _initBallGlint() -->
+              <span id="s1-brand" onclick="go1('s1-chat')" style="position:relative;display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;"><img src="dot-logo.png" alt="DOT Advertising" class="home-logo-pulse" style="height:52px;width:auto;opacity:1;display:block;" onerror="this.style.display='none'"></span>
             </div>
           </div>
           <div style="height:0.5px;background:rgba(255,255,255,0.08);margin:12px 0;"></div>
@@ -2132,7 +2142,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(_checkOverdueTaskAlert, 1000); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
+  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(_checkOverdueTaskAlert, 1000); setTimeout(wifiCheckAndAct, 400); setTimeout(_initBallGlint, 300); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
@@ -6260,6 +6270,27 @@ async function eodSubmit(){
     showToast('❌ Connection failed — please try again');
     if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
   }
+}
+
+// ── Red ball rotating glint — places orbiting specular highlight over the red ball ──
+function _initBallGlint(){
+  var brand = document.getElementById('s1-brand');
+  if(!brand) return;
+  if(document.getElementById('ball-glint-dot')) return; // already added
+  var img = brand.querySelector('img');
+  if(!img || !img.complete || img.naturalWidth === 0) {
+    img && img.addEventListener('load', _initBallGlint, {once:true});
+    return;
+  }
+  // Red ball position: ~47% from left, ~42% from top of the displayed image
+  var glint = document.createElement('div');
+  glint.id = 'ball-glint-dot';
+  glint.className = 'ball-glint';
+  var imgW = img.offsetWidth || img.width;
+  var imgH = img.offsetHeight || 52;
+  glint.style.left = Math.round(imgW * 0.47) + 'px';
+  glint.style.top  = Math.round(imgH * 0.42) + 'px';
+  brand.appendChild(glint);
 }
 
 // ── Page Data Cache — stale-while-revalidate (instant load, silent refresh) ──
