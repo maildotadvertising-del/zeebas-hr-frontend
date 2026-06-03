@@ -2511,6 +2511,31 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       </div>
     </div>
 
+    <!-- ── DASHBOARD ACCESS CONTROL ── -->
+    <div class="g sec" style="margin-top:20px;">
+      <div class="sh" style="margin-bottom:16px;">
+        <span class="st">Dashboard Access Control</span>
+        <button class="btn" style="font-size:12px;padding:7px 16px;" onclick="saveAccessControl()">💾 Save Changes</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Each role-க்கு எந்த pages access பண்ணலாம்னு select பண்ணுங்க.</div>
+      <div style="overflow-x:auto;">
+        <table id="access-table" style="width:100%;border-collapse:collapse;min-width:480px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted);font-weight:500;border-bottom:0.5px solid rgba(255,255,255,0.07);">Section</th>
+              <th style="padding:10px 16px;font-size:11px;color:#FF9F0A;font-weight:600;border-bottom:0.5px solid rgba(255,255,255,0.07);text-align:center;">👑 Primary Admin</th>
+              <th style="padding:10px 16px;font-size:11px;color:#0A84FF;font-weight:600;border-bottom:0.5px solid rgba(255,255,255,0.07);text-align:center;">🛡 Admin</th>
+              <th style="padding:10px 16px;font-size:11px;color:#BF5FFF;font-weight:600;border-bottom:0.5px solid rgba(255,255,255,0.07);text-align:center;">✏️ Editor</th>
+            </tr>
+          </thead>
+          <tbody id="access-table-body">
+            <tr><td colspan="4" style="text-align:center;padding:30px;color:var(--muted);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:rgba(245,245,247,0.3);">💡 Primary Admin (Owner) — எல்லாமே access. Lock பண்ண முடியாது.</div>
+    </div>
+
   </div>
 
   <!-- ── BIOMETRIC DEVICE SETTINGS ── -->
@@ -5312,6 +5337,78 @@ var NAV_ACCESS = {
   editor:      ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','advances','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
 };
 
+// All configurable sections with labels
+var _ALL_SECTIONS = [
+  { key:'dashboard',         label:'📊 Dashboard' },
+  { key:'attendance',        label:'🕐 Attendance' },
+  { key:'announcements',     label:'📢 Announcements' },
+  { key:'staff',             label:'👥 Team (Staff)' },
+  { key:'tasks',             label:'📌 Tasks' },
+  { key:'approvals',         label:'✅ Approvals' },
+  { key:'payroll',           label:'💰 Payroll' },
+  { key:'advances',          label:'💳 Advances' },
+  { key:'team-chat',         label:'💬 Team Chat' },
+  { key:'gps-settings',      label:'📍 GPS Settings' },
+  { key:'payroll-settings',  label:'⚙️ Payroll Settings' },
+  { key:'biometric',         label:'🔐 Biometric Device' },
+  { key:'admin-overview',    label:'🏢 Admin Overview' },
+];
+
+function renderAccessTable(){
+  var tbody = document.getElementById('access-table-body');
+  if(!tbody) return;
+  // Load saved custom access or use NAV_ACCESS defaults
+  var saved = {}; try{ saved = JSON.parse(localStorage.getItem('zhr_nav_access')||'{}'); }catch(e){}
+  var adminAccess  = saved.admin  || NAV_ACCESS.admin;
+  var editorAccess = saved.editor || NAV_ACCESS.editor;
+
+  tbody.innerHTML = _ALL_SECTIONS.map(function(s){
+    var ownerChecked  = true; // owner always has all
+    var adminChecked  = adminAccess.includes(s.key);
+    var editorChecked = editorAccess.includes(s.key);
+    var rowStyle = 'border-bottom:0.5px solid rgba(255,255,255,0.05);transition:background 0.1s;';
+    return '<tr style="'+rowStyle+'" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'\'">'
+      +'<td style="padding:10px 12px;font-size:13px;color:rgba(245,245,247,0.8);">'+s.label+'</td>'
+      +'<td style="text-align:center;padding:10px;">'
+        +'<input type="checkbox" checked disabled style="width:16px;height:16px;accent-color:#FF9F0A;opacity:0.5;cursor:not-allowed;" title="Owner always has full access">'
+      +'</td>'
+      +'<td style="text-align:center;padding:10px;">'
+        +'<input type="checkbox" id="acc-admin-'+s.key+'" '+(adminChecked?'checked':'')+' style="width:16px;height:16px;accent-color:#0A84FF;cursor:pointer;">'
+      +'</td>'
+      +'<td style="text-align:center;padding:10px;">'
+        +'<input type="checkbox" id="acc-editor-'+s.key+'" '+(editorChecked?'checked':'')+' style="width:16px;height:16px;accent-color:#BF5FFF;cursor:pointer;">'
+      +'</td>'
+    +'</tr>';
+  }).join('');
+}
+
+function saveAccessControl(){
+  var newAdmin = [], newEditor = [];
+  _ALL_SECTIONS.forEach(function(s){
+    var adminEl  = document.getElementById('acc-admin-'+s.key);
+    var editorEl = document.getElementById('acc-editor-'+s.key);
+    if(adminEl  && adminEl.checked)  newAdmin.push(s.key);
+    if(editorEl && editorEl.checked) newEditor.push(s.key);
+  });
+  // Always ensure owner has everything
+  var saved = { admin: newAdmin, editor: newEditor };
+  localStorage.setItem('zhr_nav_access', JSON.stringify(saved));
+  // Apply immediately
+  NAV_ACCESS.admin  = newAdmin;
+  NAV_ACCESS.editor = newEditor;
+  applyNavAccess(JSON.parse(localStorage.getItem('zhr_staff')||'{}'));
+  showToast('✅ Access settings saved!');
+}
+
+// Load saved access on init
+(function loadSavedAccess(){
+  try{
+    var saved = JSON.parse(localStorage.getItem('zhr_nav_access')||'{}');
+    if(saved.admin)  NAV_ACCESS.admin  = saved.admin;
+    if(saved.editor) NAV_ACCESS.editor = saved.editor;
+  }catch(e){}
+})();
+
 function applyNavAccess(staff){
   var roleKey = staff.is_owner ? 'owner' : (staff.role || 'staff');
   var allowed = NAV_ACCESS[roleKey] || [];
@@ -6447,7 +6544,7 @@ window.showPage = function(page, el){
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
   if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); switchTaskSection(_currentTaskSection||'assigned'); }
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
-  if(page==='admin-overview') setTimeout(function(){ loadAdminOverview(); loadDailyLogs(); }, 100);
+  if(page==='admin-overview') setTimeout(function(){ loadAdminOverview(); loadDailyLogs(); renderAccessTable(); }, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
   if(page==='payroll')           setTimeout(function(){ loadPayrollPage(); }, 100);
   if(page==='payroll-settings')  setTimeout(function(){ loadPayrollSettings(); psCalRender(); psLoadHolidays(); }, 100);
