@@ -38,22 +38,39 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .scr.slide-in-left{animation:slideInLeft 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
 /* ── Home page avatar + logo pulse animation every 15s ── */
 @keyframes subtlePulse{0%,87%,100%{transform:scale(1);}89%{transform:scale(1.06);}92%{transform:scale(0.97);}95%{transform:scale(1.04);}98%{transform:scale(0.99);}}
-/* Logo bounce — white glow appears only at zoom-in peak, on the red sphere */
-@keyframes logoBounceGlow{
-  0%,100%{ transform:scale(1);    filter:none; }
-  35%    { transform:scale(1.05); filter:drop-shadow(0 0 3px rgba(255,240,220,0.3)) brightness(1.05); }
-  55%    { transform:scale(1.10); filter:drop-shadow(0 0 0px rgba(255,255,255,0)) drop-shadow(0 2px 8px rgba(255,255,255,0.7)) brightness(1.18); }
-  70%    { transform:scale(1.04); filter:drop-shadow(0 0 3px rgba(255,240,220,0.25)) brightness(1.06); }
-  82%    { transform:scale(0.96); filter:none; }
-  91%    { transform:scale(1.02); filter:none; }
+/* Logo bounce — scale only, NO filter on full logo */
+@keyframes logoBounce{
+  0%,100%{ transform:scale(1); }
+  55%    { transform:scale(1.10); }
+  60%    { transform:scale(1.10); }
+  72%    { transform:scale(0.96); }
+  82%    { transform:scale(1.02); }
+  88%    { transform:scale(0.99); }
+}
+/* Red ball glow overlay — white radial glow only at bounce peak */
+@keyframes ballGlowPeak{
+  0%,48%,100%{ opacity:0; transform:scale(0.8); }
+  56%,64%    { opacity:1; transform:scale(1); }
+  74%        { opacity:0; transform:scale(0.8); }
 }
 .logo-shimmer-wrap{
   position:relative;
   display:inline-flex;
   align-items:center;
 }
+/* The glow dot sits on the red ball — positioned via JS in _initBallGlow() */
+.ball-glow-dot{
+  position:absolute;
+  width:26px; height:26px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,0.85) 0%,rgba(255,255,255,0.35) 40%,transparent 75%);
+  pointer-events:none;
+  animation:ballGlowPeak 15s ease-in-out infinite;
+  z-index:3;
+  mix-blend-mode:screen;
+}
 .home-avatar-pulse{animation:subtlePulse 15s ease-in-out infinite;}
-.home-logo-pulse{animation:logoBounceGlow 3s cubic-bezier(0.34,1.56,0.64,1) infinite;}
+.home-logo-pulse{animation:logoBounce 15s cubic-bezier(0.34,1.56,0.64,1) infinite;}
 /* ── Touch bounce feedback for cards ── */
 @keyframes cardBounce{0%{transform:scale(1);}40%{transform:scale(0.96);}70%{transform:scale(1.02);}100%{transform:scale(1);}}
 .tap-bounce{animation:cardBounce 0.3s cubic-bezier(0.36,0.07,0.19,0.97)!important;}
@@ -2141,7 +2158,7 @@ function go1(id){
     if(_preLogin.indexOf(id)>=0){ if(_sb) _sb.style.display='none'; }
     else { if(_sb) _sb.style.display=''; buildSidebarNav(id); }
   }
-  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(_checkOverdueTaskAlert, 1000); setTimeout(wifiCheckAndAct, 400); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
+  if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(_checkOverdueTaskAlert, 1000); setTimeout(wifiCheckAndAct, 400); setTimeout(_initBallGlow, 500); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
   else { stopWifiPoller(); }
   if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
   if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
@@ -6331,6 +6348,21 @@ function _sendChatNotif(title, body){
       n.onclick = function(){ window.focus(); n.close(); go1('s1-chat'); };
     }
   }catch(e){}
+}
+
+// ── Red ball glow overlay — positioned on the red sphere ──
+function _initBallGlow(){
+  var brand = document.getElementById('s1-brand');
+  if(!brand || document.getElementById('ball-glow-dot')) return;
+  var img = brand.querySelector('img');
+  if(!img || !img.offsetWidth) return;
+  var dot = document.createElement('div');
+  dot.id = 'ball-glow-dot';
+  dot.className = 'ball-glow-dot';
+  // Red ball center: ~47% from left, ~38% from top of the displayed logo
+  dot.style.left = Math.round(img.offsetWidth  * 0.47 - 13) + 'px';
+  dot.style.top  = Math.round(img.offsetHeight * 0.38 - 13) + 'px';
+  brand.appendChild(dot);
 }
 
 // ── Page Data Cache — stale-while-revalidate (instant load, silent refresh) ──
