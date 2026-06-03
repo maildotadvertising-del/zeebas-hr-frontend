@@ -58,16 +58,19 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
   display:inline-flex;
   align-items:center;
 }
-/* Center inner glow — tight bright core, fades before reaching ball edge */
+/* Center inner glow — % positioned to red ball center, no JS calc needed */
 .ball-glow-dot{
   position:absolute;
-  width:18px; height:18px;
+  left:47%;
+  top:40%;
+  transform:translate(-50%,-50%);
+  width:16px; height:16px;
   border-radius:50%;
   background:radial-gradient(circle at center,
     rgba(255,255,255,1)   0%,
-    rgba(255,255,255,0.7) 18%,
-    rgba(255,255,255,0.3) 40%,
-    transparent           65%
+    rgba(255,255,255,0.75) 20%,
+    rgba(255,255,255,0.25) 50%,
+    transparent           70%
   );
   pointer-events:none;
   animation:ballGlowPeak 15s ease-in-out infinite;
@@ -6355,18 +6358,13 @@ function _sendChatNotif(title, body){
   }catch(e){}
 }
 
-// ── Red ball glow overlay — positioned on the red sphere ──
+// ── Red ball glow overlay — CSS % positions it on the red sphere ──
 function _initBallGlow(){
   var brand = document.getElementById('s1-brand');
   if(!brand || document.getElementById('ball-glow-dot')) return;
-  var img = brand.querySelector('img');
-  if(!img || !img.offsetWidth) return;
   var dot = document.createElement('div');
   dot.id = 'ball-glow-dot';
   dot.className = 'ball-glow-dot';
-  // Red ball center: ~47% from left, ~38% from top — offset by half glow size (9px)
-  dot.style.left = Math.round(img.offsetWidth  * 0.47 - 9) + 'px';
-  dot.style.top  = Math.round(img.offsetHeight * 0.38 - 9) + 'px';
   brand.appendChild(dot);
 }
 
