@@ -38,39 +38,20 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 .scr.slide-in-left{animation:slideInLeft 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;}
 /* ── Home page avatar + logo pulse animation every 15s ── */
 @keyframes subtlePulse{0%,87%,100%{transform:scale(1);}89%{transform:scale(1.06);}92%{transform:scale(0.97);}95%{transform:scale(1.04);}98%{transform:scale(0.99);}}
-/* Professional logo shimmer — diagonal light sweep (Apple/premium brand style) */
-@keyframes logoShimmer{
-  0%    { transform:translateX(-130%) skewX(-18deg); opacity:0; }
-  3%    { opacity:1; }
-  35%   { transform:translateX(230%) skewX(-18deg); opacity:1; }
-  36%,100%{ opacity:0; transform:translateX(230%) skewX(-18deg); }
+/* White glow loop — gentle white halo pulses around the DOT logo */
+@keyframes whiteGlow{
+  0%,100%{ filter:drop-shadow(0 0 0px rgba(255,255,255,0))  brightness(1);   }
+  40%    { filter:drop-shadow(0 0 8px rgba(255,255,255,0.35)) brightness(1.08); }
+  60%    { filter:drop-shadow(0 0 14px rgba(255,255,255,0.55)) drop-shadow(0 0 4px rgba(255,255,255,0.3)) brightness(1.12); }
+  80%    { filter:drop-shadow(0 0 8px rgba(255,255,255,0.35)) brightness(1.06); }
 }
 .logo-shimmer-wrap{
   position:relative;
   display:inline-flex;
   align-items:center;
-  overflow:hidden;
-  border-radius:4px;
-}
-.logo-shimmer-wrap::after{
-  content:'';
-  position:absolute;
-  top:-20%;
-  left:0;
-  width:38%;
-  height:140%;
-  background:linear-gradient(100deg,
-    transparent 0%,
-    rgba(255,255,255,0.08) 30%,
-    rgba(255,255,255,0.28) 50%,
-    rgba(255,255,255,0.08) 70%,
-    transparent 100%
-  );
-  pointer-events:none;
-  animation:logoShimmer 4s ease-in-out infinite;
 }
 .home-avatar-pulse{animation:subtlePulse 15s ease-in-out infinite;}
-.home-logo-pulse{ /* kept for targeting */ }
+.home-logo-pulse{animation:whiteGlow 3s ease-in-out infinite;}
 /* ── Touch bounce feedback for cards ── */
 @keyframes cardBounce{0%{transform:scale(1);}40%{transform:scale(0.96);}70%{transform:scale(1.02);}100%{transform:scale(1);}}
 .tap-bounce{animation:cardBounce 0.3s cubic-bezier(0.36,0.07,0.19,0.97)!important;}
