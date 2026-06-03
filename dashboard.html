@@ -5686,7 +5686,15 @@ async function loadDashStats(){
     // ── Payroll this month (already fetched in parallel above) ──
     try{
       var prRows = pd.data || pd || [];
-      var totalNet = prRows.reduce(function(s,r){ return s + parseFloat(r.net_salary||r.net_pay||0); }, 0);
+      var isCurrMo = (month === now.getMonth()+1 && year === now.getFullYear());
+      // Current month → use earned_so_far (days actually worked × daily rate)
+      // Past months → use net_salary (final processed amount)
+      var totalNet = prRows.reduce(function(s,r){
+        var val = isCurrMo
+          ? parseFloat(r.earned_so_far || r.net_salary || 0)
+          : parseFloat(r.net_salary || r.net_pay || 0);
+        return s + val;
+      }, 0);
       var payEl = document.getElementById('dash-payroll');
       if(payEl){
         if(totalNet > 0){
@@ -5697,7 +5705,8 @@ async function loadDashStats(){
           payEl.style.fontSize = '17px';
         }
       }
-      set('dash-payroll-sub', 'Net · '+(now.toLocaleString('en-IN',{month:'short',year:'numeric'})));
+      var paySubLbl = isCurrMo ? 'Earned so far · ' : 'Net · ';
+      set('dash-payroll-sub', paySubLbl+(now.toLocaleString('en-IN',{month:'short',year:'numeric'})));
       _dSet('pay_'+month+'_'+year, pd); // ensure cached
     }catch(e3){ console.log('dash payroll stat error',e3); }
 
