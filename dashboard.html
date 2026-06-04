@@ -9452,15 +9452,15 @@ function prViewRow(r,i){
         ? '<button onclick="prStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
         : '<span style="color:rgba(255,255,255,0.2);font-size:10px;">Process first</span>')
       // Advance button — shows balance if active advance exists
+      // Advance + Additional Pay — combined in one row
       +(function(){
         var adv = (window._advancesMap||{})[r.id];
-        if(adv){
-          return '<button onclick="openAdvanceDetail('+adv.id+')" title="Active advance: ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+' · click to manage" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;white-space:nowrap;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>';
-        }
-        return '<button onclick="openAddAdvanceForStaff('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
+        var advBtn = adv
+          ? '<button onclick="openAdvanceDetail('+adv.id+')" title="Active advance · click to manage" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px 0 0 7px;padding:4px 8px;font-size:10px;cursor:pointer;white-space:nowrap;border-right:none;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>'
+          : '<button onclick="openAddAdvanceForStaff('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px 0 0 7px;padding:4px 8px;font-size:10px;cursor:pointer;border-right:none;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
+        var addBtn = '<button onclick="openAdditionalSalary('+r.id+',\''+escHtml(r.name||'')+'\')" title="Additional salary on specific date" style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.25);color:#30D158;border-radius:0 7px 7px 0;padding:4px 7px;font-size:10px;cursor:pointer;font-weight:600;" onmouseenter="this.style.background=\'rgba(48,209,88,0.18)\'" onmouseleave="this.style.background=\'rgba(48,209,88,0.08)\'">+</button>';
+        return advBtn + addBtn;
       })()
-      // Additional Salary button — extra payment on specific date
-      +'<button onclick="openAdditionalSalary('+r.id+',\''+escHtml(r.name||'')+'\')" title="Give additional salary on specific date" style="background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.2);color:rgba(48,209,88,0.7);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(48,209,88,0.5)\';this.style.color=\'#30D158\'" onmouseleave="this.style.borderColor=\'rgba(48,209,88,0.2)\';this.style.color=\'rgba(48,209,88,0.7)\'">➕ Add Pay</button>'
       +'</div>'
     +'</td></tr>';
 }
