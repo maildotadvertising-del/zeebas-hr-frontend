@@ -9886,7 +9886,13 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
 
 // ── Additional Salary — one-time extra payment on specific date ──
 function openAdditionalSalary(staffId, staffName){
-  var today = new Date().toISOString().split('T')[0];
+  // Default to last day of the currently viewed payroll month (not today)
+  var prMonth = (_pr && _pr.month) || (new Date().getMonth()+1);
+  var prYear  = (_pr && _pr.year)  || new Date().getFullYear();
+  var lastDay = new Date(prYear, prMonth, 0).getDate(); // last day of month
+  var today   = prYear + '-' + String(prMonth).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+  var minDate = prYear + '-' + String(prMonth).padStart(2,'0') + '-01';
+  var maxDate = today;
   var ov = document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);';
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
@@ -9896,9 +9902,9 @@ function openAdditionalSalary(staffId, staffName){
     // Amount
     +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Amount (₹)</div>'
     +'<input id="addpay-amount" type="number" min="1" placeholder="e.g. 5000" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:14px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
-    // Date
-    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Payment Date</div>'
-    +'<input id="addpay-date" type="date" value="'+today+'" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
+    // Date — restricted to current payroll month
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Payment Date <span style="color:rgba(245,245,247,0.3);">('+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][prMonth-1]+' '+prYear+' only)</span></div>'
+    +'<input id="addpay-date" type="date" value="'+today+'" min="'+minDate+'" max="'+maxDate+'" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
     // Reason
     +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Reason / Note</div>'
     +'<input id="addpay-reason" type="text" autocomplete="off" placeholder="e.g. Festival bonus, Special task payment…" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:18px;">'
