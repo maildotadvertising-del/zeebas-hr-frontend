@@ -96,7 +96,7 @@ h3{color:rgba(245,245,247,0.5);font-size:11px;font-weight:400;text-transform:upp
 
 /* NAV */
 .bnav{background:rgba(4,4,8,0.8);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-shrink:0;padding-bottom:5px;position:relative;z-index:10;}
-.ntb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 2px;cursor:pointer;border:none;background:none;font-family:inherit;color:rgba(235,235,245,0.35);position:relative;}
+.ntb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 2px;cursor:pointer;border:none;background:none;font-family:inherit;color:rgba(235,235,245,0.35);position:relative;font-size:9px;min-width:0;overflow:visible;}
 .ntb.on{color:#0A84FF;}
 .ntb span{font-size:9px;font-weight:400;}
 .notif-dot{position:absolute;top:5px;right:calc(50% - 12px);width:7px;height:7px;background:#FF453A;border-radius:50%;border:1.5px solid #040408;}
@@ -1432,9 +1432,8 @@ body.desktop-mode #s1-sidebar {
               <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><div id="s2-name" style="color:#fff;font-size:15px;font-weight:500;">Admin</div><div class="admin-badge">ADMIN</div></div>
               <div id="s2-date" style="color:rgba(245,245,247,0.38);font-size:11px;">—</div>
             </div>
-            <button onclick="go2('s2-more')" style="width:32px;height:32px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;color:rgba(245,245,247,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="14" cy="9" r="1.5" fill="currentColor"/></svg>
-            </button>
+            <!-- DOT Logo -->
+            <img src="dot-logo.png" alt="DOT" style="height:36px;width:auto;opacity:0.92;flex-shrink:0;" onerror="this.style.display='none'">
           </div>
           <div style="height:0.5px;background:rgba(255,255,255,0.08);margin-bottom:10px;"></div>
           <div style="display:flex;justify-content:space-between;">
@@ -2034,8 +2033,8 @@ var staffScrs=['s1-home','s1-tasks','s1-chat','s1-salary','s1-profile'];
 
 var adminTabs=[
   {l:'Home',   p:'M5.5 13V8L9 5L12.5 8V13H10.5V10.5H7.5V13Z M4 8.5L9 4L14 8.5'},
-  {l:'Attend.', p:'M9 3A6 6 0 1 0 9 15A6 6 0 0 0 9 3Z M9 6v3.5l2.5 2.5'},
-  {l:'Approve', p:'M2.5 8.5l3.5 3.5 9-9'},
+  {l:'Attend', p:'M9 3A6 6 0 1 0 9 15A6 6 0 0 0 9 3Z M9 6v3.5l2.5 2.5'},
+  {l:'Approve',p:'M2.5 8.5l3.5 3.5 9-9'},
   {l:'Chat',   p:'M3 4.5C3 3.7 3.7 3 4.5 3H13.5C14.3 3 15 3.7 15 4.5V10C15 10.8 14.3 11.5 13.5 11.5H9.5L7 14V11.5H4.5C3.7 11.5 3 10.8 3 10V4.5Z'},
   {l:'Tasks',  p:'M3.5 5h11M3.5 9h11M3.5 13h7'},
   {l:'More',   p:'M4.5 9h0.01M9 9h0.01M13.5 9h0.01', sw:'2.8'}
