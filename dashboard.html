@@ -9850,31 +9850,37 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
   var ov = document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);';
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
-  ov.innerHTML='<div style="background:rgba(16,16,28,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-width:420px;">'
-    +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
+
+  var advRow = document.createElement('div');
+  advRow.style.cssText='background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;';
+  advRow.onmouseover = function(){ advRow.style.background='rgba(255,159,10,0.15)'; };
+  advRow.onmouseout  = function(){ advRow.style.background='rgba(255,159,10,0.08)'; };
+  advRow.onclick = function(){
+    ov.remove();
+    if(advId) openAdvanceDetail(advId);
+    else openAddAdvanceForStaff(staffId, staffName, designation||'');
+  };
+  advRow.innerHTML = '<div style="width:38px;height:38px;border-radius:11px;background:rgba(255,159,10,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💳</div>'
+    +'<div><div style="color:#FF9F0A;font-size:13px;font-weight:500;">'+(advId?'Manage Advance':'Add Salary Advance')+'</div>'
+    +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">Monthly deduction from salary</div></div>';
+
+  var addRow = document.createElement('div');
+  addRow.style.cssText='background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.22);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;';
+  addRow.onmouseover = function(){ addRow.style.background='rgba(48,209,88,0.16)'; };
+  addRow.onmouseout  = function(){ addRow.style.background='rgba(48,209,88,0.08)'; };
+  addRow.onclick = function(){ ov.remove(); openAdditionalSalary(staffId, staffName); };
+  addRow.innerHTML = '<div style="width:38px;height:38px;border-radius:11px;background:rgba(48,209,88,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">➕</div>'
+    +'<div><div style="color:#30D158;font-size:13px;font-weight:500;">Additional Salary</div>'
+    +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">One-time extra payment on specific date</div></div>';
+
+  var sheet = document.createElement('div');
+  sheet.style.cssText='background:rgba(16,16,28,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-width:420px;';
+  sheet.innerHTML = '<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
     +'<div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px;">💳 '+escHtml(staffName)+'</div>'
-    +'<div style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;">'+escHtml(designation||'')+'</div>'
-    // Option 1: Salary Advance
-    +'<div onclick="this.closest(\'div[style*=fixed]\').remove();'+(advId?'openAdvanceDetail('+advId+')':'openAddAdvanceForStaff('+staffId+',\''+escHtml(staffName)+'\',\''+escHtml(designation||'\')+'\'')+')'" '
-    +'style="background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;" '
-    +'onmouseover="this.style.background=\'rgba(255,159,10,0.15)\'" onmouseout="this.style.background=\'rgba(255,159,10,0.08)\'">'
-    +'<div style="width:38px;height:38px;border-radius:11px;background:rgba(255,159,10,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💳</div>'
-    +'<div>'
-      +'<div style="color:#FF9F0A;font-size:13px;font-weight:500;">'+(advId?'Manage Advance':'Add Salary Advance')+'</div>'
-      +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">Monthly deduction from salary</div>'
-    +'</div>'
-    +'</div>'
-    // Option 2: Additional one-time payment
-    +'<div onclick="this.closest(\'div[style*=fixed]\').remove();openAdditionalSalary('+staffId+',\''+escHtml(staffName)+'\')" '
-    +'style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.22);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;" '
-    +'onmouseover="this.style.background=\'rgba(48,209,88,0.16)\'" onmouseout="this.style.background=\'rgba(48,209,88,0.08)\'">'
-    +'<div style="width:38px;height:38px;border-radius:11px;background:rgba(48,209,88,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">➕</div>'
-    +'<div>'
-      +'<div style="color:#30D158;font-size:13px;font-weight:500;">Additional Salary</div>'
-      +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">One-time extra payment on specific date</div>'
-    +'</div>'
-    +'</div>'
-  +'</div>';
+    +'<div style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;">'+escHtml(designation||'')+'</div>';
+  sheet.appendChild(advRow);
+  sheet.appendChild(addRow);
+  ov.appendChild(sheet);
   document.body.appendChild(ov);
 }
 
