@@ -9459,6 +9459,8 @@ function prViewRow(r,i){
         }
         return '<button onclick="openAddAdvanceForStaff('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
       })()
+      // Additional Salary button — extra payment on specific date
+      +'<button onclick="openAdditionalSalary('+r.id+',\''+escHtml(r.name||'')+'\')" title="Give additional salary on specific date" style="background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.2);color:rgba(48,209,88,0.7);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(48,209,88,0.5)\';this.style.color=\'#30D158\'" onmouseleave="this.style.borderColor=\'rgba(48,209,88,0.2)\';this.style.color=\'rgba(48,209,88,0.7)\'">➕ Add Pay</button>'
       +'</div>'
     +'</td></tr>';
 }
@@ -9844,6 +9846,62 @@ function _cap(s){ s=String(s||'').trim(); return s ? s.charAt(0).toUpperCase()+s
 var _advCurrStaffId = null;
 
 // Pre-filled advance modal for a specific staff (called from payroll row 💳 button)
+// ── Additional Salary — one-time extra payment on specific date ──
+function openAdditionalSalary(staffId, staffName){
+  var today = new Date().toISOString().split('T')[0];
+  var ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:rgba(16,16,28,0.99);border:0.5px solid rgba(48,209,88,0.25);border-radius:20px;padding:24px 22px;max-width:360px;width:92%;">'
+    +'<div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:4px;">➕ Additional Salary</div>'
+    +'<div style="color:rgba(245,245,247,0.45);font-size:12px;margin-bottom:18px;">'+escHtml(staffName)+'</div>'
+    // Amount
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Amount (₹)</div>'
+    +'<input id="addpay-amount" type="number" min="1" placeholder="e.g. 5000" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:14px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
+    // Date
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Payment Date</div>'
+    +'<input id="addpay-date" type="date" value="'+today+'" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
+    // Reason
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Reason / Note</div>'
+    +'<input id="addpay-reason" type="text" autocomplete="off" placeholder="e.g. Festival bonus, Special task payment…" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:18px;">'
+    // Buttons
+    +'<div style="display:flex;gap:8px;">'
+      +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>'
+      +'<button onclick="submitAdditionalSalary('+staffId+',\''+escHtml(staffName)+'\',this)" style="flex:2;background:linear-gradient(135deg,rgba(48,209,88,0.85),rgba(20,160,60,0.9));border:none;border-radius:12px;padding:11px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">➕ Confirm Payment</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ var a=document.getElementById('addpay-amount'); if(a) a.focus(); }, 200);
+}
+
+async function submitAdditionalSalary(staffId, staffName, btn){
+  var amount  = parseFloat((document.getElementById('addpay-amount').value||'').trim());
+  var date    = (document.getElementById('addpay-date').value||'').trim();
+  var reason  = (document.getElementById('addpay-reason').value||'').trim();
+  if(!amount || amount <= 0){ showToast('❌ Valid amount enter பண்ணுங்க'); return; }
+  if(!date){ showToast('❌ Date select பண்ணுங்க'); return; }
+  if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
+  try{
+    var r = await fetch(API+'/api/payroll/additional-salary', {
+      method:'POST',
+      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ staff_id: staffId, amount, date, reason: reason||'Additional payment' })
+    });
+    var d = await r.json();
+    if(d.success){
+      var ov = btn.closest('div[style*="fixed"]'); if(ov) ov.remove();
+      showToast('✅ ₹'+amount.toLocaleString('en-IN')+' added for '+staffName+' on '+date);
+      loadPayroll(); // refresh payroll table
+    } else {
+      showToast('❌ '+(d.message||'Failed'));
+      if(btn){ btn.textContent='➕ Confirm Payment'; btn.disabled=false; }
+    }
+  }catch(e){
+    showToast('❌ Network error');
+    if(btn){ btn.textContent='➕ Confirm Payment'; btn.disabled=false; }
+  }
+}
+
 function openAddAdvanceForStaff(staffId, name, designation){
   var sid = parseInt(staffId, 10);
   if(!(sid > 0)){ showToast('Invalid staff ID','error'); return; }
