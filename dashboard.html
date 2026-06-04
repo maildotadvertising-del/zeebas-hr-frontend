@@ -1348,7 +1348,8 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       <!-- Date filter -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="display:flex;gap:6px;">
-          <button class="task-tab active" id="eod-filter-today" onclick="setEodFilter('today',this)">Today</button>
+          <button class="task-tab active" id="eod-filter-all" onclick="setEodFilter('all',this)">All</button>
+          <button class="task-tab" id="eod-filter-today" onclick="setEodFilter('today',this)">Today</button>
           <button class="task-tab" id="eod-filter-yesterday" onclick="setEodFilter('yesterday',this)">Yesterday</button>
           <button class="task-tab" id="eod-filter-week" onclick="setEodFilter('week',this)">This Week</button>
         </div>
@@ -6653,18 +6654,18 @@ async function _populateEodStaffFilter(){
   }catch(e){}
 }
 
-var _eodDateFilter = 'today';
+var _eodDateFilter = 'all'; // default: show all recent reports
 function setEodFilter(type, target){
-  if(type==='today'||type==='yesterday'||type==='week'){
+  if(type==='all'||type==='today'||type==='yesterday'||type==='week'){
     _eodDateFilter = type;
     document.getElementById('eod-date-picker').value = '';
-    ['today','yesterday','week'].forEach(function(k){
+    ['all','today','yesterday','week'].forEach(function(k){
       var btn = document.getElementById('eod-filter-'+k);
       if(btn){ var active=(k===type); btn.style.background=active?'rgba(10,132,255,0.18)':'rgba(255,255,255,0.05)'; btn.style.borderColor=active?'rgba(10,132,255,0.35)':'rgba(255,255,255,0.1)'; btn.style.color=active?'#0A84FF':'var(--muted)'; }
     });
   } else if(type==='date'){
-    _eodDateFilter = target.value || 'today';
-    ['today','yesterday','week'].forEach(function(k){
+    _eodDateFilter = target.value || 'all';
+    ['all','today','yesterday','week'].forEach(function(k){
       var btn = document.getElementById('eod-filter-'+k);
       if(btn){ btn.style.background='rgba(255,255,255,0.05)'; btn.style.borderColor='rgba(255,255,255,0.1)'; btn.style.color='var(--muted)'; }
     });
@@ -6678,19 +6679,21 @@ async function loadEodReports(){
   grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;opacity:0.3;">📋</div><div>Loading…</div></div>';
   try{
     var today = new Date();
-    var dateParam;
+    var dateParam = null;
     if(_eodDateFilter==='today'){
       dateParam = today.toISOString().split('T')[0];
     } else if(_eodDateFilter==='yesterday'){
       var y=new Date(today); y.setDate(y.getDate()-1); dateParam=y.toISOString().split('T')[0];
     } else if(_eodDateFilter==='week'){
       var mon=new Date(today); mon.setDate(today.getDate()-((today.getDay()+6)%7)); dateParam='week:'+mon.toISOString().split('T')[0];
-    } else {
-      dateParam = _eodDateFilter; // specific date
+    } else if(_eodDateFilter!=='all'){
+      dateParam = _eodDateFilter; // specific date from picker
     }
+    // 'all' = no date filter → backend returns last 200 reports
     var staffId = (document.getElementById('eod-filter-staff')||{}).value||'';
     var status  = (document.getElementById('eod-filter-status')||{}).value||'';
-    var params  = '?date='+dateParam+(staffId?'&staff_id='+staffId:'')+(status?'&status='+status:'');
+    var params  = '?'+(dateParam?'date='+dateParam+'&':'')+(staffId?'staff_id='+staffId+'&':'')+(status?'status='+status:'');
+    params = params.replace(/\?&/,'?').replace(/&$/,'');
     var r = await fetch(API+'/api/eod/admin'+params,{headers:zHdr()});
     var d = await r.json();
     var reports = d.data||[];
