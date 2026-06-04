@@ -8228,40 +8228,49 @@ function approvalCard(r, type){
       +'<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:14px;font-weight:600;">'+init+'</span>'
     : init;
   var timeStr = r.check_in ? new Date(r.check_in).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
-  var dateStr = r.date ? r.date.substring(0,10) : '—';
+  // Short date: "04 Jun" instead of "2026-06-04"
+  var dateStr = r.date ? new Date(r.date.substring(0,10)+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—';
+  var lateM = r.late_minutes && r.status!=='present' ? (_calcActualLateMinutes(r.check_in,r.employment_type)||r.late_minutes) : 0;
 
   if(type==='late'){
-    return '<div id="appr-card-late-'+r.id+'" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.15);border-radius:12px;margin-bottom:8px;">'
-      +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,rgba(255,159,10,0.3),rgba(255,159,10,0.1));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FF9F0A;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
+    return '<div id="appr-card-late-'+r.id+'" style="padding:12px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.15);border-radius:12px;margin-bottom:8px;">'
+      // Row 1: avatar + name + late badge
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,rgba(255,159,10,0.3),rgba(255,159,10,0.1));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#FF9F0A;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
       +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:13px;font-weight:500;">'+(r.staff_name||'—')+'</div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+(r.designation||'')+(r.brand_name?' · '+r.brand_name:'')+'</div>'
-      +'<div style="margin-top:5px;display:flex;align-items:center;gap:8px;">'
-      +'<span style="font-size:11px;background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:6px;padding:2px 8px;">⏰ '+dateStr+'</span>'
-      +'<span style="font-size:11px;color:var(--muted);">Checked in: '+timeStr+'</span>'
-+(r.late_minutes && r.status!=='present'?'<span style="font-size:11px;background:rgba(255,69,58,0.1);color:#FF453A;border-radius:6px;padding:2px 8px;">'+(_calcActualLateMinutes(r.check_in,r.employment_type)||r.late_minutes)+' min late</span>':'')
+      +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.staff_name||'—')+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+(r.brand_name?' · '+r.brand_name:'')+'</div>'
       +'</div>'
+      +(lateM?'<span style="background:rgba(255,69,58,0.12);color:#FF453A;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:500;flex-shrink:0;">'+lateM+'m late</span>':'')
       +'</div>'
-      +'<div style="display:flex;gap:6px;flex-shrink:0;">'
-      +'<button onclick="approveLate('+r.id+',\'approve\')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:9px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✓ Accept</button>'
-      +'<button onclick="approveLate('+r.id+',\'reject\')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:9px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✕ Absent</button>'
+      // Row 2: date + check-in time
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">'
+      +'<span style="background:rgba(255,159,10,0.1);color:#FF9F0A;border-radius:6px;padding:2px 8px;font-size:10px;">⏰ '+dateStr+'</span>'
+      +'<span style="font-size:10px;color:var(--muted);">Check-in: '+timeStr+'</span>'
+      +'</div>'
+      // Row 3: buttons full-width
+      +'<div style="display:flex;gap:7px;">'
+      +'<button onclick="approveLate('+r.id+',\'approve\')" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:9px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✓ Accept</button>'
+      +'<button onclick="approveLate('+r.id+',\'reject\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:9px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✕ Absent</button>'
       +'</div></div>';
   }
   if(type==='onsite'){
-    return '<div id="appr-card-onsite-'+r.id+'" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(10,132,255,0.15);border-radius:12px;margin-bottom:8px;">'
-      +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,132,255,0.1));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0A84FF;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
+    return '<div id="appr-card-onsite-'+r.id+'" style="padding:12px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(10,132,255,0.15);border-radius:12px;margin-bottom:8px;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,rgba(10,132,255,0.3),rgba(10,132,255,0.1));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0A84FF;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
       +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:13px;font-weight:500;">'+(r.staff_name||'—')+'</div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+(r.designation||'')+(r.brand_name?' · '+r.brand_name:'')+'</div>'
-      +'<div style="margin-top:5px;display:flex;align-items:center;gap:8px;">'
-      +'<span style="font-size:11px;background:rgba(10,132,255,0.12);color:#0A84FF;border-radius:6px;padding:2px 8px;">🏗️ '+dateStr+'</span>'
-      +'<span style="font-size:11px;color:var(--muted);">'+timeStr+'</span>'
-      +(r.site_name?'<span style="font-size:11px;color:var(--muted);">📍 '+r.site_name+'</span>':'')
+      +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.staff_name||'—')+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+(r.brand_name?' · '+r.brand_name:'')+'</div>'
       +'</div>'
       +'</div>'
-      +'<div style="display:flex;gap:6px;flex-shrink:0;">'
-      +'<button onclick="approveOnsite('+r.id+',\'approve\')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:9px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✓ Approve</button>'
-      +'<button onclick="approveOnsite('+r.id+',\'reject\')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:9px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✕ Reject</button>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">'
+      +'<span style="background:rgba(10,132,255,0.1);color:#0A84FF;border-radius:6px;padding:2px 8px;font-size:10px;">🏗️ '+dateStr+'</span>'
+      +'<span style="font-size:10px;color:var(--muted);">'+timeStr+'</span>'
+      +(r.site_name?'<span style="font-size:10px;color:var(--muted);">📍 '+escHtml(r.site_name)+'</span>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:7px;">'
+      +'<button onclick="approveOnsite('+r.id+',\'approve\')" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:9px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✓ Approve</button>'
+      +'<button onclick="approveOnsite('+r.id+',\'reject\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:9px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;">✕ Reject</button>'
       +'</div></div>';
   }
   return '';
@@ -11143,23 +11152,16 @@ async function submitManualAtt(){
       </div>
     </div>
 
-    <!-- Content -->
+    <!-- Content — Tasks & Team Chat removed (already in bottom nav) -->
     <div style="font-size:9px;color:rgba(245,245,247,0.28);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;padding-left:4px;">Content</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px;">
-      <div onclick="moreGo('announcements')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-        <div style="color:#fff;font-size:11px;margin-top:5px;">Announcements</div>
-      </div>
-      <div onclick="moreGo('tasks')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div style="color:#fff;font-size:11px;margin-top:5px;">Tasks</div>
-      </div>
-      <div onclick="moreGo('team-chat')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;position:relative;">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h9C13.3 2 14 2.7 14 3.5V10c0 .8-.7 1.5-1.5 1.5H9L6.5 14V11.5H3.5C2.7 11.5 2 10.8 2 10V3.5Z" stroke="currentColor" stroke-width="1.3"/></svg>
-        <div id="more-chat-dot" style="display:none;width:7px;height:7px;background:#FF453A;border-radius:50%;position:absolute;top:8px;right:calc(50% - 16px);box-shadow:0 0 5px rgba(255,69,58,0.7);"></div>
-        <div style="color:#fff;font-size:11px;margin-top:5px;">Team Chat</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:14px;">
+      <div onclick="moreGo('announcements')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:rgba(245,245,247,0.6);flex-shrink:0;"><path d="M2 5.5C2 4.7 2.7 4 3.5 4H8L12 2v12L8 12H3.5C2.7 12 2 11.3 2 10.5v-5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <div style="color:#fff;font-size:12px;">Announcements</div>
       </div>
     </div>
+    <!-- hidden dot for chat notification tracking -->
+    <div id="more-chat-dot" style="display:none;"></div>
 
     <!-- Settings -->
     <div style="font-size:9px;color:rgba(245,245,247,0.28);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;padding-left:4px;">Settings</div>
