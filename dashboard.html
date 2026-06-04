@@ -9452,14 +9452,13 @@ function prViewRow(r,i){
         ? '<button onclick="prStartEdit('+i+')" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:7px;padding:4px 11px;font-size:10px;cursor:pointer;">✏️ Edit</button>'
         : '<span style="color:rgba(255,255,255,0.2);font-size:10px;">Process first</span>')
       // Advance button — shows balance if active advance exists
-      // Advance + Additional Pay — combined in one row
+      // Advance icon — opens sheet with Advance + Additional Pay options
       +(function(){
         var adv = (window._advancesMap||{})[r.id];
-        var advBtn = adv
-          ? '<button onclick="openAdvanceDetail('+adv.id+')" title="Active advance · click to manage" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px 0 0 7px;padding:4px 8px;font-size:10px;cursor:pointer;white-space:nowrap;border-right:none;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>'
-          : '<button onclick="openAddAdvanceForStaff('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')" title="Add salary advance" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px 0 0 7px;padding:4px 8px;font-size:10px;cursor:pointer;border-right:none;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
-        var addBtn = '<button onclick="openAdditionalSalary('+r.id+',\''+escHtml(r.name||'')+'\')" title="Additional salary on specific date" style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.25);color:#30D158;border-radius:0 7px 7px 0;padding:4px 7px;font-size:10px;cursor:pointer;font-weight:600;" onmouseenter="this.style.background=\'rgba(48,209,88,0.18)\'" onmouseleave="this.style.background=\'rgba(48,209,88,0.08)\'">+</button>';
-        return advBtn + addBtn;
+        if(adv){
+          return '<button onclick="openAdvanceOrAddPay('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\','+adv.id+')" title="Advance & Additional Salary" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;white-space:nowrap;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>';
+        }
+        return '<button onclick="openAdvanceOrAddPay('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\',null)" title="Advance & Additional Salary" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
       })()
       +'</div>'
     +'</td></tr>';
@@ -9846,6 +9845,39 @@ function _cap(s){ s=String(s||'').trim(); return s ? s.charAt(0).toUpperCase()+s
 var _advCurrStaffId = null;
 
 // Pre-filled advance modal for a specific staff (called from payroll row 💳 button)
+// ── Advance OR Additional Pay sheet — single entry point from 💳 icon ──
+function openAdvanceOrAddPay(staffId, staffName, designation, advId){
+  var ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:rgba(16,16,28,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-width:420px;">'
+    +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
+    +'<div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px;">💳 '+escHtml(staffName)+'</div>'
+    +'<div style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;">'+escHtml(designation||'')+'</div>'
+    // Option 1: Salary Advance
+    +'<div onclick="this.closest(\'div[style*=fixed]\').remove();'+(advId?'openAdvanceDetail('+advId+')':'openAddAdvanceForStaff('+staffId+',\''+escHtml(staffName)+'\',\''+escHtml(designation||'\')+'\'')+')'" '
+    +'style="background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.25);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;" '
+    +'onmouseover="this.style.background=\'rgba(255,159,10,0.15)\'" onmouseout="this.style.background=\'rgba(255,159,10,0.08)\'">'
+    +'<div style="width:38px;height:38px;border-radius:11px;background:rgba(255,159,10,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💳</div>'
+    +'<div>'
+      +'<div style="color:#FF9F0A;font-size:13px;font-weight:500;">'+(advId?'Manage Advance':'Add Salary Advance')+'</div>'
+      +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">Monthly deduction from salary</div>'
+    +'</div>'
+    +'</div>'
+    // Option 2: Additional one-time payment
+    +'<div onclick="this.closest(\'div[style*=fixed]\').remove();openAdditionalSalary('+staffId+',\''+escHtml(staffName)+'\')" '
+    +'style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.22);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;" '
+    +'onmouseover="this.style.background=\'rgba(48,209,88,0.16)\'" onmouseout="this.style.background=\'rgba(48,209,88,0.08)\'">'
+    +'<div style="width:38px;height:38px;border-radius:11px;background:rgba(48,209,88,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">➕</div>'
+    +'<div>'
+      +'<div style="color:#30D158;font-size:13px;font-weight:500;">Additional Salary</div>'
+      +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">One-time extra payment on specific date</div>'
+    +'</div>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+}
+
 // ── Additional Salary — one-time extra payment on specific date ──
 function openAdditionalSalary(staffId, staffName){
   var today = new Date().toISOString().split('T')[0];
