@@ -759,11 +759,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
         <div class="sh"><span class="st">Today's Attendance</span><span style="color:#0A84FF;font-size:12px;cursor:pointer;" onclick="showPage('attendance',null)">See all →</span></div>
         <table class="tbl" style="table-layout:fixed;width:100%;"><thead><tr>
           <th style="width:45%;padding-left:4px;">Team</th>
-          <th style="width:22%;">Check-in</th>
-          <th style="width:16%;">Type</th>
+          <th style="width:38%;">Check-in · Type</th>
           <th style="width:17%;">Status</th>
         </tr></thead><tbody id="att-table-body">
-          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px 0;">Loading attendance…</td></tr>
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px 0;">Loading attendance…</td></tr>
         </tbody></table>
       </div>
 
@@ -5754,9 +5753,8 @@ async function loadDashStats(){
             +(r.designation?'<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.designation+'</div>':'');
           return '<tr>'
             +'<td style="min-width:130px;max-width:160px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex-shrink:0;">'+avatar+'</div><div style="overflow:hidden;">'+nameHtml+'</div></div></td>'
-            +'<td style="white-space:nowrap;" class="mono">'+ci+'</td>'
-            +'<td style="color:var(--muted);white-space:nowrap;">'+type+'</td>'
-            +'<td style="white-space:nowrap;"><span style="background:'+stCol+'22;color:'+stCol+';border:0.5px solid '+stCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;">'+stLabel+'</span></td></tr>';
+            +'<td style="white-space:nowrap;" class="mono">'+ci+(ci!=='—'?' <span style="color:var(--muted);font-size:10px;">· '+type+'</span>':'')+'</td>'
+            +'<td><span style="background:'+stCol+'22;color:'+stCol+';border:0.5px solid '+stCol+'44;border-radius:6px;padding:2px 8px;font-size:10px;white-space:nowrap;">'+stLabel+'</span></td></tr>';
         }).join('');
       }
     }
