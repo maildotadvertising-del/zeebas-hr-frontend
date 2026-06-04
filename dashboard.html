@@ -6692,8 +6692,11 @@ async function loadEodReports(){
     // 'all' = no date filter → backend returns last 200 reports
     var staffId = (document.getElementById('eod-filter-staff')||{}).value||'';
     var status  = (document.getElementById('eod-filter-status')||{}).value||'';
-    var params  = '?'+(dateParam?'date='+dateParam+'&':'')+(staffId?'staff_id='+staffId+'&':'')+(status?'status='+status:'');
-    params = params.replace(/\?&/,'?').replace(/&$/,'');
+    var paramParts = [];
+    if(dateParam) paramParts.push('date='+dateParam);
+    if(staffId) paramParts.push('staff_id='+staffId);
+    if(status) paramParts.push('status='+status);
+    var params = paramParts.length ? '?'+paramParts.join('&') : '';
     var r = await fetch(API+'/api/eod/admin'+params,{headers:zHdr()});
     var d = await r.json();
     var reports = d.data||[];

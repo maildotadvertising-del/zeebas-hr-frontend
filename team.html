@@ -3250,6 +3250,9 @@ function connectStaffSocket(){
   staffSocket.on('disconnect', function(){
     var sub = document.getElementById('chat1-sub');
     if(sub) sub.textContent = 'Reconnecting…';
+    // Reset guard so connectStaffSocket() can create a fresh socket on reconnect
+    staffSocket = null;
+    setTimeout(connectStaffSocket, 3000); // attempt reconnect after 3s
   });
   // Task updated by admin — reload tasks so due date / status shows immediately
   staffSocket.on('task-updated', function(data){
@@ -6298,7 +6301,7 @@ async function eodSubmit(){
           // ── Standalone EOD from Tasks page — no checkout, just report ──
           _eodStandalone = false;
           showToast1('✅ Daily report submitted!');
-          renderTasksEodCard(); // refresh card to show "submitted" state
+          renderTasksEodCard(); // async but fire-and-forget (intentional)
         } else {
           // ── Pending EOD submitted → show brief success then refresh home (check-in now available) ──
           showToast('✅ EOD submitted! Check-in unlocked.');
@@ -7980,7 +7983,7 @@ async function loadStaffTasks(){
     if(cntEl) cntEl.textContent=open;
     updateTaskRemaining(open);
     s1TaskTab(_s1TaskTab);
-    renderTasksEodCard();
+    renderTasksEodCard(); // fire-and-forget
   }catch(e){
     if(!_s1TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
   }
