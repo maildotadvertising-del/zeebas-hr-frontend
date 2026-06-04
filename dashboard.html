@@ -9891,13 +9891,13 @@ async function submitAdditionalSalary(staffId, staffName, btn){
     if(d.success){
       var ov = btn.closest('div[style*="fixed"]'); if(ov) ov.remove();
       showToast('✅ ₹'+amount.toLocaleString('en-IN')+' added for '+staffName+' on '+date);
-      loadPayroll(); // refresh payroll table
+      if(typeof loadPayrollPage === 'function') loadPayrollPage(); // refresh payroll table
     } else {
       showToast('❌ '+(d.message||'Failed'));
       if(btn){ btn.textContent='➕ Confirm Payment'; btn.disabled=false; }
     }
   }catch(e){
-    showToast('❌ Network error');
+    showToast('❌ '+(e.message||'Network error — retry பண்ணுங்க'));
     if(btn){ btn.textContent='➕ Confirm Payment'; btn.disabled=false; }
   }
 }
