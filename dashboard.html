@@ -9873,15 +9873,45 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
     +'<div><div style="color:#30D158;font-size:13px;font-weight:500;">Additional Salary</div>'
     +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">One-time extra payment on specific date</div></div>';
 
+  var histDiv = document.createElement('div');
+  histDiv.id = 'addpay-history-'+staffId;
+  histDiv.innerHTML = '<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:8px 0;">Loading history…</div>';
+
   var sheet = document.createElement('div');
-  sheet.style.cssText='background:rgba(16,16,28,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-width:420px;';
+  sheet.style.cssText='background:rgba(16,16,28,0.99);border:0.5px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;';
   sheet.innerHTML = '<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
     +'<div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px;">💳 '+escHtml(staffName)+'</div>'
     +'<div style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;">'+escHtml(designation||'')+'</div>';
   sheet.appendChild(advRow);
   sheet.appendChild(addRow);
+
+  // Additional salary history section
+  var histSection = document.createElement('div');
+  histSection.style.cssText = 'margin-top:14px;';
+  histSection.innerHTML = '<div style="color:rgba(245,245,247,0.35);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Additional Salary History</div>';
+  histSection.appendChild(histDiv);
+  sheet.appendChild(histSection);
+
   ov.appendChild(sheet);
   document.body.appendChild(ov);
+
+  // Load history
+  fetch(API+'/api/payroll/additional-salary/'+staffId, {headers:zHdr()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var entries = d.data||[];
+      if(!entries.length){ histDiv.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:6px 0;">No additional payments yet</div>'; return; }
+      histDiv.innerHTML = entries.map(function(e){
+        var dt = e.payment_date ? e.payment_date.toString().slice(0,10) : '—';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border-radius:9px;margin-bottom:5px;">'
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="color:#30D158;font-size:12px;font-weight:500;">+₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.4);font-size:10px;">'+dt+' · '+escHtml(e.reason||'—')+'</div>'
+          +'</div>'
+          +'<button onclick="deleteAdditionalPay('+e.id+',this,'+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;flex-shrink:0;">🗑 Delete</button>'
+        +'</div>';
+      }).join('');
+    }).catch(function(){ histDiv.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:6px 0;">—</div>'; });
 }
 
 // ── Additional Salary — one-time extra payment on specific date ──
@@ -9943,6 +9973,27 @@ async function submitAdditionalSalary(staffId, staffName, btn){
   }catch(e){
     showToast('❌ '+(e.message||'Network error — retry பண்ணுங்க'));
     if(btn){ btn.textContent='➕ Confirm Payment'; btn.disabled=false; }
+  }
+}
+
+async function deleteAdditionalPay(entryId, btn, staffId){
+  if(!confirm('இந்த additional salary entry delete பண்ணட்டுமா?')) return;
+  if(btn){ btn.textContent='…'; btn.disabled=true; }
+  try{
+    var r = await fetch(API+'/api/payroll/additional-salary/entry/'+entryId, {method:'DELETE', headers:zHdr()});
+    var d = await r.json();
+    if(d.success){
+      var row = btn.closest('div[style*="display:flex"]');
+      if(row) row.remove();
+      showToast('🗑 Entry deleted');
+      loadPayrollPage(); // refresh net pay
+    } else {
+      showToast('❌ '+(d.message||'Failed'));
+      if(btn){ btn.textContent='🗑 Delete'; btn.disabled=false; }
+    }
+  }catch(e){
+    showToast('❌ Network error');
+    if(btn){ btn.textContent='🗑 Delete'; btn.disabled=false; }
   }
 }
 
