@@ -9418,7 +9418,8 @@ function prViewRow(r,i){
     +'<td style="'+td+'text-align:center;">'
       +(otherDed>0?'<div style="color:#FF453A;font-size:11px;" title="Other deduction">-₹'+otherDed.toLocaleString('en-IN')+'</div>':'')
       +(advDed>0?'<div style="color:#FF6B6B;font-size:11px;" title="Salary advance recovery">💳 -₹'+advDed.toLocaleString('en-IN')+'</div>':'')
-      +(otherDed===0&&advDed===0?'<span style="color:var(--muted);">—</span>':'')
+      +(parseFloat(r.monthly_advance_taken||0)>0?'<div style="color:#FF453A;font-size:11px;" title="Advance taken this month">💸 -₹'+parseFloat(r.monthly_advance_taken||0).toLocaleString('en-IN')+'</div>':'')
+      +(otherDed===0&&advDed===0&&parseFloat(r.monthly_advance_taken||0)===0?'<span style="color:var(--muted);">—</span>':'')
     +'</td>'
     +'<td style="'+td+'text-align:center;">'
       +(timeCutDed>0
@@ -9872,6 +9873,16 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
     +'<div><div style="color:#FF9F0A;font-size:13px;font-weight:500;">'+(advId?'Manage Advance':'Add Salary Advance')+'</div>'
     +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">Monthly deduction from salary</div></div>';
 
+  // Advance Taken row (MINUS from salary)
+  var advTakenRow = document.createElement('div');
+  advTakenRow.style.cssText='background:rgba(255,69,58,0.08);border:0.5px solid rgba(255,69,58,0.22);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;';
+  advTakenRow.onmouseover = function(){ advTakenRow.style.background='rgba(255,69,58,0.16)'; };
+  advTakenRow.onmouseout  = function(){ advTakenRow.style.background='rgba(255,69,58,0.08)'; };
+  advTakenRow.onclick = function(){ ov.remove(); openAdvanceTaken(staffId, staffName); };
+  advTakenRow.innerHTML = '<div style="width:38px;height:38px;border-radius:11px;background:rgba(255,69,58,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💸</div>'
+    +'<div><div style="color:#FF453A;font-size:13px;font-weight:500;">Advance Taken</div>'
+    +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">Part-by-part advance — deducted from salary</div></div>';
+
   var addRow = document.createElement('div');
   addRow.style.cssText='background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.22);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;';
   addRow.onmouseover = function(){ addRow.style.background='rgba(48,209,88,0.16)'; };
@@ -9880,6 +9891,11 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
   addRow.innerHTML = '<div style="width:38px;height:38px;border-radius:11px;background:rgba(48,209,88,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">➕</div>'
     +'<div><div style="color:#30D158;font-size:13px;font-weight:500;">Additional Salary</div>'
     +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:2px;">One-time extra payment on specific date</div></div>';
+
+  // Advance Taken history
+  var advTakenHistDiv = document.createElement('div');
+  advTakenHistDiv.id = 'advtaken-history-'+staffId;
+  advTakenHistDiv.innerHTML = '<div style="color:rgba(245,245,247,0.3);font-size:11px;text-align:center;padding:8px 0;">Loading…</div>';
 
   var histDiv = document.createElement('div');
   histDiv.id = 'addpay-history-'+staffId;
@@ -9891,7 +9907,15 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
     +'<div style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px;">💳 '+escHtml(staffName)+'</div>'
     +'<div style="color:rgba(245,245,247,0.4);font-size:12px;margin-bottom:18px;">'+escHtml(designation||'')+'</div>';
   sheet.appendChild(advRow);
+  sheet.appendChild(advTakenRow);
   sheet.appendChild(addRow);
+
+  // Advance Taken history section
+  var advTakenHistSection = document.createElement('div');
+  advTakenHistSection.style.cssText = 'margin-top:14px;';
+  advTakenHistSection.innerHTML = '<div style="color:rgba(255,69,58,0.6);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">💸 Advance Taken This Month</div>';
+  advTakenHistSection.appendChild(advTakenHistDiv);
+  sheet.appendChild(advTakenHistSection);
 
   // Additional salary history section
   var histSection = document.createElement('div');
@@ -9903,7 +9927,31 @@ function openAdvanceOrAddPay(staffId, staffName, designation, advId){
   ov.appendChild(sheet);
   document.body.appendChild(ov);
 
-  // Load history
+  // Load advance taken history
+  fetch(API+'/api/payroll/monthly-advance/'+staffId, {headers:zHdr()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var entries = (d.data||[]).filter(function(e){
+        var dt = e.payment_date ? e.payment_date.toString().slice(0,10) : '';
+        var m = parseInt(dt.split('-')[1]||0), y = parseInt(dt.split('-')[0]||0);
+        return m===_pr.month && y===_pr.year;
+      });
+      if(!entries.length){ advTakenHistDiv.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:6px 0;">No advance taken this month</div>'; return; }
+      var total = entries.reduce(function(s,e){ return s+parseFloat(e.amount||0); }, 0);
+      advTakenHistDiv.innerHTML = '<div style="color:rgba(255,69,58,0.8);font-size:11px;margin-bottom:6px;">Total deducted: ₹'+total.toLocaleString('en-IN')+'</div>'
+        + entries.map(function(e){
+          var dt = e.payment_date ? e.payment_date.toString().slice(0,10) : '—';
+          return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,69,58,0.04);border-radius:9px;margin-bottom:5px;">'
+            +'<div style="flex:1;min-width:0;">'
+              +'<div style="color:#FF453A;font-size:12px;font-weight:500;">-₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
+              +'<div style="color:rgba(245,245,247,0.4);font-size:10px;">'+dt+' · '+escHtml(e.reason||'—')+'</div>'
+            +'</div>'
+            +'<button onclick="deleteAdvanceTaken('+e.id+',this,'+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;flex-shrink:0;">🗑 Delete</button>'
+          +'</div>';
+        }).join('');
+    }).catch(function(){ advTakenHistDiv.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:6px 0;">—</div>'; });
+
+  // Load additional salary history
   fetch(API+'/api/payroll/additional-salary/'+staffId, {headers:zHdr()})
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -9954,6 +10002,70 @@ function openAdditionalSalary(staffId, staffName){
   +'</div>';
   document.body.appendChild(ov);
   setTimeout(function(){ var a=document.getElementById('addpay-amount'); if(a) a.focus(); }, 200);
+}
+
+// ── Advance Taken — deducted from salary ──
+function openAdvanceTaken(staffId, staffName){
+  var prMonth = (_pr && _pr.month) || (new Date().getMonth()+1);
+  var prYear  = (_pr && _pr.year)  || new Date().getFullYear();
+  var lastDay = new Date(prYear, prMonth, 0).getDate();
+  var today   = prYear + '-' + String(prMonth).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+  var minDate = prYear + '-' + String(prMonth).padStart(2,'0') + '-01';
+  var ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:rgba(16,16,28,0.99);border:0.5px solid rgba(255,69,58,0.25);border-radius:20px;padding:24px 22px;max-width:360px;width:92%;">'
+    +'<div style="font-size:16px;font-weight:600;color:#FF453A;margin-bottom:4px;">💸 Advance Taken</div>'
+    +'<div style="color:rgba(245,245,247,0.45);font-size:12px;margin-bottom:18px;">'+escHtml(staffName)+' · Will be deducted from salary</div>'
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Amount (₹)</div>'
+    +'<input id="advtaken-amount" type="number" min="1" placeholder="e.g. 2000" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;color:#fff;font-size:14px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Date <span style="color:rgba(245,245,247,0.3);">('+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][prMonth-1]+' '+prYear+' only)</span></div>'
+    +'<input id="advtaken-date" type="date" value="'+today+'" min="'+minDate+'" max="'+today+'" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:12px;">'
+    +'<div style="color:rgba(245,245,247,0.5);font-size:11px;margin-bottom:5px;">Reason / Note</div>'
+    +'<input id="advtaken-reason" type="text" autocomplete="off" placeholder="e.g. Advance for festival, Emergency…" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;box-sizing:border-box;font-family:inherit;outline:none;margin-bottom:18px;">'
+    +'<div style="display:flex;gap:8px;">'
+      +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>'
+      +'<button onclick="submitAdvanceTaken('+staffId+',\''+escHtml(staffName)+'\',this)" style="flex:2;background:linear-gradient(135deg,rgba(255,69,58,0.85),rgba(200,40,30,0.9));border:none;border-radius:12px;padding:11px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">💸 Confirm Advance</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ var a=document.getElementById('advtaken-amount'); if(a) a.focus(); }, 200);
+}
+
+async function submitAdvanceTaken(staffId, staffName, btn){
+  var amount = parseFloat((document.getElementById('advtaken-amount').value||'').trim());
+  var date   = (document.getElementById('advtaken-date').value||'').trim();
+  var reason = (document.getElementById('advtaken-reason').value||'').trim();
+  if(!amount || amount <= 0){ showToast('❌ Valid amount enter பண்ணுங்க'); return; }
+  if(!date){ showToast('❌ Date select பண்ணுங்க'); return; }
+  if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
+  try{
+    var r = await fetch(API+'/api/payroll/monthly-advance', {
+      method:'POST',
+      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ staff_id: staffId, amount, date, reason: reason||'Advance taken' })
+    });
+    var d = await r.json();
+    if(d.success){
+      var ov = btn.closest('div[style*="fixed"]'); if(ov) ov.remove();
+      showToast('💸 ₹'+amount.toLocaleString('en-IN')+' advance recorded for '+staffName+' — deducted from salary');
+      if(typeof loadPayrollPage === 'function') loadPayrollPage();
+    } else {
+      showToast('❌ '+(d.message||'Failed'));
+      if(btn){ btn.textContent='💸 Confirm Advance'; btn.disabled=false; }
+    }
+  } catch(e){ showToast('❌ Error'); if(btn){ btn.textContent='💸 Confirm Advance'; btn.disabled=false; } }
+}
+
+async function deleteAdvanceTaken(entryId, btn, staffId){
+  if(!confirm('This advance entry delete பண்ணலாமா?')) return;
+  if(btn){ btn.textContent='…'; btn.disabled=true; }
+  try{
+    var r = await fetch(API+'/api/payroll/monthly-advance/entry/'+entryId, {method:'DELETE', headers:zHdr()});
+    var d = await r.json();
+    if(d.success){ showToast('🗑 Deleted'); if(typeof loadPayrollPage==='function') loadPayrollPage(); }
+    else { showToast('❌ '+(d.message||'Failed')); if(btn){ btn.textContent='🗑 Delete'; btn.disabled=false; } }
+  } catch(e){ showToast('❌ Error'); if(btn){ btn.textContent='🗑 Delete'; btn.disabled=false; } }
 }
 
 async function submitAdditionalSalary(staffId, staffName, btn){
