@@ -2319,6 +2319,9 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
           <textarea id="adv-notes" class="inp" rows="2" placeholder="Any additional notes…" style="resize:none;"></textarea>
         </div>
         <button onclick="saveAdvance()" style="width:100%;background:linear-gradient(135deg,#0A84FF,#0A60CC);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">💾 Save Advance</button>
+        <div style="margin-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);padding-top:10px;">
+          <button onclick="(function(){ var sid=_advCurrStaffId||document.getElementById('adv-modal').getAttribute('data-sid'); var lb=document.getElementById('adv-staff-label'); var sname=lb?lb.textContent.split('·')[0].trim():'Staff'; document.getElementById('adv-modal').style.display='none'; openAdvanceTaken(sid, sname); })()" style="width:100%;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:12px;padding:11px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">💸 Add Advance Salary</button>
+        </div>
       </div>
     </div>
   </div>
