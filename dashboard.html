@@ -9435,9 +9435,10 @@ function prViewRow(r,i){
     +'<td style="'+td+'text-align:center;color:'+(parseFloat(r.absent_deduction)>0?'#FF453A':'var(--muted)')+';">'
       +(parseFloat(r.absent_deduction||0)>0?'-₹'+parseFloat(r.absent_deduction||0).toLocaleString('en-IN'):'—')
     +'</td>'
-    +'<td style="'+td+'text-align:center;color:'+(inc>0?'#30D158':'var(--muted)')+';">'
-      +(inc>0?'₹'+inc.toLocaleString('en-IN'):'—')
-      +(inc>0&&r.incentive_reason?'<div style="font-size:9px;color:rgba(48,209,88,0.6);margin-top:2px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escHtml(r.incentive_reason||'')+'">'+escHtml(r.incentive_reason)+'</div>':'')
+    +'<td style="'+td+'text-align:center;color:'+(inc>0||parseFloat(r.additional_pay||0)>0?'#30D158':'var(--muted)')+';">'
+      +(inc>0?'<div>₹'+inc.toLocaleString('en-IN')+(r.incentive_reason?'<div style="font-size:9px;color:rgba(48,209,88,0.6);margin-top:1px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escHtml(r.incentive_reason||'')+'">'+escHtml(r.incentive_reason)+'</div>':'')+'</div>':'')
+      +(parseFloat(r.additional_pay||0)>0?'<div style="color:#34C759;font-size:11px;margin-top:'+(inc>0?'3':'0')+'px;">+₹'+parseFloat(r.additional_pay||0).toLocaleString('en-IN')+'<div style="font-size:9px;color:rgba(52,199,89,0.55);margin-top:1px;">Additional</div></div>':'')
+      +(inc===0&&parseFloat(r.additional_pay||0)===0?'—':'')
     +'</td>'
     +'<td style="'+td+'text-align:center;">'
       +(r.allowance_enabled
