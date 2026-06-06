@@ -9464,10 +9464,12 @@ function prViewRow(r,i){
       // Advance icon — opens sheet with Advance + Additional Pay options
       +(function(){
         var adv = (window._advancesMap||{})[r.id];
-        if(adv){
-          return '<button onclick="openAdvanceOrAddPay('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\','+adv.id+')" title="Advance & Additional Salary" style="background:rgba(255,159,10,0.1);border:0.5px solid rgba(255,159,10,0.3);color:#FF9F0A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;white-space:nowrap;">💳 ₹'+parseFloat(adv.total_amount||0).toLocaleString('en-IN')+'</button>';
-        }
-        return '<button onclick="openAdvanceOrAddPay('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\',null)" title="Advance & Additional Salary" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.35);border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" onmouseenter="this.style.borderColor=\'rgba(255,159,10,0.3)\';this.style.color=\'#FF9F0A\'" onmouseleave="this.style.borderColor=\'rgba(255,255,255,0.1)\';this.style.color=\'rgba(245,245,247,0.35)\'">💳</button>';
+        var advId = adv ? adv.id : null;
+        var hasAdvance = parseFloat(r.monthly_advance_taken||0) > 0;
+        var btnStyle = hasAdvance
+          ? 'background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.4);color:#FF453A;'
+          : 'background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.3);';
+        return '<button onclick="openAdvanceOrAddPay('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\','+(advId||'null')+')" title="Advance Salary" style="'+btnStyle+'border-radius:7px;padding:4px 10px;font-size:13px;cursor:pointer;">💳</button>';
       })()
       +'</div>'
     +'</td></tr>';
