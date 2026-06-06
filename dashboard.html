@@ -9472,7 +9472,10 @@ function prViewRow(r,i){
         var btnStyle = hasAdvance
           ? 'background:rgba(255,69,58,0.15);border:0.5px solid rgba(255,69,58,0.4);color:#FF453A;'
           : 'background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(245,245,247,0.3);';
-        return '<button onclick="openAdvanceOrAddPay('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\','+(advId||'null')+')" title="Advance Salary" style="'+btnStyle+'border-radius:7px;padding:4px 10px;font-size:13px;cursor:pointer;">💳</button>';
+        var onclick = advId
+          ? 'openAdvanceDetail('+advId+')'
+          : 'openAddAdvanceForStaff('+r.id+',\''+escHtml(r.name||'')+'\',\''+escHtml(r.designation||'')+'\')';
+        return '<button onclick="'+onclick+'" title="Advance Salary" style="'+btnStyle+'border-radius:7px;padding:4px 10px;font-size:13px;cursor:pointer;">💳</button>';
       })()
       +'</div>'
     +'</td></tr>';
