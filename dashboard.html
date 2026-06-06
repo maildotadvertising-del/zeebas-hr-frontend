@@ -9309,13 +9309,20 @@ function _sendDashNotif(title, body){
 
 <!-- ── Payroll JS ── -->
 <script>
-var _pr = { month: new Date().getMonth()+1, year: new Date().getFullYear() };
+var _pr = (function(){
+  try {
+    var s = sessionStorage.getItem('_prSel');
+    if(s){ var p=JSON.parse(s); if(p.month&&p.year) return p; }
+  } catch(e){}
+  return { month: new Date().getMonth()+1, year: new Date().getFullYear() };
+})();
 var _prMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function payrollNavMonth(dir){
   _pr.month += dir;
   if(_pr.month > 12){ _pr.month=1; _pr.year++; }
   if(_pr.month < 1){ _pr.month=12; _pr.year--; }
+  try{ sessionStorage.setItem('_prSel', JSON.stringify(_pr)); }catch(e){}
   loadPayrollPage();
 }
 
