@@ -9397,10 +9397,9 @@ function prViewRow(r,i){
   var defMins      = parseInt(r.net_deficit_mins||0);
   var surMins      = parseInt(r.net_surplus_mins||0);
 
-  // Current month → always show earned-so-far (live days × daily rate)
-  // Past months → show saved net_salary from processed payroll
+  // All months → show earned_so_far (present days × daily rate calculation)
   var isLive = !!window._prIsCurrMonth;
-  var net = isLive ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
+  var net = parseFloat(r.earned_so_far||0);
 
   var statusBadge = r.payroll_status==='paid'
     ? '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
@@ -9450,9 +9449,7 @@ function prViewRow(r,i){
     +'</td>'
     +'<td style="'+td+'text-align:center;">'
       +'<div style="font-weight:600;color:'+(net>0?'#30D158':'#FF453A')+';">₹'+Math.round(net).toLocaleString('en-IN')+'</div>'
-      +(isLive
-        ?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:1px;">'+r.days_present+'d × ₹'+Math.round(parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</div>'
-        :'')
+      +'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:1px;">'+r.days_present+'d × ₹'+Math.round(parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</div>'
     +'</td>'
     +'<td style="'+td+'text-align:center;">'+statusBadge+'</td>'
     +'<td style="'+td+'text-align:center;padding-right:10px;">'
