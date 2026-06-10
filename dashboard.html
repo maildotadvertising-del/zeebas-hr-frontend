@@ -6491,9 +6491,10 @@ async function loadAttendancePage(){
       if(_lcd && (st==='late'||st==='late_pending')) st = 'present';
       if(st==='present'||st==='onsite_approved') cnt.present++;
       else if(st==='late'){ cnt.present++; cnt.late++; }
+      else if(st==='late_pending'||st==='break_return_pending'){ cnt.present++; cnt.late++; cnt.pending++; }
+      else if(st==='onsite_pending'){ cnt.present++; cnt.pending++; }
       else if(st==='absent') cnt.absent++;
       else if(st==='on_leave') cnt.leave++;
-      else if(st==='late_pending'||st==='onsite_pending') cnt.pending++;
       else cnt.absent++;
     });
     var setEl=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
