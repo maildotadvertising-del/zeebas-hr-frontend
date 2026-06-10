@@ -3959,6 +3959,7 @@ async function openEdit(staffId){
             +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">'
             +'<span style="font-size:10px;color:rgba(245,245,247,0.4);">Effective hours/day:</span>'
             +hpdHtml
+            +'<input type="hidden" id="ef-hours-cleared" value="0">'
             +'<button onclick="efClearHours()" style="margin-left:auto;font-size:10px;color:rgba(255,69,58,0.7);background:none;border:none;cursor:pointer;padding:0;">✕ Clear (use default)</button>'
             +'</div>'
             // Auto Checkout Time row
@@ -4029,6 +4030,8 @@ function efClearHours(){
   if(we) we.value='';
   if(bm) bm.value='';
   if(ac) ac.value='';
+  // Mark as explicitly cleared so backend knows to set NULL
+  var cl=document.getElementById('ef-hours-cleared'); if(cl) cl.value='1';
   efCalcHpd();
 }
 
@@ -4107,10 +4110,19 @@ async function saveEdit(){
     var wendEl   = document.getElementById('ef-wend');
     var bminEl   = document.getElementById('ef-bmin');
     var autoCoEl = document.getElementById('ef-auto-co');
-    if(wstartEl) fd.append('work_start_time',   wstartEl.value||'');
-    if(wendEl)   fd.append('work_end_time',      wendEl.value||'');
-    if(bminEl)   fd.append('break_minutes',      bminEl.value||'');
-    if(autoCoEl) fd.append('auto_checkout_time', autoCoEl.value||'');
+    // Custom hours: only send if filled OR explicitly cleared
+    var hoursCleared = (document.getElementById('ef-hours-cleared')||{}).value === '1';
+    if(hoursCleared){
+      fd.append('work_start_time',   '');
+      fd.append('work_end_time',     '');
+      fd.append('break_minutes',     '');
+      fd.append('auto_checkout_time','');
+    } else {
+      if(wstartEl && wstartEl.value.trim()) fd.append('work_start_time',   wstartEl.value.trim());
+      if(wendEl   && wendEl.value.trim())   fd.append('work_end_time',      wendEl.value.trim());
+      if(bminEl   && bminEl.value.trim())   fd.append('break_minutes',      bminEl.value.trim());
+      if(autoCoEl && autoCoEl.value.trim()) fd.append('auto_checkout_time', autoCoEl.value.trim());
+    }
     // Attach photo — send base64 (persists across server restarts)
     if(efPhotoB64) fd.append('photo_data', efPhotoB64);
     var res = await fetch(API+'/api/staff/'+_editStaffId, {
