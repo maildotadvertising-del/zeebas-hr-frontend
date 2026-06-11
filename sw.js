@@ -5,7 +5,7 @@
    Now uses Web Push for reliable background wake.
    ══════════════════════════════════════════════ */
 
-const SW_VERSION = 'zeebas-sw-v4';
+const SW_VERSION = 'zeebas-sw-v5';
 
 // ── IndexedDB helpers ─────────────────────────
 // Auth token + API URL are stored here by the
@@ -180,14 +180,23 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-// Activate — claim all clients immediately, then tell them to reload for fresh content
+// Activate — claim all clients immediately, show branded update notification
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     self.clients.claim().then(function() {
-      // Notify all open tabs to reload so they pick up the latest HTML/JS
-      return self.clients.matchAll({ type: 'window' }).then(function(list) {
-        list.forEach(function(client) {
-          client.postMessage({ type: 'SW_UPDATED' });
+      // Show our own branded notification so Chrome doesn't show its generic "D" one
+      return self.registration.showNotification('DOT Team App', {
+        body: 'App updated with latest changes ✓',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: 'sw-update',
+        silent: true
+      }).catch(function(){}).then(function() {
+        // Notify all open tabs to reload
+        return self.clients.matchAll({ type: 'window' }).then(function(list) {
+          list.forEach(function(client) {
+            client.postMessage({ type: 'SW_UPDATED' });
+          });
         });
       });
     })
