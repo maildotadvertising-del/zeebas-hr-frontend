@@ -2896,6 +2896,9 @@ function showToast1(msg){
 
 function staffLogout(){
   if(!confirm('Logout பண்ணணுமா?')) return;
+  stopWifiPoller();
+  swClearAuth();
+  if(staffSocket){ try{ staffSocket.disconnect(); }catch(e){} staffSocket=null; }
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   go1('s1-roleselect');
@@ -8472,7 +8475,9 @@ async function submitExtraTime(){
 
 /* ── LOGOUT ── */
 function zLogout(){
-  swClearAuth(); // clear token from SW IndexedDB before logout
+  stopWifiPoller();
+  swClearAuth();
+  if(staffSocket){ try{ staffSocket.disconnect(); }catch(e){} staffSocket=null; }
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   location.reload();

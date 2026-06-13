@@ -4225,10 +4225,9 @@ async function saveNewStaff(){
     fd.append('address', addr.trim());
     if(photo && photo.files[0]) fd.append('photo', photo.files[0]);
 
-    var token = localStorage.getItem('zhr_token')||'';
-    var res = await fetch('https://zeebas-hr-backend.onrender.com/api/staff',{
+    var res = await fetch(API+'/api/staff',{
       method:'POST',
-      headers:{ 'Authorization':'Bearer '+token },
+      headers: zHdr(),
       body: fd
     });
     var d = await res.json();
@@ -8231,10 +8230,10 @@ async function saveProfilePassword(){
 }
 
 function dashLogout(){
+  if(dashSocket){ try{ dashSocket.disconnect(); }catch(e){} dashSocket=null; }
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   try{ sessionStorage.removeItem('zhr_page'); }catch(e){}
-  // Clear URL hash
   try{ history.replaceState(null, '', location.pathname); }catch(e){}
   // Show login overlay directly — no reload needed
   var overlay = document.getElementById('admin-login-overlay');
