@@ -5679,7 +5679,8 @@ async function loadDashStats(){
       // Auto-downgrade late/late_pending→present if check_in is within grace (wrong DB value)
       if((st==='late'||st==='late_pending') && r.check_in && _calcLateFromCheckIn(r.check_in, r.employment_type) === 0) st='present';
       if(st==='present'||st==='onsite_approved') p++;
-      else if(st==='late'||st==='late_pending'||st==='break_return_pending') { p++; l++; }
+      else if(st==='late') { p++; l++; }
+      else if(st==='late_pending'||st==='break_return_pending') { p++; l++; lp++; }
       else if(st==='onsite_pending') { p++; op++; }
       else if(st==='absent') a++;
       else if(st==='on_leave') lv++;
@@ -5694,7 +5695,7 @@ async function loadDashStats(){
 
     // ── Tasks count (already fetched in parallel above) ──
     try{
-      var allTasks = td.data || td || [];
+      var allTasks = Array.isArray(td.data) ? td.data : Array.isArray(td) ? td : [];
       var openTasks = allTasks.filter(function(t){ return (t.status||'').toLowerCase()!=='done'; });
       var doneTasks = allTasks.filter(function(t){ return (t.status||'').toLowerCase()==='done'; });
       set('dash-tasks', openTasks.length);
@@ -6040,7 +6041,7 @@ async function deleteAnnouncement(id){
   try{
     var r = await fetch(API+'/api/announcements/'+id, { method:'DELETE', headers:zHdr() });
     var d = await r.json();
-    if(d.success){ showToast('🗑 Announcement deleted'); loadAnnouncements(); }
+    if(d.success){ showToast('🗑 Announcement deleted'); _dSet('ann', null); loadAnnouncements(); }
     else alert(d.message||'Could not delete');
   }catch(e){ alert('Network error'); }
 }
@@ -6258,6 +6259,7 @@ async function sendAnnouncement(){
       _annEditId = null;
       document.getElementById('ann-overlay').style.display='none';
       document.getElementById('ann-panel').style.display='none';
+      _dSet('ann', null);
       loadAnnouncements();
     }
   }catch(e){ showToast('Network error'); }
@@ -9524,7 +9526,7 @@ function prViewRow(r,i){
 
   return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
-      +'<div><div style="font-size:12px;font-weight:500;">'+escHtml(r.name)+'</div>'
+      +'<div><div style="font-size:12px;font-weight:500;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,255,255,0.2);text-underline-offset:2px;" onclick="openStaffPayrollDetail('+i+')">'+escHtml(r.name)+'</div>'
       +'<div style="font-size:10px;color:var(--muted);">'+(r.designation||'')+'</div>'
       +(r.notes?'<div style="font-size:9px;color:rgba(245,245,247,0.35);margin-top:2px;font-style:italic;">📝 '+escHtml(r.notes)+'</div>':'')
       +'</div></div></td>'
@@ -9645,6 +9647,258 @@ function prEditRow(r,i){
 function prStartEdit(i){
   var row = document.getElementById('pr-row-'+i);
   if(row) row.outerHTML = prEditRow(window._prRows[i], i);
+}
+
+/* ── Staff Payroll Detail Modal ── */
+function openStaffPayrollDetail(i){
+  var r = window._prRows[i];
+  if(!r) return;
+  var existing = document.getElementById('spdm-overlay');
+  if(existing) existing.remove();
+
+  var net = parseFloat(r.earned_so_far||r.net_salary||0);
+  var advDed = parseFloat(r.advance_deduction||0) + parseFloat(r.monthly_advance_taken||0);
+  var balanceSalary = net; // earned_so_far already deducts advance
+  var today = new Date().toISOString().slice(0,10);
+  var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
+  var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
+  var year = (_pr&&_pr.year)||new Date().getFullYear();
+  var photoSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
+  var init = (r.name||'?').substring(0,2).toUpperCase();
+  var avatarHtml = photoSrc
+    ? '<img src="'+photoSrc+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.1);">'
+    : '<div style="width:44px;height:44px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#0A84FF;">'+init+'</div>';
+
+  var isPaid = r.payroll_status==='paid';
+  var inp = 'background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:9px;color:#fff;padding:8px 10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;';
+
+  var ov = document.createElement('div');
+  ov.id = 'spdm-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9998;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+
+  ov.innerHTML = '<div style="background:linear-gradient(160deg,#0a0a18,#0d0d20);border:0.5px solid rgba(255,255,255,0.1);border-radius:24px 24px 0 0;width:100%;max-width:560px;max-height:92vh;display:flex;flex-direction:column;">'
+
+    // ── Header ──
+    +'<div style="padding:18px 20px 14px;border-bottom:0.5px solid rgba(255,255,255,0.07);flex-shrink:0;">'
+      +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px;"></div>'
+      +'<div style="display:flex;align-items:center;gap:12px;">'
+        +avatarHtml
+        +'<div style="flex:1;">'
+          +'<div style="font-size:16px;font-weight:600;color:#fff;">'+escHtml(r.name)+'</div>'
+          +'<div style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:1px;">'+(r.designation||'')+(r.designation?' · ':'')+monthName+' '+year+'</div>'
+        +'</div>'
+        +'<button onclick="document.getElementById(\'spdm-overlay\').remove()" style="background:rgba(255,255,255,0.08);border:none;border-radius:10px;width:32px;height:32px;color:rgba(245,245,247,0.5);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>'
+      +'</div>'
+    +'</div>'
+
+    // ── Scrollable body ──
+    +'<div style="overflow-y:auto;padding:16px 20px 28px;display:flex;flex-direction:column;gap:14px;">'
+
+      // Net Pay Summary card
+      +'<div style="background:linear-gradient(135deg,rgba(10,80,180,0.45),rgba(80,10,140,0.35));border:0.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 16px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+          +'<div style="color:rgba(245,245,247,0.4);font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Net Pay · '+monthName+' '+year+'</div>'
+          +(isPaid
+            ?'<div style="text-align:right;"><span style="background:rgba(48,209,88,0.15);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'+(paidDate?'<div style="font-size:9px;color:rgba(48,209,88,0.55);margin-top:2px;">'+paidDate+'</div>':'')+'</div>'
+            :'<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">⏳ Pending</span>')
+        +'</div>'
+        +'<div style="color:#fff;font-size:26px;font-weight:500;letter-spacing:-0.5px;margin-bottom:4px;">₹'+Math.round(net).toLocaleString('en-IN')+'</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+' · '+r.days_present+'d present · ₹'+Math.round(parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'/day</div>'
+        +(advDed>0?'<div style="margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Advance deducted</span><span style="color:#FF6B6B;font-size:11px;">-₹'+advDed.toLocaleString('en-IN')+'</span></div>':'')
+      +'</div>'
+
+      // ── Payroll Adjustments ──
+      +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(10,132,255,0.15);border-radius:14px;padding:14px;">'
+        +'<div style="font-size:11px;color:#0A84FF;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">✏️ Payroll Adjustments</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;">'
+          +'<div><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Other Deduction (₹)</div>'
+            +'<input type="number" id="spdm-od" value="'+parseFloat(r.other_deduction||0)+'" min="0" style="'+inp+'width:100%;border-color:rgba(255,69,58,0.25);"></div>'
+          +'<div><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Incentive (₹)</div>'
+            +'<input type="number" id="spdm-inc" value="'+parseFloat(r.other_incentive||0)+'" min="0" style="'+inp+'width:100%;border-color:rgba(48,209,88,0.25);"></div>'
+        +'</div>'
+        +'<div style="margin-bottom:9px;"><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Incentive Reason</div>'
+          +'<input type="text" id="spdm-inc-reason" value="'+escHtml(r.incentive_reason||'')+'" placeholder="Performance bonus reason…" style="'+inp+'width:100%;"></div>'
+        +(r.allowance_enabled
+          ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;">'
+            +'<div><div style="font-size:10px;color:rgba(191,95,255,0.7);margin-bottom:3px;">Allowance (₹)</div>'
+              +'<input type="number" id="spdm-alw" value="'+parseFloat(r.allowance_amount||0)+'" min="0" style="'+inp+'width:100%;border-color:rgba(191,95,255,0.25);"></div>'
+            +'<div><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Allowance Note</div>'
+              +'<input type="text" id="spdm-alw-note" value="'+escHtml(r.allowance_note||'')+'" placeholder="Note…" style="'+inp+'width:100%;border-color:rgba(191,95,255,0.18);"></div>'
+          +'</div>'
+          :'')
+        +'<div style="margin-bottom:12px;"><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Admin Notes</div>'
+          +'<input type="text" id="spdm-notes" value="'+escHtml(r.notes||'')+'" placeholder="Internal note (not shown to staff)" style="'+inp+'width:100%;"></div>'
+        +'<button id="spdm-save-adj" onclick="spdmSaveAdjustments('+i+')" style="width:100%;background:rgba(10,132,255,0.85);border:none;border-radius:10px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">💾 Save Adjustments</button>'
+      +'</div>'
+
+      // ── Advance Salary ──
+      +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,69,58,0.15);border-radius:14px;padding:14px;">'
+        +'<div style="font-size:11px;color:#FF453A;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💳 Advance Salary — Date Wise</div>'
+        +'<div id="spdm-adv-history-'+r.id+'"><div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Loading…</div></div>'
+        +'<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.07);">'
+          +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:6px;">➕ Add New Advance</div>'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
+            +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Amount (₹)</div>'
+              +'<input type="number" id="spdm-adv-amt" min="1" placeholder="e.g. 2000" style="'+inp+'width:100%;"></div>'
+            +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Date</div>'
+              +'<input type="date" id="spdm-adv-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;"></div>'
+          +'</div>'
+          +'<div style="margin-bottom:8px;"><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Reason</div>'
+            +'<input type="text" id="spdm-adv-reason" placeholder="Festival advance, Emergency…" style="'+inp+'width:100%;"></div>'
+          +'<button id="spdm-adv-btn" onclick="spdmSaveAdvance('+r.id+')" style="width:100%;background:rgba(255,69,58,0.8);border:none;border-radius:10px;padding:9px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">💸 Save Advance</button>'
+        +'</div>'
+      +'</div>'
+
+      // ── Payment Status ──
+      +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(48,209,88,0.15);border-radius:14px;padding:14px;">'
+        +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
+        +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
+          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(parseFloat(r.earned_so_far||0)+advDed).toLocaleString('en-IN')+'</span></div>'
+          +(advDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Deducted</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advDed).toLocaleString('en-IN')+'</span></div>':'')
+          +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>'
+          +'<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-size:13px;font-weight:600;">Balance Salary</span><span style="color:#30D158;font-size:15px;font-weight:700;">₹'+Math.round(net).toLocaleString('en-IN')+'</span></div>'
+        +'</div>'
+        +(isPaid
+          ?'<div style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;padding:10px;text-align:center;">'
+            +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Balance Salary Paid</div>'
+            +(paidDate?'<div style="color:rgba(48,209,88,0.6);font-size:11px;margin-top:3px;">Transferred on '+paidDate+'</div>':'')
+          +'</div>'
+          :'<div>'
+            +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Balance Transfer Date</div>'
+            +'<input type="date" id="spdm-paid-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;margin-bottom:8px;">'
+            +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="width:100%;background:rgba(48,209,88,0.85);border:none;border-radius:10px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✅ Mark Balance Salary as Paid</button>'
+          +'</div>')
+      +'</div>'
+
+    +'</div>'
+  +'</div>';
+
+  document.body.appendChild(ov);
+  _loadAdvanceSalaryHistory_modal(r.id);
+}
+
+async function spdmSaveAdjustments(i){
+  var r = window._prRows[i];
+  var btn = document.getElementById('spdm-save-adj');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  var alwEl = document.getElementById('spdm-alw');
+  var alwNoteEl = document.getElementById('spdm-alw-note');
+  var payload = {
+    other_deduction:  parseFloat((document.getElementById('spdm-od')||{}).value)||0,
+    other_incentive:  parseFloat((document.getElementById('spdm-inc')||{}).value)||0,
+    incentive_reason: (document.getElementById('spdm-inc-reason')||{}).value||'',
+    advance_deduction: parseFloat(r.advance_deduction||0),
+    allowance_amount: alwEl ? (parseFloat(alwEl.value)||0) : parseFloat(r.allowance_amount||0),
+    allowance_note:   alwNoteEl ? (alwNoteEl.value||'') : (r.allowance_note||''),
+    notes: (document.getElementById('spdm-notes')||{}).value||''
+  };
+  try{
+    var res = await fetch(API+'/api/payroll/'+r.payroll_id+'/adjust', {
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body: JSON.stringify(payload)
+    });
+    var d = await res.json();
+    if(d.success){
+      window._prRows[i] = Object.assign({},r,{
+        other_deduction:payload.other_deduction, other_incentive:payload.other_incentive,
+        incentive_reason:payload.incentive_reason, allowance_amount:payload.allowance_amount,
+        allowance_note:payload.allowance_note, net_salary:d.net_salary, earned_so_far:d.net_salary,
+        notes:payload.notes
+      });
+      var row = document.getElementById('pr-row-'+i);
+      if(row) row.outerHTML = prViewRow(window._prRows[i], i);
+      showToast('✅ Payroll updated');
+      document.getElementById('spdm-overlay').remove();
+      var totalNet=0; window._prRows.forEach(function(rx){ totalNet+=parseFloat(rx.earned_so_far||rx.net_salary||0); });
+      var tnEl=document.getElementById('pr-total-net'); if(tnEl) tnEl.textContent='₹'+Math.round(totalNet).toLocaleString('en-IN');
+    } else { showToast('❌ '+(d.message||'Save failed'),'error'); }
+  }catch(e){ showToast('❌ Connection error','error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='💾 Save Adjustments'; } }
+}
+
+async function spdmSaveAdvance(staffId){
+  var amount = parseFloat((document.getElementById('spdm-adv-amt')||{}).value||'');
+  var date   = (document.getElementById('spdm-adv-date')||{}).value||'';
+  var reason = (document.getElementById('spdm-adv-reason')||{}).value||'';
+  var btn = document.getElementById('spdm-adv-btn');
+  if(!amount||amount<=0){ showToast('❌ Amount enter பண்ணுங்க','error'); return; }
+  if(!date){ showToast('❌ Date select பண்ணுங்க','error'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try{
+    var r = await fetch(API+'/api/payroll/monthly-advance',{
+      method:'POST', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({staff_id:staffId, amount, date, reason:reason||'Advance taken'})
+    });
+    var d = await r.json();
+    if(d.success){
+      var amtEl=document.getElementById('spdm-adv-amt'); if(amtEl) amtEl.value='';
+      var rsnEl=document.getElementById('spdm-adv-reason'); if(rsnEl) rsnEl.value='';
+      showToast('💸 ₹'+amount.toLocaleString('en-IN')+' advance saved');
+      _loadAdvanceSalaryHistory_modal(staffId);
+      if(typeof loadPayrollPage==='function') loadPayrollPage();
+    } else showToast('❌ '+(d.message||'Failed'),'error');
+  }catch(e){ showToast('❌ Error','error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='💸 Save Advance'; } }
+}
+
+async function spdmMarkPaid(payrollId, name){
+  if(!payrollId){ showToast('Process payroll first','error'); return; }
+  var paidDate = (document.getElementById('spdm-paid-date')||{}).value || new Date().toISOString().slice(0,10);
+  try{
+    var res = await fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({paid_date:paidDate})
+    });
+    var d = await res.json();
+    if(d.success){
+      showToast('✅ '+name+' salary marked as paid');
+      var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
+      loadPayrollPage();
+    } else showToast('❌ '+(d.message||'Error'),'error');
+  }catch(e){ showToast('❌ Server error','error'); }
+}
+
+// Loads advance history inside the staff payroll detail modal
+function _loadAdvanceSalaryHistory_modal(staffId){
+  var histEl = document.getElementById('spdm-adv-history-'+staffId);
+  if(!histEl) return;
+  fetch(API+'/api/payroll/monthly-advance/'+staffId,{headers:zHdr()})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var entries=d.data||[];
+      if(!entries.length){ histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No advance salary records</div>'; return; }
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var grouped={};
+      entries.forEach(function(e){
+        var dt=(e.payment_date||'').toString().slice(0,10);
+        var key=dt.slice(0,7);
+        if(!grouped[key]) grouped[key]=[];
+        grouped[key].push(e);
+      });
+      histEl.innerHTML=Object.keys(grouped).sort().reverse().map(function(key){
+        var parts=key.split('-');
+        var mLabel=months[parseInt(parts[1]||1)-1]+' '+parts[0];
+        var grp=grouped[key];
+        var total=grp.reduce(function(s,e){return s+parseFloat(e.amount||0);},0);
+        return '<div style="margin-bottom:10px;">'
+          +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
+            +'<span style="font-size:10px;color:rgba(245,245,247,0.4);">'+mLabel+'</span>'
+            +'<span style="font-size:10px;color:#FF453A;font-weight:600;">-₹'+total.toLocaleString('en-IN')+'</span>'
+          +'</div>'
+          +grp.map(function(e){
+            var dt=(e.payment_date||'').toString().slice(0,10);
+            return '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(255,69,58,0.05);border-radius:8px;margin-bottom:4px;">'
+              +'<div style="flex:1;">'
+                +'<div style="color:#FF453A;font-size:11px;font-weight:500;">-₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
+                +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+dt+' · '+escHtml(e.reason||'—')+'</div>'
+              +'</div>'
+              +'<button onclick="deleteAdvanceSalaryEntry('+e.id+','+staffId+');_loadAdvanceSalaryHistory_modal('+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;">🗑</button>'
+            +'</div>';
+          }).join('')
+        +'</div>';
+      }).join('');
+    }).catch(function(){ if(histEl) histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">—</div>'; });
 }
 function prCancelEdit(i){
   var row = document.getElementById('pr-row-'+i);

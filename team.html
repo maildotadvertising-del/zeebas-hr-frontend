@@ -5462,7 +5462,7 @@ async function loadMySalary(){
     var statusLabel  = status==='paid' ? '✓ Paid' : status==='pending' ? '⏳ Pending' : '👁 Live Preview';
     var statusBadge  = '<span style="background:'+statusBg+';color:'+statusColor+';font-size:9px;padding:2px 8px;border-radius:8px;font-weight:500;">'+statusLabel+'</span>';
     var paidDateHtml = (status==='paid' && payroll && payroll.paid_date)
-      ? (function(){ var dt=new Date(payroll.paid_date); return '<div style="color:rgba(48,209,88,0.55);font-size:9px;text-align:right;margin-top:2px;">Received '+dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear()+'</div>'; })()
+      ? (function(){ var dt=new Date(payroll.paid_date); return '<div style="color:rgba(48,209,88,0.55);font-size:9px;text-align:right;margin-top:2px;">'+(advDeduction>0?'Balance ':'')+'Received '+dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear()+'</div>'; })()
       : '';
 
     var html = ''
@@ -5473,7 +5473,9 @@ async function loadMySalary(){
           +'<div style="text-align:right;">'+statusBadge+paidDateHtml+'</div>'
         +'</div>'
         +'<div style="color:#fff;font-size:28px;font-weight:500;letter-spacing:-0.5px;margin-bottom:3px;">₹'+fmt(netSalary)+'</div>'
-        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isCurrMonth?' · '+daysWorked+' days worked so far':'')+'</div>'
+        +(advDeduction>0?'<div style="color:rgba(245,245,247,0.35);font-size:11px;margin-bottom:1px;">Base ₹'+fmt(baseSalary)+' · Advance -₹'+fmt(advDeduction)+' deducted</div>'
+          :'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isCurrMonth?' · '+daysWorked+' days worked so far':'')+'</div>')
+        +(advDeduction>0?'<div style="color:rgba(48,209,88,0.7);font-size:11px;font-weight:500;">Balance Salary: ₹'+fmt(netSalary)+'</div>':'')
         +'<div style="height:0.5px;background:rgba(255,255,255,0.09);margin:12px 0;"></div>'
         +'<div style="display:flex;justify-content:space-between;">'
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">Present</div><div style="color:#30D158;font-size:14px;font-weight:500;">'+daysWorked+'</div></div>'
@@ -8335,6 +8337,11 @@ async function s1UpdateTask(id,status){
   if(t){ t.status=status; if(status==='done') t.progress_percent=100; }
   if(_s1TasksCache){ var ct=_s1TasksCache.find(function(x){return String(x.id)===String(id);}); if(ct){ct.status=status;if(status==='done')ct.progress_percent=100;} }
   s1TaskTab(_s1TaskTab);
+  // Keep open-count badge in sync with actual task state
+  var openNow = _s1Tasks.filter(function(x){return x.status!=='done';}).length;
+  var cntEl=document.getElementById('s1-tasks-count'); if(cntEl) cntEl.textContent=openNow;
+  var lblEl=document.getElementById('s1-tasks-open-lbl'); if(lblEl) lblEl.textContent=openNow+' open';
+  updateTaskRemaining(openNow);
   try{
     var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
     var d=await r.json();
