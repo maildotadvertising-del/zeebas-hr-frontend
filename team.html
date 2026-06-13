@@ -5375,13 +5375,16 @@ async function loadMySalary(){
     var statusBg     = status==='paid' ? 'rgba(48,209,88,0.15)' : status==='pending' ? 'rgba(255,159,10,0.15)' : 'rgba(90,171,240,0.12)';
     var statusLabel  = status==='paid' ? '✓ Paid' : status==='pending' ? '⏳ Pending' : '👁 Live Preview';
     var statusBadge  = '<span style="background:'+statusBg+';color:'+statusColor+';font-size:9px;padding:2px 8px;border-radius:8px;font-weight:500;">'+statusLabel+'</span>';
+    var paidDateHtml = (status==='paid' && payroll && payroll.paid_date)
+      ? (function(){ var dt=new Date(payroll.paid_date); return '<div style="color:rgba(48,209,88,0.55);font-size:9px;text-align:right;margin-top:2px;">Received '+dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear()+'</div>'; })()
+      : '';
 
     var html = ''
       // ── Net pay card ──
       +'<div style="background:linear-gradient(135deg,rgba(10,80,180,0.55),rgba(80,10,140,0.45));border:0.5px solid rgba(255,255,255,0.12);border-radius:18px;padding:16px;margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
           +'<div style="color:rgba(245,245,247,0.42);font-size:9px;text-transform:uppercase;letter-spacing:0.7px;">Net Pay · '+periodLabel+'</div>'
-          +statusBadge
+          +'<div style="text-align:right;">'+statusBadge+paidDateHtml+'</div>'
         +'</div>'
         +'<div style="color:#fff;font-size:28px;font-weight:500;letter-spacing:-0.5px;margin-bottom:3px;">₹'+fmt(netSalary)+'</div>'
         +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isCurrMonth?' · '+daysWorked+' days worked so far':'')+'</div>'
@@ -5431,9 +5434,28 @@ async function loadMySalary(){
           +(incentiveAmt>0
             ? bRow('Incentive 🎯', 'Performance bonus', '+₹'+fmt(incentiveAmt), '#FF9F0A')
             : bRow('Incentive 🎯', 'Not applicable', '+₹0', 'rgba(245,245,247,0.22)'))
-          // Advance recovery
-          +(advDeduction>0
-            ? bRow('Advance Recovery', 'Monthly recovery', '−₹'+fmt(advDeduction), '#FF453A')
+          // Advance recovery — show date-wise entries
+          +(advances.length>0
+            ? (function(){
+                var _months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                var totalAdv=advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); },0);
+                var rows=advances.map(function(a){
+                  var dt=(a.payment_date||'').toString().slice(0,10);
+                  var dObj=dt?new Date(dt):null;
+                  var dLabel=dObj?dObj.getDate()+' '+_months[dObj.getMonth()]:'';
+                  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">'
+                    +'<div style="color:rgba(245,245,247,0.4);font-size:10px;">'+escHtml(a.reason||'Advance')+(dLabel?' · '+dLabel:'')+'</div>'
+                    +'<div style="color:#FF6B6B;font-size:10px;font-family:monospace;">−₹'+fmt(parseFloat(a.amount||a.monthly_recovery||0))+'</div>'
+                  +'</div>';
+                }).join('');
+                return '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+                  +'<div style="flex:1;">'
+                    +'<div style="color:rgba(245,245,247,0.7);font-size:12px;">Advance Recovery 💳</div>'
+                    +'<div style="margin-top:4px;">'+rows+'</div>'
+                  +'</div>'
+                  +'<div style="color:#FF453A;font-size:13px;font-weight:600;font-family:monospace;padding-left:10px;flex-shrink:0;">−₹'+fmt(totalAdv)+'</div>'
+                +'</div>';
+              })()
             : '')
           // Total
           +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 2px;margin-top:2px;">'
