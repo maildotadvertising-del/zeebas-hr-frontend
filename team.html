@@ -664,7 +664,7 @@ body.desktop-mode #s1-sidebar {
         </div>
       </div>
       <div id="s1-tasks-list" class="scroll" style="padding:4px 13px 8px;"></div>
-      <div id="s1-eod-section" style="padding:0 13px 10px;flex-shrink:0;"></div>
+      <div id="s1-eod-section" style="display:none;"></div>
       <div id="n1-tasks" class="bnav"></div>
     </div>
 
@@ -4418,7 +4418,8 @@ async function loadAdminTasks(){
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
-    _s2AllTasks=Array.isArray(d)?d:(d.data||d.tasks||[]);
+    var allT=Array.isArray(d)?d:(d.data||d.tasks||[]);
+    _s2AllTasks=allT.filter(function(t){ return String(t.assigned_by) !== String(t.assigned_to); });
     _s2TasksCache=_s2AllTasks;
     s2TaskTab(_s2TaskTab);
   }catch(e){ if(!_s2TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
@@ -7946,7 +7947,7 @@ async function fetchMyTasks(staffId){
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
     var rows=Array.isArray(d)?d:(d.data||d.tasks||[]);
-    var mine=rows.filter(function(t){ return String(t.assigned_to)===String(staffId)&&t.status!=='done'; });
+    var mine=rows.filter(function(t){ return String(t.assigned_to)===String(staffId)&&String(t.assigned_by)!==String(staffId)&&t.status!=='done'; });
     var openCount=mine.length;
     var el=document.getElementById('s1-tasks-count');
     if(el) el.textContent=openCount;
@@ -7977,7 +7978,8 @@ async function loadStaffTasks(){
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
-    _s1Tasks=Array.isArray(d)?d:(d.data||[]);
+    var all=Array.isArray(d)?d:(d.data||[]);
+    _s1Tasks=all.filter(function(t){ return String(t.assigned_by) !== String(t.assigned_to); });
     _s1TasksCache=_s1Tasks;
     var open=_s1Tasks.filter(function(t){return t.status!=='done';}).length;
     var openEl=document.getElementById('s1-tasks-open-lbl');
@@ -7986,11 +7988,9 @@ async function loadStaffTasks(){
     if(cntEl) cntEl.textContent=open;
     updateTaskRemaining(open);
     s1TaskTab(_s1TaskTab);
-    renderTasksEodCard(); // fire-and-forget
   }catch(e){
     if(!_s1TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
   }
-  renderTasksEodCard();
 }
 
 function s1TaskTab(tab){

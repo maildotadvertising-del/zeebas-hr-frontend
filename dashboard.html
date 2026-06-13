@@ -7023,8 +7023,8 @@ async function loadTasks(){
     var q2=[]; if(_taskFilters.brand) q2.push('brand_id='+_taskFilters.brand); if(_taskFilters.category) q2.push('category='+_taskFilters.category); if(_taskFilters.priority) q2.push('priority='+_taskFilters.priority);
     var allRes  = await fetch(API+'/api/tasks'+(q2.length?'?'+q2.join('&'):''), { headers: zHdr() });
     var allData = await allRes.json();
-    var allTasks = allData.data || [];
-    _tasksCache = allTasks; // update cache
+    var allTasks = (allData.data || []).filter(function(t){ return String(t.assigned_by) !== String(t.assigned_to); });
+    _tasksCache = allTasks;
 
     _renderTasks(allTasks);
 
