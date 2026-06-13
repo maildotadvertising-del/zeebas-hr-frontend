@@ -9333,6 +9333,7 @@ var _pr = (function(){
   return { month: new Date().getMonth()+1, year: new Date().getFullYear() };
 })();
 var _prMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var _prCache = {}; // keyed by "month_year"
 
 function payrollNavMonth(dir){
   _pr.month += dir;
@@ -9347,22 +9348,45 @@ async function loadPayrollPage(){
   if(lbl) lbl.textContent = _prMonths[_pr.month-1]+' '+_pr.year;
   var tbody = document.getElementById('payroll-tbody');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
 
-  // Is this the current month? (affects Net Pay display — earned so far vs full month)
   var _now = new Date();
   window._prIsCurrMonth = (_pr.month === _now.getMonth()+1 && _pr.year === _now.getFullYear());
+  var cacheKey = _pr.month+'_'+_pr.year;
+
+  // Instant render from cache — no spinner
+  if(_prCache[cacheKey]){
+    var c = _prCache[cacheKey];
+    window._advancesMap = c.advancesMap;
+    window._prRows = c.rows;
+    var setEl2 = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+    setEl2('pr-total-staff', c.rows.length);
+    setEl2('pr-working-days', c.working_days||'—');
+    setEl2('pr-total-net', '₹'+Math.round(c.totalNet).toLocaleString('en-IN'));
+    setEl2('pr-total-ded', '₹'+Math.round(c.totalDed).toLocaleString('en-IN'));
+    tbody.innerHTML = c.rows.map(function(r,i){ return prViewRow(r,i); }).join('');
+    return; // served from cache
+  }
+
+  tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading…</td></tr>';
 
   try{
-    var res = await fetch(API+'/api/payroll/salary-preview?month='+_pr.month+'&year='+_pr.year, { headers: zHdr() });
-    var d = await res.json();
+    // Fetch salary-preview and advances in parallel
+    var results = await Promise.all([
+      fetch(API+'/api/payroll/salary-preview?month='+_pr.month+'&year='+_pr.year, { headers: zHdr() }),
+      fetch(API+'/api/advances?status=active', { headers: zHdr() })
+    ]);
+    var d       = await results[0].json();
+    var advData = await results[1].json().catch(function(){ return {}; });
+
     if(!d.success){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#FF453A;">Error: '+escHtml(d.message||'Failed')+'</td></tr>'; return; }
 
     var rows = d.data || [];
+    window._advancesMap = {};
+    (advData.data||[]).forEach(function(a){ window._advancesMap[a.staff_id] = a; });
+
     var setEl = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
     setEl('pr-total-staff', rows.length);
     setEl('pr-working-days', d.working_days||'—');
-    // Summary totals
     var totalNet=0, totalDed=0;
     rows.forEach(function(r){
       totalNet += window._prIsCurrMonth ? parseFloat(r.earned_so_far||0) : parseFloat(r.net_salary||0);
@@ -9379,16 +9403,13 @@ async function loadPayrollPage(){
       return;
     }
 
-    // Also fetch active advances to display per row
-    try{
-      var advRes = await fetch(API+'/api/advances?status=active', { headers: zHdr() });
-      var advData = await advRes.json();
-      window._advancesMap = {};
-      (advData.data||[]).forEach(function(a){ window._advancesMap[a.staff_id] = a; });
-    } catch(e){ window._advancesMap = {}; }
-
     window._prRows = rows;
     tbody.innerHTML = rows.map(function(r,i){ return prViewRow(r,i); }).join('');
+
+    // Cache past months (current month data changes so skip caching it)
+    if(!window._prIsCurrMonth){
+      _prCache[cacheKey] = { rows:rows, advancesMap:window._advancesMap, working_days:d.working_days, totalNet:totalNet, totalDed:totalDed };
+    }
   } catch(e){
     if(tbody) tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#FF453A;">Error loading payroll</td></tr>';
     console.error('loadPayrollPage:',e);
