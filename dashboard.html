@@ -1333,6 +1333,15 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
       <div id="extra-time-list"></div>
     </div>
 
+    <!-- Overdue Date Extension Requests Panel -->
+    <div id="overdue-ext-panel" style="display:none;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="color:#FF453A;font-size:13px;font-weight:500;">📅 Overdue Extension Requests</div>
+        <span id="ov-ext-count" style="background:rgba(255,69,58,0.15);color:#FF453A;border-radius:8px;padding:1px 7px;font-size:10px;font-weight:600;">0</span>
+      </div>
+      <div id="overdue-ext-list"></div>
+    </div>
+
     <!-- Task list -->
     <div id="tasks-grid" style="display:flex;flex-direction:column;gap:10px;">
       <div style="text-align:center;padding:60px;color:var(--muted);">
@@ -6569,7 +6578,7 @@ window.showPage = function(page, el){
   if(page==='attendance')     { _dSet('att', null); _dashCacheTs['att'] = 0; }
   if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(initMbLazyLoad, 200); }
   if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
-  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); switchTaskSection(_currentTaskSection||'assigned'); }
+  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); setTimeout(loadOverdueExtRequests, 300); switchTaskSection(_currentTaskSection||'assigned'); }
   if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
   if(page==='admin-overview') setTimeout(function(){ loadAdminOverview(); loadDailyLogs(); renderAccessTable(); }, 100);
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
@@ -6837,6 +6846,72 @@ async function approveExtraTime(taskId, action){
       loadTasks();
     } else showToast(d.message||'Failed');
   }catch(e){ showToast('Server error'); }
+}
+
+async function loadOverdueExtRequests(){
+  try{
+    var res=await fetch(API+'/api/tasks/date-extension-requests',{headers:zHdr()});
+    var d=await res.json();
+    var data=d.data||[];
+    var panel=document.getElementById('overdue-ext-panel');
+    var listEl=document.getElementById('overdue-ext-list');
+    var cntEl=document.getElementById('ov-ext-count');
+    if(!panel||!listEl) return;
+    if(!data.length){ panel.style.display='none'; return; }
+    panel.style.display='block';
+    if(cntEl) cntEl.textContent=data.length;
+    var today=new Date().toISOString().slice(0,10);
+    listEl.innerHTML=data.map(function(r){
+      var avSrc=_getAvatar(r.staff_id, r.photo_url, r.photo_data);
+      var init=(r.staff_name||'?').charAt(0).toUpperCase();
+      var av=avSrc
+        ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        :'<div style="width:34px;height:34px;border-radius:50%;background:rgba(255,69,58,0.2);display:flex;align-items:center;justify-content:center;color:#FF453A;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
+      var oldDue=r.due_date?r.due_date.slice(0,10):'—';
+      var reqDate=r.requested_date?r.requested_date.slice(0,10):'';
+      var defDate=reqDate||today;
+      return '<div style="background:rgba(255,69,58,0.06);border:0.5px solid rgba(255,69,58,0.25);border-radius:14px;padding:14px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +av
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.title||'Task')+'</div>'
+          +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+escHtml(r.staff_name||'Staff')+' · Was due: '+oldDue+'</div>'
+          +(reqDate?'<div style="color:#FF9F0A;font-size:11px;margin-top:2px;font-weight:500;">📅 Requesting: '+reqDate+'</div>':'')
+        +'</div>'
+        +'<span style="background:rgba(255,69,58,0.14);color:#FF453A;border:0.5px solid rgba(255,69,58,0.28);border-radius:6px;padding:2px 7px;font-size:9px;flex-shrink:0;">Overdue</span>'
+        +'</div>'
+        +(r.reason?'<div style="color:rgba(245,245,247,0.55);font-size:12px;font-style:italic;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;">"'+escHtml(r.reason)+'"</div>':'')
+        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Approve with new due date</div>'
+        +'<input id="dash-ov-date-'+r.id+'" type="date" value="'+defDate+'" min="'+today+'" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.14);border-radius:9px;padding:8px 11px;color:#fff;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;margin-bottom:10px;">'
+        +'<div style="display:flex;gap:8px;">'
+          +'<button onclick="approveOverdueExt('+r.id+',\'reject\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+          +'<button onclick="approveOverdueExt('+r.id+',\'approve\')" style="flex:2;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✅ Approve & Extend Date</button>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }catch(e){ console.error('loadOverdueExtRequests:',e); }
+}
+
+async function approveOverdueExt(reqId, action){
+  var approvedDate='';
+  if(action==='approve'){
+    var el=document.getElementById('dash-ov-date-'+reqId);
+    approvedDate=el?el.value:'';
+    if(!approvedDate){ showToast('❌ Date select பண்ணுங்க','error'); return; }
+  }
+  try{
+    var r=await fetch(API+'/api/tasks/date-extension-requests/'+reqId+'/review',{
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body:JSON.stringify({action:action, approved_date:approvedDate||undefined})
+    });
+    var d=await r.json();
+    if(d.success){
+      showToast(action==='approve'?'✅ Date extended — staff can now check in':'✕ Request rejected');
+      loadOverdueExtRequests();
+      loadTasks();
+    } else showToast(d.message||'Failed','error');
+  }catch(e){ showToast('Server error','error'); }
 }
 
 // Open task edit form — pre-fills requested new date, marks request approved on save

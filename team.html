@@ -1527,6 +1527,7 @@ body.desktop-mode #s1-sidebar {
         <button id="s2-appr-tab-onsite" onclick="s2ApprTab('onsite')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Onsite</button>
         <button id="s2-appr-tab-late" onclick="s2ApprTab('late')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Late</button>
         <button id="s2-appr-tab-extratime" onclick="s2ApprTab('extratime')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Extra Time</button>
+        <button id="s2-appr-tab-overdue" onclick="s2ApprTab('overdue')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">📅 Overdue</button>
       </div>
       <div class="scroll" style="padding:10px 13px 8px;">
         <div id="s2-appr-list" style="display:flex;flex-direction:column;gap:9px;">
@@ -2041,7 +2042,7 @@ var adminTabs=[
 ];
 var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
 var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[], _s2TasksCache=null;
-var _s2ApprLeaves=[], _s2ApprOnsites=[], _s2ApprLates=[], _s2ApprExtraTime=[];
+var _s2ApprLeaves=[], _s2ApprOnsites=[], _s2ApprLates=[], _s2ApprExtraTime=[], _s2ApprOverdue=[];
 
 function makeNav(tabs,scrs,active,prefix){
   return tabs.map(function(x,i){
@@ -2402,22 +2403,29 @@ function attActionCheckout(){
 async function showOverduePopup(tasks, onDone){
   var ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);';
+  var today=new Date().toISOString().slice(0,10);
+  var suggest=new Date(); suggest.setDate(suggest.getDate()+3);
+  var suggestStr=suggest.toISOString().slice(0,10);
+
   var inner='<div style="background:linear-gradient(160deg,rgba(20,8,40,0.99),rgba(10,10,22,0.99));border:0.5px solid rgba(255,69,58,0.3);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">'
     +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px;"></div>'
-    +'<div style="font-size:22px;text-align:center;margin-bottom:6px;">⚠️</div>'
-    +'<div style="font-size:16px;font-weight:600;text-align:center;color:#fff;margin-bottom:6px;">Pending Tasks Overdue</div>'
-    +'<div style="font-size:12px;color:rgba(245,245,247,0.5);text-align:center;margin-bottom:20px;line-height:1.5;">இந்த tasks complete பண்ணல — காரணம் சொல்லி check in பண்ணுங்க</div>';
+    +'<div style="font-size:22px;text-align:center;margin-bottom:6px;">🚫</div>'
+    +'<div style="font-size:16px;font-weight:600;text-align:center;color:#fff;margin-bottom:4px;">Overdue Tasks — Check-in Blocked</div>'
+    +'<div style="font-size:12px;color:rgba(245,245,247,0.5);text-align:center;margin-bottom:20px;line-height:1.5;">காரணம் சொல்லி, புதுசா date request பண்ணுங்க.<br>Admin approve பண்ணினா மட்டும் check-in ஆகும்.</div>';
 
-  tasks.forEach(function(t,i){
+  tasks.forEach(function(t){
     var dateStr=t.due_date?(new Date(t.due_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})):'';
-    inner+='<div style="background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px 14px 12px;margin-bottom:12px;">'
+    inner+='<div style="background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px 14px 13px;margin-bottom:12px;">'
       +'<div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:2px;">'+escStr(t.title)+'</div>'
-      +'<div style="font-size:11px;color:rgba(255,69,58,0.8);margin-bottom:10px;">Due: '+dateStr+(t.brand_name?' · '+escStr(t.brand_name):'')+'</div>'
-      +'<textarea id="od-reason-'+t.id+'" placeholder="என்ன reason?" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 11px;color:#fff;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box;"></textarea>'
+      +'<div style="font-size:11px;color:rgba(255,69,58,0.75);margin-bottom:10px;">Due: '+dateStr+(t.brand_name?' · '+escStr(t.brand_name):'')+'</div>'
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Reason — என்ன reason?</div>'
+      +'<textarea id="od-reason-'+t.id+'" placeholder="காரணம் type பண்ணுங்க…" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 11px;color:#fff;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box;margin-bottom:8px;"></textarea>'
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">புதுசா Due Date Request</div>'
+      +'<input id="od-date-'+t.id+'" type="date" value="'+suggestStr+'" min="'+today+'" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px 11px;color:#fff;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;">'
       +'</div>';
   });
 
-  inner+='<button id="od-submit-btn" style="width:100%;background:linear-gradient(135deg,#FF453A,#cc2a1f);border:none;border-radius:14px;padding:15px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;">Submit & Check In →</button>'
+  inner+='<button id="od-submit-btn" style="width:100%;background:linear-gradient(135deg,#FF453A,#cc2a1f);border:none;border-radius:14px;padding:15px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;">📨 Extension Request அனுப்பு</button>'
     +'</div>';
   ov.innerHTML=inner;
   document.body.appendChild(ov);
@@ -2427,12 +2435,13 @@ async function showOverduePopup(tasks, onDone){
     var allFilled=true;
     tasks.forEach(function(t){
       var val=(document.getElementById('od-reason-'+t.id)||{}).value||'';
+      var dt=(document.getElementById('od-date-'+t.id)||{}).value||'';
       if(!val.trim()){ allFilled=false; return; }
-      reasons.push({task_id:t.id, reason:val.trim()});
+      reasons.push({task_id:t.id, reason:val.trim(), requested_date:dt||null});
     });
     if(!allFilled){ alert('எல்லா tasks-க்கும் reason போடுங்க'); return; }
     var btn=document.getElementById('od-submit-btn');
-    btn.disabled=true; btn.textContent='Submitting…';
+    btn.disabled=true; btn.textContent='Sending…';
     try{
       var r=await fetch(API_URL+'/api/tasks/overdue-reason',{
         method:'POST',
@@ -2440,9 +2449,20 @@ async function showOverduePopup(tasks, onDone){
         body:JSON.stringify({reasons:reasons})
       });
       var d=await r.json();
-      if(d.success){ ov.remove(); onDone(); }
-      else{ btn.disabled=false; btn.textContent='Submit & Check In →'; alert(d.message||'Error'); }
-    }catch(e){ btn.disabled=false; btn.textContent='Submit & Check In →'; alert('Network error'); }
+      if(d.success){
+        ov.remove();
+        showToast1('📨 Request sent — Admin approval-ku wait பண்ணுங்க');
+        // Check-in stays blocked until admin approves — do NOT proceed
+      } else{
+        btn.disabled=false;
+        btn.textContent='📨 Extension Request அனுப்பு';
+        alert(d.message||'Error');
+      }
+    }catch(e){
+      btn.disabled=false;
+      btn.textContent='📨 Extension Request அனுப்பு';
+      alert('Network error');
+    }
   };
 }
 
@@ -2467,7 +2487,11 @@ async function markAttendance(){
     var ocRes=await fetch(API_URL+'/api/tasks/overdue-check',{headers:zHead()});
     var ocData=await ocRes.json();
     if(ocData.success && ocData.blocked){
-      showOverduePopup(ocData.tasks, function(){ markAttendance(); });
+      if(ocData.pending_approval){
+        showToast1('⏳ Admin approval pending — request அனுப்பிட்டீங்க, wait பண்ணுங்க');
+      } else {
+        showOverduePopup(ocData.tasks, function(){ markAttendance(); });
+      }
       return;
     }
   }catch(e){ /* network issue — don't block check-in */ }
@@ -4257,19 +4281,24 @@ async function loadAdminApprovals(){
       var ed=await er.json();
       _s2ApprExtraTime=ed.data||[];
     }catch(e2){ _s2ApprExtraTime=[]; }
+    try{
+      var dr=await fetch(API_URL+'/api/tasks/date-extension-requests',{headers:zHead()});
+      var dd=await dr.json();
+      _s2ApprOverdue=dd.data||[];
+    }catch(e3){ _s2ApprOverdue=[]; }
     s2ApprTab(_s2ApprTab);
   }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
 }
 
 function s2ApprTab(tab){
   _s2ApprTab=tab;
-  var tabs={leave:'rgba(255,159,10',onsite:'rgba(191,95,255',late:'rgba(255,69,58',extratime:'rgba(10,132,255'};
-  ['leave','onsite','late','extratime'].forEach(function(t){
+  var tabs={leave:'rgba(255,159,10',onsite:'rgba(191,95,255',late:'rgba(255,69,58',extratime:'rgba(10,132,255',overdue:'rgba(255,69,58'};
+  var tabColors={leave:'#FF9F0A',onsite:'#BF5FFF',late:'#FF453A',extratime:'#0A84FF',overdue:'#FF453A'};
+  ['leave','onsite','late','extratime','overdue'].forEach(function(t){
     var el=document.getElementById('s2-appr-tab-'+t);
     if(!el) return;
     var active=t===tab;
-    el.style.cssText=(active?'background:'+tabs[t]+',0.18);border:0.5px solid '+tabs[t]+',0.3);color:'+
-      (t==='leave'?'#FF9F0A':t==='onsite'?'#BF5FFF':t==='late'?'#FF453A':'#0A84FF')+';':
+    el.style.cssText=(active?'background:'+tabs[t]+',0.18);border:0.5px solid '+tabs[t]+',0.3);color:'+tabColors[t]+';':
       'background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);')+
       'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
   });
@@ -4328,7 +4357,7 @@ function s2ApprTab(tab){
         +'<button onclick="s2ActLate('+o.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
         +'</div></div>';
     }).join('');
-  } else {
+  } else if(tab==='extratime'){
     if(!_s2ApprExtraTime.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">⌛</div>No extra time requests</div>'; return; }
     listEl.innerHTML=_s2ApprExtraTime.map(function(t){
       return'<div class="g" style="padding:12px;" data-etid="'+t.id+'">'
@@ -4343,6 +4372,37 @@ function s2ApprTab(tab){
         +'<button onclick="s2ActExtraTime('+t.id+',\'approve\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
         +'<button onclick="s2ActExtraTime('+t.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
         +'</div></div>';
+    }).join('');
+  } else {
+    // ── Overdue date extension requests ──
+    var overdueList = _s2ApprOverdue||[];
+    if(!overdueList.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">📅</div>No overdue extension requests</div>'; return; }
+    listEl.innerHTML=overdueList.map(function(t){
+      var reqDate=t.requested_date?(new Date(t.requested_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})):'';
+      var oldDate=t.due_date?(new Date(t.due_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})):'';
+      var minDate=new Date().toISOString().slice(0,10);
+      var defDate=t.requested_date?(new Date(t.requested_date).toISOString().slice(0,10)):minDate;
+      return'<div class="g" style="padding:12px;" data-ovid="'+t.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;">'
+          +'<div style="width:34px;height:34px;background:rgba(255,69,58,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📅</div>'
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(t.staff_name||'Staff')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(t.title||'Task')+'</div>'
+          +'</div>'
+          +'<span style="background:rgba(255,69,58,0.14);color:#FF453A;border:0.5px solid rgba(255,69,58,0.28);border-radius:6px;padding:2px 6px;font-size:9px;flex-shrink:0;">Overdue</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:9px 10px;margin-bottom:8px;">'
+          +(oldDate?'<div style="display:flex;gap:8px;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.35);font-size:10px;width:72px;flex-shrink:0;">Old Due Date</span><span style="color:#FF453A;font-size:10px;">'+oldDate+'</span></div>':'')
+          +(reqDate?'<div style="display:flex;gap:8px;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.35);font-size:10px;width:72px;flex-shrink:0;">Requested</span><span style="color:#0A84FF;font-size:10px;">'+reqDate+'</span></div>':'')
+          +(t.reason?'<div style="display:flex;gap:8px;"><span style="color:rgba(245,245,247,0.35);font-size:10px;width:72px;flex-shrink:0;">Reason</span><span style="color:rgba(245,245,247,0.7);font-size:10px;flex:1;">'+escHtml(t.reason)+'</span></div>':'')
+        +'</div>'
+        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Approve with date (customize if needed)</div>'
+        +'<input id="ov-appr-date-'+t.id+'" type="date" value="'+defDate+'" min="'+minDate+'" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:9px;padding:7px 10px;color:#fff;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;margin-bottom:9px;">'
+        +'<div style="display:flex;gap:8px;">'
+          +'<button onclick="s2ActOverdue('+t.id+',\'approve\',this)" style="flex:2;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve & Extend</button>'
+          +'<button onclick="s2ActOverdue('+t.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div>'
+      +'</div>';
     }).join('');
   }
 }
@@ -4392,6 +4452,30 @@ async function s2ActExtraTime(id,action,btn){
     var d=await r.json();
     if(d.success){ showToast1(action==='approve'?'✅ Extra time approved':'❌ Request rejected'); _s2ApprExtraTime=_s2ApprExtraTime.filter(function(x){return x.id!==id;}); s2ApprTab('extratime'); }
     else{ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
+}
+
+async function s2ActOverdue(id,action,btn){
+  var card=btn.closest('[data-ovid]');
+  if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  var approvedDate='';
+  if(action==='approve'){
+    var dateEl=document.getElementById('ov-appr-date-'+id);
+    approvedDate=dateEl?dateEl.value:'';
+    if(!approvedDate){ showToast1('❌ Date select பண்ணுங்க'); if(card){card.style.opacity='1';card.style.pointerEvents='auto';} return; }
+  }
+  try{
+    var r=await fetch(API_URL+'/api/tasks/date-extension-requests/'+id+'/review',{
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'},zHead()),
+      body:JSON.stringify({action:action, approved_date:approvedDate||undefined})
+    });
+    var d=await r.json();
+    if(d.success){
+      showToast1(action==='approve'?'✅ Date extended — staff can now check in':'❌ Request rejected');
+      _s2ApprOverdue=(_s2ApprOverdue||[]).filter(function(x){return x.id!==id;});
+      s2ApprTab('overdue');
+    } else{ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
   }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
 }
 
@@ -6801,6 +6885,21 @@ async function homeSmartCheckin(){
       setBtnState('✅ Check In', false); return;
     }
 
+    // Step 1b: Check for overdue tasks — block check-in if any pending
+    try{
+      var ocH=await fetch(API_URL+'/api/tasks/overdue-check',{headers:zHead()});
+      var ocHD=await ocH.json();
+      if(ocHD.success && ocHD.blocked){
+        setBtnState('✅ Check In',false);
+        if(ocHD.pending_approval){
+          showToast1('⏳ Admin approval pending — request அனுப்பிட்டீங்க, wait பண்ணுங்க');
+        } else {
+          showOverduePopup(ocHD.tasks, function(){ homeSmartCheckin(); });
+        }
+        return;
+      }
+    }catch(eOc){ /* network — don't block */ }
+
     // Step 2a: On office WiFi → WiFi check-in
     if(rs.wifiEnabled && rs.isOffice){
       var cr=await fetch(API_URL+'/api/attendance/wifi-checkin',{method:'POST',headers:zHead()});
@@ -7163,7 +7262,11 @@ async function wifiCheckAndAct(){
           var ocWD=await ocW.json();
           if(ocWD.success && ocWD.blocked){
             wifiBanner(false);
-            showOverduePopup(ocWD.tasks, function(){ wifiCheckAndAct(); });
+            if(ocWD.pending_approval){
+              showToast1('⏳ Admin approval pending — request அனுப்பிட்டீங்க, wait பண்ணுங்க');
+            } else {
+              showOverduePopup(ocWD.tasks, function(){ wifiCheckAndAct(); });
+            }
             return;
           }
         }catch(e2){}
