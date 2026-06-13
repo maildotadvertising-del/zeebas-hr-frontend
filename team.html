@@ -5841,7 +5841,7 @@ async function doAllowNotif(){
       if(_swRegistration) subscribeToPush(_swRegistration).catch(function(){});
       // Send a test notification so they know it works
       setTimeout(function(){
-        try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/icon-192.png', badge:'/icon-192.png' }); }catch(e){}
+        try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/dot-logo.png', badge:'/icon-192.png' }); }catch(e){}
       }, 500);
     } else {
       syncNotifCard(); // hide card (denied — no point showing)
@@ -6363,7 +6363,7 @@ function _sendChatNotif(title, body){
     if(Notification && Notification.permission === 'granted'){
       var n = new Notification(title, {
         body: body,
-        icon: '/icon-192.png',
+        icon: '/dot-logo.png',
         badge: '/icon-192.png',
         tag: 'chat-notif',
         renotify: true,
@@ -6493,7 +6493,7 @@ async function checkPendingEod(){
 
 function sendNotif(title, body){
   if('Notification' in window && Notification.permission === 'granted'){
-    new Notification(title, { body: body, icon: '/icon-192.png', badge: '/icon-192.png' });
+    new Notification(title, { body: body, icon: '/dot-logo.png', badge: '/icon-192.png' });
   }
 }
 
