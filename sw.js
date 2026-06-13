@@ -5,7 +5,7 @@
    Now uses Web Push for reliable background wake.
    ══════════════════════════════════════════════ */
 
-const SW_VERSION = 'zeebas-sw-v5';
+const SW_VERSION = 'zeebas-sw-v6';
 
 // ── IndexedDB helpers ─────────────────────────
 // Auth token + API URL are stored here by the
@@ -73,7 +73,7 @@ async function doWifiCheck() {
         if (cd.success) {
           await self.registration.showNotification('✅ Checked In — Zeebas HR', {
             body: 'Auto checked in via Office WiFi',
-            icon: '/icon-192.png',
+            icon: '/dot-logo.png',
             badge: '/icon-192.png',
             tag: 'zeebas-checkin',
             renotify: false,
@@ -103,7 +103,7 @@ async function doWifiCheck() {
           if (bd.success) {
             await self.registration.showNotification('⚠️ Auto Checked Out — Zeebas HR', {
               body: 'Away from office WiFi for 40+ min. Open app to return if you\'re back.',
-              icon: '/icon-192.png',
+              icon: '/dot-logo.png',
               badge: '/icon-192.png',
               tag: 'zeebas-break',
               renotify: false
@@ -187,7 +187,7 @@ self.addEventListener('activate', function(event) {
       // Show our own branded notification so Chrome doesn't show its generic "D" one
       return self.registration.showNotification('DOT Team App', {
         body: 'App updated with latest changes ✓',
-        icon: '/icon-192.png',
+        icon: '/dot-logo.png',
         badge: '/icon-192.png',
         tag: 'sw-update',
         silent: true

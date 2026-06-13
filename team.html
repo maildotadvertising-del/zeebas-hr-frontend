@@ -664,7 +664,7 @@ body.desktop-mode #s1-sidebar {
         </div>
       </div>
       <div id="s1-tasks-list" class="scroll" style="padding:4px 13px 8px;"></div>
-      <div id="s1-eod-section" style="padding:0 13px 10px;flex-shrink:0;"></div>
+      <div id="s1-eod-section" style="display:none;"></div>
       <div id="n1-tasks" class="bnav"></div>
     </div>
 
@@ -1527,6 +1527,7 @@ body.desktop-mode #s1-sidebar {
         <button id="s2-appr-tab-onsite" onclick="s2ApprTab('onsite')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Onsite</button>
         <button id="s2-appr-tab-late" onclick="s2ApprTab('late')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Late</button>
         <button id="s2-appr-tab-extratime" onclick="s2ApprTab('extratime')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Extra Time</button>
+        <button id="s2-appr-tab-overdue" onclick="s2ApprTab('overdue')" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:5px 13px;font-size:11px;color:rgba(245,245,247,0.38);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">📅 Overdue</button>
       </div>
       <div class="scroll" style="padding:10px 13px 8px;">
         <div id="s2-appr-list" style="display:flex;flex-direction:column;gap:9px;">
@@ -2041,7 +2042,7 @@ var adminTabs=[
 ];
 var adminScrs=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
 var _s2ApprTab='leave', _s2TaskTab='all', _s2AllTasks=[], _s2AllStaff=[], _s2TasksCache=null;
-var _s2ApprLeaves=[], _s2ApprOnsites=[], _s2ApprLates=[], _s2ApprExtraTime=[];
+var _s2ApprLeaves=[], _s2ApprOnsites=[], _s2ApprLates=[], _s2ApprExtraTime=[], _s2ApprOverdue=[];
 
 function makeNav(tabs,scrs,active,prefix){
   return tabs.map(function(x,i){
@@ -2402,22 +2403,29 @@ function attActionCheckout(){
 async function showOverduePopup(tasks, onDone){
   var ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);';
+  var today=new Date().toISOString().slice(0,10);
+  var suggest=new Date(); suggest.setDate(suggest.getDate()+3);
+  var suggestStr=suggest.toISOString().slice(0,10);
+
   var inner='<div style="background:linear-gradient(160deg,rgba(20,8,40,0.99),rgba(10,10,22,0.99));border:0.5px solid rgba(255,69,58,0.3);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">'
     +'<div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px;"></div>'
-    +'<div style="font-size:22px;text-align:center;margin-bottom:6px;">⚠️</div>'
-    +'<div style="font-size:16px;font-weight:600;text-align:center;color:#fff;margin-bottom:6px;">Pending Tasks Overdue</div>'
-    +'<div style="font-size:12px;color:rgba(245,245,247,0.5);text-align:center;margin-bottom:20px;line-height:1.5;">இந்த tasks complete பண்ணல — காரணம் சொல்லி check in பண்ணுங்க</div>';
+    +'<div style="font-size:22px;text-align:center;margin-bottom:6px;">🚫</div>'
+    +'<div style="font-size:16px;font-weight:600;text-align:center;color:#fff;margin-bottom:4px;">Overdue Tasks — Check-in Blocked</div>'
+    +'<div style="font-size:12px;color:rgba(245,245,247,0.5);text-align:center;margin-bottom:20px;line-height:1.5;">காரணம் சொல்லி, புதுசா date request பண்ணுங்க.<br>Admin approve பண்ணினா மட்டும் check-in ஆகும்.</div>';
 
-  tasks.forEach(function(t,i){
+  tasks.forEach(function(t){
     var dateStr=t.due_date?(new Date(t.due_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})):'';
-    inner+='<div style="background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px 14px 12px;margin-bottom:12px;">'
+    inner+='<div style="background:rgba(255,69,58,0.07);border:0.5px solid rgba(255,69,58,0.2);border-radius:14px;padding:14px 14px 13px;margin-bottom:12px;">'
       +'<div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:2px;">'+escStr(t.title)+'</div>'
-      +'<div style="font-size:11px;color:rgba(255,69,58,0.8);margin-bottom:10px;">Due: '+dateStr+(t.brand_name?' · '+escStr(t.brand_name):'')+'</div>'
-      +'<textarea id="od-reason-'+t.id+'" placeholder="என்ன reason?" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 11px;color:#fff;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box;"></textarea>'
+      +'<div style="font-size:11px;color:rgba(255,69,58,0.75);margin-bottom:10px;">Due: '+dateStr+(t.brand_name?' · '+escStr(t.brand_name):'')+'</div>'
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Reason — என்ன reason?</div>'
+      +'<textarea id="od-reason-'+t.id+'" placeholder="காரணம் type பண்ணுங்க…" rows="2" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 11px;color:#fff;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box;margin-bottom:8px;"></textarea>'
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">புதுசா Due Date Request</div>'
+      +'<input id="od-date-'+t.id+'" type="date" value="'+suggestStr+'" min="'+today+'" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px 11px;color:#fff;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;">'
       +'</div>';
   });
 
-  inner+='<button id="od-submit-btn" style="width:100%;background:linear-gradient(135deg,#FF453A,#cc2a1f);border:none;border-radius:14px;padding:15px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;">Submit & Check In →</button>'
+  inner+='<button id="od-submit-btn" style="width:100%;background:linear-gradient(135deg,#FF453A,#cc2a1f);border:none;border-radius:14px;padding:15px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;">📨 Extension Request அனுப்பு</button>'
     +'</div>';
   ov.innerHTML=inner;
   document.body.appendChild(ov);
@@ -2427,12 +2435,13 @@ async function showOverduePopup(tasks, onDone){
     var allFilled=true;
     tasks.forEach(function(t){
       var val=(document.getElementById('od-reason-'+t.id)||{}).value||'';
+      var dt=(document.getElementById('od-date-'+t.id)||{}).value||'';
       if(!val.trim()){ allFilled=false; return; }
-      reasons.push({task_id:t.id, reason:val.trim()});
+      reasons.push({task_id:t.id, reason:val.trim(), requested_date:dt||null});
     });
     if(!allFilled){ alert('எல்லா tasks-க்கும் reason போடுங்க'); return; }
     var btn=document.getElementById('od-submit-btn');
-    btn.disabled=true; btn.textContent='Submitting…';
+    btn.disabled=true; btn.textContent='Sending…';
     try{
       var r=await fetch(API_URL+'/api/tasks/overdue-reason',{
         method:'POST',
@@ -2440,9 +2449,20 @@ async function showOverduePopup(tasks, onDone){
         body:JSON.stringify({reasons:reasons})
       });
       var d=await r.json();
-      if(d.success){ ov.remove(); onDone(); }
-      else{ btn.disabled=false; btn.textContent='Submit & Check In →'; alert(d.message||'Error'); }
-    }catch(e){ btn.disabled=false; btn.textContent='Submit & Check In →'; alert('Network error'); }
+      if(d.success){
+        ov.remove();
+        showToast1('📨 Request sent — Admin approval-ku wait பண்ணுங்க');
+        // Check-in stays blocked until admin approves — do NOT proceed
+      } else{
+        btn.disabled=false;
+        btn.textContent='📨 Extension Request அனுப்பு';
+        alert(d.message||'Error');
+      }
+    }catch(e){
+      btn.disabled=false;
+      btn.textContent='📨 Extension Request அனுப்பு';
+      alert('Network error');
+    }
   };
 }
 
@@ -2467,7 +2487,11 @@ async function markAttendance(){
     var ocRes=await fetch(API_URL+'/api/tasks/overdue-check',{headers:zHead()});
     var ocData=await ocRes.json();
     if(ocData.success && ocData.blocked){
-      showOverduePopup(ocData.tasks, function(){ markAttendance(); });
+      if(ocData.pending_approval){
+        showToast1('⏳ Admin approval pending — request அனுப்பிட்டீங்க, wait பண்ணுங்க');
+      } else {
+        showOverduePopup(ocData.tasks, function(){ markAttendance(); });
+      }
       return;
     }
   }catch(e){ /* network issue — don't block check-in */ }
@@ -2856,11 +2880,12 @@ async function profSaveField(field){
     });
     var d = await r.json();
     if(d.success){
-      // Update localStorage
+      // Update localStorage and clear stale cache
       var updated = Object.assign({}, s);
       updated[cfg.apiKey] = val;
       if(field==='phone') updated.mobile = val;
       localStorage.setItem('zhr_staff', JSON.stringify(updated));
+      _cacheClear('profile');
       // Refresh display
       var display = document.getElementById(cfg.displayId);
       if(display){
@@ -2896,8 +2921,12 @@ function showToast1(msg){
 
 function staffLogout(){
   if(!confirm('Logout பண்ணணுமா?')) return;
+  stopWifiPoller();
+  swClearAuth();
+  if(staffSocket){ try{ staffSocket.disconnect(); }catch(e){} staffSocket=null; }
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
+  _cacheClearAll();
   go1('s1-roleselect');
 }
 
@@ -3298,7 +3327,7 @@ async function loadStaffMessages(){
     msgs.innerHTML = '';
     // Filter out: any message with file_url and no text (covers DOT logo regardless of message_type)
     // Also filter image-type messages with empty/whitespace-only text
-    var filtered = d.data.filter(function(m){
+    var filtered = (d.data||[]).filter(function(m){
       var hasFile = !!(m.file_url);
       var hasText = !!(m.message||'').trim();
       if(hasFile && !hasText) return false; // skip file-only messages with no caption
@@ -3757,12 +3786,12 @@ async function loadDmConversations(){
     list.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(245,245,247,0.3);font-size:12px;">Loading…</div>';
 
     // Fetch both members + existing conversations in parallel
-    var [mRes, cRes] = await Promise.all([
-      fetch(API_URL+'/api/chat/members', {headers:zHead()}),
-      fetch(API_URL+'/api/chat/dm/conversations', {headers:zHead()})
+    var [mSettled, cSettled] = await Promise.allSettled([
+      fetch(API_URL+'/api/chat/members', {headers:zHead()}).then(function(r){return r.json();}),
+      fetch(API_URL+'/api/chat/dm/conversations', {headers:zHead()}).then(function(r){return r.json();})
     ]);
-    var mData = await mRes.json();
-    var cData = await cRes.json();
+    var mData = mSettled.status==='fulfilled' ? mSettled.value : {data:[]};
+    var cData = cSettled.status==='fulfilled' ? cSettled.value : {data:[]};
 
     var me = zStaff() || {};
     var members = (mData.data||[]).filter(function(m){ return m.id !== me.id; });
@@ -3871,7 +3900,7 @@ async function loadDmMessages(userId){
     var res = await fetch(API_URL+'/api/chat/dm/'+userId, {headers:zHead()});
     var d = await res.json();
     msgs.innerHTML = '';
-    if(!d.success || !d.data.length){
+    if(!d.success || !(d.data||[]).length){
       msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;"><div style="font-size:32px;opacity:0.2;">💬</div><div style="color:rgba(232,232,232,0.3);font-size:12px;">Say hello!</div></div>';
       return;
     }
@@ -4254,19 +4283,24 @@ async function loadAdminApprovals(){
       var ed=await er.json();
       _s2ApprExtraTime=ed.data||[];
     }catch(e2){ _s2ApprExtraTime=[]; }
+    try{
+      var dr=await fetch(API_URL+'/api/tasks/date-extension-requests',{headers:zHead()});
+      var dd=await dr.json();
+      _s2ApprOverdue=dd.data||[];
+    }catch(e3){ _s2ApprOverdue=[]; }
     s2ApprTab(_s2ApprTab);
   }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
 }
 
 function s2ApprTab(tab){
   _s2ApprTab=tab;
-  var tabs={leave:'rgba(255,159,10',onsite:'rgba(191,95,255',late:'rgba(255,69,58',extratime:'rgba(10,132,255'};
-  ['leave','onsite','late','extratime'].forEach(function(t){
+  var tabs={leave:'rgba(255,159,10',onsite:'rgba(191,95,255',late:'rgba(255,69,58',extratime:'rgba(10,132,255',overdue:'rgba(255,69,58'};
+  var tabColors={leave:'#FF9F0A',onsite:'#BF5FFF',late:'#FF453A',extratime:'#0A84FF',overdue:'#FF453A'};
+  ['leave','onsite','late','extratime','overdue'].forEach(function(t){
     var el=document.getElementById('s2-appr-tab-'+t);
     if(!el) return;
     var active=t===tab;
-    el.style.cssText=(active?'background:'+tabs[t]+',0.18);border:0.5px solid '+tabs[t]+',0.3);color:'+
-      (t==='leave'?'#FF9F0A':t==='onsite'?'#BF5FFF':t==='late'?'#FF453A':'#0A84FF')+';':
+    el.style.cssText=(active?'background:'+tabs[t]+',0.18);border:0.5px solid '+tabs[t]+',0.3);color:'+tabColors[t]+';':
       'background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);color:rgba(245,245,247,0.38);')+
       'border-radius:14px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
   });
@@ -4325,7 +4359,7 @@ function s2ApprTab(tab){
         +'<button onclick="s2ActLate('+o.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
         +'</div></div>';
     }).join('');
-  } else {
+  } else if(tab==='extratime'){
     if(!_s2ApprExtraTime.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">⌛</div>No extra time requests</div>'; return; }
     listEl.innerHTML=_s2ApprExtraTime.map(function(t){
       return'<div class="g" style="padding:12px;" data-etid="'+t.id+'">'
@@ -4340,6 +4374,37 @@ function s2ApprTab(tab){
         +'<button onclick="s2ActExtraTime('+t.id+',\'approve\',this)" style="flex:1;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve</button>'
         +'<button onclick="s2ActExtraTime('+t.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
         +'</div></div>';
+    }).join('');
+  } else {
+    // ── Overdue date extension requests ──
+    var overdueList = _s2ApprOverdue||[];
+    if(!overdueList.length){ listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;"><div style="font-size:26px;margin-bottom:8px;opacity:0.3;">📅</div>No overdue extension requests</div>'; return; }
+    listEl.innerHTML=overdueList.map(function(t){
+      var reqDate=t.requested_date?(new Date(t.requested_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})):'';
+      var oldDate=t.due_date?(new Date(t.due_date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})):'';
+      var minDate=new Date().toISOString().slice(0,10);
+      var defDate=t.requested_date?(new Date(t.requested_date).toISOString().slice(0,10)):minDate;
+      return'<div class="g" style="padding:12px;" data-ovid="'+t.id+'">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;">'
+          +'<div style="width:34px;height:34px;background:rgba(255,69,58,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📅</div>'
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="color:#fff;font-size:12px;font-weight:500;">'+escHtml(t.staff_name||'Staff')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(t.title||'Task')+'</div>'
+          +'</div>'
+          +'<span style="background:rgba(255,69,58,0.14);color:#FF453A;border:0.5px solid rgba(255,69,58,0.28);border-radius:6px;padding:2px 6px;font-size:9px;flex-shrink:0;">Overdue</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:9px 10px;margin-bottom:8px;">'
+          +(oldDate?'<div style="display:flex;gap:8px;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.35);font-size:10px;width:72px;flex-shrink:0;">Old Due Date</span><span style="color:#FF453A;font-size:10px;">'+oldDate+'</span></div>':'')
+          +(reqDate?'<div style="display:flex;gap:8px;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.35);font-size:10px;width:72px;flex-shrink:0;">Requested</span><span style="color:#0A84FF;font-size:10px;">'+reqDate+'</span></div>':'')
+          +(t.reason?'<div style="display:flex;gap:8px;"><span style="color:rgba(245,245,247,0.35);font-size:10px;width:72px;flex-shrink:0;">Reason</span><span style="color:rgba(245,245,247,0.7);font-size:10px;flex:1;">'+escHtml(t.reason)+'</span></div>':'')
+        +'</div>'
+        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Approve with date (customize if needed)</div>'
+        +'<input id="ov-appr-date-'+t.id+'" type="date" value="'+defDate+'" min="'+minDate+'" style="width:100%;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:9px;padding:7px 10px;color:#fff;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;margin-bottom:9px;">'
+        +'<div style="display:flex;gap:8px;">'
+          +'<button onclick="s2ActOverdue('+t.id+',\'approve\',this)" style="flex:2;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Approve & Extend</button>'
+          +'<button onclick="s2ActOverdue('+t.id+',\'reject\',this)" style="flex:1;background:rgba(255,69,58,0.12);border:0.5px solid rgba(255,69,58,0.22);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+        +'</div>'
+      +'</div>';
     }).join('');
   }
 }
@@ -4392,6 +4457,30 @@ async function s2ActExtraTime(id,action,btn){
   }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
 }
 
+async function s2ActOverdue(id,action,btn){
+  var card=btn.closest('[data-ovid]');
+  if(card){card.style.opacity='0.5';card.style.pointerEvents='none';}
+  var approvedDate='';
+  if(action==='approve'){
+    var dateEl=document.getElementById('ov-appr-date-'+id);
+    approvedDate=dateEl?dateEl.value:'';
+    if(!approvedDate){ showToast1('❌ Date select பண்ணுங்க'); if(card){card.style.opacity='1';card.style.pointerEvents='auto';} return; }
+  }
+  try{
+    var r=await fetch(API_URL+'/api/tasks/date-extension-requests/'+id+'/review',{
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'},zHead()),
+      body:JSON.stringify({action:action, approved_date:approvedDate||undefined})
+    });
+    var d=await r.json();
+    if(d.success){
+      showToast1(action==='approve'?'✅ Date extended — staff can now check in':'❌ Request rejected');
+      _s2ApprOverdue=(_s2ApprOverdue||[]).filter(function(x){return x.id!==id;});
+      s2ApprTab('overdue');
+    } else{ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ '+(d.message||'Failed')); }
+  }catch(e){ if(card){card.style.opacity='1';card.style.pointerEvents='auto';} showToast1('❌ Network error'); }
+}
+
 async function quickApproveLeave(id,action,btn){
   var row=btn.parentNode.parentNode;
   if(row){row.style.opacity='0.4';row.style.pointerEvents='none';}
@@ -4415,7 +4504,8 @@ async function loadAdminTasks(){
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
-    _s2AllTasks=Array.isArray(d)?d:(d.data||d.tasks||[]);
+    var allT=Array.isArray(d)?d:(d.data||d.tasks||[]);
+    _s2AllTasks=allT.filter(function(t){ return String(t.assigned_by) !== String(t.assigned_to); });
     _s2TasksCache=_s2AllTasks;
     s2TaskTab(_s2TaskTab);
   }catch(e){ if(!_s2TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
@@ -4466,8 +4556,8 @@ async function s2UpdateTaskStatus(id,status){
     var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
     var d=await r.json();
     if(d.success){ showToast1(status==='done'?'✅ Task done!':status==='pending'?'↩ Task reopened':'▶ Task started'); }
-    else{ showToast1('❌ '+(d.message||'Failed')); loadAdminTasks(); }
-  }catch(e){ showToast1('❌ Network error'); loadAdminTasks(); }
+    else{ showToast1('❌ '+(d.message||'Failed')); _s2TasksCache=null; loadAdminTasks(); }
+  }catch(e){ showToast1('❌ Network error'); _s2TasksCache=null; loadAdminTasks(); }
 }
 
 async function s2DeleteTask(id){
@@ -5371,16 +5461,21 @@ async function loadMySalary(){
     var statusBg     = status==='paid' ? 'rgba(48,209,88,0.15)' : status==='pending' ? 'rgba(255,159,10,0.15)' : 'rgba(90,171,240,0.12)';
     var statusLabel  = status==='paid' ? '✓ Paid' : status==='pending' ? '⏳ Pending' : '👁 Live Preview';
     var statusBadge  = '<span style="background:'+statusBg+';color:'+statusColor+';font-size:9px;padding:2px 8px;border-radius:8px;font-weight:500;">'+statusLabel+'</span>';
+    var paidDateHtml = (status==='paid' && payroll && payroll.paid_date)
+      ? (function(){ var dt=new Date(payroll.paid_date); return '<div style="color:rgba(48,209,88,0.55);font-size:9px;text-align:right;margin-top:2px;">'+(advDeduction>0?'Balance ':'')+'Received '+dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear()+'</div>'; })()
+      : '';
 
     var html = ''
       // ── Net pay card ──
       +'<div style="background:linear-gradient(135deg,rgba(10,80,180,0.55),rgba(80,10,140,0.45));border:0.5px solid rgba(255,255,255,0.12);border-radius:18px;padding:16px;margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
           +'<div style="color:rgba(245,245,247,0.42);font-size:9px;text-transform:uppercase;letter-spacing:0.7px;">Net Pay · '+periodLabel+'</div>'
-          +statusBadge
+          +'<div style="text-align:right;">'+statusBadge+paidDateHtml+'</div>'
         +'</div>'
         +'<div style="color:#fff;font-size:28px;font-weight:500;letter-spacing:-0.5px;margin-bottom:3px;">₹'+fmt(netSalary)+'</div>'
-        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isCurrMonth?' · '+daysWorked+' days worked so far':'')+'</div>'
+        +(advDeduction>0?'<div style="color:rgba(245,245,247,0.35);font-size:11px;margin-bottom:1px;">Base ₹'+fmt(baseSalary)+' · Advance -₹'+fmt(advDeduction)+' deducted</div>'
+          :'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isCurrMonth?' · '+daysWorked+' days worked so far':'')+'</div>')
+        +(advDeduction>0?'<div style="color:rgba(48,209,88,0.7);font-size:11px;font-weight:500;">Balance Salary: ₹'+fmt(netSalary)+'</div>':'')
         +'<div style="height:0.5px;background:rgba(255,255,255,0.09);margin:12px 0;"></div>'
         +'<div style="display:flex;justify-content:space-between;">'
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">Present</div><div style="color:#30D158;font-size:14px;font-weight:500;">'+daysWorked+'</div></div>'
@@ -5427,9 +5522,28 @@ async function loadMySalary(){
           +(incentiveAmt>0
             ? bRow('Incentive 🎯', 'Performance bonus', '+₹'+fmt(incentiveAmt), '#FF9F0A')
             : bRow('Incentive 🎯', 'Not applicable', '+₹0', 'rgba(245,245,247,0.22)'))
-          // Advance recovery
-          +(advDeduction>0
-            ? bRow('Advance Recovery', 'Monthly recovery', '−₹'+fmt(advDeduction), '#FF453A')
+          // Advance recovery — show date-wise entries
+          +(advances.length>0
+            ? (function(){
+                var _months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                var totalAdv=advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); },0);
+                var rows=advances.map(function(a){
+                  var dt=(a.payment_date||'').toString().slice(0,10);
+                  var dObj=dt?new Date(dt):null;
+                  var dLabel=dObj?dObj.getDate()+' '+_months[dObj.getMonth()]:'';
+                  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">'
+                    +'<div style="color:rgba(245,245,247,0.4);font-size:10px;">'+escHtml(a.reason||'Advance')+(dLabel?' · '+dLabel:'')+'</div>'
+                    +'<div style="color:#FF6B6B;font-size:10px;font-family:monospace;">−₹'+fmt(parseFloat(a.amount||a.monthly_recovery||0))+'</div>'
+                  +'</div>';
+                }).join('');
+                return '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
+                  +'<div style="flex:1;">'
+                    +'<div style="color:rgba(245,245,247,0.7);font-size:12px;">Advance Recovery 💳</div>'
+                    +'<div style="margin-top:4px;">'+rows+'</div>'
+                  +'</div>'
+                  +'<div style="color:#FF453A;font-size:13px;font-weight:600;font-family:monospace;padding-left:10px;flex-shrink:0;">−₹'+fmt(totalAdv)+'</div>'
+                +'</div>';
+              })()
             : '')
           // Total
           +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 2px;margin-top:2px;">'
@@ -5841,7 +5955,7 @@ async function doAllowNotif(){
       if(_swRegistration) subscribeToPush(_swRegistration).catch(function(){});
       // Send a test notification so they know it works
       setTimeout(function(){
-        try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/icon-192.png', badge:'/icon-192.png' }); }catch(e){}
+        try{ new Notification('✅ Notifications On — DOT Team App', { body:'You\'ll get alerts for check-in, tasks & announcements.', icon:'/dot-logo.png', badge:'/icon-192.png' }); }catch(e){}
       }, 500);
     } else {
       syncNotifCard(); // hide card (denied — no point showing)
@@ -6363,7 +6477,7 @@ function _sendChatNotif(title, body){
     if(Notification && Notification.permission === 'granted'){
       var n = new Notification(title, {
         body: body,
-        icon: '/icon-192.png',
+        icon: '/dot-logo.png',
         badge: '/icon-192.png',
         tag: 'chat-notif',
         renotify: true,
@@ -6493,7 +6607,7 @@ async function checkPendingEod(){
 
 function sendNotif(title, body){
   if('Notification' in window && Notification.permission === 'granted'){
-    new Notification(title, { body: body, icon: '/icon-192.png', badge: '/icon-192.png' });
+    new Notification(title, { body: body, icon: '/dot-logo.png', badge: '/icon-192.png' });
   }
 }
 
@@ -6774,6 +6888,21 @@ async function homeSmartCheckin(){
       showToast1('✅ Day complete — already checked out');
       setBtnState('✅ Check In', false); return;
     }
+
+    // Step 1b: Check for overdue tasks — block check-in if any pending
+    try{
+      var ocH=await fetch(API_URL+'/api/tasks/overdue-check',{headers:zHead()});
+      var ocHD=await ocH.json();
+      if(ocHD.success && ocHD.blocked){
+        setBtnState('✅ Check In',false);
+        if(ocHD.pending_approval){
+          showToast1('⏳ Admin approval pending — request அனுப்பிட்டீங்க, wait பண்ணுங்க');
+        } else {
+          showOverduePopup(ocHD.tasks, function(){ homeSmartCheckin(); });
+        }
+        return;
+      }
+    }catch(eOc){ /* network — don't block */ }
 
     // Step 2a: On office WiFi → WiFi check-in
     if(rs.wifiEnabled && rs.isOffice){
@@ -7137,7 +7266,11 @@ async function wifiCheckAndAct(){
           var ocWD=await ocW.json();
           if(ocWD.success && ocWD.blocked){
             wifiBanner(false);
-            showOverduePopup(ocWD.tasks, function(){ wifiCheckAndAct(); });
+            if(ocWD.pending_approval){
+              showToast1('⏳ Admin approval pending — request அனுப்பிட்டீங்க, wait பண்ணுங்க');
+            } else {
+              showOverduePopup(ocWD.tasks, function(){ wifiCheckAndAct(); });
+            }
             return;
           }
         }catch(e2){}
@@ -7943,7 +8076,7 @@ async function fetchMyTasks(staffId){
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
     var rows=Array.isArray(d)?d:(d.data||d.tasks||[]);
-    var mine=rows.filter(function(t){ return String(t.assigned_to)===String(staffId)&&t.status!=='done'; });
+    var mine=rows.filter(function(t){ return String(t.assigned_to)===String(staffId)&&String(t.assigned_by)!==String(staffId)&&t.status!=='done'; });
     var openCount=mine.length;
     var el=document.getElementById('s1-tasks-count');
     if(el) el.textContent=openCount;
@@ -7974,7 +8107,8 @@ async function loadStaffTasks(){
   try{
     var res=await fetch(API_URL+'/api/tasks',{headers:zHead()});
     var d=await res.json();
-    _s1Tasks=Array.isArray(d)?d:(d.data||[]);
+    var all=Array.isArray(d)?d:(d.data||[]);
+    _s1Tasks=all.filter(function(t){ return String(t.assigned_by) !== String(t.assigned_to); });
     _s1TasksCache=_s1Tasks;
     var open=_s1Tasks.filter(function(t){return t.status!=='done';}).length;
     var openEl=document.getElementById('s1-tasks-open-lbl');
@@ -7983,11 +8117,9 @@ async function loadStaffTasks(){
     if(cntEl) cntEl.textContent=open;
     updateTaskRemaining(open);
     s1TaskTab(_s1TaskTab);
-    renderTasksEodCard(); // fire-and-forget
   }catch(e){
     if(!_s1TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
   }
-  renderTasksEodCard();
 }
 
 function s1TaskTab(tab){
@@ -8205,6 +8337,11 @@ async function s1UpdateTask(id,status){
   if(t){ t.status=status; if(status==='done') t.progress_percent=100; }
   if(_s1TasksCache){ var ct=_s1TasksCache.find(function(x){return String(x.id)===String(id);}); if(ct){ct.status=status;if(status==='done')ct.progress_percent=100;} }
   s1TaskTab(_s1TaskTab);
+  // Keep open-count badge in sync with actual task state
+  var openNow = _s1Tasks.filter(function(x){return x.status!=='done';}).length;
+  var cntEl=document.getElementById('s1-tasks-count'); if(cntEl) cntEl.textContent=openNow;
+  var lblEl=document.getElementById('s1-tasks-open-lbl'); if(lblEl) lblEl.textContent=openNow+' open';
+  updateTaskRemaining(openNow);
   try{
     var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
     var d=await r.json();
@@ -8472,7 +8609,10 @@ async function submitExtraTime(){
 
 /* ── LOGOUT ── */
 function zLogout(){
-  swClearAuth(); // clear token from SW IndexedDB before logout
+  stopWifiPoller();
+  swClearAuth();
+  if(staffSocket){ try{ staffSocket.disconnect(); }catch(e){} staffSocket=null; }
+  _cacheClearAll();
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   location.reload();
