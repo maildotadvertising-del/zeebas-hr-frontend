@@ -2880,11 +2880,12 @@ async function profSaveField(field){
     });
     var d = await r.json();
     if(d.success){
-      // Update localStorage
+      // Update localStorage and clear stale cache
       var updated = Object.assign({}, s);
       updated[cfg.apiKey] = val;
       if(field==='phone') updated.mobile = val;
       localStorage.setItem('zhr_staff', JSON.stringify(updated));
+      _cacheClear('profile');
       // Refresh display
       var display = document.getElementById(cfg.displayId);
       if(display){
@@ -2925,6 +2926,7 @@ function staffLogout(){
   if(staffSocket){ try{ staffSocket.disconnect(); }catch(e){} staffSocket=null; }
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
+  _cacheClearAll();
   go1('s1-roleselect');
 }
 
@@ -3325,7 +3327,7 @@ async function loadStaffMessages(){
     msgs.innerHTML = '';
     // Filter out: any message with file_url and no text (covers DOT logo regardless of message_type)
     // Also filter image-type messages with empty/whitespace-only text
-    var filtered = d.data.filter(function(m){
+    var filtered = (d.data||[]).filter(function(m){
       var hasFile = !!(m.file_url);
       var hasText = !!(m.message||'').trim();
       if(hasFile && !hasText) return false; // skip file-only messages with no caption
@@ -3784,12 +3786,12 @@ async function loadDmConversations(){
     list.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(245,245,247,0.3);font-size:12px;">Loading…</div>';
 
     // Fetch both members + existing conversations in parallel
-    var [mRes, cRes] = await Promise.all([
-      fetch(API_URL+'/api/chat/members', {headers:zHead()}),
-      fetch(API_URL+'/api/chat/dm/conversations', {headers:zHead()})
+    var [mSettled, cSettled] = await Promise.allSettled([
+      fetch(API_URL+'/api/chat/members', {headers:zHead()}).then(function(r){return r.json();}),
+      fetch(API_URL+'/api/chat/dm/conversations', {headers:zHead()}).then(function(r){return r.json();})
     ]);
-    var mData = await mRes.json();
-    var cData = await cRes.json();
+    var mData = mSettled.status==='fulfilled' ? mSettled.value : {data:[]};
+    var cData = cSettled.status==='fulfilled' ? cSettled.value : {data:[]};
 
     var me = zStaff() || {};
     var members = (mData.data||[]).filter(function(m){ return m.id !== me.id; });
@@ -3898,7 +3900,7 @@ async function loadDmMessages(userId){
     var res = await fetch(API_URL+'/api/chat/dm/'+userId, {headers:zHead()});
     var d = await res.json();
     msgs.innerHTML = '';
-    if(!d.success || !d.data.length){
+    if(!d.success || !(d.data||[]).length){
       msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;"><div style="font-size:32px;opacity:0.2;">💬</div><div style="color:rgba(232,232,232,0.3);font-size:12px;">Say hello!</div></div>';
       return;
     }
@@ -4554,8 +4556,8 @@ async function s2UpdateTaskStatus(id,status){
     var r=await fetch(API_URL+'/api/tasks/'+id+'/status',{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},zHead()),body:JSON.stringify({status:status})});
     var d=await r.json();
     if(d.success){ showToast1(status==='done'?'✅ Task done!':status==='pending'?'↩ Task reopened':'▶ Task started'); }
-    else{ showToast1('❌ '+(d.message||'Failed')); loadAdminTasks(); }
-  }catch(e){ showToast1('❌ Network error'); loadAdminTasks(); }
+    else{ showToast1('❌ '+(d.message||'Failed')); _s2TasksCache=null; loadAdminTasks(); }
+  }catch(e){ showToast1('❌ Network error'); _s2TasksCache=null; loadAdminTasks(); }
 }
 
 async function s2DeleteTask(id){
@@ -8603,6 +8605,7 @@ function zLogout(){
   stopWifiPoller();
   swClearAuth();
   if(staffSocket){ try{ staffSocket.disconnect(); }catch(e){} staffSocket=null; }
+  _cacheClearAll();
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   location.reload();

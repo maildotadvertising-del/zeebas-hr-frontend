@@ -8306,6 +8306,7 @@ async function saveProfilePassword(){
 
 function dashLogout(){
   if(dashSocket){ try{ dashSocket.disconnect(); }catch(e){} dashSocket=null; }
+  _dashCache={}; _dashCacheTs={};
   localStorage.removeItem('zhr_token');
   localStorage.removeItem('zhr_staff');
   try{ sessionStorage.removeItem('zhr_page'); }catch(e){}
