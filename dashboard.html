@@ -9645,7 +9645,8 @@ function openStaffPayrollDetail(i){
   var advMonthly = parseFloat(r.monthly_advance_taken||0);   // from advance salary entries
   var advPayroll = parseFloat(r.advance_deduction||0);       // separate payroll adjustment advance
   var advDed = advMonthly + advPayroll;
-  var balanceSalary = net; // earned_so_far already deducts all advances
+  var grossEarned = Math.round(parseFloat(r.days_present||0) * parseFloat(r.daily_rate||0)); // true gross: days × rate
+  var balanceSalary = net; // earned_so_far already deducts all deductions
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
   var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
@@ -9745,7 +9746,7 @@ function openStaffPayrollDetail(i){
       +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(48,209,88,0.15);border-radius:14px;padding:14px;">'
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
-          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(parseFloat(r.earned_so_far||0)+advDed).toLocaleString('en-IN')+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+grossEarned.toLocaleString('en-IN')+'</span></div>'
           +(advMonthly>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Entries</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advMonthly).toLocaleString('en-IN')+'</span></div>':'')
           +(advPayroll>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Payroll Adj. Advance</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advPayroll).toLocaleString('en-IN')+'</span></div>':'')
           +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>'
