@@ -9936,14 +9936,14 @@ async function spdmMarkPaid(payrollId, name){
     });
     var d = await res.json();
     if(d.success){
-      var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
-      // Inline row update
       var idx = (window._prRows||[]).findIndex(function(rx){ return rx.payroll_id === payrollId; });
       if(idx !== -1){
         window._prRows[idx] = Object.assign({}, window._prRows[idx], { payroll_status:'paid', paid_date: paidDate });
         var row = document.getElementById('pr-row-'+idx);
         if(row) row.outerHTML = prViewRow(window._prRows[idx], idx);
       }
+      var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
+      if(idx !== -1) openStaffPayrollDetail(idx); // reopen modal to show updated paid date
       showToast('✅ '+name+' salary marked as paid');
     } else showToast('❌ '+(d.message||'Error'),'error');
   }catch(e){ showToast('❌ Server error','error'); }
