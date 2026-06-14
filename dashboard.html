@@ -9535,15 +9535,9 @@ function prViewRow(r,i){
     +'<td style="'+td+'text-align:center;color:rgba(245,245,247,0.6);">₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+'</td>'
     +'<td style="'+td+'text-align:center;color:#30D158;">'+(r.days_present||0)+'d</td>'
     +'<td style="'+td+'text-align:center;color:'+(r.days_absent>0?'#FF453A':'var(--muted)')+';">'+(r.days_absent||0)+'d</td>'
-    +(function(){
-      var totalAdvDed = advDed + parseFloat(r.monthly_advance_taken||0);
-      var hasAny = otherDed>0 || totalAdvDed>0;
-      return '<td style="'+td+'text-align:center;">'
-        +(otherDed>0?'<div style="color:#FF453A;font-size:11px;" title="Other deduction">-₹'+otherDed.toLocaleString('en-IN')+'</div>':'')
-        +(totalAdvDed>0?'<div style="color:#FF6B6B;font-size:11px;" title="Advance deduction">💳 -₹'+totalAdvDed.toLocaleString('en-IN')+'</div>':'')
-        +(!hasAny?'<span style="color:var(--muted);">—</span>':'')
-      +'</td>';
-    })()
+    +'<td style="'+td+'text-align:center;">'
+      +(otherDed>0?'<div style="color:#FF453A;font-size:11px;">-₹'+otherDed.toLocaleString('en-IN')+'</div>':'<span style="color:var(--muted);">—</span>')
+    +'</td>'
     +'<td style="'+td+'text-align:center;">'
       +(timeCutDed>0
         ?'<div style="color:#FF453A;font-size:11px;font-weight:500;">-₹'+timeCutDed.toLocaleString('en-IN')+'</div>'
