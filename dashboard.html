@@ -9744,14 +9744,26 @@ function openStaffPayrollDetail(i){
         +'</div>'
         +(isPaid
           ?'<div style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;padding:10px;text-align:center;">'
-            +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Balance Salary Paid</div>'
+            +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Salary Transferred</div>'
             +(paidDate?'<div style="color:rgba(48,209,88,0.6);font-size:11px;margin-top:3px;">Transferred on '+paidDate+'</div>':'')
           +'</div>'
-          :'<div>'
-            +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Balance Transfer Date</div>'
-            +'<input type="date" id="spdm-paid-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;margin-bottom:8px;">'
-            +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="width:100%;background:rgba(48,209,88,0.85);border:none;border-radius:10px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✅ Mark Balance Salary as Paid</button>'
-          +'</div>')
+          :(net<=0
+            ?'<div>'
+              +'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Advance already covers full salary — no balance to transfer.</div>'
+              +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Entry Date</div>'
+              +'<div style="display:flex;gap:8px;align-items:center;">'
+                +'<input type="date" id="spdm-paid-date" value="'+today+'" style="'+inp+'flex:1;color-scheme:dark;">'
+                +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 14px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">✓ Mark Settled</button>'
+              +'</div>'
+            +'</div>'
+            :'<div>'
+              +'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Record when you transferred the balance salary to staff.</div>'
+              +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Transfer Date</div>'
+              +'<div style="display:flex;gap:8px;align-items:center;">'
+                +'<input type="date" id="spdm-paid-date" value="'+today+'" style="'+inp+'flex:1;color-scheme:dark;">'
+                +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 14px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💸 Save Entry</button>'
+              +'</div>'
+            +'</div>'))
       +'</div>'
 
     +'</div>'
