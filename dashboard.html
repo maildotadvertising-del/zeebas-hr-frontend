@@ -9494,6 +9494,22 @@ async function loadPayrollPage(){
   }
 }
 
+/* Auto-mark as paid when advance fully covers salary (balance = ₹0) */
+var _autoSettleInProgress = {};
+function _autoSettleAdvancePaid(payrollId, i){
+  if(_autoSettleInProgress[payrollId]) return;
+  _autoSettleInProgress[payrollId] = true;
+  var today = new Date().toISOString().slice(0,10);
+  fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
+    method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+    body:JSON.stringify({paid_date:today})
+  }).then(function(res){ return res.json(); }).then(function(d){
+    if(d.success && window._prRows[i]){
+      window._prRows[i] = Object.assign({}, window._prRows[i], {payroll_status:'paid', paid_date:today});
+    }
+  }).catch(function(){}).finally(function(){ delete _autoSettleInProgress[payrollId]; });
+}
+
 /* ── PAYROLL INLINE EDIT ── */
 function prViewRow(r,i){
   var photoSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
@@ -9522,7 +9538,9 @@ function prViewRow(r,i){
   var statusBadge = r.payroll_status==='paid'
     ? '<div style="text-align:center;"><span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
       +(paidDateFmt?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:3px;">'+paidDateFmt+'</div>':'')+'</div>'
-    : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">Pending</span>';
+    : (net<=0 && r.payroll_id
+        ? (function(){ _autoSettleAdvancePaid(r.payroll_id, i); return '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Settled</span>'; })()
+        : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">Pending</span>');
 
   return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
