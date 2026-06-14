@@ -9494,21 +9494,7 @@ async function loadPayrollPage(){
   }
 }
 
-/* Auto-mark as paid when advance fully covers salary (balance = ₹0) */
-var _autoSettleInProgress = {};
-function _autoSettleAdvancePaid(payrollId, i){
-  if(_autoSettleInProgress[payrollId]) return;
-  _autoSettleInProgress[payrollId] = true;
-  var today = new Date().toISOString().slice(0,10);
-  fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
-    method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-    body:JSON.stringify({paid_date:today})
-  }).then(function(res){ return res.json(); }).then(function(d){
-    if(d.success && window._prRows[i]){
-      window._prRows[i] = Object.assign({}, window._prRows[i], {payroll_status:'paid', paid_date:today});
-    }
-  }).catch(function(){}).finally(function(){ delete _autoSettleInProgress[payrollId]; });
-}
+/* ── (auto-settle removed: admin must confirm date explicitly) ── */
 
 /* ── PAYROLL INLINE EDIT ── */
 function prViewRow(r,i){
@@ -9538,9 +9524,7 @@ function prViewRow(r,i){
   var statusBadge = r.payroll_status==='paid'
     ? '<div style="text-align:center;"><span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
       +(paidDateFmt?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:3px;">'+paidDateFmt+'</div>':'')+'</div>'
-    : (net<=0 && r.payroll_id
-        ? (function(){ _autoSettleAdvancePaid(r.payroll_id, i); return '<span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Settled</span>'; })()
-        : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">Pending</span>');
+    : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">Pending</span>';
 
   return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
@@ -9769,26 +9753,17 @@ function openStaffPayrollDetail(i){
         +'</div>'
         +(isPaid
           ?'<div style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;padding:10px;text-align:center;">'
-            +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Salary Transferred</div>'
-            +(paidDate?'<div style="color:rgba(48,209,88,0.6);font-size:11px;margin-top:3px;">Transferred on '+paidDate+'</div>':'')
+            +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Salary Paid</div>'
+            +(paidDate?'<div style="color:rgba(48,209,88,0.6);font-size:11px;margin-top:3px;">Paid on '+paidDate+'</div>':'')
           +'</div>'
-          :(net<=0
-            ?'<div>'
-              +'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Advance already covers full salary — no balance to transfer.</div>'
-              +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Entry Date</div>'
-              +'<div style="display:flex;gap:8px;align-items:center;">'
-                +'<input type="date" id="spdm-paid-date" value="'+today+'" style="'+inp+'flex:1;color-scheme:dark;">'
-                +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 14px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">✓ Mark Settled</button>'
-              +'</div>'
+          :'<div>'
+            +(net<=0?'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Advance covers full salary. Enter the date when you gave the advance/salary.</div>':'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Enter the date when you transferred the balance salary.</div>')
+            +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Salary Paid Date</div>'
+            +'<div style="display:flex;gap:8px;align-items:center;">'
+              +'<input type="date" id="spdm-paid-date" style="'+inp+'flex:1;color-scheme:dark;">'
+              +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 14px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💸 Save</button>'
             +'</div>'
-            :'<div>'
-              +'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Record when you transferred the balance salary to staff.</div>'
-              +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Transfer Date</div>'
-              +'<div style="display:flex;gap:8px;align-items:center;">'
-                +'<input type="date" id="spdm-paid-date" value="'+today+'" style="'+inp+'flex:1;color-scheme:dark;">'
-                +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 14px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💸 Save Entry</button>'
-              +'</div>'
-            +'</div>'))
+          +'</div>')
       +'</div>'
 
     +'</div>'
@@ -9864,7 +9839,8 @@ async function spdmSaveAdvance(staffId){
 
 async function spdmMarkPaid(payrollId, name){
   if(!payrollId){ showToast('Process payroll first','error'); return; }
-  var paidDate = (document.getElementById('spdm-paid-date')||{}).value || new Date().toISOString().slice(0,10);
+  var paidDate = (document.getElementById('spdm-paid-date')||{}).value;
+  if(!paidDate){ showToast('❌ Date select பண்ணுங்க','error'); return; }
   try{
     var res = await fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
       method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
