@@ -9522,7 +9522,7 @@ function prViewRow(r,i){
   var statusBadge = r.payroll_status==='paid'
     ? '<div style="text-align:center;"><span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
       +(paidDateFmt?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:3px;">'+paidDateFmt+'</div>':'')+'</div>'
-    : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;cursor:pointer;" onclick="markPayrollPaid('+r.payroll_id+',\''+escHtml(r.name)+'\')">Pending</span>';
+    : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">Pending</span>';
 
   return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
     +'<td style="'+td+'padding-left:14px;"><div style="display:flex;align-items:center;gap:8px;">'+avatar
