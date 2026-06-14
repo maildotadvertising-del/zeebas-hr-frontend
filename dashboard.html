@@ -9752,9 +9752,19 @@ function openStaffPayrollDetail(i){
           +'<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-size:13px;font-weight:600;">Balance Salary</span><span style="color:#30D158;font-size:15px;font-weight:700;">₹'+Math.round(net).toLocaleString('en-IN')+'</span></div>'
         +'</div>'
         +(isPaid
-          ?'<div style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;padding:10px;text-align:center;">'
-            +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Salary Paid</div>'
-            +(paidDate?'<div style="color:rgba(48,209,88,0.6);font-size:11px;margin-top:3px;">Paid on '+paidDate+'</div>':'')
+          ?'<div style="background:rgba(48,209,88,0.08);border:0.5px solid rgba(48,209,88,0.2);border-radius:10px;padding:10px;">'
+            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(paidDate?'4':'0')+'px;">'
+              +'<div style="color:#30D158;font-size:13px;font-weight:500;">✅ Salary Paid</div>'
+              +'<button onclick="document.getElementById(\'spdm-edit-date-wrap\').style.display=\'block\';this.style.display=\'none\';" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:7px;padding:3px 10px;color:rgba(245,245,247,0.5);font-size:11px;cursor:pointer;font-family:inherit;">✏️ Edit Date</button>'
+            +'</div>'
+            +(paidDate?'<div style="color:rgba(48,209,88,0.6);font-size:11px;">Paid on '+paidDate+'</div>':'')
+            +'<div id="spdm-edit-date-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">'
+              +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Update Paid Date</div>'
+              +'<div style="display:flex;gap:8px;align-items:center;">'
+                +'<input type="date" id="spdm-paid-date" style="'+inp+'flex:1;color-scheme:dark;">'
+                +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 12px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 Update</button>'
+              +'</div>'
+            +'</div>'
           +'</div>'
           :'<div>'
             +(net<=0?'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Advance covers full salary. Enter the date when you gave the advance/salary.</div>':'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Enter the date when you transferred the balance salary.</div>')
