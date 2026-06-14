@@ -9641,12 +9641,11 @@ function openStaffPayrollDetail(i){
   var existing = document.getElementById('spdm-overlay');
   if(existing) existing.remove();
 
-  var net = parseFloat(r.earned_so_far||r.net_salary||0);
   var advMonthly = parseFloat(r.monthly_advance_taken||0);   // from advance salary entries
   var advPayroll = parseFloat(r.advance_deduction||0);       // separate payroll adjustment advance
   var advDed = advMonthly + advPayroll;
-  var grossEarned = Math.round(parseFloat(r.days_present||0) * parseFloat(r.daily_rate||0)); // true gross: days × rate
-  var balanceSalary = net; // earned_so_far already deducts all deductions
+  var grossEarned = Math.round(parseFloat(r.days_present||0) * parseFloat(r.daily_rate||0)); // days × rate
+  var net = grossEarned - Math.round(advDed); // balance after advance deduction
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
   var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
