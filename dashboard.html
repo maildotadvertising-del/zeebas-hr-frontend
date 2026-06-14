@@ -9516,7 +9516,7 @@ function prViewRow(r,i){
 
   var isLive = !!window._prIsCurrMonth;
   var _backendNet = parseFloat(r.earned_so_far||r.net_salary||0);
-  var net = _backendNet || (parseFloat(r.days_present||0) * Math.round(parseFloat(r.daily_rate||0)) - Math.round(parseFloat(r.absent_deduction||0)));
+  var net = _backendNet || (parseFloat(r.days_present||0) * Math.round(parseFloat(r.daily_rate||0)));
 
   var paidDateFmt = (r.payroll_status==='paid' && r.paid_date)
     ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })()
@@ -9640,7 +9640,8 @@ function openStaffPayrollDetail(i){
   var advDed = advMonthly + advPayroll;
   var absentDed = parseFloat(r.absent_deduction||0);
   var grossEarned = parseFloat(r.days_present||0) * Math.round(parseFloat(r.daily_rate||0)); // use rounded rate to match display
-  var net = grossEarned - Math.round(advDed) - Math.round(absentDed);
+  // absentDed is already baked into grossEarned (days_present excludes absent days), so don't subtract again
+  var net = grossEarned - Math.round(advDed);
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
   var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
@@ -9777,7 +9778,7 @@ function openStaffPayrollDetail(i){
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
           +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+grossEarned.toLocaleString('en-IN')+'</span></div>'
-          +(absentDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent Deduction</span><span style="color:#FF453A;font-size:12px;">-₹'+Math.round(absentDed).toLocaleString('en-IN')+'</span></div>':'')
+          +(absentDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent ('+r.days_absent+'d)</span><span style="color:rgba(255,69,58,0.65);font-size:12px;">−₹'+Math.round(absentDed).toLocaleString('en-IN')+' (withheld)</span></div>':'')
           +(advMonthly>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Entries</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advMonthly).toLocaleString('en-IN')+'</span></div>':'')
           +(advPayroll>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Payroll Adj. Advance</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advPayroll).toLocaleString('en-IN')+'</span></div>':'')
           +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>'
