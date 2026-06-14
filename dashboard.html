@@ -9835,9 +9835,15 @@ async function spdmMarkPaid(payrollId, name){
     });
     var d = await res.json();
     if(d.success){
-      showToast('✅ '+name+' salary marked as paid');
       var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
-      loadPayrollPage();
+      // Inline row update
+      var idx = (window._prRows||[]).findIndex(function(rx){ return rx.payroll_id === payrollId; });
+      if(idx !== -1){
+        window._prRows[idx] = Object.assign({}, window._prRows[idx], { payroll_status:'paid', paid_date: paidDate });
+        var row = document.getElementById('pr-row-'+idx);
+        if(row) row.outerHTML = prViewRow(window._prRows[idx], idx);
+      }
+      showToast('✅ '+name+' salary marked as paid');
     } else showToast('❌ '+(d.message||'Error'),'error');
   }catch(e){ showToast('❌ Server error','error'); }
 }
@@ -9979,8 +9985,20 @@ async function markPayrollPaid(payrollId, name){
         body: JSON.stringify({ paid_date: paidDate })
       });
       var d = await res.json();
-      if(d.success){ showToast('✅ '+name+' salary marked as paid'); loadPayrollPage(); }
-      else showToast('❌ '+(d.message||'Error'),'error');
+      if(d.success){
+        // Inline row update — no full page reload needed
+        var idx = (window._prRows||[]).findIndex(function(rx){ return rx.payroll_id === payrollId; });
+        if(idx !== -1){
+          window._prRows[idx] = Object.assign({}, window._prRows[idx], { payroll_status:'paid', paid_date: paidDate });
+          var row = document.getElementById('pr-row-'+idx);
+          if(row) row.outerHTML = prViewRow(window._prRows[idx], idx);
+          // update paid count badge
+          var paidCount = (window._prRows||[]).filter(function(rx){ return rx.payroll_status==='paid'; }).length;
+          var paidEl = document.getElementById('pr-paid-count');
+          if(paidEl) paidEl.textContent = paidCount+' / '+(window._prRows||[]).length;
+        }
+        showToast('✅ '+name+' salary marked as paid');
+      } else showToast('❌ '+(d.message||'Error'),'error');
     } catch(e){ showToast('❌ Server error','error'); }
   };
 }
