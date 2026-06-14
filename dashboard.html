@@ -9644,7 +9644,7 @@ function openStaffPayrollDetail(i){
   var advMonthly = parseFloat(r.monthly_advance_taken||0);   // from advance salary entries
   var advPayroll = parseFloat(r.advance_deduction||0);       // separate payroll adjustment advance
   var advDed = advMonthly + advPayroll;
-  var grossEarned = Math.round(parseFloat(r.days_present||0) * parseFloat(r.daily_rate||0)); // days × rate
+  var grossEarned = parseFloat(r.days_present||0) * Math.round(parseFloat(r.daily_rate||0)); // use rounded rate to match display
   var net = grossEarned - Math.round(advDed); // balance after advance deduction
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
