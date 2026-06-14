@@ -9658,8 +9658,10 @@ function openStaffPayrollDetail(i){
   if(existing) existing.remove();
 
   var net = parseFloat(r.earned_so_far||r.net_salary||0);
-  var advDed = parseFloat(r.advance_deduction||0) + parseFloat(r.monthly_advance_taken||0);
-  var balanceSalary = net; // earned_so_far already deducts advance
+  var advMonthly = parseFloat(r.monthly_advance_taken||0);   // from advance salary entries
+  var advPayroll = parseFloat(r.advance_deduction||0);       // separate payroll adjustment advance
+  var advDed = advMonthly + advPayroll;
+  var balanceSalary = net; // earned_so_far already deducts all advances
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
   var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
@@ -9718,6 +9720,10 @@ function openStaffPayrollDetail(i){
           +'<div><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Incentive (₹)</div>'
             +'<input type="number" id="spdm-inc" value="'+parseFloat(r.other_incentive||0)+'" min="0" style="'+inp+'width:100%;border-color:rgba(48,209,88,0.25);"></div>'
         +'</div>'
+        +(advPayroll>0
+          ?'<div style="margin-bottom:9px;"><div style="font-size:10px;color:rgba(255,107,107,0.7);margin-bottom:3px;">Payroll Adj. Advance (₹) <span style="color:rgba(245,245,247,0.3);font-size:9px;">— set to 0 to clear</span></div>'
+            +'<input type="number" id="spdm-adv-ded" value="'+Math.round(advPayroll)+'" min="0" style="'+inp+'width:100%;border-color:rgba(255,69,58,0.25);"></div>'
+          :'')
         +'<div style="margin-bottom:9px;"><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Incentive Reason</div>'
           +'<input type="text" id="spdm-inc-reason" value="'+escHtml(r.incentive_reason||'')+'" placeholder="Performance bonus reason…" style="'+inp+'width:100%;"></div>'
         +(r.allowance_enabled
@@ -9756,7 +9762,8 @@ function openStaffPayrollDetail(i){
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
           +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(parseFloat(r.earned_so_far||0)+advDed).toLocaleString('en-IN')+'</span></div>'
-          +(advDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Deducted</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advDed).toLocaleString('en-IN')+'</span></div>':'')
+          +(advMonthly>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Entries</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advMonthly).toLocaleString('en-IN')+'</span></div>':'')
+          +(advPayroll>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Payroll Adj. Advance</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advPayroll).toLocaleString('en-IN')+'</span></div>':'')
           +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>'
           +'<div style="display:flex;justify-content:space-between;"><span style="color:#fff;font-size:13px;font-weight:600;">Balance Salary</span><span style="color:#30D158;font-size:15px;font-weight:700;">₹'+Math.round(net).toLocaleString('en-IN')+'</span></div>'
         +'</div>'
@@ -9801,7 +9808,7 @@ async function spdmSaveAdjustments(i){
     other_deduction:  parseFloat((document.getElementById('spdm-od')||{}).value)||0,
     other_incentive:  parseFloat((document.getElementById('spdm-inc')||{}).value)||0,
     incentive_reason: (document.getElementById('spdm-inc-reason')||{}).value||'',
-    advance_deduction: parseFloat(r.advance_deduction||0),
+    advance_deduction: parseFloat((document.getElementById('spdm-adv-ded')||{value:r.advance_deduction||0}).value)||0,
     allowance_amount: alwEl ? (parseFloat(alwEl.value)||0) : parseFloat(r.allowance_amount||0),
     allowance_note:   alwNoteEl ? (alwNoteEl.value||'') : (r.allowance_note||''),
     notes: (document.getElementById('spdm-notes')||{}).value||''
