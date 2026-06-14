@@ -9700,6 +9700,12 @@ function openStaffPayrollDetail(i){
           +'<div><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Incentive (₹)</div>'
             +'<input type="number" id="spdm-inc" value="'+parseFloat(r.other_incentive||0)+'" min="0" style="'+inp+'width:100%;border-color:rgba(48,209,88,0.25);"></div>'
         +'</div>'
+        +(absentDed>0
+          ?'<div style="margin-bottom:9px;background:rgba(255,69,58,0.06);border:0.5px solid rgba(255,69,58,0.18);border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;">'
+            +'<div style="font-size:10px;color:rgba(255,69,58,0.7);">Absent Deduction <span style="color:rgba(245,245,247,0.3);font-size:9px;">(auto-calculated · read only)</span></div>'
+            +'<div style="color:#FF453A;font-size:13px;font-weight:600;">-₹'+Math.round(absentDed).toLocaleString('en-IN')+'</div>'
+          +'</div>'
+          :'')
         +(advPayroll>0
           ?'<div style="margin-bottom:9px;"><div style="font-size:10px;color:rgba(255,107,107,0.7);margin-bottom:3px;">Payroll Adj. Advance (₹) <span style="color:rgba(245,245,247,0.3);font-size:9px;">— set to 0 to clear</span></div>'
             +'<input type="number" id="spdm-adv-ded" value="'+Math.round(advPayroll)+'" min="0" style="'+inp+'width:100%;border-color:rgba(255,69,58,0.25);"></div>'
