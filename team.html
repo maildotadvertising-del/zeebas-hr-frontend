@@ -5432,7 +5432,8 @@ async function loadMySalary(){
     var lateDeduction  = parseFloat(payroll ? payroll.late_deduction : (att.total_late_deduction||0));
     var otHours        = parseFloat(payroll ? payroll.ot_hours : (att.total_ot_hours||0));
     var otAmount       = parseFloat(payroll ? payroll.ot_amount : (att.total_ot_amount||0));
-    var advDeduction   = parseFloat(payroll ? payroll.advance_deduction : advances.reduce(function(s,a){ return s+parseFloat(a.monthly_recovery||0); }, 0));
+    var advFromEntries = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
+    var advDeduction   = parseFloat(payroll ? payroll.advance_deduction : 0) + advFromEntries;
     var allowanceAmt   = parseFloat((payroll && payroll.allowance_enabled) ? (payroll.allowance_amount||0) : 0);
     var allowanceNote  = (payroll && payroll.allowance_note) || '';
     var incentiveAmt   = parseFloat(payroll ? (payroll.other_incentive||0) : 0);

@@ -9919,6 +9919,7 @@ async function spdmSaveAdvance(staffId){
       var rsnEl=document.getElementById('spdm-adv-reason'); if(rsnEl) rsnEl.value='';
       showToast('💸 ₹'+amount.toLocaleString('en-IN')+' advance saved');
       _loadAdvanceSalaryHistory_modal(staffId);
+      if(_pr) delete _prCache[_pr.month+'_'+_pr.year];
       if(typeof loadPayrollPage==='function') loadPayrollPage();
     } else showToast('❌ '+(d.message||'Failed'),'error');
   }catch(e){ showToast('❌ Error','error'); }
@@ -9947,6 +9948,22 @@ async function spdmMarkPaid(payrollId, name){
       showToast('✅ '+name+' salary marked as paid');
     } else showToast('❌ '+(d.message||'Error'),'error');
   }catch(e){ showToast('❌ Server error','error'); }
+}
+
+async function spdmDeleteAdvanceEntry(id, staffId){
+  if(!confirm('Delete பண்ணலாமா?')) return;
+  try{
+    var r = await fetch(API+'/api/payroll/monthly-advance/entry/'+id, {method:'DELETE', headers:zHdr()});
+    var d = await r.json();
+    if(d.success){
+      showToast('🗑 Deleted');
+      if(_pr) delete _prCache[_pr.month+'_'+_pr.year];
+      if(typeof loadPayrollPage==='function') await loadPayrollPage();
+      var idx = (window._prRows||[]).findIndex(function(rx){ return rx.id === staffId; });
+      if(idx !== -1) openStaffPayrollDetail(idx);
+      else _loadAdvanceSalaryHistory_modal(staffId);
+    } else showToast('❌ '+(d.message||'Failed'),'error');
+  } catch(e){ showToast('❌ Error','error'); }
 }
 
 // Loads advance history inside the staff payroll detail modal
@@ -9983,7 +10000,7 @@ function _loadAdvanceSalaryHistory_modal(staffId){
                 +'<div style="color:#FF453A;font-size:11px;font-weight:500;">-₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
                 +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+dt+' · '+escHtml(e.reason||'—')+'</div>'
               +'</div>'
-              +'<button onclick="deleteAdvanceSalaryEntry('+e.id+','+staffId+');_loadAdvanceSalaryHistory_modal('+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;">🗑</button>'
+              +'<button onclick="spdmDeleteAdvanceEntry('+e.id+','+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;">🗑</button>'
             +'</div>';
           }).join('')
         +'</div>';
@@ -10572,6 +10589,7 @@ async function submitAdvanceSalaryEntry(staffId, btn){
       document.getElementById('asf-reason').value='';
       showToast('💸 ₹'+amount.toLocaleString('en-IN')+' advance saved');
       _loadAdvanceSalaryHistory(staffId);
+      if(_pr) delete _prCache[_pr.month+'_'+_pr.year];
       if(typeof loadPayrollPage==='function') loadPayrollPage();
     } else { showToast('❌ '+(d.message||'Failed')); }
   } catch(e){ showToast('❌ Error'); }
@@ -10603,7 +10621,7 @@ async function saveAdvanceSalaryEdit(id, staffId){
       body:JSON.stringify({amount, payment_date:date, reason})
     });
     var d = await r.json();
-    if(d.success){ showToast('✅ Updated'); _loadAdvanceSalaryHistory(staffId); if(typeof loadPayrollPage==='function') loadPayrollPage(); }
+    if(d.success){ showToast('✅ Updated'); _loadAdvanceSalaryHistory(staffId); if(_pr) delete _prCache[_pr.month+'_'+_pr.year]; if(typeof loadPayrollPage==='function') loadPayrollPage(); }
     else showToast('❌ '+(d.message||'Failed'));
   } catch(e){ showToast('❌ Error'); }
 }
@@ -10613,7 +10631,7 @@ async function deleteAdvanceSalaryEntry(id, staffId){
   try{
     var r = await fetch(API+'/api/payroll/monthly-advance/entry/'+id, {method:'DELETE', headers:zHdr()});
     var d = await r.json();
-    if(d.success){ showToast('🗑 Deleted'); _loadAdvanceSalaryHistory(staffId); if(typeof loadPayrollPage==='function') loadPayrollPage(); }
+    if(d.success){ showToast('🗑 Deleted'); _loadAdvanceSalaryHistory(staffId); if(_pr) delete _prCache[_pr.month+'_'+_pr.year]; if(typeof loadPayrollPage==='function') loadPayrollPage(); }
     else showToast('❌ '+(d.message||'Failed'));
   } catch(e){ showToast('❌ Error'); }
 }
