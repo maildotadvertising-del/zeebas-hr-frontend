@@ -5447,7 +5447,7 @@ async function loadMySalary(){
     var absentDeduction = absentDays > 0
       ? (isCurrMonth ? (absentDays * dailyRate) : (payroll ? parseFloat(payroll.absent_deduction||0) : absentDays * dailyRate))
       : 0;
-    var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt - lateDeduction - advDeduction);
+    var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
     var netSalary  = isCurrMonth ? earnedSoFar : parseFloat(payroll ? payroll.net_salary : earnedSoFar);
     var isProcessed = !!payroll;
     var status      = payroll ? payroll.status : 'preview';

@@ -9641,7 +9641,10 @@ function openStaffPayrollDetail(i){
   var absentDed = parseFloat(r.absent_deduction||0);
   var grossEarned = parseFloat(r.days_present||0) * Math.round(parseFloat(r.daily_rate||0)); // use rounded rate to match display
   // absentDed is already baked into grossEarned (days_present excludes absent days), so don't subtract again
-  var net = grossEarned - Math.round(advDed);
+  // Trust the backend's authoritative net (same field the payroll list row uses) so the modal matches the
+  // list and correctly reflects late/OT deductions, other deduction/incentive and allowance too
+  var _backendNet = parseFloat((window._prIsCurrMonth ? r.earned_so_far : r.net_salary)||0);
+  var net = _backendNet || (grossEarned - Math.round(advDed));
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
   var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
