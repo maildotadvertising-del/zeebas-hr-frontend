@@ -9686,17 +9686,51 @@ async function dtLoadSalary(){
   var el=document.getElementById('dt-salary-content');
   if(!el) return;
   try{
-    var r=await fetch(API_URL+'/api/payroll/my',{headers:{Authorization:'Bearer '+(localStorage.getItem('zhr_token')||'')}});
-    var d=await r.json();
-    var s=d.data||d;
-    if(!s||!s.gross){ el.innerHTML='<div style="text-align:center;padding:24px;color:rgba(245,245,247,0.3);font-size:12px;">Salary info not available yet</div>'; return; }
+    var now=new Date(), month=now.getMonth()+1, year=now.getFullYear();
+    var [pRes, sRes] = await Promise.all([
+      fetch(API_URL+'/api/payroll/my?month='+month+'&year='+year, {headers:zHead()}),
+      fetch(API_URL+'/api/settings/payroll', {headers:zHead()})
+    ]);
+    var pData = await pRes.json();
+    var sData = await sRes.json();
+
+    var staffInfo = zStaff() || {};
+    var att = pData.attendance_summary||{};
+    var payroll = pData.payroll||null;
+    var advances = pData.advances||[];
+    var settings = sData.data||{};
+
+    var baseSalary = parseFloat(payroll ? payroll.base_salary : (staffInfo.base_salary||staffInfo.daily_rate||0));
+    var daysWorked = parseInt(att.days_present||0);
+    var lateDays   = parseInt(att.late_days||0);
+    var absentDays = parseInt(att.days_absent||0);
+    var lateDeduction = parseFloat(payroll ? payroll.late_deduction : (att.total_late_deduction||0));
+    var otHours    = parseFloat(payroll ? payroll.ot_hours : (att.total_ot_hours||0));
+    var otAmount   = parseFloat(payroll ? payroll.ot_amount : (att.total_ot_amount||0));
+    var allowanceAmt  = parseFloat((payroll && payroll.allowance_enabled) ? (payroll.allowance_amount||0) : 0);
+    var incentiveAmt  = parseFloat(payroll ? (payroll.other_incentive||0) : 0);
+    var wdFull    = pData.working_days || settings.working_days_per_month || 26;
+    var dailyRate = baseSalary / wdFull;
+    var absentDeduction = absentDays>0 ? absentDays*dailyRate : 0;
+    // Always current month here — trust live date-wise advance entries (same fix as mobile My Salary)
+    // so an admin add/edit/delete reflects instantly instead of a stale processed-payroll snapshot.
+    var advDeduction = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
+    var netSalary = Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
+
+    var fmt=function(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0}); };
     var row=function(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'+'<span style="font-size:12px;color:rgba(245,245,247,0.5);">'+lbl+'</span>'+'<span style="font-size:13px;font-weight:500;color:'+(col||'#F5F5F7')+';">'+val+'</span></div>'; };
     el.innerHTML=''
-      +row('Gross Salary','₹'+Number(s.gross||0).toLocaleString('en-IN'),'#F5F5F7')
-      +row('Deductions','₹'+Number(s.deductions||0).toLocaleString('en-IN'),'#FF453A')
-      +row('Net Pay','₹'+Number(s.net||s.net_pay||0).toLocaleString('en-IN'),'#30D158')
-      +(s.attendance_days!==undefined?row('Days Present',s.attendance_days+' days'):'')
-      +(s.ot_hours?row('OT Hours',parseFloat(s.ot_hours).toFixed(1)+'h','#FF9F0A'):'');
+      +row('Base Salary','₹'+fmt(baseSalary))
+      +row('Present Salary','+₹'+fmt(daysWorked*dailyRate),'#30D158')
+      +(absentDeduction>0?row('Absent Deduction','−₹'+fmt(absentDeduction),'#FF453A'):'')
+      +(lateDeduction>0?row('Late Deduction','−₹'+fmt(lateDeduction),'#FF9F0A'):'')
+      +(otAmount>0?row('OT Pay','+₹'+fmt(otAmount),'#0A84FF'):'')
+      +(allowanceAmt>0?row('Allowance','+₹'+fmt(allowanceAmt),'#BF5FFF'):'')
+      +(incentiveAmt>0?row('Incentive','+₹'+fmt(incentiveAmt),'#FF9F0A'):'')
+      +(advDeduction>0?row('Advance Recovery','−₹'+fmt(advDeduction),'#FF453A'):'')
+      +row('Net Pay','₹'+fmt(netSalary),'#30D158')
+      +row('Days Present',daysWorked+' days')
+      +(otHours>0?row('OT Hours',otHours.toFixed(1)+'h','#FF9F0A'):'');
   } catch(e){ el.innerHTML='<div style="text-align:center;padding:24px;color:rgba(245,245,247,0.3);font-size:12px;">Could not load salary info</div>'; }
 }
 
