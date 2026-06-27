@@ -5432,7 +5432,8 @@ async function loadMySalary(){
     var lateDeduction  = parseFloat(payroll ? payroll.late_deduction : (att.total_late_deduction||0));
     var otHours        = parseFloat(payroll ? payroll.ot_hours : (att.total_ot_hours||0));
     var otAmount       = parseFloat(payroll ? payroll.ot_amount : (att.total_ot_amount||0));
-    var advDeduction   = parseFloat(payroll ? payroll.advance_deduction : advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0));
+    var advancesLiveTotal = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
+    var advDeduction   = parseFloat(payroll ? payroll.advance_deduction : advancesLiveTotal);
     var allowanceAmt   = parseFloat((payroll && payroll.allowance_enabled) ? (payroll.allowance_amount||0) : 0);
     var allowanceNote  = (payroll && payroll.allowance_note) || '';
     var incentiveAmt   = parseFloat(payroll ? (payroll.other_incentive||0) : 0);
@@ -5447,6 +5448,10 @@ async function loadMySalary(){
     var absentDeduction = absentDays > 0
       ? (isCurrMonth ? (absentDays * dailyRate) : (payroll ? parseFloat(payroll.absent_deduction||0) : absentDays * dailyRate))
       : 0;
+    // Same staleness issue for advances: once payroll is processed, payroll.advance_deduction is a snapshot
+    // that doesn't update if admin later adds/edits/deletes a date-wise advance entry. Always trust the
+    // live date-wise entries for the current month so admin changes reflect instantly.
+    if(isCurrMonth) advDeduction = advancesLiveTotal;
     var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
     var netSalary  = isCurrMonth ? earnedSoFar : parseFloat(payroll ? payroll.net_salary : earnedSoFar);
     var isProcessed = !!payroll;
