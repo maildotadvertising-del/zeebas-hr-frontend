@@ -9782,6 +9782,12 @@ function openStaffPayrollDetail(i){
         +'</div>'
       +'</div>'
 
+      // ── Salary Advance — Installment (separate /api/advances system; recurs monthly until recovered/closed) ──
+      +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.18);border-radius:14px;padding:14px;">'
+        +'<div style="font-size:11px;color:#FF9F0A;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💼 Salary Advance — Installment</div>'
+        +'<div id="spdm-inst-adv-'+r.id+'"><div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Loading…</div></div>'
+      +'</div>'
+
       // ── Payment Status ──
       +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(48,209,88,0.15);border-radius:14px;padding:14px;">'
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
@@ -9823,6 +9829,44 @@ function openStaffPayrollDetail(i){
 
   document.body.appendChild(ov);
   _loadAdvanceSalaryHistory_modal(r.id);
+  _loadInstallmentAdvances_modal(r.id, r.name);
+}
+
+// Shows any active "installment" salary advance (/api/advances — total_amount, monthly_recovery,
+// amount_recovered) for this staff. This is a separate system from the date-wise advance entries
+// above: an active record here keeps deducting monthly_recovery every month until it's marked
+// recovered/closed — it was previously invisible in this modal, causing admin/staff app mismatches.
+async function _loadInstallmentAdvances_modal(staffId, staffName){
+  var el = document.getElementById('spdm-inst-adv-'+staffId);
+  if(!el) return;
+  try{
+    var res = await fetch(API+'/api/advances?status=active', {headers: zHdr()});
+    var d = await res.json();
+    var list = (d.data||[]).filter(function(a){ return parseInt(a.staff_id,10)===parseInt(staffId,10); });
+    if(!list.length){ el.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No active installment advance</div>'; return; }
+    el.innerHTML = list.map(function(a){
+      var dt = a.given_date ? a.given_date.toString().slice(0,10) : '';
+      var recovered = parseFloat(a.amount_recovered||0);
+      var remaining = parseFloat(a.total_amount||0) - recovered;
+      return '<div style="background:rgba(255,159,10,0.06);border:0.5px solid rgba(255,159,10,0.18);border-radius:10px;padding:10px 12px;margin-bottom:8px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">'
+          +'<div>'
+            +'<div style="color:#fff;font-size:13px;font-weight:600;">₹'+Math.round(a.total_amount).toLocaleString('en-IN')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;">'+escHtml(a.reason||'Salary Advance')+(dt?' · '+dt:'')+'</div>'
+          +'</div>'
+          +'<div style="color:#FF9F0A;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;">● active</div>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">'
+          +'<span>Recovered: ₹'+Math.round(recovered).toLocaleString('en-IN')+'</span>'
+          +'<span>Remaining: ₹'+Math.round(remaining).toLocaleString('en-IN')+'</span>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;">'
+          +'<button onclick="closeAdvance('+a.id+',\''+encodeURIComponent(staffName||'')+'\')" style="flex:1;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.3);border-radius:8px;padding:6px;color:#30D158;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Mark Recovered</button>'
+          +'<button onclick="deleteAdvance('+a.id+')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;padding:6px;color:#FF453A;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">🗑 Delete</button>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  } catch(e){ el.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Could not load</div>'; }
 }
 
 function spdmRenderAlwList(){
@@ -10930,7 +10974,7 @@ async function closeAdvance(id, nameEnc){
   try {
     var res = await fetch(API+'/api/advances/'+id+'/close', { method:'POST', headers: zHdr() });
     var d = await res.json();
-    if(d.success){ showToast('✅ Advance closed — fully settled'); loadPayrollPage(); }
+    if(d.success){ showToast('✅ Advance closed — fully settled'); loadPayrollPage(); _refreshOpenInstallmentAdvances(); }
     else showToast('❌ '+(d.message||'Error'),'error');
   } catch(e){ showToast('❌ Server error','error'); }
 }
@@ -10940,9 +10984,18 @@ async function deleteAdvance(id){
   try {
     var res = await fetch(API+'/api/advances/'+id, { method:'DELETE', headers: zHdr() });
     var d = await res.json();
-    if(d.success){ showToast('🗑 Advance deleted'); loadPayrollPage(); }
+    if(d.success){ showToast('🗑 Advance deleted'); loadPayrollPage(); _refreshOpenInstallmentAdvances(); }
     else showToast('❌ '+(d.message||'Error'),'error');
   } catch(e){ showToast('❌ Server error','error'); }
+}
+
+// If the staff payroll detail modal is open, re-render its installment advance section in place
+function _refreshOpenInstallmentAdvances(){
+  var openEl = document.querySelector('[id^="spdm-inst-adv-"]');
+  if(!openEl) return;
+  var staffId = openEl.id.replace('spdm-inst-adv-','');
+  var nameEl = document.querySelector('#spdm-overlay [style*="font-weight:600;color:#fff"]');
+  _loadInstallmentAdvances_modal(staffId, nameEl ? nameEl.textContent : '');
 }
 </script>
 
