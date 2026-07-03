@@ -1326,6 +1326,25 @@ body.desktop-mode #s1-sidebar {
       </div>
     </div>
 
+    <!-- EQUIPMENT (s1 — staff view) -->
+    <div id="s1-assets" class="scr">
+      <div style="padding:12px 13px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <button onclick="go1('s1-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <div style="flex:1;">
+          <div style="color:#fff;font-size:16px;font-weight:500;">Equipment</div>
+          <div style="color:rgba(245,245,247,0.35);font-size:10px;">Available inventory</div>
+        </div>
+        <button onclick="loadS1Assets()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;width:28px;height:28px;color:rgba(245,245,247,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;">↻</button>
+      </div>
+      <div class="scroll" style="flex:1;padding:12px 13px;">
+        <div id="s1-ast-content">
+          <div style="text-align:center;padding:50px 0;color:rgba(245,245,247,0.25);font-size:12px;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
     <!-- WHATSAPP ATTACH SHEET -->
     <!-- Hidden file inputs for attach sheet -->
     <input type="file" id="fi-camera"  accept="image/*" capture="environment" style="display:none" onchange="handleFileAttach(this)">
@@ -1474,6 +1493,13 @@ body.desktop-mode #s1-sidebar {
             </div>
             <div style="color:#fff;font-size:11px;font-weight:500;">Team Chat</div>
             <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">All staff</div>
+          </div>
+          <div class="gs" style="padding:11px;cursor:pointer;" onclick="go2('s2-assets')">
+            <div style="width:30px;height:30px;background:rgba(48,209,88,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 5.5l6-3 6 3v6l-6 3-6-3v-6z" stroke="#30D158" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 5.5l6 3.5 6-3.5M8 9v5.5" stroke="#30D158" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            <div style="color:#fff;font-size:11px;font-weight:500;">Equipment</div>
+            <div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">Checkout / Return</div>
           </div>
         </div>
         <!-- Today mini attendance -->
@@ -2017,6 +2043,28 @@ body.desktop-mode #s1-sidebar {
       </div>
     </div>
 
+    <!-- ASSETS (s2 — admin view) -->
+    <div id="s2-assets" class="scr">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 13px 10px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <button onclick="go2('s2-home')" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div style="color:#fff;font-size:15px;font-weight:500;flex:1;">📦 Equipment</div>
+        <button onclick="loadS2Assets()" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;width:28px;height:28px;color:rgba(245,245,247,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;">↻</button>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:6px;padding:10px 13px;flex-shrink:0;overflow-x:auto;">
+        <button id="s2-ast-tab-active" onclick="s2AstTab('active')" style="white-space:nowrap;padding:6px 14px;border-radius:20px;border:0.5px solid rgba(10,132,255,0.35);background:rgba(10,132,255,0.15);color:#0A84FF;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;">Active</button>
+        <button id="s2-ast-tab-available" onclick="s2AstTab('available')" style="white-space:nowrap;padding:6px 14px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.07);background:transparent;color:rgba(245,245,247,0.4);font-size:11px;cursor:pointer;font-family:inherit;">All Equipment</button>
+        <button id="s2-ast-tab-history" onclick="s2AstTab('history')" style="white-space:nowrap;padding:6px 14px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.07);background:transparent;color:rgba(245,245,247,0.4);font-size:11px;cursor:pointer;font-family:inherit;">History</button>
+      </div>
+      <div class="scroll" style="flex:1;padding:0 13px 14px;">
+        <div id="s2-ast-content">
+          <div style="text-align:center;padding:50px 0;color:rgba(245,245,247,0.25);font-size:12px;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -2081,7 +2129,7 @@ var _s1NavInPopstate  = false;
 var _s1CurrentScreen  = 's1-home';
 var _s1BackPressCount = 0;
 var _s1BackTimer      = null;
-var _S1_APP_SCREENS   = ['s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory'];
+var _S1_APP_SCREENS   = ['s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory','s1-assets'];
 var _S1_LOGIN_SCREENS = ['s1-splash','s1-roleselect','s1-login'];
 
 window.addEventListener('popstate', function(e) {
@@ -2142,7 +2190,7 @@ window.addEventListener('popstate', function(e) {
 // Bottom nav order for directional slide animation
 var _navOrder = ['s1-home','s1-tasks','s1-chat','s1-salary','s1-profile'];
 function go1(id){
-  var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory'];
+  var all=['s1-splash','s1-roleselect','s1-login','s1-home','s1-tasks','s1-chat','s1-gps','s1-leave','s1-salary','s1-attsuccess','s1-dailylog','s1-profile','s1-atthistory','s1-assets'];
   // Determine slide direction based on bottom nav order
   var fromIdx = _navOrder.indexOf(_s1CurrentScreen||'');
   var toIdx   = _navOrder.indexOf(id);
@@ -2186,12 +2234,13 @@ function go1(id){
   if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
   if(id==='s1-atthistory'){ loadAttHistory(); }
   if(id==='s1-profile'){ setTimeout(loadProfile, 100); }
+  if(id==='s1-assets'){ setTimeout(loadS1Assets, 100); }
 }
 
 var _adminNavOrder = ['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
 var _s2CurrentScreen = 's2-home';
 function go2(id){
-  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings','s2-advances','s2-announcements','s2-ot-rules'];
+  var all=['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more','s2-stafflist','s2-staffprofile','s2-payroll','s2-gps-settings','s2-payroll-settings','s2-biometric-settings','s2-advances','s2-announcements','s2-ot-rules','s2-assets'];
   // Directional slide based on bottom nav order
   var fromIdx = _adminNavOrder.indexOf(_s2CurrentScreen);
   var toIdx   = _adminNavOrder.indexOf(id);
@@ -2221,6 +2270,7 @@ function go2(id){
   if(id==='s2-payroll-settings')  { loadPayrollSettings(); }
   if(id==='s2-biometric-settings'){ loadBiometricSettings(); }
   if(id==='s2-ot-rules')          { loadOTRules(); }
+  if(id==='s2-assets')            { loadS2Assets(); }
 }
 
 /* staffLogin() — handled by API script */
@@ -8633,6 +8683,7 @@ var _deskNavItems = [
   {id:'s1-tasks',   label:'Tasks',      p:'M5 5H13V14H5V5Z M7 8H11 M7 10.5H9.5'},
   {id:'s1-leave',   label:'Leaves',     p:'M3 5h12M3 9h8M3 13h6'},
   {id:'s1-salary',  label:'Payslip',    p:'M9 3.5V15.5 M6.5 6H11.5 M6.5 13H11.5'},
+  {id:'s1-assets',  label:'Equipment',  p:'M3 6.5l6-3.5 6 3.5v6l-6 3.5-6-3.5v-6z M3 6.5l6 3.5 6-3.5 M9 10v5.5'},
   {id:'s1-profile', label:'Profile',    p:'M9 8.5A2.5 2.5 0 1 0 9 3.5A2.5 2.5 0 0 0 9 8.5Z M3.5 15.5C3.5 12.5 6 10 9 10C12 10 14.5 12.5 14.5 15.5'},
 ];
 var _deskActive = 's1-home';
@@ -9775,6 +9826,199 @@ window.addEventListener('resize', function(){
 </script>
 
 <script>
+/* ═══════════════════════════════════════
+   ASSETS — s1 staff view + s2 admin
+   ═══════════════════════════════════════ */
+function _t_aGet(){ try{ return JSON.parse(localStorage.getItem('zhr_assets')||'[]'); }catch(e){ return []; } }
+function _t_cGet(){ try{ return JSON.parse(localStorage.getItem('zhr_checkouts')||'[]'); }catch(e){ return []; } }
+function _t_cSave(d){ localStorage.setItem('zhr_checkouts', JSON.stringify(d)); }
+
+function _t_astAvail(asset, checkouts){
+  var out = (checkouts||[]).filter(function(c){ return c.asset_id===asset.id && !c.returned; }).reduce(function(s,c){ return s+parseInt(c.qty||1); }, 0);
+  return Math.max(0, parseInt(asset.qty||1) - out);
+}
+
+function loadS1Assets(){
+  var el = document.getElementById('s1-ast-content');
+  if(!el) return;
+  var assets = _t_aGet();
+  var checkouts = _t_cGet();
+  var staffName = (zStaff()||{}).name || '';
+  var myActive = checkouts.filter(function(c){ return !c.returned && c.staff_name && c.staff_name.toLowerCase()===staffName.toLowerCase(); });
+  var today = new Date().toISOString().slice(0,10);
+  var html = '';
+
+  if(myActive.length){
+    html += '<div style="color:rgba(245,245,247,0.4);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">My Active Checkouts</div>';
+    html += myActive.map(function(c){
+      var overdue = c.expected_return && c.expected_return.slice(0,10) < today;
+      return '<div style="background:rgba(255,159,10,0.07);border:0.5px solid rgba(255,159,10,0.18);border-radius:14px;padding:12px;margin-bottom:8px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+          +'<div style="color:#fff;font-size:13px;font-weight:500;">'+c.asset_name+'</div>'
+          +(overdue
+            ?'<div style="font-size:9px;background:rgba(255,69,58,0.15);color:#FF453A;border-radius:6px;padding:2px 7px;font-weight:500;">Overdue</div>'
+            :'<div style="font-size:9px;background:rgba(255,159,10,0.15);color:#FF9F0A;border-radius:6px;padding:2px 7px;">With Me</div>')
+        +'</div>'
+        +(c.event?'<div style="font-size:10px;color:rgba(245,245,247,0.4);">Event: <span style="color:rgba(245,245,247,0.7);">'+c.event+'</span></div>':'')
+        +(c.expected_return?'<div style="font-size:10px;color:rgba(245,245,247,0.4);">Return by: <span style="color:'+(overdue?'#FF453A':'#30D158')+';">'+c.expected_return.slice(0,10)+'</span></div>':'')
+        +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-top:3px;">Qty taken: <span style="color:#0A84FF;">'+c.qty+'</span></div>'
+      +'</div>';
+    }).join('');
+    html += '<div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0;"></div>';
+  }
+
+  var available = assets.filter(function(a){ return _t_astAvail(a, checkouts) > 0; });
+  html += '<div style="color:rgba(245,245,247,0.4);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Available Equipment</div>';
+  if(!available.length){
+    html += '<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.25);font-size:12px;"><div style="font-size:28px;margin-bottom:6px;">📦</div>No equipment available right now</div>';
+  } else {
+    html += available.map(function(a){
+      var avail = _t_astAvail(a, checkouts);
+      return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
+        +'<div><div style="color:#fff;font-size:13px;font-weight:500;">'+a.name+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">'+a.category+'</div></div>'
+        +'<div style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.25);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:500;">'+avail+' avail</div>'
+      +'</div>';
+    }).join('');
+  }
+
+  if(!myActive.length && !available.length && assets.length){
+    html = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.25);font-size:12px;"><div style="font-size:28px;margin-bottom:8px;">📦</div>All equipment is checked out</div>';
+  } else if(!assets.length){
+    html = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.25);font-size:12px;"><div style="font-size:28px;margin-bottom:8px;">📦</div>No equipment added yet</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+var _s2AstTab = 'active';
+function s2AstTab(tab){
+  _s2AstTab = tab;
+  ['active','available','history'].forEach(function(t){
+    var btn = document.getElementById('s2-ast-tab-'+t);
+    if(btn){
+      btn.style.background = t===tab ? 'rgba(10,132,255,0.15)' : 'transparent';
+      btn.style.color = t===tab ? '#0A84FF' : 'rgba(245,245,247,0.4)';
+      btn.style.borderColor = t===tab ? 'rgba(10,132,255,0.35)' : 'rgba(255,255,255,0.07)';
+    }
+  });
+  if(tab==='active') renderS2AstActive();
+  else if(tab==='available') renderS2AstAvailable();
+  else renderS2AstHistory();
+}
+
+function loadS2Assets(){ s2AstTab(_s2AstTab||'active'); }
+
+function renderS2AstActive(){
+  var el = document.getElementById('s2-ast-content');
+  if(!el) return;
+  var checkouts = _t_cGet().filter(function(c){ return !c.returned; });
+  if(!checkouts.length){
+    el.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.25);font-size:12px;"><div style="font-size:28px;margin-bottom:8px;">✅</div>No active checkouts</div>';
+    return;
+  }
+  var today = new Date().toISOString().slice(0,10);
+  el.innerHTML = checkouts.map(function(c){
+    var overdue = c.expected_return && c.expected_return.slice(0,10) < today;
+    return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;margin-bottom:8px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+        +'<div><div style="color:#fff;font-size:13px;font-weight:500;">'+c.asset_name+'</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:10px;">'+c.staff_name+(c.event?' · '+c.event:'')+'</div></div>'
+        +(overdue
+          ?'<div style="font-size:9px;background:rgba(255,69,58,0.15);color:#FF453A;border-radius:6px;padding:2px 7px;font-weight:500;">Overdue</div>'
+          :'<div style="font-size:9px;background:rgba(255,159,10,0.12);color:#FF9F0A;border-radius:6px;padding:2px 7px;">Out</div>')
+      +'</div>'
+      +'<div style="display:flex;gap:8px;font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:8px;">'
+        +'<span>Qty: <span style="color:#0A84FF;">'+c.qty+'</span></span>'
+        +(c.from_date?'<span>From: '+c.from_date.slice(0,10)+'</span>':'')
+        +(c.expected_return?'<span>Due: <span style="color:'+(overdue?'#FF453A':'#30D158')+';">'+c.expected_return.slice(0,10)+'</span></span>':'')
+      +'</div>'
+      +'<button onclick="s2MarkReturn(\''+c.id+'\')" style="width:100%;padding:8px;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.25);border-radius:10px;color:#30D158;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">📥 Mark Returned</button>'
+    +'</div>';
+  }).join('');
+}
+
+function renderS2AstAvailable(){
+  var el = document.getElementById('s2-ast-content');
+  if(!el) return;
+  var assets = _t_aGet();
+  var checkouts = _t_cGet();
+  if(!assets.length){
+    el.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.25);font-size:12px;"><div style="font-size:28px;margin-bottom:8px;">📦</div>No equipment added yet<br><span style="font-size:10px;">Add equipment from the Admin Dashboard</span></div>';
+    return;
+  }
+  el.innerHTML = assets.map(function(a){
+    var avail = _t_astAvail(a, checkouts);
+    var total = parseInt(a.qty||1);
+    return '<div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
+      +'<div><div style="color:#fff;font-size:13px;font-weight:500;">'+a.name+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;">'+a.category+'</div></div>'
+      +'<div style="text-align:right;"><div style="font-size:14px;font-weight:600;color:#30D158;">'+avail+'<span style="font-size:10px;font-weight:400;color:rgba(245,245,247,0.3);"> / '+total+'</span></div><div style="font-size:9px;color:rgba(245,245,247,0.3);">available</div></div>'
+    +'</div>';
+  }).join('');
+}
+
+function renderS2AstHistory(){
+  var el = document.getElementById('s2-ast-content');
+  if(!el) return;
+  var returned = _t_cGet().filter(function(c){ return c.returned; }).reverse();
+  if(!returned.length){
+    el.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.25);font-size:12px;"><div style="font-size:28px;margin-bottom:8px;">📋</div>No return history</div>';
+    return;
+  }
+  el.innerHTML = returned.map(function(c){
+    var condColor = c.return_condition==='Good'?'#30D158':c.return_condition==='Fair'?'#FF9F0A':'#FF453A';
+    return '<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px;margin-bottom:6px;">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+        +'<div style="color:#fff;font-size:12px;font-weight:500;">'+c.asset_name+'</div>'
+        +'<div style="font-size:9px;color:#30D158;background:rgba(48,209,88,0.1);border-radius:6px;padding:2px 7px;">Returned</div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:rgba(245,245,247,0.35);">'+c.staff_name+(c.return_date?' · '+c.return_date.slice(0,10):'')+(c.return_condition?' · <span style="color:'+condColor+';">'+c.return_condition+'</span>':'')+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function s2MarkReturn(checkoutId){
+  var c = _t_cGet().find(function(x){ return x.id===checkoutId; });
+  if(!c) return;
+  var existing = document.getElementById('s2-ret-ov');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 's2-ret-ov';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:8000;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);';
+  var today = new Date().toISOString().slice(0,10);
+  var condOpts = ['Good','Fair','Poor'].map(function(co){ return '<option value="'+co+'">'+co+'</option>'; }).join('');
+  ov.innerHTML = '<div style="background:#1C1C1E;border-radius:22px 22px 0 0;border:0.5px solid rgba(255,255,255,0.1);padding:16px;width:100%;max-width:420px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+      +'<div style="color:#fff;font-size:15px;font-weight:500;">📥 Mark Returned</div>'
+      +'<button onclick="document.getElementById(\'s2-ret-ov\').remove()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;width:28px;height:28px;color:rgba(245,245,247,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>'
+    +'</div>'
+    +'<div style="color:#30D158;font-size:11px;margin-bottom:12px;">'+c.asset_name+' · '+c.staff_name+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
+      +'<div><div style="font-size:9px;color:rgba(245,245,247,0.4);text-transform:uppercase;margin-bottom:5px;">Return Date</div>'
+      +'<input id="s2ret-date" type="date" value="'+today+'" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:11px;color:#fff;padding:8px 10px;font-size:12px;outline:none;font-family:inherit;box-sizing:border-box;"></div>'
+      +'<div><div style="font-size:9px;color:rgba(245,245,247,0.4);text-transform:uppercase;margin-bottom:5px;">Condition</div>'
+      +'<select id="s2ret-cond" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:11px;color:#fff;padding:8px 10px;font-size:12px;outline:none;font-family:inherit;-webkit-appearance:none;">'+condOpts+'</select></div>'
+    +'</div>'
+    +'<textarea id="s2ret-notes" rows="2" placeholder="Remarks…" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:11px;color:#fff;padding:8px 10px;font-size:12px;outline:none;font-family:inherit;resize:none;box-sizing:border-box;margin-bottom:12px;"></textarea>'
+    +'<button onclick="s2SaveReturn(\''+checkoutId+'\')" style="width:100%;padding:11px;background:linear-gradient(135deg,#30D158,#1aaa40);border:none;border-radius:13px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Confirm Return</button>'
+  +'</div>';
+  document.body.appendChild(ov);
+}
+
+function s2SaveReturn(checkoutId){
+  var date  = document.getElementById('s2ret-date').value;
+  var cond  = document.getElementById('s2ret-cond').value;
+  var notes = (document.getElementById('s2ret-notes').value||'').trim();
+  if(!date){ alert('Return date required!'); return; }
+  var checkouts = _t_cGet().map(function(c){
+    return c.id===checkoutId ? Object.assign({},c,{returned:true,return_date:date,return_condition:cond,return_notes:notes}) : c;
+  });
+  _t_cSave(checkouts);
+  var ov = document.getElementById('s2-ret-ov');
+  if(ov) ov.remove();
+  loadS2Assets();
+}
+
 /* ── Enable spellcheck + autocorrect on all text inputs & textareas ── */
 (function enableSpellcheck(){
   function applyToEl(el){
