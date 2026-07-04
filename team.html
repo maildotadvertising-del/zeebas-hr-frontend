@@ -5498,12 +5498,13 @@ async function loadMySalary(){
     var absentDeduction = absentDays > 0
       ? (isCurrMonth ? (absentDays * dailyRate) : (payroll ? parseFloat(payroll.absent_deduction||0) : absentDays * dailyRate))
       : 0;
-    // Same staleness issue for advances: once payroll is processed, payroll.advance_deduction is a snapshot
-    // that doesn't update if admin later adds/edits/deletes a date-wise advance entry. Always trust the
-    // live date-wise entries for the current month so admin changes reflect instantly.
-    if(isCurrMonth) advDeduction = advancesLiveTotal;
+    // When payroll record exists (pending/paid), admin has finalised — trust payroll.net_salary
+    // so staff app matches admin dashboard exactly.
+    // For live preview (no payroll record yet), compute from live attendance + live advances.
+    if(!payroll) advDeduction = advancesLiveTotal;
+    else advDeduction = parseFloat(payroll.advance_deduction||0);
     var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
-    var netSalary  = isCurrMonth ? earnedSoFar : parseFloat(payroll ? payroll.net_salary : earnedSoFar);
+    var netSalary = payroll ? parseFloat(payroll.net_salary||earnedSoFar) : earnedSoFar;
     var isProcessed = !!payroll;
     var status      = payroll ? payroll.status : 'preview';
 
@@ -5555,12 +5556,8 @@ async function loadMySalary(){
           +'<div style="color:rgba(245,245,247,0.5);font-size:10px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:4px;">Salary Breakdown</div>'
           // Base Salary
           +bRow('Base Salary', 'Monthly fixed', '₹'+fmt(baseSalary), 'rgba(245,245,247,0.55)')
-          // Present earnings
-          +bRow('Present Salary', daysWorked+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN'), '+₹'+fmt(presentEarned), '#30D158')
-          // Absent deduction
-          +(absentDays>0
-            ? bRow('Absent Deduction', absentDays+' day'+(absentDays>1?'s':'')+' × ₹'+Math.round(dailyRate).toLocaleString('en-IN'), '−₹'+fmt(absentDeduction), '#FF453A')
-            : bRow('Absent Deduction', '0 days', '−₹0', 'rgba(245,245,247,0.22)'))
+          // Present earnings (absent days already implicit — only present days × rate counted)
+          +bRow('Present Salary', daysWorked+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN')+(absentDays>0?' ('+absentDays+' absent)':''), '+₹'+fmt(presentEarned), '#30D158')
           // Late deduction
           +(lateDeduction>0
             ? bRow('Late Deduction', lateDays+' late day'+(lateDays>1?'s':''), '−₹'+fmt(lateDeduction), '#FF9F0A')
@@ -9762,18 +9759,17 @@ async function dtLoadSalary(){
     var incentiveAmt  = parseFloat(payroll ? (payroll.other_incentive||0) : 0);
     var wdFull    = pData.working_days || settings.working_days_per_month || 26;
     var dailyRate = baseSalary / wdFull;
-    var absentDeduction = absentDays>0 ? absentDays*dailyRate : 0;
-    // Always current month here — trust live date-wise advance entries (same fix as mobile My Salary)
-    // so an admin add/edit/delete reflects instantly instead of a stale processed-payroll snapshot.
-    var advDeduction = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
-    var netSalary = Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
+    // When payroll record exists, trust payroll.net_salary (matches admin dashboard).
+    // For live preview (no payroll record), compute from live advances + attendance.
+    var advancesLiveTotal = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
+    var advDeduction = payroll ? parseFloat(payroll.advance_deduction||0) : advancesLiveTotal;
+    var netSalary = payroll ? parseFloat(payroll.net_salary||0) : Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
 
     var fmt=function(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0}); };
     var row=function(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'+'<span style="font-size:12px;color:rgba(245,245,247,0.5);">'+lbl+'</span>'+'<span style="font-size:13px;font-weight:500;color:'+(col||'#F5F5F7')+';">'+val+'</span></div>'; };
     el.innerHTML=''
       +row('Base Salary','₹'+fmt(baseSalary))
-      +row('Present Salary','+₹'+fmt(daysWorked*dailyRate),'#30D158')
-      +(absentDeduction>0?row('Absent Deduction','−₹'+fmt(absentDeduction),'#FF453A'):'')
+      +row('Present Salary','+₹'+fmt(daysWorked*dailyRate)+(absentDays>0?' ('+absentDays+' absent)':''),'#30D158')
       +(lateDeduction>0?row('Late Deduction','−₹'+fmt(lateDeduction),'#FF9F0A'):'')
       +(otAmount>0?row('OT Pay','+₹'+fmt(otAmount),'#0A84FF'):'')
       +(allowanceAmt>0?row('Allowance','+₹'+fmt(allowanceAmt),'#BF5FFF'):'')
