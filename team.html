@@ -9336,8 +9336,17 @@ textarea.dt-inp{resize:none;}
 
       <!-- ── SALARY PANEL ── -->
       <div id="dtp-salary" class="dt-panel">
-        <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;margin-bottom:4px;">My Salary</div>
-        <div style="font-size:13px;color:rgba(245,245,247,0.4);margin-bottom:24px;">Current month breakdown</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-0.3px;margin-bottom:2px;">My Salary</div>
+            <div id="dt-pay-month-lbl" style="font-size:13px;color:rgba(245,245,247,0.4);">Current month breakdown</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="dtPayNav(-1)" title="Previous month" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;width:32px;height:32px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;">‹</button>
+            <button onclick="dtPayNav(0)" title="Jump to current month" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.09);border-radius:9px;padding:0 12px;height:32px;color:rgba(245,245,247,0.5);cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;">Today</button>
+            <button id="dt-pay-next-btn" onclick="dtPayNav(1)" title="Next month" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;width:32px;height:32px;color:rgba(245,245,247,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;">›</button>
+          </div>
+        </div>
         <div id="dt-salary-content" class="dt-g" style="padding:24px;max-width:480px;">
           <div style="text-align:center;padding:24px;color:rgba(245,245,247,0.35);font-size:12px;">Loading salary info…</div>
         </div>
@@ -9730,11 +9739,34 @@ async function dtSubmitLeave(){
 }
 
 /* ── SALARY ── */
+var _dtPayMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var _dtPayMonth = new Date().getMonth() + 1;
+var _dtPayYear  = new Date().getFullYear();
+
+function dtPayNav(dir){
+  if(dir === 0){ _dtPayMonth = new Date().getMonth()+1; _dtPayYear = new Date().getFullYear(); }
+  else {
+    _dtPayMonth += dir;
+    if(_dtPayMonth > 12){ _dtPayMonth = 1; _dtPayYear++; }
+    if(_dtPayMonth < 1){ _dtPayMonth = 12; _dtPayYear--; }
+  }
+  var now = new Date();
+  var nextBtn = document.getElementById('dt-pay-next-btn');
+  if(nextBtn){
+    var atCurrent = _dtPayMonth === now.getMonth()+1 && _dtPayYear === now.getFullYear();
+    nextBtn.style.opacity = atCurrent ? '0.3' : '1';
+    nextBtn.style.pointerEvents = atCurrent ? 'none' : '';
+  }
+  dtLoadSalary();
+}
+
 async function dtLoadSalary(){
   var el=document.getElementById('dt-salary-content');
   if(!el) return;
+  var lbl = document.getElementById('dt-pay-month-lbl');
+  if(lbl) lbl.textContent = _dtPayMonthNames[_dtPayMonth-1] + ' ' + _dtPayYear;
   try{
-    var now=new Date(), month=now.getMonth()+1, year=now.getFullYear();
+    var month=_dtPayMonth, year=_dtPayYear;
     var [pRes, sRes] = await Promise.all([
       fetch(API_URL+'/api/payroll/my?month='+month+'&year='+year, {headers:zHead()}),
       fetch(API_URL+'/api/settings/payroll', {headers:zHead()})
