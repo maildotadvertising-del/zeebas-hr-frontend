@@ -9817,12 +9817,6 @@ function openStaffPayrollDetail(i){
         +'</div>'
       +'</div>'
 
-      // ── Salary Advance — Installment (separate /api/advances system; recurs monthly until recovered/closed) ──
-      +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.18);border-radius:14px;padding:14px;">'
-        +'<div style="font-size:11px;color:#FF9F0A;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💼 Salary Advance — Installment</div>'
-        +'<div id="spdm-inst-adv-'+r.id+'"><div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Loading…</div></div>'
-      +'</div>'
-
       // ── Payment Status ──
       +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(48,209,88,0.15);border-radius:14px;padding:14px;">'
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
@@ -9864,7 +9858,6 @@ function openStaffPayrollDetail(i){
 
   document.body.appendChild(ov);
   _loadAdvanceSalaryHistory_modal(r.id);
-  _loadInstallmentAdvances_modal(r.id, r.name);
 }
 
 // Shows any active "installment" salary advance (/api/advances — total_amount, monthly_recovery,
