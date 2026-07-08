@@ -10055,8 +10055,11 @@ function _loadAdvanceSalaryHistory_modal(staffId){
   fetch(API+'/api/payroll/monthly-advance/'+staffId,{headers:zHdr()})
     .then(function(r){return r.json();})
     .then(function(d){
-      var entries=d.data||[];
-      if(!entries.length){ histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No advance salary records</div>'; return; }
+      // Only show entries for the payroll month currently being viewed — an advance
+      // taken in May must not appear (or be implied as deducted) while viewing June.
+      var viewKey = (_pr&&_pr.year?_pr.year:new Date().getFullYear())+'-'+String((_pr&&_pr.month?_pr.month:new Date().getMonth()+1)).padStart(2,'0');
+      var entries=(d.data||[]).filter(function(e){ return (e.payment_date||'').toString().slice(0,7)===viewKey; });
+      if(!entries.length){ histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No advance salary records this month</div>'; return; }
       var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       var grouped={};
       entries.forEach(function(e){
