@@ -3926,14 +3926,14 @@ async function openEdit(staffId){
           +'<span style="margin-left:auto;font-size:9px;color:rgba(245,245,247,0.3);">🔒 CEO/Founder</span>'
           +'</div>'
           +'<input type="hidden" id="ef-role" value="'+p.role+'">'
-        // All other staff — Admin / Team Leader / Staff dropdown
+        // All other staff — Admin / Editor / Team Leader / Staff dropdown
         :'<select class="inp" id="ef-role">'+
-          ['admin','team_leader','staff'].map(function(r){
-            var lbl={admin:'🔑 Admin',team_leader:'⭐ Team Leader',staff:'👤 Team Member'}[r]||r;
+          ['admin','editor','team_leader','staff'].map(function(r){
+            var lbl={admin:'🔑 Admin',editor:'✏️ Editor',team_leader:'⭐ Team Leader',staff:'👤 Team Member'}[r]||r;
             return '<option value="'+r+'"'+(p.role===r?' selected':'')+'>'+lbl+'</option>';
           }).join('')
           +'</select>'
-          +'<div style="font-size:9px;color:rgba(245,245,247,0.3);margin-top:3px;">Admin = Attendance+Tasks · Team Leader = Tasks only</div>')
+          +'<div style="font-size:9px;color:rgba(245,245,247,0.3);margin-top:3px;">Admin = Attendance+Tasks · Editor = Tasks+Approvals · Team Leader = Tasks only</div>')
       +'</div>'
       +'<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Reports To (Team Leader)</div>'
       +'<select class="inp" id="ef-reports"><option value="">— None —</option>'
@@ -5395,7 +5395,7 @@ var NAV_ACCESS = {
   owner:       ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','assets','advances','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
   admin:       ['dashboard','attendance','announcements','tasks','team-chat','admin-overview'],
   team_leader: ['tasks','team-chat'],
-  editor:      ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','assets','advances','team-chat','gps-settings','payroll-settings','biometric','admin-overview']
+  editor:      ['tasks','approvals']
 };
 
 // All configurable sections with labels
