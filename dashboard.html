@@ -1166,7 +1166,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="sec g">
       <div class="sh">
         <span class="st">📋 EOD Work Reports</span>
-        <span id="eod-approval-count" class="pg" style="font-size:11px;padding:3px 9px;background:rgba(48,209,88,0.12);color:#30D158;border-color:rgba(48,209,88,0.3);display:none;"></span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="eod-approval-count" class="pg" style="font-size:11px;padding:3px 9px;background:rgba(48,209,88,0.12);color:#30D158;border-color:rgba(48,209,88,0.3);display:none;"></span>
+          <button id="eod-approve-all-btn" onclick="approveAllEod()" style="display:none;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.3);color:#30D158;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;">✓ Approve All</button>
+        </div>
       </div>
       <!-- EOD Reports section — populated by loadEodAdmin() -->
       <div id="eod-admin-section" style="margin-top:4px;">
@@ -8924,12 +8927,15 @@ async function acceptAllLeave(){
 async function loadEodAdmin(){
   var sec = document.getElementById('eod-admin-section');
   var cnt = document.getElementById('eod-approval-count');
+  var allBtn = document.getElementById('eod-approve-all-btn');
   if(!sec) return;
   try{
     var r = await fetch(API+'/api/eod/admin?status=pending', {headers:zHdr()});
     var d = await r.json();
     var reports = d.data||[];
+    window._pendingEodIds = reports.map(function(rpt){ return rpt.id; });
     if(cnt){ if(reports.length){ cnt.textContent=reports.length+' pending'; cnt.style.display=''; } else { cnt.style.display='none'; } }
+    if(allBtn){ allBtn.style.display = reports.length ? '' : 'none'; allBtn.textContent='✓ Approve All'; allBtn.disabled=false; }
     if(!reports.length){
       sec.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No pending EOD reports</div>';
       return;
@@ -8970,6 +8976,27 @@ async function loadEodAdmin(){
         +'</div>';
     }).join('');
   }catch(e){ console.log('eod admin load error',e.message); }
+}
+
+async function approveAllEod(){
+  var ids = window._pendingEodIds||[];
+  if(!ids.length) return;
+  var btn = document.getElementById('eod-approve-all-btn');
+  if(btn){ btn.textContent='Approving…'; btn.disabled=true; }
+  var done=0;
+  for(var i=0;i<ids.length;i++){
+    try{
+      var r = await fetch(API+'/api/eod/'+ids[i]+'/review', {
+        method:'PUT',
+        headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
+        body: JSON.stringify({ status:'approved', items:_eodEditCache[ids[i]]||null, admin_note:'' })
+      });
+      var d = await r.json();
+      if(d.success){ done++; delete _eodEditCache[ids[i]]; }
+    }catch(e){}
+  }
+  showToast('✅ Approved '+done+' of '+ids.length+' EOD reports');
+  loadEodAdmin();
 }
 
 var _eodEditCache = {}; // reportId → items array (with edits)
