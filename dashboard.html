@@ -6681,6 +6681,12 @@ var STATUS_COLOR   = { pending:'#FF9F0A', in_progress:'#0A84FF', done:'#30D158' 
 /* ── Load Tasks ── */
 /* ── Extra Time Requests ── */
 /* ── Task Page Section Switcher ── */
+// Task assignment is restricted to Admin & Editor (Owner counts as Admin) — Team Leaders can view/work tasks but not create them
+function _canAssignTasks(){
+  var me={}; try{ me=JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
+  return !!(me.is_owner || me.role==='admin' || me.role==='editor');
+}
+
 var _currentTaskSection = 'assigned';
 function switchTaskSection(section){
   _currentTaskSection = section;
@@ -6694,7 +6700,7 @@ function switchTaskSection(section){
     aTab.style.borderBottomColor='#0A84FF'; aTab.style.color='#0A84FF';
     eTab.style.borderBottomColor='transparent'; eTab.style.color='rgba(245,245,247,0.4)';
     aDiv.style.display='block'; eDiv.style.display='none';
-    if(assignBtn) assignBtn.style.display='';
+    if(assignBtn) assignBtn.style.display=_canAssignTasks()?'':'none';
     if(exportBtn) exportBtn.style.display='';
   } else {
     eTab.style.borderBottomColor='#0A84FF'; eTab.style.color='#0A84FF';
@@ -7532,6 +7538,7 @@ function loadSubTasksFromData(raw){
 
 /* ── Open Add Task Panel ── */
 async function openAddTask(){
+  if(!_canAssignTasks()){ showToast('❌ Only Admin & Editor can assign tasks','error'); return; }
   document.getElementById('task-edit-id').value   = '';
   document.getElementById('task-panel-title').textContent = 'Assign New Task';
   document.getElementById('task-save-btn').textContent    = 'Assign Task';
