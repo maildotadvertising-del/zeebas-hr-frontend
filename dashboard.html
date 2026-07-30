@@ -5557,7 +5557,7 @@ async function loadStaffList(retryCount){
   }
 
   // Show only non-admin roles in Staff page (admins → Admin Overview page)
-  var staff = (d.data || []).filter(function(s){ return s.role !== 'admin' && s.role !== 'editor'; }).sort(function(a,b){
+  var staff = (d.data || []).filter(function(s){ return s.role !== 'admin'; }).sort(function(a,b){
     var na = parseInt((a.emp_id||'').replace(/\D+/g,'')) || 0;
     var nb = parseInt((b.emp_id||'').replace(/\D+/g,'')) || 0;
     return na - nb;
@@ -5709,7 +5709,7 @@ async function loadDashStats(){
     if(!cached_ann)  _dSet('ann', ad);
 
     // ── Attendance ──
-    var rows = (d.data || []).filter(function(r){ return r.role!=='admin'&&r.role!=='editor'; });
+    var rows = (d.data || []).filter(function(r){ return r.role!=='admin'; });
     var p=0,a=0,l=0,lp=0,op=0,lv=0;
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
@@ -5918,7 +5918,7 @@ async function exportDashboard(){
     showToast('⏳ Preparing export…');
     var res=await fetch(API+'/api/attendance/today',{headers:zHdr()});
     var d=await res.json();
-    var rows=(d.data||[]).filter(function(r){return r.role!=='admin'&&r.role!=='editor';});
+    var rows=(d.data||[]).filter(function(r){return r.role!=='admin';});
     if(!rows.length){ showToast('⚠️ No attendance data to export'); return; }
     var today=new Date().toISOString().slice(0,10);
     var lines=['Name,Designation,Brand,Check-In,Type,Status,Late Minutes'];
@@ -6504,8 +6504,8 @@ async function loadAttendancePage(){
   try{
     var res = attRes.value || attRes;
     var d=await res.json();
-    // Filter out admin/editor accounts — attendance tracked for staff only
-    var rows=(d.data||[]).filter(function(r){ return r.role!=='admin'&&r.role!=='editor'; });
+    // Filter out admin accounts — attendance tracked for staff (incl. Editor role) only
+    var rows=(d.data||[]).filter(function(r){ return r.role!=='admin'; });
 
     // Sort by check_in time — earliest first; absent/no check-in goes to bottom
     rows.sort(function(a,b){
