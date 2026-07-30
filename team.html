@@ -4184,7 +4184,7 @@ async function loadAdminHome(){
   try{
     var res=await fetch(API_URL+'/api/attendance/today',{headers:zHead()});
     var d=await res.json();
-    var rows=(d.data||[]).filter(function(r){return r.role!=='admin'&&r.role!=='editor';});
+    var rows=(d.data||[]).filter(function(r){return r.role!=='admin';});
     var p=0,a=0,l=0,o=0;
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
@@ -4262,7 +4262,7 @@ async function loadAdminAttendance(){
     var url=isToday?API_URL+'/api/attendance/today':API_URL+'/api/attendance/date?date='+date;
     var res=await fetch(url,{headers:zHead()});
     var d=await res.json();
-    var rows=(d.data||[]).filter(function(r){return r.role!=='admin'&&r.role!=='editor';});
+    var rows=(d.data||[]).filter(function(r){return r.role!=='admin';});
     var p=0,a=0,l=0,lv=0,o=0;
     rows.forEach(function(r){
       var st=(r.status||'').toLowerCase();
