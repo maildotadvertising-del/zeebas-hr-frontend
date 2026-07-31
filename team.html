@@ -622,6 +622,17 @@ body.desktop-mode #s1-sidebar {
             </div>
           </div>
         </div>
+        <!-- My Tasks — assigned by Admin/Editor, preview on Home -->
+        <div id="s1-hometasks-card" style="display:none;margin-bottom:10px;">
+          <div class="g" style="padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="go1('s1-tasks')">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div style="color:#fff;font-size:12px;font-weight:500;">📌 My Tasks</div>
+              <div id="s1-hometasks-count" style="color:#FF9F0A;font-size:11px;font-weight:600;"></div>
+            </div>
+            <div id="s1-hometasks-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+        </div>
+
         <!-- Apply Leave -->
         <div style="margin-bottom:10px;">
           <div class="gs" style="padding:13px 14px;cursor:pointer;" onclick="go1('s1-leave')">
@@ -687,6 +698,13 @@ body.desktop-mode #s1-sidebar {
 
         <!-- Add item button -->
         <button onclick="eodAddItem()" style="width:100%;background:rgba(255,255,255,0.05);border:0.5px dashed rgba(255,255,255,0.2);border-radius:12px;padding:11px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:20px;">+ Add Work Item</button>
+
+        <!-- Task Status Update — must set status for every assigned task before checkout -->
+        <div id="eod-tasks-section" style="display:none;margin-bottom:20px;">
+          <div style="font-size:11px;color:rgba(245,245,247,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;">📌 Update Your Tasks</div>
+          <div style="font-size:11px;color:rgba(255,159,10,0.7);margin-bottom:10px;">Set today's status for each task before you can check out.</div>
+          <div id="eod-tasks-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
 
         <!-- Submit + Later -->
         <button id="eod-submit-btn" onclick="eodSubmit()" style="width:100%;background:linear-gradient(135deg,#30D158,#25A244);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(48,209,88,0.35);margin-bottom:10px;">Submit &amp; Check Out →</button>
@@ -2230,6 +2248,7 @@ function go1(id){
     _attBtnText('Check In'); _attBtnSub('WiFi · GPS auto detected');
     setTimeout(function(){ loadAttGpsScreen(); initGPSScreen(); }, 200);
   }
+  if(id==='s1-home'){    setTimeout(loadStaffTasks, 100); }
   if(id==='s1-tasks'){   setTimeout(loadStaffTasks, 100); }
   if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
   if(id==='s1-atthistory'){ loadAttHistory(); }
@@ -6114,6 +6133,42 @@ function renderEodItems(){
   }).join('');
 }
 
+// ── Daily task status gate — must set Completed/Ongoing/Pending for every open assigned task before checkout ──
+var _eodTaskStatus = {};
+function _eodRenderTaskSection(resetSelections){
+  var sec = document.getElementById('eod-tasks-section');
+  var listEl = document.getElementById('eod-tasks-list');
+  if(!sec || !listEl) return;
+  if(resetSelections !== false) _eodTaskStatus = {};
+  var active = (_s1Tasks||[]).filter(function(t){ return t.status!=='done'; });
+  if(!active.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  var OPTS = [ ['done','✅ Completed','#30D158'], ['in_progress','⏳ Ongoing','#0A84FF'], ['pending','⏸ Pending','#636366'] ];
+  listEl.innerHTML = active.map(function(t){
+    return '<div class="eod-task-row" data-task-id="'+t.id+'" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 12px;">'
+      +'<div style="color:#fff;font-size:12px;font-weight:500;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(t.title||'Untitled')+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">'
+      +OPTS.map(function(o){
+        return '<button onclick="_eodSetTaskStatus('+t.id+',\''+o[0]+'\')" data-status="'+o[0]+'" style="padding:8px 4px;border-radius:9px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(245,245,247,0.4);transition:all 0.15s;">'+o[1]+'</button>';
+      }).join('')
+      +'</div></div>';
+  }).join('');
+  // Re-apply highlight for any status already picked this session
+  Object.keys(_eodTaskStatus).forEach(function(id){ _eodSetTaskStatus(id, _eodTaskStatus[id]); });
+}
+function _eodSetTaskStatus(id, status){
+  _eodTaskStatus[id] = status;
+  var row = document.querySelector('.eod-task-row[data-task-id="'+id+'"]');
+  if(!row) return;
+  var COLORS = {done:'#30D158', in_progress:'#0A84FF', pending:'#636366'};
+  row.querySelectorAll('button[data-status]').forEach(function(b){
+    var active = b.getAttribute('data-status')===status;
+    b.style.borderColor = active ? COLORS[status]+'88' : 'rgba(255,255,255,0.1)';
+    b.style.background  = active ? COLORS[status]+'22' : 'rgba(255,255,255,0.04)';
+    b.style.color        = active ? COLORS[status] : 'rgba(245,245,247,0.4)';
+  });
+}
+
 function showEodPopup(){
   if(_eodTriggered) return;
   _eodTriggered = true;
@@ -6139,6 +6194,8 @@ function showEodPopup(){
   if(laterBtn) laterBtn.style.display = 'block'; // show Later for normal checkout
   var note = document.getElementById('eod-bottom-note');
   if(note){ note.style.display='block'; note.textContent='You must submit your work report to check out.'; }
+  _eodRenderTaskSection(true); // instant render from cache, reset selections
+  loadStaffTasks().then(function(){ if(!_eodPendingDate) _eodRenderTaskSection(false); }); // reconcile with latest tasks, keep selections
   var ov = document.getElementById('ov-eod');
   if(ov) ov.style.display='flex';
 }
@@ -6169,6 +6226,7 @@ function showPendingEodPopup(dateStr){
   if(laterBtn) laterBtn.style.display = 'none'; // no snooze for pending EOD
   var note = document.getElementById('eod-bottom-note');
   if(note){ note.style.display='block'; note.textContent='Submit to unlock today\'s check-in.'; }
+  var tsec = document.getElementById('eod-tasks-section'); if(tsec) tsec.style.display='none'; // not the checkout path
   var ov = document.getElementById('ov-eod');
   if(ov) ov.style.display='flex';
 }
@@ -6196,6 +6254,7 @@ function openStandaloneEodModal(){
   if(btn){ btn.textContent = '📤 Submit Report →'; btn.disabled = false; }
   var note = document.getElementById('eod-bottom-note');
   if(note) note.style.display='none';
+  var tsec = document.getElementById('eod-tasks-section'); if(tsec) tsec.style.display='none'; // not the checkout path
   var ov = document.getElementById('ov-eod');
   if(ov) ov.style.display='flex';
 }
@@ -6420,6 +6479,41 @@ async function eodSubmit(){
       showToast('⚠️ Add at least one work item!');
       return;
     }
+    if(!isPending){
+      // Every open assigned task must have a status picked before checkout is allowed
+      var activeTasks = (_s1Tasks||[]).filter(function(t){ return t.status!=='done'; });
+      var unanswered = activeTasks.filter(function(t){ return !_eodTaskStatus[t.id]; });
+      if(unanswered.length){
+        if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
+        showToast('⚠️ Update status for all your tasks before checking out!');
+        var firstRow = document.querySelector('.eod-task-row[data-task-id="'+unanswered[0].id+'"]');
+        if(firstRow) firstRow.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+      // Push task status changes before checkout
+      var taskIds = Object.keys(_eodTaskStatus);
+      if(taskIds.length){
+        try{
+          await Promise.all(taskIds.map(function(id){
+            return fetch(API_URL+'/api/tasks/'+id+'/status', {
+              method:'PATCH',
+              headers:Object.assign({'Content-Type':'application/json'}, zHead()),
+              body: JSON.stringify({status:_eodTaskStatus[id]})
+            });
+          }));
+          // Keep local task cache in sync
+          taskIds.forEach(function(id){
+            var t=(_s1Tasks||[]).find(function(x){return String(x.id)===String(id);});
+            if(t){ t.status=_eodTaskStatus[id]; if(t.status==='done') t.progress_percent=100; }
+            if(_s1TasksCache){ var ct=_s1TasksCache.find(function(x){return String(x.id)===String(id);}); if(ct){ct.status=_eodTaskStatus[id]; if(ct.status==='done') ct.progress_percent=100;} }
+          });
+        }catch(e){
+          if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
+          showToast('❌ Could not save task updates — check connection & retry');
+          return;
+        }
+      }
+    }
     var payload = { items: items };
     if(isPending){
       payload.date = _eodPendingDate; // past date — no checkout trigger
@@ -6453,6 +6547,7 @@ async function eodSubmit(){
       _eodTriggered = false;
       try{ localStorage.removeItem('zhr_eod_pending_later'); }catch(e){} // clear snooze flag
       _cacheClearAll(); // salary/attendance data changed after checkout
+      renderS1HomeTasks(); // reflect task status updates made during checkout
 
       // checkout_done=false means no attendance record was found (edge case: auto-checkout on wrong date)
       if(!isPending && d.checkout_done === false){
@@ -8172,6 +8267,29 @@ async function loadStaffTasks(){
   }catch(e){
     if(!_s1TasksCache && listEl) listEl.innerHTML='<div style="text-align:center;padding:24px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Failed to load</div>';
   }
+  renderS1HomeTasks();
+}
+
+// ── Home screen "My Tasks" preview card — tasks assigned by Admin/Editor ──
+function renderS1HomeTasks(){
+  var card=document.getElementById('s1-hometasks-card');
+  var cntEl=document.getElementById('s1-hometasks-count');
+  var listEl=document.getElementById('s1-hometasks-list');
+  if(!card||!listEl) return;
+  var active=(_s1Tasks||[]).filter(function(t){ return t.status!=='done'; });
+  if(!active.length){ card.style.display='none'; return; }
+  card.style.display='block';
+  if(cntEl) cntEl.textContent=active.length+' open';
+  var STATUS_LBL={pending:'Pending',in_progress:'Ongoing',done:'Completed'};
+  var STATUS_CLR={pending:'#636366',in_progress:'#0A84FF',done:'#30D158'};
+  listEl.innerHTML=active.slice(0,3).map(function(t){
+    var st=t.status||'pending';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:0.5px solid rgba(255,255,255,0.05);">'
+      +'<span style="color:rgba(245,245,247,0.75);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">'+escHtml(t.title||'Untitled')+'</span>'
+      +'<span style="color:'+STATUS_CLR[st]+';font-size:9px;font-weight:600;background:'+STATUS_CLR[st]+'18;border-radius:6px;padding:2px 7px;flex-shrink:0;">'+STATUS_LBL[st]+'</span>'
+      +'</div>';
+  }).join('')
+  +(active.length>3?'<div style="text-align:center;color:rgba(245,245,247,0.3);font-size:10px;padding-top:6px;">+'+(active.length-3)+' more →</div>':'');
 }
 
 function s1TaskTab(tab){
