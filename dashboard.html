@@ -11826,28 +11826,38 @@ function attViewRow(r,i){
     +'<td style="'+td+'text-align:center;font-size:11px;">'
       +attLateCell(r)
       +(function(){
-          // "+Xm extra ⚡" — shows for net extra 1-40 min (any combo of early-in + late-out).
-          // 41+ min net extra → OT column handles it, no badge here.
+          // "+Xm extra ⚡" — mirrors the exact extra_comp_minutes the backend stored at
+          // checkout (the same figure Payroll sums/nets against late minutes for the month),
+          // so this badge never disagrees with what Payroll ends up showing.
           if(!r.check_in) return '';
-          var pr = window._attPayroll || {};
-          var et = (r.employment_type||'full_time').toLowerCase();
-          var toM = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
-          var ci = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
           if(r.check_out){
-            // Checked out: compute net extra (total worked − required)
+            if(r.extra_comp_minutes != null){
+              var mins = parseInt(r.extra_comp_minutes) || 0;
+              if(mins <= 0) return '';
+              return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+mins+'m extra ⚡</div>';
+            }
+            // Fallback for rows without the field yet (older cached data) — rough client estimate
+            var pr = window._attPayroll || {};
+            var et = (r.employment_type||'full_time').toLowerCase();
+            var toM = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+            var ci = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
             var co2 = new Date(typeof r.check_out==='string'?r.check_out.replace(' ','T'):r.check_out);
             var reqMins = r.work_end_time && r.work_start_time
               ? toM(r.work_end_time) - toM(r.work_start_time)
               : (et==='day_time' ? pr.dt_mins||480 : et==='part_time' ? pr.pt_mins||240 : pr.ft_mins||480);
             var netExtra = Math.floor((co2 - ci) / 60000) - reqMins;
-            if(netExtra <= 0 || netExtra > 40) return ''; // deficit OR OT range — hide badge
+            if(netExtra <= 0 || netExtra > 40) return '';
             return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+netExtra+'m extra ⚡</div>';
           }
           // Still working — show early arrival if came in before start
+          var pr2 = window._attPayroll || {};
+          var et2 = (r.employment_type||'full_time').toLowerCase();
+          var toM2 = function(t){ var p=(t||'09:00').split(':').map(Number); return p[0]*60+p[1]; };
+          var ci2 = new Date(typeof r.check_in==='string'?r.check_in.replace(' ','T'):r.check_in);
           var startStr = r.work_start_time
             ? r.work_start_time
-            : (et==='day_time' ? pr.dt_start||'09:00' : et==='part_time' ? pr.pt_start||'09:00' : pr.ft_start||'09:00');
-          var earlyMins = Math.max(0, Math.min(toM(startStr) - (ci.getHours()*60+ci.getMinutes()), 120));
+            : (et2==='day_time' ? pr2.dt_start||'09:00' : et2==='part_time' ? pr2.pt_start||'09:00' : pr2.ft_start||'09:00');
+          var earlyMins = Math.max(0, Math.min(toM2(startStr) - (ci2.getHours()*60+ci2.getMinutes()), 120));
           if(earlyMins <= 0) return '';
           return '<div style="color:rgba(48,209,88,0.7);font-size:9px;margin-top:2px;">+'+earlyMins+'m early ⚡</div>';
         })()
