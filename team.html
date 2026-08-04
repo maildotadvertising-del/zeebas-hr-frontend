@@ -5191,7 +5191,7 @@ async function attachContact(){
 function showAttach(){toggleAttach();}
 
 // Init chat scroll
-setTimeout(function(){var m=document.getElementById('msgs1');if(m)m.scrollTop=m.scrollHeight;var m2=document.getElementById('msgs2');if(m2)m2.scrollTop=m2.scrollHeight;},300);
+setTimeout(function(){var m=document.getElementById('msgs1');if(m)m.scrollTop=m.scrollHeight;},300);
 
 
 // Dismiss react-picker on outside tap
@@ -6480,6 +6480,13 @@ async function eodSubmit(){
       return;
     }
     if(!isPending){
+      // Guard against checking out before tasks have ever loaded (e.g. fast checkout right after
+      // app open) — an empty/never-fetched _s1Tasks would otherwise silently bypass the gate below.
+      if(_s1TasksCache === null){
+        if(btn){ btn.textContent='Checking tasks…'; btn.disabled=true; }
+        try{ await loadStaffTasks(); }catch(e){}
+        _eodRenderTaskSection(false);
+      }
       // Every open assigned task must have a status picked before checkout is allowed
       var activeTasks = (_s1Tasks||[]).filter(function(t){ return t.status!=='done'; });
       var unanswered = activeTasks.filter(function(t){ return !_eodTaskStatus[t.id]; });
@@ -6517,6 +6524,7 @@ async function eodSubmit(){
     var payload = { items: items };
     if(isPending){
       payload.date = _eodPendingDate; // past date — no checkout trigger
+      if(_eodStandalone) payload.no_checkout = true; // same-day progress report — must NOT check out
     } else {
       payload.checkout_at = checkoutAt;
     }
@@ -7442,8 +7450,6 @@ async function wifiCheckAndAct(){
             } else {
               wifiBanner(true,'rgba(48,209,88,0.1)','rgba(48,209,88,1)','📶 WiFi Auto Check-in ✓','Checked in at '+ts+' via Office WiFi',false);
             }
-            var sub=document.getElementById('s1-att-sub');
-            if(sub) sub.textContent='Checked in via WiFi ✓';
           } else {
             wifiBanner(true,'rgba(255,69,58,0.1)','rgba(255,69,58,1)','📶 WiFi Check-in Failed',cd.message||'Please try GPS attendance',false);
             setTimeout(function(){ wifiBanner(false); }, 5000);
