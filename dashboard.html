@@ -1947,6 +1947,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
           <div id="att-filter-date-trigger" onclick="openUCal('att-filter-date','att-filter-date-label',loadAttendancePage)" style="padding:8px 12px;font-size:12px;cursor:pointer;min-width:110px;text-align:center;white-space:nowrap;"><span id="att-filter-date-label" style="color:rgba(245,245,247,0.85);">Today</span></div>
           <button onclick="attShiftDay(1)" title="Next day" style="background:none;border:none;border-left:0.5px solid rgba(255,255,255,0.1);padding:8px 11px;cursor:pointer;color:rgba(245,245,247,0.7);font-size:15px;line-height:1;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">›</button>
         </div>
+        <button id="reset-not-in-office-btn" onclick="resetAllInOffice()" title="Restore staff wrongly marked 'not in office' who have a recent WiFi ping" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:10px;padding:8px 13px;color:#0A84FF;font-size:12px;cursor:pointer;font-family:inherit;">📶 Fix WiFi</button>
         <input type="hidden" id="att-filter-date">
       </div>
     </div>
@@ -2926,7 +2927,7 @@ window.addEventListener('popstate', function(e) {
 });
 
 // Nav order for directional slides (left sidebar top-to-bottom)
-var _dashNavOrder = ['home','attendance','approvals','tasks','leave','payroll','assets','staff','chat','announcements','advances','settings'];
+var _dashNavOrder = ['home','attendance','approvals','tasks','leave','payroll','assets','staff','chat','announcements','settings'];
 var _dashCurrentPage = 'home';
 function showPage(name, el){
   var fromIdx = _dashNavOrder.indexOf(_dashCurrentPage);
@@ -2981,16 +2982,6 @@ function tick(){
 tick(); var _dashClockTimer = setInterval(tick, 1000); // stored for potential cleanup
 
 // GPS
-function updateRadius(){var v=parseInt(document.getElementById('radius-inp').value)||300;document.getElementById('radius-slider').value=Math.min(v,1000);syncDisplay(v);}
-function syncSlider(v){document.getElementById('radius-inp').value=v;syncDisplay(parseInt(v));}
-function setRadius(v){document.getElementById('radius-inp').value=v;document.getElementById('radius-slider').value=Math.min(v,1000);syncDisplay(v);}
-function syncDisplay(v){
-  var lbl=document.getElementById('rad-display');if(lbl)lbl.textContent=v+'m radius';
-  var rl=document.getElementById('radius-label');if(rl)rl.textContent=v+'m';
-  var rc=document.getElementById('rc-label');if(rc)rc.textContent=v+'m';
-  var circle=document.getElementById('radius-circle');if(circle){var sz=Math.min(Math.max(v/300*120,60),200);circle.style.width=sz+'px';circle.style.height=sz+'px';}
-  var dashLbl=document.getElementById('radius-label');if(dashLbl)dashLbl.textContent=v+'m';
-}
 // ── Payroll Settings ──
 function psDayToggle(el){ el.classList.toggle('active'); psCalRender(); }
 
@@ -3832,7 +3823,6 @@ async function saveGPS(){
     else showToast('❌ '+(d.message||'Save failed'));
   } catch(e){ showToast('❌ '+(e.message||'Server error')); }
 }
-function resetGPS(){setRadius(300);}
 
 // Approvals
 function qApprove(btn){var row=btn.closest('.gs');row.style.opacity='0.5';row.style.pointerEvents='none';btn.textContent='✓ Done';}
@@ -4315,7 +4305,6 @@ function initDashChat(){
   var bnDot = document.getElementById('bn-chat-dot');
   if(bnDot) bnDot.style.display = 'none';
   loadDashMessages();
-  loadChatMembers();
   loadDashPinned();
   connectDashSocket();
 }
@@ -4442,25 +4431,6 @@ async function loadDashPinned(){
     if(d.data) el.textContent=d.data.staff_name+': '+d.data.message;
     else el.textContent='No pinned message';
   }catch(e){}
-}
-
-async function loadChatMembers(){
-  try{
-    var res=await fetch(API+'/api/chat/members',{headers:zHdr()});
-    var d=await res.json();
-    var list=document.getElementById('chat-members-list'); if(!list||!d.success) return;
-    list.innerHTML=d.data.map(function(m){
-      var init=(m.name||'?').charAt(0).toUpperCase();
-      var avSrc=m.photo_data||(m.photo_url?API+m.photo_url:null);
-      var av=avSrc
-        ?'<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
-        :'<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.3),rgba(94,92,230,0.4));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;flex-shrink:0;">'+init+'</div>';
-      var roleBadge=m.role==='admin'?'<span style="background:rgba(191,95,255,0.15);color:#BF5FFF;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">ADMIN</span>':m.role==='editor'?'<span style="background:rgba(255,159,10,0.15);color:#FF9F0A;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px;">EDITOR</span>':'';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);">'
-        +av+'<div><div style="font-size:12px;font-weight:400;">'+m.name+roleBadge+'</div>'
-        +'<div style="font-size:10px;color:var(--muted);">'+(m.brand_name||m.designation||'')+'</div></div></div>';
-    }).join('');
-  }catch(e){ console.error('loadChatMembers:',e); }
 }
 
 // ─────────────────────────────────────────────
@@ -5395,7 +5365,7 @@ async function adminLogin(){
 /* ── ROLE-BASED NAV ACCESS ── */
 // Pages each role can access
 var NAV_ACCESS = {
-  owner:       ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','assets','advances','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
+  owner:       ['dashboard','attendance','announcements','staff','tasks','approvals','payroll','assets','team-chat','gps-settings','payroll-settings','biometric','admin-overview'],
   admin:       ['dashboard','attendance','announcements','tasks','team-chat','admin-overview'],
   team_leader: ['tasks','team-chat'],
   editor:      ['tasks','approvals']
@@ -5411,7 +5381,6 @@ var _ALL_SECTIONS = [
   { key:'approvals',         label:'✅ Approvals' },
   { key:'payroll',           label:'💰 Payroll' },
   { key:'assets',            label:'📦 Assets' },
-  { key:'advances',          label:'💳 Advances' },
   { key:'team-chat',         label:'💬 Team Chat' },
   { key:'gps-settings',      label:'📍 GPS Settings' },
   { key:'payroll-settings',  label:'⚙️ Payroll Settings' },
@@ -5477,11 +5446,14 @@ function saveAccessControl(){
 function applyNavAccess(staff){
   var roleKey = staff.is_owner ? 'owner' : (staff.role || 'staff');
   var allowed = NAV_ACCESS[roleKey] || [];
+  // Guard the desktop sidebar (.ni), the mobile bottom-nav bar, and the mobile "More" sheet —
+  // all three can navigate to a page, so all three must respect the same role restriction.
+  var navEls = document.querySelectorAll('.ni, .bn-item[onclick], [onclick^="moreGo("]');
   // Always reset all nav items to visible first, then hide restricted ones
-  document.querySelectorAll('.ni').forEach(function(ni){ ni.style.display = ''; });
+  navEls.forEach(function(ni){ ni.style.display = ''; });
   if(allowed.length === NAV_ACCESS.owner.length) return; // owner — show everything
   // Hide nav items not in allowed list
-  document.querySelectorAll('.ni').forEach(function(ni){
+  navEls.forEach(function(ni){
     var oc = ni.getAttribute('onclick')||'';
     var m  = oc.match(/'([^']+)'/);
     if(m){
@@ -6898,7 +6870,7 @@ async function approveExtraTime(taskId, action){
 
 async function loadOverdueExtRequests(){
   try{
-    var res=await fetch(API+'/api/tasks/date-extension-requests',{headers:zHdr()});
+    var res=await fetch(API+'/api/tasks/overdue-reasons?status=pending',{headers:zHdr()});
     var d=await res.json();
     var data=d.data||[];
     var panel=document.getElementById('overdue-ext-panel');
@@ -6916,46 +6888,51 @@ async function loadOverdueExtRequests(){
         ?'<img src="'+avSrc+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
         :'<div style="width:34px;height:34px;border-radius:50%;background:rgba(255,69,58,0.2);display:flex;align-items:center;justify-content:center;color:#FF453A;font-weight:600;font-size:14px;flex-shrink:0;">'+init+'</div>';
       var oldDue=r.due_date?r.due_date.slice(0,10):'—';
-      var reqDate=r.requested_date?r.requested_date.slice(0,10):'';
-      var defDate=reqDate||today;
-      return '<div style="background:rgba(255,69,58,0.06);border:0.5px solid rgba(255,69,58,0.25);border-radius:14px;padding:14px;margin-bottom:10px;">'
+      return '<div style="background:rgba(255,69,58,0.06);border:0.5px solid rgba(255,69,58,0.25);border-radius:14px;padding:14px;margin-bottom:10px;" data-task-id="'+r.task_id+'">'
         +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
         +av
         +'<div style="flex:1;min-width:0;">'
-          +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.title||'Task')+'</div>'
+          +'<div style="color:#fff;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.task_title||'Task')+'</div>'
           +'<div style="color:rgba(245,245,247,0.4);font-size:11px;margin-top:1px;">'+escHtml(r.staff_name||'Staff')+' · Was due: '+oldDue+'</div>'
-          +(reqDate?'<div style="color:#FF9F0A;font-size:11px;margin-top:2px;font-weight:500;">📅 Requesting: '+reqDate+'</div>':'')
         +'</div>'
         +'<span style="background:rgba(255,69,58,0.14);color:#FF453A;border:0.5px solid rgba(255,69,58,0.28);border-radius:6px;padding:2px 7px;font-size:9px;flex-shrink:0;">Overdue</span>'
         +'</div>'
         +(r.reason?'<div style="color:rgba(245,245,247,0.55);font-size:12px;font-style:italic;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;">"'+escHtml(r.reason)+'"</div>':'')
         +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Approve with new due date</div>'
-        +'<input id="dash-ov-date-'+r.id+'" type="date" value="'+defDate+'" min="'+today+'" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.14);border-radius:9px;padding:8px 11px;color:#fff;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;margin-bottom:10px;">'
+        +'<input id="dash-ov-date-'+r.id+'" type="date" value="'+today+'" min="'+today+'" style="width:100%;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.14);border-radius:9px;padding:8px 11px;color:#fff;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;color-scheme:dark;margin-bottom:10px;">'
         +'<div style="display:flex;gap:8px;">'
-          +'<button onclick="approveOverdueExt('+r.id+',\'reject\')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
-          +'<button onclick="approveOverdueExt('+r.id+',\'approve\')" style="flex:2;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✅ Approve & Extend Date</button>'
+          +'<button onclick="approveOverdueExt('+r.id+',\'rejected\','+r.task_id+')" style="flex:1;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.2);border-radius:10px;padding:9px;color:#FF453A;font-size:12px;cursor:pointer;font-family:inherit;">✕ Reject</button>'
+          +'<button onclick="approveOverdueExt('+r.id+',\'approved\','+r.task_id+')" style="flex:2;background:rgba(48,209,88,0.12);border:0.5px solid rgba(48,209,88,0.22);border-radius:10px;padding:9px;color:#30D158;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">✅ Approve & Extend Date</button>'
         +'</div>'
       +'</div>';
     }).join('');
   }catch(e){ console.error('loadOverdueExtRequests:',e); }
 }
 
-async function approveOverdueExt(reqId, action){
-  var approvedDate='';
-  if(action==='approve'){
-    var el=document.getElementById('dash-ov-date-'+reqId);
-    approvedDate=el?el.value:'';
-    if(!approvedDate){ showToast('❌ Date select பண்ணுங்க','error'); return; }
+async function approveOverdueExt(reasonId, status, taskId){
+  var newDate='';
+  if(status==='approved'){
+    var el=document.getElementById('dash-ov-date-'+reasonId);
+    newDate=el?el.value:'';
+    if(!newDate){ showToast('❌ Date select பண்ணுங்க','error'); return; }
   }
   try{
-    var r=await fetch(API+'/api/tasks/date-extension-requests/'+reqId+'/review',{
+    var r=await fetch(API+'/api/tasks/overdue-reasons/'+reasonId+'/review',{
       method:'PUT',
       headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-      body:JSON.stringify({action:action, approved_date:approvedDate||undefined})
+      body:JSON.stringify({status:status, admin_note:''})
     });
     var d=await r.json();
     if(d.success){
-      showToast(action==='approve'?'✅ Date extended — staff can now check in':'✕ Request rejected');
+      if(status==='approved'){
+        // Reviewing the reason doesn't itself move the due date — open the task so the
+        // chosen date is actually saved through the normal edit flow.
+        showToast('✅ Reason approved — set the new due date');
+        await openEditTask(taskId);
+        taskCalSetValue(newDate, 'due');
+      } else {
+        showToast('✕ Request rejected');
+      }
       loadOverdueExtRequests();
       loadTasks();
     } else showToast(d.message||'Failed','error');
@@ -6976,8 +6953,7 @@ async function openEditTaskForDeadline(taskId, newDate, newTime){
   await openEditTask(taskId);
   // Pre-fill the requested new due date in the form if provided
   if(newDate){
-    var dateEl = document.getElementById('task-due-date');
-    if(dateEl) dateEl.value = newDate;
+    taskCalSetValue(newDate, 'due');
   }
   if(newTime){
     var timeEl = document.getElementById('task-due-time');
@@ -8011,7 +7987,12 @@ async function saveTask(){
       }
 
       // Step 2 — if more staff selected than existing tasks, create new tasks for the extras
+      // (this is task ASSIGNMENT, same restriction as the "+ Assign Task" button — Admin/Editor only)
       var extraStaff = _assignedStaff.slice(groupIds.length);
+      if(extraStaff.length && !_canAssignTasks()){
+        showToast('❌ Only Admin & Editor can assign tasks to more staff','error');
+        extraStaff = [];
+      }
       var extraCount = 0;
       for(var ei=0; ei<extraStaff.length; ei++){
         var efd = new FormData();
@@ -9129,20 +9110,6 @@ async function loadAdminOverview(){
       var ohEl=document.getElementById('co-hours');
       // Only update if not customised
     }
-  }catch(e){}
-  try{
-    // Today's attendance for Admin Overview summary
-    var today=new Date().toISOString().slice(0,10);
-    var aRes=await fetch(API+'/api/attendance?date='+today,{headers:zHdr()});
-    var aData=await aRes.json();
-    var rows=Array.isArray(aData)?aData:(aData.data||aData.records||[]);
-    var p=0,ab=0,l=0,lv=0;
-    rows.forEach(function(r){ var st=(r.status||'').toLowerCase(); if(st==='present'||st==='onsite')p++; else if(st==='absent')ab++; else if(st==='late')l++; else if(st==='leave'||st==='on_leave')lv++; });
-    var total=p+ab+l+lv; var pct=total?Math.round(p/total*100):0;
-    var s=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
-    s('ao-present',p); s('ao-absent',ab); s('ao-late',l); s('ao-leave',lv);
-    var pctEl=document.getElementById('ao-att-pct'); if(pctEl){ pctEl.textContent=pct+'%'; pctEl.style.color=pct>=80?'#30D158':pct>=60?'#FF9F0A':'#FF453A'; }
-    var bar=document.getElementById('ao-att-bar'); if(bar) bar.style.width=pct+'%';
   }catch(e){}
 
   // Load backup status whenever Admin Overview opens
