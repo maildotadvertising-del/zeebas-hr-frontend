@@ -5577,10 +5577,17 @@ async function loadMySalary(){
           +bRow('Base Salary', 'Monthly fixed', '₹'+fmt(baseSalary), 'rgba(245,245,247,0.55)')
           // Present earnings (absent days already implicit — only present days × rate counted)
           +bRow('Present Salary', daysWorked+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN')+(absentDays>0?' ('+absentDays+' absent)':''), '+₹'+fmt(presentEarned), '#30D158')
-          // Late deduction
-          +(lateDeduction>0
-            ? bRow('Late Deduction', lateDays+' late day'+(lateDays>1?'s':''), '−₹'+fmt(lateDeduction), '#FF9F0A')
-            : bRow('Late Deduction', 'No late deductions', '−₹0', 'rgba(245,245,247,0.22)'))
+          // Late deduction — tap to see the day-by-day breakdown
+          +'<div onclick="myToggleLateDetail('+(staffInfo.id||'')+','+myPayMonth+','+myPayYear+')" style="cursor:pointer;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
+            +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+              +'<div>'
+                +'<div style="color:rgba(245,245,247,0.7);font-size:12px;">Late Deduction</div>'
+                +'<div style="color:rgba(245,245,247,0.3);font-size:10px;margin-top:1px;" id="my-late-sub">'+(lateDeduction>0 ? lateDays+' late day'+(lateDays>1?'s':'')+' · tap for details' : 'tap for details')+'</div>'
+              +'</div>'
+              +'<div style="color:'+(lateDeduction>0?'#FF9F0A':'rgba(245,245,247,0.22)')+';font-size:13px;font-weight:600;font-family:monospace;">'+(lateDeduction>0?'−₹'+fmt(lateDeduction):'−₹0')+'</div>'
+            +'</div>'
+            +'<div id="my-late-detail" style="display:none;margin-top:8px;"></div>'
+          +'</div>'
           // OT Pay — always show row; amount 0 when no overtime
           +(otAmount>0
             ? bRow('OT Pay', otHours.toFixed(1)+' hrs overtime', '+₹'+fmt(otAmount), '#0A84FF')
@@ -5679,6 +5686,56 @@ async function loadMySalary(){
 
   } catch(e){
     if(el && !cachedHtml) el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load salary data</div>';
+  }
+}
+
+// Tap-to-expand day-by-day late/extra breakdown on the staff's own salary screen
+var _myLateLoaded = {};
+async function myToggleLateDetail(staffId, month, year){
+  var box = document.getElementById('my-late-detail');
+  if(!box || !staffId) return;
+  var opening = box.style.display === 'none';
+  box.style.display = opening ? 'block' : 'none';
+  if(!opening || _myLateLoaded[staffId+'_'+month+'_'+year]) return;
+  box.innerHTML = '<div style="text-align:center;padding:8px 0;color:rgba(245,245,247,0.3);font-size:11px;">Loading…</div>';
+  try{
+    var res = await fetch(API_URL+'/api/payroll/late-detail?staff_id='+staffId+'&month='+month+'&year='+year, {headers:zHead()});
+    var d = await res.json();
+    if(!d.success){ box.innerHTML='<div style="color:rgba(255,69,58,0.7);font-size:11px;">'+(d.message||'Failed to load')+'</div>'; return; }
+    _myLateLoaded[staffId+'_'+month+'_'+year] = true;
+    if(!d.days.length){
+      box.innerHTML = '<div style="text-align:center;padding:6px 0;color:rgba(245,245,247,0.3);font-size:11px;">No late or extra-time days this month</div>';
+      return;
+    }
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var rowsHtml = d.days.map(function(day){
+      var dt = new Date(day.date+'T00:00:00');
+      var dLabel = dt.getDate()+' '+months[dt.getMonth()];
+      var parts = [];
+      if(day.short_time_minutes>0){
+        var sh=Math.floor(day.short_time_minutes/60), sm=day.short_time_minutes%60;
+        var sLabel = (sh>0?sh+'h ':'')+(sm>0||sh===0?sm+'m':'');
+        parts.push('<span style="color:#FF453A;">−'+sLabel+' short</span>');
+      }
+      if(day.extra_comp_minutes>0){
+        var eh=Math.floor(day.extra_comp_minutes/60), em=day.extra_comp_minutes%60;
+        var eLabel = (eh>0?eh+'h ':'')+(em>0||eh===0?em+'m':'');
+        parts.push('<span style="color:#30D158;">+'+eLabel+' extra</span>');
+      }
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);font-size:11px;">'
+        +'<span style="color:rgba(245,245,247,0.55);">'+dLabel+'</span>'
+        +'<span style="display:flex;gap:8px;">'+parts.join('')+'</span>'
+      +'</div>';
+    }).join('');
+    box.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:9px;padding:10px 11px;">'
+      + rowsHtml
+      + '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.08);font-size:11px;color:rgba(245,245,247,0.45);">'
+        + 'Total short: '+d.total_short_minutes+'m · Total extra: '+d.total_extra_minutes+'m · Net: '+d.net_deficit_minutes+'m'
+        + (d.net_deficit_minutes>0 ? ' × ₹'+d.per_min_rate+'/min = <span style="color:#FF453A;font-weight:600;">−₹'+Math.round(d.net_late_deduction).toLocaleString('en-IN')+'</span>' : ' → <span style="color:#30D158;font-weight:600;">₹0 (fully offset)</span>')
+      + '</div>'
+    + '</div>';
+  }catch(e){
+    box.innerHTML = '<div style="color:rgba(255,69,58,0.7);font-size:11px;">Network error</div>';
   }
 }
 
@@ -9926,7 +9983,13 @@ async function dtLoadSalary(){
     el.innerHTML=''
       +row('Base Salary','₹'+fmt(baseSalary))
       +row('Present Salary','+₹'+fmt(daysWorked*dailyRate)+(absentDays>0?' ('+absentDays+' absent)':''),'#30D158')
-      +(lateDeduction>0?row('Late Deduction','−₹'+fmt(lateDeduction),'#FF9F0A'):'')
+      +'<div onclick="dtToggleLateDetail('+(staffInfo.id||'')+','+month+','+year+')" style="cursor:pointer;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+          +'<span style="font-size:12px;color:rgba(245,245,247,0.5);">Late Deduction <span style="font-size:10px;color:rgba(245,245,247,0.3);">▸ details</span></span>'
+          +'<span style="font-size:13px;font-weight:500;color:'+(lateDeduction>0?'#FF9F0A':'rgba(245,245,247,0.35)')+';">'+(lateDeduction>0?'−₹'+fmt(lateDeduction):'−₹0')+'</span>'
+        +'</div>'
+        +'<div id="dt-late-detail" style="display:none;margin-top:8px;"></div>'
+      +'</div>'
       +(otAmount>0?row('OT Pay','+₹'+fmt(otAmount),'#0A84FF'):'')
       +(allowanceAmt>0?row('Allowance','+₹'+fmt(allowanceAmt),'#BF5FFF'):'')
       +(incentiveAmt>0?row('Incentive','+₹'+fmt(incentiveAmt),'#FF9F0A'):'')
@@ -9935,6 +9998,56 @@ async function dtLoadSalary(){
       +row('Days Present',daysWorked+' days')
       +(otHours>0?row('OT Hours',otHours.toFixed(1)+'h','#FF9F0A'):'');
   } catch(e){ el.innerHTML='<div style="text-align:center;padding:24px;color:rgba(245,245,247,0.3);font-size:12px;">Could not load salary info</div>'; }
+}
+
+// Tap-to-expand day-by-day late/extra breakdown on the desktop staff salary panel
+var _dtLateLoaded = {};
+async function dtToggleLateDetail(staffId, month, year){
+  var box = document.getElementById('dt-late-detail');
+  if(!box || !staffId) return;
+  var opening = box.style.display === 'none';
+  box.style.display = opening ? 'block' : 'none';
+  if(!opening || _dtLateLoaded[staffId+'_'+month+'_'+year]) return;
+  box.innerHTML = '<div style="text-align:center;padding:8px 0;color:rgba(245,245,247,0.3);font-size:11px;">Loading…</div>';
+  try{
+    var res = await fetch(API_URL+'/api/payroll/late-detail?staff_id='+staffId+'&month='+month+'&year='+year, {headers:zHead()});
+    var d = await res.json();
+    if(!d.success){ box.innerHTML='<div style="color:rgba(255,69,58,0.7);font-size:11px;">'+(d.message||'Failed to load')+'</div>'; return; }
+    _dtLateLoaded[staffId+'_'+month+'_'+year] = true;
+    if(!d.days.length){
+      box.innerHTML = '<div style="text-align:center;padding:6px 0;color:rgba(245,245,247,0.3);font-size:11px;">No late or extra-time days this month</div>';
+      return;
+    }
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var rowsHtml = d.days.map(function(day){
+      var dt = new Date(day.date+'T00:00:00');
+      var dLabel = dt.getDate()+' '+months[dt.getMonth()];
+      var parts = [];
+      if(day.short_time_minutes>0){
+        var sh=Math.floor(day.short_time_minutes/60), sm=day.short_time_minutes%60;
+        var sLabel = (sh>0?sh+'h ':'')+(sm>0||sh===0?sm+'m':'');
+        parts.push('<span style="color:#FF453A;">−'+sLabel+' short</span>');
+      }
+      if(day.extra_comp_minutes>0){
+        var eh=Math.floor(day.extra_comp_minutes/60), em=day.extra_comp_minutes%60;
+        var eLabel = (eh>0?eh+'h ':'')+(em>0||eh===0?em+'m':'');
+        parts.push('<span style="color:#30D158;">+'+eLabel+' extra</span>');
+      }
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);font-size:11px;">'
+        +'<span style="color:rgba(245,245,247,0.55);">'+dLabel+'</span>'
+        +'<span style="display:flex;gap:8px;">'+parts.join('')+'</span>'
+      +'</div>';
+    }).join('');
+    box.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:9px;padding:10px 11px;">'
+      + rowsHtml
+      + '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.08);font-size:11px;color:rgba(245,245,247,0.45);">'
+        + 'Total short: '+d.total_short_minutes+'m · Total extra: '+d.total_extra_minutes+'m · Net: '+d.net_deficit_minutes+'m'
+        + (d.net_deficit_minutes>0 ? ' × ₹'+d.per_min_rate+'/min = <span style="color:#FF453A;font-weight:600;">−₹'+Math.round(d.net_late_deduction).toLocaleString('en-IN')+'</span>' : ' → <span style="color:#30D158;font-weight:600;">₹0 (fully offset)</span>')
+      + '</div>'
+    + '</div>';
+  }catch(e){
+    box.innerHTML = '<div style="color:rgba(255,69,58,0.7);font-size:11px;">Network error</div>';
+  }
 }
 
 /* ── STARTUP — check if already logged in ── */
