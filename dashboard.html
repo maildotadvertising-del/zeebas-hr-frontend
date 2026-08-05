@@ -9826,6 +9826,11 @@ function openStaffPayrollDetail(i){
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
           +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+grossEarned.toLocaleString('en-IN')+'</span></div>'
           +(absentDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent ('+r.days_absent+'d)</span><span style="color:rgba(255,69,58,0.65);font-size:12px;">−₹'+Math.round(absentDed).toLocaleString('en-IN')+' (withheld)</span></div>':'')
+          +'<div onclick="spdmToggleLateDetail('+r.id+','+(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)+','+year+')" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:6px;padding:2px 4px;margin:0 -4px;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'">'
+            +'<span style="color:rgba(245,245,247,0.5);font-size:12px;display:flex;align-items:center;gap:4px;">Late Deduction <span id="spdm-late-caret-'+r.id+'" style="font-size:9px;color:rgba(245,245,247,0.3);">▸ details</span></span>'
+            +'<span style="color:'+(parseFloat(r.late_deduction||0)>0?'rgba(255,69,58,0.65)':'rgba(245,245,247,0.35)')+';font-size:12px;">'+(parseFloat(r.late_deduction||0)>0?'−₹'+Math.round(parseFloat(r.late_deduction||0)).toLocaleString('en-IN'):'—')+'</span>'
+          +'</div>'
+          +'<div id="spdm-late-detail-'+r.id+'" style="display:none;background:rgba(255,255,255,0.03);border-radius:9px;padding:10px 11px;margin:2px 0;"></div>'
           +(advMonthly>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Advance Entries</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advMonthly).toLocaleString('en-IN')+'</span></div>':'')
           +(advPayroll>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Payroll Adj. Advance</span><span style="color:#FF6B6B;font-size:12px;">-₹'+Math.round(advPayroll).toLocaleString('en-IN')+'</span></div>':'')
           +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:4px 0;"></div>'
@@ -10002,6 +10007,56 @@ async function spdmSaveAdvance(staffId){
     } else showToast('❌ '+(d.message||'Failed'),'error');
   }catch(e){ showToast('❌ Error','error'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='💸 Save Advance'; } }
+}
+
+// Toggle + lazy-load the day-by-day late/extra breakdown inside the staff payroll modal
+var _spdmLateLoaded = {};
+async function spdmToggleLateDetail(staffId, month, year){
+  var box = document.getElementById('spdm-late-detail-'+staffId);
+  var caret = document.getElementById('spdm-late-caret-'+staffId);
+  if(!box) return;
+  var opening = box.style.display === 'none';
+  box.style.display = opening ? 'block' : 'none';
+  if(caret) caret.textContent = opening ? '▾ hide' : '▸ details';
+  if(!opening || _spdmLateLoaded[staffId+'_'+month+'_'+year]) return;
+  box.innerHTML = '<div style="text-align:center;padding:8px 0;color:rgba(245,245,247,0.3);font-size:11px;">Loading…</div>';
+  try{
+    var res = await fetch(API+'/api/payroll/late-detail?staff_id='+staffId+'&month='+month+'&year='+year, {headers:zHdr()});
+    var d = await res.json();
+    if(!d.success){ box.innerHTML='<div style="color:rgba(255,69,58,0.7);font-size:11px;">'+(d.message||'Failed to load')+'</div>'; return; }
+    _spdmLateLoaded[staffId+'_'+month+'_'+year] = true;
+    if(!d.days.length){
+      box.innerHTML = '<div style="text-align:center;padding:6px 0;color:rgba(245,245,247,0.3);font-size:11px;">No late or extra-time days this month</div>';
+      return;
+    }
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var rowsHtml = d.days.map(function(day){
+      var dt = new Date(day.date+'T00:00:00');
+      var dLabel = dt.getDate()+' '+months[dt.getMonth()];
+      var parts = [];
+      if(day.short_time_minutes>0){
+        var sh=Math.floor(day.short_time_minutes/60), sm=day.short_time_minutes%60;
+        var sLabel = (sh>0?sh+'h ':'')+(sm>0||sh===0?sm+'m':'');
+        parts.push('<span style="color:#FF453A;">−'+sLabel+' short</span>');
+      }
+      if(day.extra_comp_minutes>0){
+        var eh=Math.floor(day.extra_comp_minutes/60), em=day.extra_comp_minutes%60;
+        var eLabel = (eh>0?eh+'h ':'')+(em>0||eh===0?em+'m':'');
+        parts.push('<span style="color:#30D158;">+'+eLabel+' extra</span>');
+      }
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);font-size:11px;">'
+        +'<span style="color:rgba(245,245,247,0.55);">'+dLabel+'</span>'
+        +'<span style="display:flex;gap:8px;">'+parts.join('')+'</span>'
+      +'</div>';
+    }).join('');
+    box.innerHTML = rowsHtml
+      + '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.08);font-size:11px;color:rgba(245,245,247,0.45);">'
+        + 'Total short: '+d.total_short_minutes+'m · Total extra: '+d.total_extra_minutes+'m · Net: '+d.net_deficit_minutes+'m'
+        + (d.net_deficit_minutes>0 ? ' × ₹'+d.per_min_rate+'/min = <span style="color:#FF453A;font-weight:600;">−₹'+Math.round(d.net_late_deduction).toLocaleString('en-IN')+'</span>' : ' → <span style="color:#30D158;font-weight:600;">₹0 (fully offset)</span>')
+      + '</div>';
+  }catch(e){
+    box.innerHTML = '<div style="color:rgba(255,69,58,0.7);font-size:11px;">Network error</div>';
+  }
 }
 
 async function spdmMarkPaid(payrollId, name){
