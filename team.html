@@ -4958,11 +4958,11 @@ async function loadAdminPayroll(){
         +(lateDed>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Late '+(s.late_days||s.days_late||0)+'d</span><span style="color:#FF9F0A;font-size:10px;">−₹'+lateDed.toLocaleString('en-IN')+'</span></div>':'')
         +(otAmt>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">OT '+otHrs.toFixed(1)+'h</span><span style="color:#0A84FF;font-size:10px;">+₹'+otAmt.toLocaleString('en-IN')+'</span></div>':'')
         +(incAmt>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Incentive</span><span style="color:#30D158;font-size:10px;">+₹'+incAmt.toLocaleString('en-IN')+'</span></div>':'')
-        +(alwAmt>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Allowance'+(s.allowance_note?' ('+s.allowance_note+')':'')+'</span><span style="color:#BF5FFF;font-size:10px;">+₹'+alwAmt.toLocaleString('en-IN')+'</span></div>':'')
         +(advDed>0?'<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(245,245,247,0.38);font-size:10px;">Advance Recovery</span><span style="color:#FF453A;font-size:10px;">−₹'+advDed.toLocaleString('en-IN')+'</span></div>':'')
         +'<div style="height:0.5px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>'
         +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.6);font-size:11px;font-weight:500;">Net Salary'+(isLivePr?' (Live)':'')+'</span><span style="color:#30D158;font-size:13px;font-weight:600;">₹'+Math.round(netToShow).toLocaleString('en-IN')+'</span></div>'
         +'</div>'
+        +(alwAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.25);border-radius:9px;padding:7px 10px;margin-bottom:9px;"><div><span style="color:#BF5FFF;font-size:10px;font-weight:600;">🚌 Travel Allowance'+(s.allowance_note?' ('+s.allowance_note+')':'')+'</span><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-top:1px;">Paid separately — not part of salary</div></div><span style="color:#BF5FFF;font-size:12px;font-weight:700;">₹'+alwAmt.toLocaleString('en-IN')+'</span></div>':'')
         +(ps==='pending'?'<button onclick="s2MarkPaid('+s.payroll_id+',this)" style="width:100%;background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.28);border-radius:10px;padding:9px;color:#30D158;font-size:12px;cursor:pointer;font-family:inherit;">✓ Mark as Paid</button>'
           :(ps==='not_processed'?'<div style="color:rgba(245,245,247,0.28);font-size:10px;text-align:center;padding:4px 0;">Process payroll to generate this record</div>':'<div style="display:flex;align-items:center;justify-content:center;gap:4px;color:rgba(48,209,88,0.6);font-size:10px;padding:2px 0;">✓ Paid</div>'))
         +'</div>';
@@ -5522,7 +5522,8 @@ async function loadMySalary(){
     // For live preview (no payroll record yet), compute from live attendance + live advances.
     if(!payroll) advDeduction = advancesLiveTotal;
     else advDeduction = parseFloat(payroll.advance_deduction||0);
-    var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
+    // Travel allowance is NOT included in earned/net salary — it's paid separately, never mixed into salary.
+    var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount - lateDeduction - advDeduction);
     var netSalary = payroll ? parseFloat(payroll.net_salary||earnedSoFar) : earnedSoFar;
     var isProcessed = !!payroll;
     var status      = payroll ? payroll.status : 'preview';
@@ -5559,6 +5560,13 @@ async function loadMySalary(){
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">OT hrs</div><div style="color:#0A84FF;font-size:14px;font-weight:500;">'+otHours.toFixed(1)+'</div></div>'
         +'</div>'
       +'</div>'
+      // ── Travel Allowance (separate — not part of salary) ──
+      +(allowanceAmt>0
+        ?'<div style="background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.25);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">'
+          +'<div><div style="color:#BF5FFF;font-size:12px;font-weight:600;">🚌 Travel Allowance</div><div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;">'+(allowanceNote||'Paid separately')+' — not part of salary</div></div>'
+          +'<div style="color:#BF5FFF;font-size:16px;font-weight:700;font-family:monospace;">₹'+fmt(allowanceAmt)+'</div>'
+        +'</div>'
+        :'')
       // ── Salary Breakdown (always shown) ──
       +(function(){
         var presentEarned = daysWorked * dailyRate;
@@ -5592,10 +5600,6 @@ async function loadMySalary(){
           +(otAmount>0
             ? bRow('OT Pay', otHours.toFixed(1)+' hrs overtime', '+₹'+fmt(otAmount), '#0A84FF')
             : bRow('OT Pay', 'No overtime this month', '+₹0', 'rgba(245,245,247,0.22)'))
-          // Allowance
-          +(allowanceAmt>0
-            ? bRow('Allowance', allowanceNote||'Monthly allowance', '+₹'+fmt(allowanceAmt), '#BF5FFF')
-            : bRow('Allowance', 'Not applicable', '+₹0', 'rgba(245,245,247,0.22)'))
           // Incentive
           +(incentiveAmt>0
             ? bRow('Incentive 🎯', 'Performance bonus', '+₹'+fmt(incentiveAmt), '#FF9F0A')
@@ -9976,11 +9980,13 @@ async function dtLoadSalary(){
     // For live preview (no payroll record), compute from live advances + attendance.
     var advancesLiveTotal = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
     var advDeduction = payroll ? parseFloat(payroll.advance_deduction||0) : advancesLiveTotal;
-    var netSalary = payroll ? parseFloat(payroll.net_salary||0) : Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount + allowanceAmt - lateDeduction - advDeduction);
+    // Travel allowance is NOT included in net salary — it's paid separately, never mixed into salary.
+    var netSalary = payroll ? parseFloat(payroll.net_salary||0) : Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount - lateDeduction - advDeduction);
 
     var fmt=function(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0}); };
     var row=function(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'+'<span style="font-size:12px;color:rgba(245,245,247,0.5);">'+lbl+'</span>'+'<span style="font-size:13px;font-weight:500;color:'+(col||'#F5F5F7')+';">'+val+'</span></div>'; };
     el.innerHTML=''
+      +(allowanceAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:8px;background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.25);border-radius:10px;"><div><span style="font-size:12px;color:#BF5FFF;font-weight:600;">🚌 Travel Allowance</span><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-top:1px;">Paid separately — not part of salary</div></div><span style="font-size:14px;font-weight:700;color:#BF5FFF;">₹'+fmt(allowanceAmt)+'</span></div>':'')
       +row('Base Salary','₹'+fmt(baseSalary))
       +row('Present Salary','+₹'+fmt(daysWorked*dailyRate)+(absentDays>0?' ('+absentDays+' absent)':''),'#30D158')
       +'<div onclick="dtToggleLateDetail('+(staffInfo.id||'')+','+month+','+year+')" style="cursor:pointer;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
@@ -9991,7 +9997,6 @@ async function dtLoadSalary(){
         +'<div id="dt-late-detail" style="display:none;margin-top:8px;"></div>'
       +'</div>'
       +(otAmount>0?row('OT Pay','+₹'+fmt(otAmount),'#0A84FF'):'')
-      +(allowanceAmt>0?row('Allowance','+₹'+fmt(allowanceAmt),'#BF5FFF'):'')
       +(incentiveAmt>0?row('Incentive','+₹'+fmt(incentiveAmt),'#FF9F0A'):'')
       +(advDeduction>0?row('Advance Recovery','−₹'+fmt(advDeduction),'#FF453A'):'')
       +row('Net Pay','₹'+fmt(netSalary),'#30D158')
