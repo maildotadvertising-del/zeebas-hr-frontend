@@ -9731,7 +9731,10 @@ function openStaffPayrollDetail(i){
   var advPayroll = parseFloat(r.advance_deduction||0);       // separate payroll adjustment advance
   var advDed = advMonthly + advPayroll;
   var absentDed = parseFloat(r.absent_deduction||0);
-  var grossEarned = parseFloat(r.days_present||0) * Math.round(parseFloat(r.daily_rate||0)); // use rounded rate to match display
+  // Use the exact (unrounded) daily rate — matches what the backend actually used inside
+  // net_salary/earned_so_far, so this row's figure is consistent with the other rows and
+  // the Balance Salary total below (rounding the rate here caused a few-rupee mismatch).
+  var grossEarned = parseFloat(r.days_present||0) * parseFloat(r.daily_rate||0);
   // absentDed is already baked into grossEarned (days_present excludes absent days), so don't subtract again
   // Trust the backend's authoritative net (same field the payroll list row uses) so the modal matches the
   // list and correctly reflects late/OT deductions, other deduction/incentive and allowance too
@@ -9878,8 +9881,12 @@ function openStaffPayrollDetail(i){
       +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(48,209,88,0.15);border-radius:14px;padding:14px;">'
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
-          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+grossEarned.toLocaleString('en-IN')+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(grossEarned).toLocaleString('en-IN')+'</span></div>'
           +(absentDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent ('+r.days_absent+'d)</span><span style="color:rgba(255,69,58,0.65);font-size:12px;">−₹'+Math.round(absentDed).toLocaleString('en-IN')+' (withheld)</span></div>':'')
+          +(parseFloat(r.other_incentive||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Incentive</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.other_incentive||0)).toLocaleString('en-IN')+'</span></div>':'')
+          +(parseFloat(r.allowance_amount||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Allowance</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.allowance_amount||0)).toLocaleString('en-IN')+'</span></div>':'')
+          +(parseFloat(r.ot_amount||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">OT Pay</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.ot_amount||0)).toLocaleString('en-IN')+'</span></div>':'')
+          +(parseFloat(r.other_deduction||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Other Deduction</span><span style="color:#FF6B6B;font-size:12px;">−₹'+Math.round(parseFloat(r.other_deduction||0)).toLocaleString('en-IN')+'</span></div>':'')
           +'<div onclick="spdmToggleLateDetail('+r.id+','+(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)+','+year+')" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:6px;padding:2px 4px;margin:0 -4px;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'">'
             +'<span style="color:rgba(245,245,247,0.5);font-size:12px;display:flex;align-items:center;gap:4px;">Late Deduction <span id="spdm-late-caret-'+r.id+'" style="font-size:9px;color:rgba(245,245,247,0.3);">▸ details</span></span>'
             +'<span style="color:'+(parseFloat(r.late_deduction||0)>0?'rgba(255,69,58,0.65)':'rgba(245,245,247,0.35)')+';font-size:12px;">'+(parseFloat(r.late_deduction||0)>0?'−₹'+Math.round(parseFloat(r.late_deduction||0)).toLocaleString('en-IN'):'—')+'</span>'
