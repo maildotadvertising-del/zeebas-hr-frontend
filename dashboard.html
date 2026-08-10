@@ -9880,11 +9880,16 @@ function openStaffPayrollDetail(i){
       // ── Payment Status ──
       +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(48,209,88,0.15);border-radius:14px;padding:14px;">'
         +'<div style="font-size:11px;color:#30D158;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💰 Salary Payment</div>'
+        +(parseFloat(r.allowance_amount||0)>0
+          ?'<div style="margin-bottom:12px;padding:8px 10px;background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.25);border-radius:9px;display:flex;justify-content:space-between;align-items:center;">'
+            +'<div><div style="color:#BF5FFF;font-size:11px;font-weight:600;">🚌 Travel Allowance</div><div style="font-size:9px;color:rgba(245,245,247,0.4);margin-top:1px;">Paid separately — not part of salary</div></div>'
+            +'<div style="color:#BF5FFF;font-size:14px;font-weight:700;">₹'+Math.round(parseFloat(r.allowance_amount||0)).toLocaleString('en-IN')+'</div>'
+          +'</div>'
+          :'')
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
           +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(grossEarned).toLocaleString('en-IN')+'</span></div>'
           +(absentDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent ('+r.days_absent+'d)</span><span style="color:rgba(255,69,58,0.65);font-size:12px;">−₹'+Math.round(absentDed).toLocaleString('en-IN')+' (withheld)</span></div>':'')
           +(parseFloat(r.other_incentive||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Incentive</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.other_incentive||0)).toLocaleString('en-IN')+'</span></div>':'')
-          +(parseFloat(r.allowance_amount||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Allowance</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.allowance_amount||0)).toLocaleString('en-IN')+'</span></div>':'')
           +(parseFloat(r.ot_amount||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">OT Pay</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.ot_amount||0)).toLocaleString('en-IN')+'</span></div>':'')
           +(parseFloat(r.other_deduction||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Other Deduction</span><span style="color:#FF6B6B;font-size:12px;">−₹'+Math.round(parseFloat(r.other_deduction||0)).toLocaleString('en-IN')+'</span></div>':'')
           +'<div onclick="spdmToggleLateDetail('+r.id+','+(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)+','+year+')" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:6px;padding:2px 4px;margin:0 -4px;" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'">'
