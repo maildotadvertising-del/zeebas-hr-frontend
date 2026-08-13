@@ -9742,8 +9742,19 @@ function openStaffPayrollDetail(i){
   var net = _backendNet || (grossEarned - Math.round(advDed));
   var today = new Date().toISOString().slice(0,10);
   var paidDate = r.paid_date ? (function(){ var dt=new Date(r.paid_date); return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear(); })() : '';
-  var monthName = _prMonths[(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)-1];
+  var pMonth = (_pr&&_pr.month)?_pr.month:new Date().getMonth()+1;
+  var monthName = _prMonths[pMonth-1];
   var year = (_pr&&_pr.year)||new Date().getFullYear();
+  // Advance/Allowance dates must stay inside the payroll month currently open in this modal —
+  // otherwise a date picked from a different month silently gets deducted from THAT month's
+  // payroll instead (advance/allowance attribution is date-based on the backend), confusing
+  // admins who intended it for the month they're looking at.
+  var pad2 = function(n){ return n<10?'0'+n:''+n; };
+  var monthMin = year+'-'+pad2(pMonth)+'-01';
+  var monthLastDay = new Date(year, pMonth, 0).getDate();
+  var monthMax = year+'-'+pad2(pMonth)+'-'+pad2(monthLastDay);
+  var monthDefaultDate = (today>=monthMin && today<=monthMax) ? today : monthMax;
+  window._spdmMonthMin = monthMin; window._spdmMonthMax = monthMax;
   var photoSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
   var init = (r.name||'?').substring(0,2).toUpperCase();
   var avatarHtml = photoSrc
@@ -9839,7 +9850,7 @@ function openStaffPayrollDetail(i){
                     +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Amount (₹)</div>'
                       +'<input type="number" id="spdm-alw-amt" min="1" placeholder="e.g. 500" style="'+inp+'width:100%;border-color:rgba(191,95,255,0.2);"></div>'
                     +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Date</div>'
-                      +'<input type="date" id="spdm-alw-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;border-color:rgba(191,95,255,0.2);"></div>'
+                      +'<input type="date" id="spdm-alw-date" value="'+monthDefaultDate+'" min="'+monthMin+'" max="'+monthMax+'" style="'+inp+'width:100%;color-scheme:dark;border-color:rgba(191,95,255,0.2);"></div>'
                   +'</div>'
                   +'<div style="margin-bottom:6px;"><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Type</div>'
                     +'<select id="spdm-alw-type" style="'+inp+'width:100%;border-color:rgba(191,95,255,0.2);">'
@@ -9869,7 +9880,7 @@ function openStaffPayrollDetail(i){
             +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Amount (₹)</div>'
               +'<input type="number" id="spdm-adv-amt" min="1" placeholder="e.g. 2000" style="'+inp+'width:100%;"></div>'
             +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Date</div>'
-              +'<input type="date" id="spdm-adv-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;"></div>'
+              +'<input type="date" id="spdm-adv-date" value="'+monthDefaultDate+'" min="'+monthMin+'" max="'+monthMax+'" style="'+inp+'width:100%;color-scheme:dark;"></div>'
           +'</div>'
           +'<div style="margin-bottom:8px;"><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Reason</div>'
             +'<input type="text" id="spdm-adv-reason" placeholder="Festival advance, Emergency…" style="'+inp+'width:100%;"></div>'
@@ -9998,6 +10009,9 @@ function spdmAddAlwEntry(){
   var type = (document.getElementById('spdm-alw-type')||{}).value||'Other';
   if(!amt||amt<=0){ showToast('❌ Amount enter பண்ணுங்க','error'); return; }
   if(!date){ showToast('❌ Date select பண்ணுங்க','error'); return; }
+  if(window._spdmMonthMin && window._spdmMonthMax && (date<window._spdmMonthMin || date>window._spdmMonthMax)){
+    showToast('❌ Date இந்த payroll month-க்குள்ளதான் இருக்கணும்','error'); return;
+  }
   if(!window._spdmAlwEntries) window._spdmAlwEntries=[];
   window._spdmAlwEntries.push({amount:amt, date:date, type:type});
   var amtEl = document.getElementById('spdm-alw-amt'); if(amtEl) amtEl.value='';
@@ -10056,6 +10070,9 @@ async function spdmSaveAdvance(staffId){
   var btn = document.getElementById('spdm-adv-btn');
   if(!amount||amount<=0){ showToast('❌ Amount enter பண்ணுங்க','error'); return; }
   if(!date){ showToast('❌ Date select பண்ணுங்க','error'); return; }
+  if(window._spdmMonthMin && window._spdmMonthMax && (date<window._spdmMonthMin || date>window._spdmMonthMax)){
+    showToast('❌ Date இந்த payroll month-க்குள்ளதான் இருக்கணும்','error'); return;
+  }
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
   try{
     var r = await fetch(API+'/api/payroll/monthly-advance',{
