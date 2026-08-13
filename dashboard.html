@@ -9615,7 +9615,8 @@ function prViewRow(r,i){
     : '';
   var statusBadge = r.payroll_status==='paid'
     ? '<div style="text-align:center;"><span style="background:rgba(48,209,88,0.12);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'
-      +(paidDateFmt?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:3px;">'+paidDateFmt+'</div>':'')+'</div>'
+      +(paidDateFmt?'<div style="font-size:9px;color:rgba(48,209,88,0.5);margin-top:3px;">'+paidDateFmt+'</div>':'')
+      +(parseFloat(r.roundup_amount||0)>0?'<div style="font-size:9px;color:#BF5FFF;margin-top:1px;">+₹'+Math.round(parseFloat(r.roundup_amount)).toLocaleString('en-IN')+' roundup</div>':'')+'</div>'
     : '<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">Pending</span>';
 
   return '<tr id="pr-row-'+i+'" style="background:'+bg+';">'
@@ -9745,16 +9746,12 @@ function openStaffPayrollDetail(i){
   var pMonth = (_pr&&_pr.month)?_pr.month:new Date().getMonth()+1;
   var monthName = _prMonths[pMonth-1];
   var year = (_pr&&_pr.year)||new Date().getFullYear();
-  // Advance/Allowance dates must stay inside the payroll month currently open in this modal —
-  // otherwise a date picked from a different month silently gets deducted from THAT month's
-  // payroll instead (advance/allowance attribution is date-based on the backend), confusing
-  // admins who intended it for the month they're looking at.
-  var pad2 = function(n){ return n<10?'0'+n:''+n; };
-  var monthMin = year+'-'+pad2(pMonth)+'-01';
-  var monthLastDay = new Date(year, pMonth, 0).getDate();
-  var monthMax = year+'-'+pad2(pMonth)+'-'+pad2(monthLastDay);
-  var monthDefaultDate = (today>=monthMin && today<=monthMax) ? today : monthMax;
-  window._spdmMonthMin = monthMin; window._spdmMonthMax = monthMax;
+  // Advance Salary entries deduct from whichever payroll month this modal is open on
+  // (pMonth/year), regardless of the calendar date picked — an advance can be dated in a
+  // future month (e.g. given near month-end for the coming month) but still count against
+  // the month being viewed here. window._spdmPayrollMonth/Year let spdmSaveAdvance send that
+  // explicitly instead of letting the backend guess it from the date.
+  window._spdmPayrollMonth = pMonth; window._spdmPayrollYear = year;
   var photoSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
   var init = (r.name||'?').substring(0,2).toUpperCase();
   var avatarHtml = photoSrc
@@ -9850,7 +9847,7 @@ function openStaffPayrollDetail(i){
                     +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Amount (₹)</div>'
                       +'<input type="number" id="spdm-alw-amt" min="1" placeholder="e.g. 500" style="'+inp+'width:100%;border-color:rgba(191,95,255,0.2);"></div>'
                     +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Date</div>'
-                      +'<input type="date" id="spdm-alw-date" value="'+monthDefaultDate+'" min="'+monthMin+'" max="'+monthMax+'" style="'+inp+'width:100%;color-scheme:dark;border-color:rgba(191,95,255,0.2);"></div>'
+                      +'<input type="date" id="spdm-alw-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;border-color:rgba(191,95,255,0.2);"></div>'
                   +'</div>'
                   +'<div style="margin-bottom:6px;"><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Type</div>'
                     +'<select id="spdm-alw-type" style="'+inp+'width:100%;border-color:rgba(191,95,255,0.2);">'
@@ -9875,12 +9872,12 @@ function openStaffPayrollDetail(i){
         +'<div style="font-size:11px;color:#FF453A;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💳 Advance Salary — Date Wise</div>'
         +'<div id="spdm-adv-history-'+r.id+'"><div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Loading…</div></div>'
         +'<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.07);">'
-          +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:6px;">➕ Add New Advance</div>'
+          +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:6px;">➕ Add New Advance <span style="color:rgba(245,245,247,0.25);">— always deducted from '+monthName+' '+year+', whatever date you pick</span></div>'
           +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
             +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Amount (₹)</div>'
               +'<input type="number" id="spdm-adv-amt" min="1" placeholder="e.g. 2000" style="'+inp+'width:100%;"></div>'
             +'<div><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Date</div>'
-              +'<input type="date" id="spdm-adv-date" value="'+monthDefaultDate+'" min="'+monthMin+'" max="'+monthMax+'" style="'+inp+'width:100%;color-scheme:dark;"></div>'
+              +'<input type="date" id="spdm-adv-date" value="'+today+'" style="'+inp+'width:100%;color-scheme:dark;"></div>'
           +'</div>'
           +'<div style="margin-bottom:8px;"><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Reason</div>'
             +'<input type="text" id="spdm-adv-reason" placeholder="Festival advance, Emergency…" style="'+inp+'width:100%;"></div>'
@@ -9917,12 +9914,15 @@ function openStaffPayrollDetail(i){
               +'<div style="text-align:right;">'
                 +'<div style="color:#30D158;font-size:15px;font-weight:700;">₹'+Math.round(net).toLocaleString('en-IN')+'</div>'
                 +(paidDate?'<div style="color:rgba(48,209,88,0.55);font-size:10px;margin-top:1px;">✓ Paid · '+paidDate+'</div>':'<div style="color:rgba(48,209,88,0.45);font-size:10px;margin-top:1px;">✓ Paid</div>')
+                +(parseFloat(r.roundup_amount||0)>0?'<div style="color:#BF5FFF;font-size:10px;margin-top:1px;">+₹'+Math.round(parseFloat(r.roundup_amount||0)).toLocaleString('en-IN')+' roundup</div>':'')
               +'</div>'
             +'</div>'
             +'<div id="spdm-edit-date-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.07);">'
+              +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Amount You Transferred (₹) <span style="color:rgba(245,245,247,0.25);">— extra above Balance Salary is tracked as roundup</span></div>'
+              +'<input type="number" id="spdm-paid-amt" min="0" value="'+(parseFloat(r.paid_amount||0)>0?Math.round(parseFloat(r.paid_amount)):Math.round(net))+'" style="'+inp+'width:100%;margin-bottom:8px;">'
               +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Update Paid Date</div>'
               +'<div style="display:flex;gap:8px;align-items:center;">'
-                +'<input type="date" id="spdm-paid-date" style="'+inp+'flex:1;color-scheme:dark;">'
+                +'<input type="date" id="spdm-paid-date" value="'+(r.paid_date||'')+'" style="'+inp+'flex:1;color-scheme:dark;">'
                 +'<button onclick="event.stopPropagation();spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 12px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 Update</button>'
               +'</div>'
             +'</div>'
@@ -9931,6 +9931,8 @@ function openStaffPayrollDetail(i){
               +'<span style="color:#30D158;font-size:15px;font-weight:700;">₹'+Math.round(net).toLocaleString('en-IN')+'</span>'
             +'</div>'
             +(net<=0?'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Advance covers full salary. Enter the date when you gave the advance/salary.</div>':'<div style="font-size:11px;color:rgba(245,245,247,0.45);margin-bottom:8px;">Enter the date when you transferred the balance salary.</div>')
+            +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Amount You Transferred (₹) <span style="color:rgba(245,245,247,0.25);">— round up? the extra shows as Roundup</span></div>'
+            +'<input type="number" id="spdm-paid-amt" min="0" value="'+Math.round(net)+'" style="'+inp+'width:100%;margin-bottom:8px;">'
             +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Salary Paid Date</div>'
             +'<div style="display:flex;gap:8px;align-items:center;">'
               +'<input type="date" id="spdm-paid-date" style="'+inp+'flex:1;color-scheme:dark;">'
@@ -10009,9 +10011,6 @@ function spdmAddAlwEntry(){
   var type = (document.getElementById('spdm-alw-type')||{}).value||'Other';
   if(!amt||amt<=0){ showToast('❌ Amount enter பண்ணுங்க','error'); return; }
   if(!date){ showToast('❌ Date select பண்ணுங்க','error'); return; }
-  if(window._spdmMonthMin && window._spdmMonthMax && (date<window._spdmMonthMin || date>window._spdmMonthMax)){
-    showToast('❌ Date இந்த payroll month-க்குள்ளதான் இருக்கணும்','error'); return;
-  }
   if(!window._spdmAlwEntries) window._spdmAlwEntries=[];
   window._spdmAlwEntries.push({amount:amt, date:date, type:type});
   var amtEl = document.getElementById('spdm-alw-amt'); if(amtEl) amtEl.value='';
@@ -10070,14 +10069,13 @@ async function spdmSaveAdvance(staffId){
   var btn = document.getElementById('spdm-adv-btn');
   if(!amount||amount<=0){ showToast('❌ Amount enter பண்ணுங்க','error'); return; }
   if(!date){ showToast('❌ Date select பண்ணுங்க','error'); return; }
-  if(window._spdmMonthMin && window._spdmMonthMax && (date<window._spdmMonthMin || date>window._spdmMonthMax)){
-    showToast('❌ Date இந்த payroll month-க்குள்ளதான் இருக்கணும்','error'); return;
-  }
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
   try{
+    // month/year pin this advance to the payroll page currently open — it deducts from THIS
+    // month regardless of which calendar month the picked date falls in.
     var r = await fetch(API+'/api/payroll/monthly-advance',{
       method:'POST', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-      body:JSON.stringify({staff_id:staffId, amount, date, reason:reason||'Advance taken'})
+      body:JSON.stringify({staff_id:staffId, amount, date, reason:reason||'Advance taken', month:window._spdmPayrollMonth, year:window._spdmPayrollYear})
     });
     var d = await r.json();
     if(d.success){
@@ -10145,23 +10143,26 @@ async function spdmToggleLateDetail(staffId, month, year){
 async function spdmMarkPaid(payrollId, name){
   if(!payrollId){ showToast('Process payroll first','error'); return; }
   var paidDate = (document.getElementById('spdm-paid-date')||{}).value;
+  var paidAmtEl = document.getElementById('spdm-paid-amt');
+  var paidAmt = paidAmtEl ? parseFloat(paidAmtEl.value) : NaN;
   if(!paidDate){ showToast('❌ Date select பண்ணுங்க','error'); return; }
+  if(paidAmtEl && (isNaN(paidAmt) || paidAmt<0)){ showToast('❌ Amount transferred சரியா enter பண்ணுங்க','error'); return; }
   try{
     var res = await fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
       method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-      body:JSON.stringify({paid_date:paidDate})
+      body:JSON.stringify({paid_date:paidDate, paid_amount: isNaN(paidAmt)?undefined:paidAmt})
     });
     var d = await res.json();
     if(d.success){
       var idx = (window._prRows||[]).findIndex(function(rx){ return rx.payroll_id === payrollId; });
       if(idx !== -1){
-        window._prRows[idx] = Object.assign({}, window._prRows[idx], { payroll_status:'paid', paid_date: paidDate });
+        window._prRows[idx] = Object.assign({}, window._prRows[idx], { payroll_status:'paid', paid_date: paidDate, paid_amount: d.paid_amount, roundup_amount: d.roundup_amount });
         var row = document.getElementById('pr-row-'+idx);
         if(row) row.outerHTML = prViewRow(window._prRows[idx], idx);
       }
       var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
       if(idx !== -1) openStaffPayrollDetail(idx); // reopen modal to show updated paid date
-      showToast('✅ '+name+' salary marked as paid');
+      showToast(d.roundup_amount>0 ? '✅ '+name+' paid — +₹'+Math.round(d.roundup_amount).toLocaleString('en-IN')+' roundup tracked' : '✅ '+name+' salary marked as paid');
     } else showToast('❌ '+(d.message||'Error'),'error');
   }catch(e){ showToast('❌ Server error','error'); }
 }
@@ -10189,41 +10190,34 @@ function _loadAdvanceSalaryHistory_modal(staffId){
   fetch(API+'/api/payroll/monthly-advance/'+staffId,{headers:zHdr()})
     .then(function(r){return r.json();})
     .then(function(d){
-      // Only show entries for the payroll month currently being viewed — an advance
-      // taken in May must not appear (or be implied as deducted) while viewing June.
-      var viewKey = (_pr&&_pr.year?_pr.year:new Date().getFullYear())+'-'+String((_pr&&_pr.month?_pr.month:new Date().getMonth()+1)).padStart(2,'0');
-      var entries=(d.data||[]).filter(function(e){ return (e.payment_date||'').toString().slice(0,7)===viewKey; });
-      if(!entries.length){ histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No advance salary records this month</div>'; return; }
-      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      var grouped={};
-      entries.forEach(function(e){
-        var dt=(e.payment_date||'').toString().slice(0,10);
-        var key=dt.slice(0,7);
-        if(!grouped[key]) grouped[key]=[];
-        grouped[key].push(e);
+      // Only show entries for the payroll month currently being viewed. Match by
+      // for_month/for_year — the payroll month this advance was recorded against — NOT
+      // payment_date's own month, since an entry can be dated in a different month than the
+      // one it deducts from. Legacy entries saved before for_month/for_year existed fall back
+      // to their payment_date's month.
+      var viewYear  = (_pr&&_pr.year)  || new Date().getFullYear();
+      var viewMonth = (_pr&&_pr.month) || (new Date().getMonth()+1);
+      var entries=(d.data||[]).filter(function(e){
+        var y = e.for_year  || parseInt((e.payment_date||'').toString().slice(0,4));
+        var m = e.for_month || parseInt((e.payment_date||'').toString().slice(5,7));
+        return y===viewYear && m===viewMonth;
       });
-      histEl.innerHTML=Object.keys(grouped).sort().reverse().map(function(key){
-        var parts=key.split('-');
-        var mLabel=months[parseInt(parts[1]||1)-1]+' '+parts[0];
-        var grp=grouped[key];
-        var total=grp.reduce(function(s,e){return s+parseFloat(e.amount||0);},0);
-        return '<div style="margin-bottom:10px;">'
-          +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
-            +'<span style="font-size:10px;color:rgba(245,245,247,0.4);">'+mLabel+'</span>'
-            +'<span style="font-size:10px;color:#FF453A;font-weight:600;">-₹'+total.toLocaleString('en-IN')+'</span>'
-          +'</div>'
-          +grp.map(function(e){
-            var dt=(e.payment_date||'').toString().slice(0,10);
-            return '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(255,69,58,0.05);border-radius:8px;margin-bottom:4px;">'
-              +'<div style="flex:1;">'
-                +'<div style="color:#FF453A;font-size:11px;font-weight:500;">-₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
-                +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+dt+' · '+escHtml(e.reason||'—')+'</div>'
-              +'</div>'
-              +'<button onclick="spdmDeleteAdvanceEntry('+e.id+','+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;">🗑</button>'
-            +'</div>';
-          }).join('')
-        +'</div>';
-      }).join('');
+      if(!entries.length){ histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No advance salary records this month</div>'; return; }
+      var total=entries.reduce(function(s,e){return s+parseFloat(e.amount||0);},0);
+      histEl.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
+          +'<span style="font-size:10px;color:rgba(245,245,247,0.4);">'+_prMonths[viewMonth-1]+' '+viewYear+'</span>'
+          +'<span style="font-size:10px;color:#FF453A;font-weight:600;">-₹'+total.toLocaleString('en-IN')+'</span>'
+        +'</div>'
+        +entries.map(function(e){
+          var dt=(e.payment_date||'').toString().slice(0,10);
+          return '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(255,69,58,0.05);border-radius:8px;margin-bottom:4px;">'
+            +'<div style="flex:1;">'
+              +'<div style="color:#FF453A;font-size:11px;font-weight:500;">-₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
+              +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">'+dt+' · '+escHtml(e.reason||'—')+'</div>'
+            +'</div>'
+            +'<button onclick="spdmDeleteAdvanceEntry('+e.id+','+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;">🗑</button>'
+          +'</div>';
+        }).join('');
     }).catch(function(){ if(histEl) histEl.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">—</div>'; });
 }
 function prCancelEdit(i){
