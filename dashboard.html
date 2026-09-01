@@ -5534,6 +5534,36 @@ function applyNavAccess(staff){
 function zTok(){ return localStorage.getItem('zhr_token')||''; }
 function zHdr(){ return { 'Authorization':'Bearer '+zTok() }; }
 
+/* ── GLOBAL SESSION GUARD ──
+   The server re-checks that the account is still active on EVERY request, so a relieved
+   member's token starts returning 401 straight away. Only a couple of screens handled that
+   individually; this catches it everywhere so a revoked session can't keep browsing cached
+   pages behind failed requests. */
+var _zSessionEnded = false;
+function zSessionRevoked(){
+  if(_zSessionEnded) return;
+  _zSessionEnded = true;
+  try{ localStorage.removeItem('zhr_token'); localStorage.removeItem('zhr_staff'); }catch(e){}
+  var ov = document.getElementById('admin-login-overlay');
+  if(ov){ ov.style.display='flex'; document.body.style.overflow='hidden'; }
+  else location.reload();
+}
+(function(){
+  var _origFetch = window.fetch;
+  window.fetch = function(input, init){
+    var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+    return _origFetch.apply(this, arguments).then(function(res){
+      // /api/auth/* answers 401 for a wrong password too — a failed login, not a revoked
+      // session, and there is no saved token to clear in that case anyway.
+      if(res && res.status === 401 && url.indexOf(API) === 0
+         && url.indexOf('/api/auth/') === -1 && zTok()){
+        zSessionRevoked();
+      }
+      return res;
+    });
+  };
+})();
+
 /* ── LOAD STAFF LIST ── */
 async function loadStaffList(retryCount){
   retryCount = retryCount || 0;

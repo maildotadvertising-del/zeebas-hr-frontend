@@ -5389,6 +5389,47 @@ function zToken(){ return localStorage.getItem('zhr_token'); }
 function zStaff(){ try{ return JSON.parse(localStorage.getItem('zhr_staff')||'null'); }catch(e){ return null; } }
 function zHead(){ return { 'Authorization':'Bearer '+zToken(), 'Content-Type':'application/json' }; }
 
+/* ── GLOBAL SESSION GUARD ──
+   The server re-checks that the account is still active on EVERY request, so a relieved
+   staff member's token starts returning 401 immediately. Without this, the app would keep
+   showing its cached screens behind a wall of "server may be waking up" retries. Any 401
+   from our API on a saved session means access has been revoked (or the token expired) —
+   wipe the credentials and send them back to login. */
+var _zSessionEnded = false;
+function zSessionRevoked(){
+  if(_zSessionEnded) return;
+  _zSessionEnded = true;
+  try{ stopWifiPoller(); }catch(e){}
+  try{ swClearAuth(); }catch(e){}
+  try{ if(typeof staffSocket!=='undefined' && staffSocket){ staffSocket.disconnect(); staffSocket=null; } }catch(e){}
+  try{ _cacheClearAll(); }catch(e){}
+  try{ localStorage.removeItem('zhr_token'); localStorage.removeItem('zhr_staff'); }catch(e){}
+  var ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#0a0a12;display:flex;align-items:center;justify-content:center;padding:28px;';
+  ov.innerHTML='<div style="text-align:center;max-width:300px;">'
+    +'<div style="font-size:34px;margin-bottom:14px;">🔐</div>'
+    +'<div style="color:#fff;font-size:16px;font-weight:600;margin-bottom:8px;">Access removed</div>'
+    +'<div style="color:rgba(245,245,247,0.45);font-size:13px;line-height:1.5;margin-bottom:20px;">Your account is no longer active. Please contact your admin if this is unexpected.</div>'
+    +'<button onclick="location.reload()" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.35);border-radius:11px;color:#0A84FF;font-size:13px;padding:10px 24px;cursor:pointer;font-family:inherit;">Go to Login</button>'
+  +'</div>';
+  document.body.appendChild(ov);
+}
+(function(){
+  var _origFetch = window.fetch;
+  window.fetch = function(input, init){
+    var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+    return _origFetch.apply(this, arguments).then(function(res){
+      // /api/auth/* answers 401 for a wrong password too — that's a failed login, not a
+      // revoked session, and there's no saved token to clear in that case anyway.
+      if(res && res.status === 401 && url.indexOf(API_URL) === 0
+         && url.indexOf('/api/auth/') === -1 && zToken()){
+        zSessionRevoked();
+      }
+      return res;
+    });
+  };
+})();
+
 /* ── LOGIN ERROR MESSAGE ── */
 function loginErr(msg){
   var e=document.getElementById('login-err');
