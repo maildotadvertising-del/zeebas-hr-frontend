@@ -2807,7 +2807,7 @@ function loadProfile(){
   // Avatar
   var av = document.getElementById('prof-avatar');
   if(av){
-    var src = s.photo_data || (s.photo_url ? API_URL+s.photo_url : null);
+    var src = zAvatar(s.id, s.photo_url, s.photo_data);
     if(src){ av.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'; av.style.overflow='hidden'; }
     else { av.textContent=(s.name||'?').charAt(0).toUpperCase(); }
   }
@@ -3373,6 +3373,9 @@ var _staffMsgRetryTimer = null;
 async function loadStaffMessages(){
   var msgs = document.getElementById('msgs1'); if(!msgs) return;
   if(_staffMsgRetryTimer){ clearTimeout(_staffMsgRetryTimer); _staffMsgRetryTimer=null; }
+  // Messages carry only photo_url; make sure the avatar cache is loaded first so members
+  // whose photo was uploaded in-app (base64) render with their picture, not an initial.
+  if(!Object.keys(window._avatarMap||{}).length){ try{ await refreshAvatarCache(); }catch(e){} }
   msgs.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px;flex-direction:column;gap:8px;"><div style="font-size:26px;opacity:0.35;">⏳</div><div style="color:rgba(245,245,247,0.25);font-size:12px;text-align:center;">Loading messages…</div></div>';
   try{
     var res = await fetch(API_URL+'/api/chat/messages', {headers:zHead()});
@@ -3436,10 +3439,9 @@ function appendStaffMsg1(msg, doScroll){
   if(msgs.querySelector('[style*="padding-top:40px"]') || msgs.querySelector('[style*="padding-top:60px"]')) msgs.innerHTML = '';
   var isMe = msg.staff_id === staff.id;
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
-  // Skip dot-logo.png — don't use it as a chat avatar
-  var _rawPhoto = (msg.photo_url||'').toLowerCase();
-  var _skipPhoto = _rawPhoto.indexOf('dot-logo') !== -1 || _rawPhoto.indexOf('dot_logo') !== -1;
-  var avSrc = !_skipPhoto ? (msg.photo_data || (msg.photo_url ? API_URL+msg.photo_url : null)) : null;
+  // zAvatar skips the dot-logo and falls back to the cached photo for members whose
+  // picture was uploaded in-app (stored as base64, not carried on message rows).
+  var avSrc = zAvatar(msg.staff_id, msg.photo_url, msg.photo_data);
   var avFbStyle1 = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);';
   // Avatar — tappable to open DM (only for other people's messages)
   var _avOnClick = !isMe ? ' onclick="openDmChat('+msg.staff_id+',\''+escHtml(msg.staff_name||'?')+'\',\''+escHtml(msg.photo_url||'')+'\',\''+escHtml(msg.brand_name||'')+'\',\''+init+'\')" title="DM '+escHtml(msg.staff_name||'')+'" style="cursor:pointer;"' : '';
@@ -3609,7 +3611,7 @@ async function showMentionPopup(query){
 
   list.innerHTML = filtered.map(function(m){
     var init = (m.name||'?').charAt(0).toUpperCase();
-    var avSrc = m.photo_data || (m.photo_url ? API_URL+m.photo_url : null);
+    var avSrc = zAvatar(m.id, m.photo_url, m.photo_data);
     var av = avSrc
       ? '<img src="'+avSrc+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<div style=&quot;width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:600;flex-shrink:0;&quot;>'+init+'</div>\'">'
       : '<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.4);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:600;flex-shrink:0;">'+init+'</div>';
@@ -3833,7 +3835,7 @@ async function loadDmMemberList(){
     if(!members.length){ list.innerHTML='<div style="padding:20px 16px;color:rgba(232,232,232,0.4);font-size:13px;text-align:center;">No other members online</div>'; return; }
     list.innerHTML = members.map(function(m){
       var init = (m.name||'?').charAt(0).toUpperCase();
-      var _mAvSrc = m.photo_data || (m.photo_url ? API_URL+m.photo_url : null);
+      var _mAvSrc = zAvatar(m.id, m.photo_url, m.photo_data);
       var avHtml = _mAvSrc
         ? '<img src="'+_mAvSrc+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
         : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
@@ -3889,7 +3891,7 @@ async function loadDmConversations(){
     list.innerHTML = '<div style="padding:9px 14px 6px;color:rgba(245,245,247,0.3);font-size:10px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;">Team Members</div>'
       + members.map(function(m){
         var init = (m.name||'?').charAt(0).toUpperCase();
-        var _mAvSrc = m.photo_data || (m.photo_url ? API_URL+m.photo_url : null);
+        var _mAvSrc = zAvatar(m.id, m.photo_url, m.photo_data);
         var avHtml = _mAvSrc
           ? '<img src="'+_mAvSrc+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.08);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"><div style="display:none;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>'
           : '<div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#fff;flex-shrink:0;">'+init+'</div>';
@@ -4008,8 +4010,9 @@ function appendDmMsg(msg, doScroll){
   } else {
     var init = (msg.sender_name||'?').charAt(0).toUpperCase();
     var avFbStyleDm = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.5),rgba(94,92,230,0.6));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;';
-    var av = msg.photo_url
-      ? '<img src="'+API_URL+msg.photo_url+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyleDm+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
+    var _dmAv = zAvatar(msg.sender_id, msg.photo_url, msg.photo_data);
+    var av = _dmAv
+      ? '<img src="'+_dmAv+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\';var d=document.createElement(\'div\');d.style.cssText=\''+avFbStyleDm+'\';d.textContent=\''+init+'\';this.parentNode.insertBefore(d,this);">'
       : '<div style="'+avFbStyleDm+'">'+init+'</div>';
     wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;">'
       +av+'<div style="display:flex;flex-direction:column;align-items:flex-start;max-width:78%;">'
@@ -4146,7 +4149,7 @@ function appendAdminMsg2(msg){
   var isMe=msg.staff_id===staff.id;
   var init=(msg.staff_name||'?').charAt(0).toUpperCase();
   var _rp2=(msg.photo_url||'').toLowerCase();
-  var avSrc=(_rp2&&_rp2.indexOf('dot-logo')===-1&&_rp2.indexOf('dot_logo')===-1)?API_URL+msg.photo_url:null;
+  var avSrc=zAvatar(msg.staff_id, msg.photo_url, msg.photo_data);
   var avS='width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(10,132,255,0.6),rgba(94,92,230,0.7));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;flex-shrink:0;';
   var av=avSrc?'<img src="'+avSrc+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\';">':'<div style="'+avS+'">'+init+'</div>';
   var t=(function(){var dt=msg.created_at?new Date(msg.created_at):new Date();var h=dt.getHours(),m=dt.getMinutes(),a=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+a;})();
@@ -4307,7 +4310,7 @@ async function loadAdminAttendance(){
         var ci=fmtTime(r.check_in); var co=fmtTime(r.check_out);
         var init=(r.name||'?').charAt(0).toUpperCase();
         var avBg=st==='present'?'rgba(48,209,88,0.18)':st==='late'?'rgba(255,159,10,0.18)':st==='on_leave'?'rgba(10,132,255,0.18)':'rgba(255,69,58,0.18)';
-        var avSrc = r.photo_data || (r.photo_url ? API_URL+r.photo_url : null);
+        var avSrc = zAvatar(r.id || r.staff_id, r.photo_url, r.photo_data);
         var avatar = avSrc
           ? '<img src="'+avSrc+'" style="width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<div style=&quot;width:38px;height:38px;border-radius:10px;background:'+avBg+';display:flex;align-items:center;justify-content:center;color:'+col+';font-size:14px;font-weight:600;flex-shrink:0;&quot;>'+init+'</div>\'">'
           : '<div style="width:38px;height:38px;border-radius:10px;background:'+avBg+';display:flex;align-items:center;justify-content:center;color:'+col+';font-size:14px;font-weight:600;flex-shrink:0;">'+init+'</div>';
@@ -4800,8 +4803,9 @@ async function loadAdminStaffList(){
       var emp=s.employment_type||'full_time';
       var ec=empColors[emp]||'#0A84FF';
       var el=empLabel[emp]||emp;
-      var avBg=s.photo_url?'':'rgba(10,132,255,0.2)';
-      var avContent=s.photo_url?'<img src="'+API_URL+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">':'<span style="color:#fff;font-size:14px;font-weight:500;">'+(s.name||'?').charAt(0).toUpperCase()+'</span>';
+      var _sAv=zAvatar(s.id, s.photo_url, s.photo_data);
+      var avBg=_sAv?'':'rgba(10,132,255,0.2)';
+      var avContent=_sAv?'<img src="'+_sAv+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">':'<span style="color:#fff;font-size:14px;font-weight:500;">'+(s.name||'?').charAt(0).toUpperCase()+'</span>';
       return'<div class="gs" style="padding:11px;display:flex;align-items:center;gap:10px;margin-bottom:7px;cursor:pointer;active:scale(0.98);" onclick="openStaffProfile('+s.id+')">'
         +'<div style="width:36px;height:36px;background:'+avBg+';border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">'+avContent+'</div>'
         +'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:12px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(s.name||'—')+'</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(s.designation||'—')+(s.brand_name?' · '+s.brand_name:'')+'</div></div>'
@@ -4848,7 +4852,8 @@ async function openStaffProfile(id){
     var empColors={'full_time':'#30D158','part_time':'#FF9F0A','daily_wage':'#0A84FF','day_time':'#BF5FFF'};
     var empLabel={'full_time':'Full Time','part_time':'Part Time','daily_wage':'Daily Wage','day_time':'Day Time'};
     var ec=empColors[emp]||'#0A84FF'; var el=empLabel[emp]||emp;
-    var avContent=s.photo_url?'<img src="'+API_URL+s.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">':'<span style="color:#fff;font-size:26px;font-weight:500;">'+(s.name||'?').charAt(0).toUpperCase()+'</span>';
+    var _spAv=zAvatar(s.id, s.photo_url, s.photo_data);
+    var avContent=_spAv?'<img src="'+_spAv+'" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">':'<span style="color:#fff;font-size:26px;font-weight:500;">'+(s.name||'?').charAt(0).toUpperCase()+'</span>';
     var salary=s.salary_type==='daily'?('₹'+(parseFloat(s.daily_rate||0).toLocaleString('en-IN'))+'/day'):('₹'+(parseFloat(s.base_salary||0).toLocaleString('en-IN'))+'/mo');
     var joining=s.joining_date?new Date(s.joining_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
     var dob=s.dob?new Date(s.dob).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
@@ -5320,7 +5325,7 @@ function checkCelebrations(){
         var init=nm.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'?';
         var bg='linear-gradient(145deg,rgba(10,40,80,0.95),rgba(5,10,30,0.95))';
         var col='#5AABF0';
-        var photo=s.photo_data||(s.photo_url?API_URL+s.photo_url:null);
+        var photo=zAvatar(s.id, s.photo_url, s.photo_data);
         var brand=s.brand_name||'DOT Advertising';
         if(s.dob){
           var dob=new Date(s.dob);
@@ -5388,6 +5393,39 @@ var API_URL = 'https://zeebas-hr-backend.onrender.com';
 function zToken(){ return localStorage.getItem('zhr_token'); }
 function zStaff(){ try{ return JSON.parse(localStorage.getItem('zhr_staff')||'null'); }catch(e){ return null; } }
 function zHead(){ return { 'Authorization':'Bearer '+zToken(), 'Content-Type':'application/json' }; }
+
+/* ── AVATAR CACHE ──
+   Staff photos uploaded in-app are stored as base64 in photo_data, but most list/message
+   APIs only carry photo_url (a file path) to keep responses small — so anyone whose photo
+   was uploaded rather than linked showed up as a letter circle everywhere. This caches
+   every member's photo once from /api/chat/members and serves it as the fallback, so a
+   photo shows wherever we have the staff id. */
+window._avatarMap = {};
+function _cacheAvatars(list){
+  (list||[]).forEach(function(s){
+    if(!s || !s.id) return;
+    var raw = (s.photo_url||'').toLowerCase();
+    // The company logo is not a person's avatar — never cache it as one
+    if(raw.indexOf('dot-logo')!==-1 || raw.indexOf('dot_logo')!==-1) return;
+    var src = s.photo_data || (s.photo_url ? API_URL+s.photo_url : null);
+    if(src) window._avatarMap[s.id] = src;
+  });
+}
+// Resolve a usable avatar for a staff member: inline data first, then the cache.
+function zAvatar(staffId, photoUrl, photoData){
+  var raw = (photoUrl||'').toLowerCase();
+  var skip = raw.indexOf('dot-logo')!==-1 || raw.indexOf('dot_logo')!==-1;
+  if(photoData) return photoData;
+  if(photoUrl && !skip) return API_URL+photoUrl;
+  return (window._avatarMap && window._avatarMap[staffId]) || null;
+}
+function refreshAvatarCache(){
+  if(!zToken()) return Promise.resolve();
+  return fetch(API_URL+'/api/chat/members',{headers:zHead()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d && d.success) _cacheAvatars(d.data); })
+    .catch(function(){});
+}
 
 /* ── GLOBAL SESSION GUARD ──
    The server re-checks that the account is still active on EVERY request, so a relieved
@@ -8112,23 +8150,30 @@ async function loadOTRules(){
 /* ── POPULATE STAFF UI ── */
 function populateStaff(s){
   _pendingEodChecked = false; // reset on fresh login so one check runs per session
+  // Warm the avatar cache so team members' photos are ready before chat/lists render
+  _cacheAvatars([s]);
+  refreshAvatarCache().then(function(){ try{ populateStaffAvatar(s); }catch(e){} });
   var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
   set('s1-name', s.name||'Staff');
   set('s1-desig', s.designation||'Staff');
   // s1-brand shows dot-logo.png image — no text needed
   set('s1-home-netpay', '\u2026'); // will be updated by loadMySalary
-  // Avatar \u2014 show profile photo if available
-  var av=document.getElementById('s1-avatar');
-  if(av){
-    var src = s.photo_data || (s.photo_url ? API_URL+s.photo_url : null);
-    if(src){
-      av.innerHTML = '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent=\''+(s.name||'S').charAt(0).toUpperCase()+'\';">';
-    } else {
-      av.innerHTML = '';
-      av.textContent = (s.name||'S').charAt(0).toUpperCase();
-    }
-  }
+  populateStaffAvatar(s);
   updateSidebarUser(s);
+}
+
+// Home-header avatar. Split out so it can be re-applied once the avatar cache has loaded
+// (a photo uploaded in-app lives in photo_data, which not every response carries).
+function populateStaffAvatar(s){
+  var av=document.getElementById('s1-avatar');
+  if(!av || !s) return;
+  var src = zAvatar(s.id, s.photo_url, s.photo_data);
+  if(src){
+    av.innerHTML = '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent=\''+(s.name||'S').charAt(0).toUpperCase()+'\';">';
+  } else {
+    av.innerHTML = '';
+    av.textContent = (s.name||'S').charAt(0).toUpperCase();
+  }
 }
 
 // ── Update Task Remaining in work timer row ──
