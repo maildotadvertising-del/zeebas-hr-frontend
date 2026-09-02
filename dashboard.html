@@ -7415,7 +7415,9 @@ function buildTaskCard(t){
     photo_url: t.photo_url||null, photo_data: t.photo_data||null
   }];
   var avatarStrip = staffList.map(function(s, idx){
-    var avSrc = s.photo_data||(s.photo_url?API+s.photo_url:null);
+    // Via _getAvatar so it falls back to the cached avatar map — the tasks API no longer
+    // ships each assignee's base64 photo on every task row (it was megabytes per load).
+    var avSrc = _getAvatar(s.id, s.photo_url, s.photo_data);
     var init  = (s.name||'?').charAt(0).toUpperCase();
     var ml    = idx>0?'margin-left:-7px;':'';
     return avSrc
