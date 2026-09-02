@@ -3282,9 +3282,8 @@ function connectStaffSocket(){
   staffSocket.on('new-message', function(msg){
     var me = zStaff() || {};
     if(msg.staff_id === me.id) return; // skip own messages (already appended optimistically)
-    // Skip file-only messages with no caption (covers DOT logo regardless of message_type)
-    if(msg.file_url && !(msg.message||'').trim()) return;
-    // Skip messages from DOT logo account with file
+    // Hide only the DOT-logo account's file posts — a caption-less photo or file from a
+    // real person is a normal message and must still appear.
     if(msg.file_url && (msg.photo_url||'').toLowerCase().indexOf('dot-logo') !== -1) return;
     appendStaffMsg1(msg);
     // Notification when not on chat screen
@@ -3397,16 +3396,12 @@ async function loadStaffMessages(){
       return;
     }
     msgs.innerHTML = '';
-    // Filter out: any message with file_url and no text (covers DOT logo regardless of message_type)
-    // Also filter image-type messages with empty/whitespace-only text
+    resetChatGrouping(); // fresh render → day separators and grouping start over
+    // Hide only the DOT-logo account's file posts. Photos and files sent without a caption
+    // are ordinary messages — filtering those out made shared images vanish for everyone.
     var filtered = (d.data||[]).filter(function(m){
-      var hasFile = !!(m.file_url);
-      var hasText = !!(m.message||'').trim();
-      if(hasFile && !hasText) return false; // skip file-only messages with no caption
-      if(m.message_type === 'image' && !hasText) return false; // skip image with no text
-      // Skip messages from DOT logo account with any file attachment
       var ph = (m.photo_url||'').toLowerCase();
-      if(ph.indexOf('dot-logo') !== -1 && hasFile) return false;
+      if(m.file_url && ph.indexOf('dot-logo') !== -1) return false;
       return true;
     });
     if(!filtered.length){
@@ -3433,12 +3428,48 @@ async function loadStaff1Pinned(){
   }catch(e){}
 }
 
+/* ── Chat day separators + consecutive-message grouping ──
+   Tracks what was last rendered so a new day gets a "Today / Yesterday / 12 Aug" divider
+   and a run of messages from the same person doesn't repeat their avatar and name. */
+var _chatLastDay = null, _chatLastSender = null, _chatLastTs = 0;
+function _chatDayKey(d){ return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
+function _chatDayLabel(d){
+  var now = new Date();
+  var today = _chatDayKey(now);
+  var y = new Date(now.getTime() - 86400000);
+  if(_chatDayKey(d) === today) return 'Today';
+  if(_chatDayKey(d) === _chatDayKey(y)) return 'Yesterday';
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var label = d.getDate()+' '+months[d.getMonth()];
+  if(d.getFullYear() !== now.getFullYear()) label += ' '+d.getFullYear();
+  return label;
+}
+function resetChatGrouping(){ _chatLastDay=null; _chatLastSender=null; _chatLastTs=0; }
+
 function appendStaffMsg1(msg, doScroll){
   var staff = zStaff() || {};
   var msgs = document.getElementById('msgs1'); if(!msgs) return;
-  if(msgs.querySelector('[style*="padding-top:40px"]') || msgs.querySelector('[style*="padding-top:60px"]')) msgs.innerHTML = '';
+  if(msgs.querySelector('[style*="padding-top:40px"]') || msgs.querySelector('[style*="padding-top:60px"]')){ msgs.innerHTML = ''; _chatLastDay=null; _chatLastSender=null; _chatLastTs=0; }
   var isMe = msg.staff_id === staff.id;
   var init = (msg.staff_name||'?').charAt(0).toUpperCase();
+
+  // ── Day separator ──
+  var _mDate = msg.created_at ? new Date(msg.created_at) : new Date();
+  var _mDay  = _chatDayKey(_mDate);
+  if(_mDay !== _chatLastDay){
+    var sep = document.createElement('div');
+    sep.style.cssText = 'display:flex;align-items:center;justify-content:center;margin:14px 0 10px;';
+    sep.innerHTML = '<span style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.07);color:rgba(245,245,247,0.45);font-size:10.5px;font-weight:500;letter-spacing:0.3px;padding:4px 12px;border-radius:99px;">'+_chatDayLabel(_mDate)+'</span>';
+    msgs.appendChild(sep);
+    _chatLastDay = _mDay;
+    _chatLastSender = null; // a new day always restarts grouping
+  }
+  // ── Consecutive grouping ── same sender, same day, within 5 minutes → no repeated
+  // avatar/name, tighter spacing. Keeps a long back-and-forth readable.
+  var _ts = _mDate.getTime();
+  var grouped = (_chatLastSender === msg.staff_id) && (_ts - _chatLastTs) < 5*60*1000;
+  _chatLastSender = msg.staff_id;
+  _chatLastTs = _ts;
   // zAvatar skips the dot-logo and falls back to the cached photo for members whose
   // picture was uploaded in-app (stored as base64, not carried on message rows).
   var avSrc = zAvatar(msg.staff_id, msg.photo_url, msg.photo_data);
@@ -3477,23 +3508,25 @@ function appendStaffMsg1(msg, doScroll){
   var wrap = document.createElement('div');
   wrap.className = 'msg-wrap';
   wrap.setAttribute('data-msgid', msgId);
-  wrap.style.cssText = 'margin-bottom:4px;padding:0 10px;';
+  // Grouped runs sit tighter together than the gap between different speakers
+  wrap.style.cssText = 'margin-bottom:'+(grouped?'2px':'4px')+';padding:0 10px;';
 
   var msgContent = renderMsgContent(msg);
   if(!msgContent && !msg.message) return; // skip empty messages (e.g. dot-logo image with no text)
   if(isMe){
     wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;flex-direction:row-reverse;">'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;max-width:78%;">'
-      +'<div class="bubble" style="background:linear-gradient(135deg,rgba(10,132,255,0.85),rgba(10,96,204,0.9));border-radius:18px;border-bottom-right-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#fff;word-break:break-word;line-height:1.4;">'
+      +'<div class="bubble" style="background:linear-gradient(135deg,rgba(10,132,255,0.85),rgba(10,96,204,0.9));border-radius:18px;border-bottom-right-radius:'+(grouped?'18px':'4px')+';padding:10px 14px 8px;font-size:14px;font-weight:400;color:#fff;word-break:break-word;line-height:1.4;">'
       +replyHtml+msgContent
-      +'<div style="font-size:10px;color:rgba(255,255,255,0.55);text-align:right;margin-top:4px;">'+t+' ✓✓</div>'
+      +'<div style="font-size:10px;color:rgba(255,255,255,0.55);text-align:right;margin-top:4px;">'+t+'</div>'
       +'</div>'+reactHtml+'</div></div>';
   } else {
+    // In a grouped run the avatar slot is kept (as blank space) so bubbles stay aligned
     wrap.innerHTML = '<div style="display:flex;align-items:flex-end;gap:8px;">'
-      +av
+      +(grouped ? '<div style="width:36px;flex-shrink:0;"></div>' : av)
       +'<div style="display:flex;flex-direction:column;align-items:flex-start;max-width:78%;">'
-      +'<div style="font-size:11px;color:rgba(100,200,255,0.85);font-weight:500;margin-bottom:3px;padding-left:2px;">'+escHtml(msg.staff_name||'')+(msg.brand_name?' <span style="color:rgba(255,255,255,0.35);font-weight:400;">· '+escHtml(msg.brand_name)+'</span>':'')+'</div>'
-      +'<div class="bubble" style="background:rgba(38,38,50,0.95);border:0.5px solid rgba(255,255,255,0.08);border-radius:18px;border-bottom-left-radius:4px;padding:10px 14px 8px;font-size:14px;font-weight:400;color:#E8E8E8;word-break:break-word;line-height:1.4;">'
+      +(grouped ? '' : '<div style="font-size:11px;color:rgba(100,200,255,0.85);font-weight:500;margin-bottom:3px;padding-left:2px;">'+escHtml(msg.staff_name||'')+(msg.brand_name?' <span style="color:rgba(255,255,255,0.35);font-weight:400;">· '+escHtml(msg.brand_name)+'</span>':'')+'</div>')
+      +'<div class="bubble" style="background:rgba(38,38,50,0.95);border:0.5px solid rgba(255,255,255,0.08);border-radius:18px;border-bottom-left-radius:'+(grouped?'18px':'4px')+';padding:10px 14px 8px;font-size:14px;font-weight:400;color:#E8E8E8;word-break:break-word;line-height:1.4;">'
       +replyHtml+msgContent
       +'<div style="font-size:10px;color:rgba(255,255,255,0.35);text-align:right;margin-top:4px;">'+t+'</div>'
       +'</div>'+reactHtml+'</div></div>';
@@ -4186,8 +4219,11 @@ async function initAdminChat2(){
     var d=await res.json();
     msgs.innerHTML='';
     if(d.success&&d.data&&d.data.length){
-      // Filter image-only messages (no text) — removes DOT logo
-      var msgs2Data = d.data.filter(function(m){ return !(m.message_type==='image' && !m.message); });
+      // Hide only the DOT-logo account's file posts — an image sent without a caption is
+      // an ordinary message and must still show.
+      var msgs2Data = d.data.filter(function(m){
+        return !(m.file_url && (m.photo_url||'').toLowerCase().indexOf('dot-logo') !== -1);
+      });
       if(msgs2Data.length){ msgs2Data.forEach(function(m){appendAdminMsg2(m);}); }
       else { msgs.innerHTML='<div style="text-align:center;padding:40px 0;color:rgba(245,245,247,0.22);font-size:11px;"><div style="font-size:22px;margin-bottom:8px;opacity:0.3;">💬</div>No messages yet</div>'; }
     } else {
