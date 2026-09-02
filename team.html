@@ -773,6 +773,8 @@ body.desktop-mode #s1-sidebar {
             <div style="color:rgba(245,245,247,0.3);font-size:13px;text-align:center;">No messages yet — say hello!</div>
           </div>
         </div>
+        <!-- Typing indicator — sits just above the composer, hidden when nobody is typing -->
+        <div id="typing1" style="display:none;flex-shrink:0;padding:2px 16px 5px;background:#07071A;color:rgba(100,200,255,0.75);font-size:11px;font-style:italic;"></div>
         <!-- Emoji picker panel -->
         <div id="emoji-panel" style="display:none;background:rgba(14,14,28,0.98);border-top:0.5px solid rgba(255,255,255,0.08);flex-shrink:0;max-height:200px;overflow-y:auto;">
           <div style="padding:6px 10px 4px;display:flex;gap:6px;border-bottom:0.5px solid rgba(255,255,255,0.07);overflow-x:auto;">
@@ -3294,6 +3296,18 @@ function connectStaffSocket(){
       );
     }
   });
+  // Someone else started/stopped typing in the group chat
+  staffSocket.on('typing', function(d){
+    if(!d || !d.staff_id) return;
+    var me = zStaff() || {};
+    if(d.staff_id === me.id) return;
+    if(d.typing){
+      _typers1[d.staff_id] = { name: (d.staff_name||'Someone').split(' ')[0], at: Date.now() };
+    } else {
+      delete _typers1[d.staff_id];
+    }
+    renderTyping1();
+  });
   staffSocket.on('online-count', function(n){
     var sub = document.getElementById('chat1-sub');
     if(sub) sub.textContent = n + ' online';
@@ -3426,6 +3440,48 @@ async function loadStaff1Pinned(){
     if(d.data) el.textContent = d.data.staff_name + ': ' + d.data.message;
     else el.textContent = 'No pinned message';
   }catch(e){}
+}
+
+/* ── Typing indicator ──
+   Purely transient: who is typing is held in memory and relayed over the socket, never
+   stored. Entries self-expire in case a sender closes the app mid-type without sending
+   the stop event. */
+var _typers1 = {}, _typingSendTs = 0, _typingStopTimer = null;
+function renderTyping1(){
+  var el = document.getElementById('typing1'); if(!el) return;
+  var now = Date.now();
+  Object.keys(_typers1).forEach(function(k){ if(now - _typers1[k].at > 6000) delete _typers1[k]; });
+  var names = Object.keys(_typers1).map(function(k){ return _typers1[k].name; });
+  if(!names.length){ el.style.display='none'; el.textContent=''; return; }
+  var txt = names.length===1 ? names[0]+' is typing…'
+          : names.length===2 ? names[0]+' and '+names[1]+' are typing…'
+          : names.length+' people are typing…';
+  el.textContent = txt;
+  el.style.display = 'block';
+}
+setInterval(function(){ if(Object.keys(_typers1).length) renderTyping1(); }, 3000);
+
+// Called on every keystroke. Throttled to one "typing" ping every 2s, with a stop event
+// once the user pauses, so we don't flood the socket.
+function emitTyping1(value){
+  if(typeof staffSocket==='undefined' || !staffSocket || !staffSocket.connected) return;
+  var me = zStaff() || {}; if(!me.id) return;
+  clearTimeout(_typingStopTimer);
+  if(!(value||'').trim()){
+    staffSocket.emit('typing', {staff_id:me.id, staff_name:me.name, typing:false});
+    _typingSendTs = 0;
+    return;
+  }
+  var now = Date.now();
+  if(now - _typingSendTs > 2000){
+    staffSocket.emit('typing', {staff_id:me.id, staff_name:me.name, typing:true});
+    _typingSendTs = now;
+  }
+  _typingStopTimer = setTimeout(function(){
+    if(staffSocket && staffSocket.connected)
+      staffSocket.emit('typing', {staff_id:me.id, staff_name:me.name, typing:false});
+    _typingSendTs = 0;
+  }, 3000);
 }
 
 /* ── Chat day separators + consecutive-message grouping ──
@@ -3574,6 +3630,7 @@ async function sendChat1(overrideMsg){
   var txt = overrideMsg ? overrideMsg.message : (inp.value||'').trim();
   if(!txt && !(overrideMsg && overrideMsg.file_url)) return;
   if(!overrideMsg) inp.value = '';
+  emitTyping1(''); // sending ends the typing state immediately
   var staff = zStaff() || {};
   var reply = _replyTo1 ? {reply_to_id:_replyTo1.id, reply_to_text:_replyTo1.text, reply_to_name:_replyTo1.name} : {};
   clearReply1();
@@ -3593,7 +3650,8 @@ async function sendChat1(overrideMsg){
 
 // ── Input listeners ──
 document.getElementById('ci1').addEventListener('keydown', function(e){ if(e.key==='Enter'){ hideMentionPopup(); sendChat1(); } });
-document.getElementById('ci1').addEventListener('input', function(){ handleMentionInput(this); });
+document.getElementById('ci1').addEventListener('input', function(){ handleMentionInput(this); emitTyping1(this.value); });
+document.getElementById('ci1').addEventListener('blur', function(){ emitTyping1(''); });
 document.getElementById('ci1').addEventListener('blur', function(){ setTimeout(hideMentionPopup, 200); });
 
 // ── @ Mention ──
