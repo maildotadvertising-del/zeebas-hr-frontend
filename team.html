@@ -1790,7 +1790,10 @@ body.desktop-mode #s1-sidebar {
             <div style="flex:1;"><div style="color:#fff;font-size:13px;">Biometric Device</div><div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:1px;">ZKTeco / eSSL connection</div></div>
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(245,245,247,0.2)" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
-          <div onclick="window.open('https://zeebas-hr-frontend.vercel.app/dashboard.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+          <!-- Relative, not an absolute domain: the dashboard ships from this same Vercel
+               project, so /admin follows whatever domain the app is served on and can't
+               go stale when the project is renamed. -->
+          <div onclick="window.open('/admin','_blank')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06);">
             <div style="width:34px;height:34px;background:rgba(191,95,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#BF5FFF" stroke-width="1.3"/><path d="M2 7h12" stroke="#BF5FFF" stroke-width="1.3"/></svg>
             </div>
