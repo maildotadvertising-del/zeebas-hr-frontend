@@ -2715,75 +2715,75 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div class="topbar">
       <div><div class="ptitle">MCP Settings</div><div class="psub">Connect Claude to this app via a custom MCP connector</div></div>
     </div>
-    <div style="max-width:720px;">
-      <div class="g sec" style="margin-bottom:14px;">
-        <div class="sh"><span class="st">🔌 Connector Details</span></div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">MCP Server URL</div>
-          <div style="display:flex;gap:8px;">
-            <input class="inp" id="mcp-url-field" readonly style="flex:1;font-family:monospace;font-size:12px;">
-            <button class="btn-g" onclick="mcpCopy('mcp-url-field','URL')" style="white-space:nowrap;">📋 Copy</button>
-          </div>
+    <div style="max-width:760px;">
+
+      <div class="g sec" style="margin-bottom:12px;">
+        <div class="sh"><span class="st">🔌 Server URL</span></div>
+        <div style="display:flex;gap:8px;">
+          <input class="inp" id="mcp-url-field" readonly style="flex:1;font-family:monospace;font-size:12px;">
+          <button class="btn-g" onclick="mcpCopy('mcp-url-field','URL')" style="white-space:nowrap;">📋 Copy</button>
         </div>
       </div>
 
-      <div class="g sec" style="margin-bottom:14px;">
+      <div class="g sec" style="margin-bottom:12px;">
         <div class="sh">
           <span class="st">🔑 Access Tokens</span>
           <button class="btn" onclick="mcpOpenCreate()">+ New Token</button>
         </div>
-        <div style="font-size:12px;color:rgba(245,245,247,0.5);line-height:1.6;margin-bottom:12px;">
-          Each token gets its own permissions and its own expiry date, and can be revoked on its own without
-          touching the others. Make one per connector — laptop, phone, a teammate — so revoking one doesn't
-          cut off the rest.
-        </div>
         <div id="mcp-token-list"><div style="font-size:12px;color:var(--muted);padding:6px 0;">Loading…</div></div>
       </div>
 
-      <div class="g sec" style="margin-bottom:14px;">
-        <div class="sh"><span class="st">⚠️ Login Token <span style="font-size:11px;font-weight:400;color:rgba(255,159,10,0.75);">— full access, no expiry control</span></span></div>
-        <div style="font-size:12px;color:rgba(245,245,247,0.6);line-height:1.6;margin-bottom:12px;">
-          Your login token still works as an MCP token. It carries <b>every permission your account has</b>,
-          can't be revoked without logging out everywhere, and stops working whenever you log out and back in.
-          It's here so connectors set up before scoped tokens existed keep running — for anything new, create
-          a scoped token above instead.
+      <div class="g sec" style="margin-bottom:12px;">
+        <div class="sh">
+          <span class="st">⚙️ Setup</span>
+          <button class="btn-g" style="padding:5px 12px;font-size:11px;" onclick="mcpToggleBox('mcp-setup-box',this)">Show</button>
         </div>
-        <div style="display:flex;gap:8px;">
-          <input class="inp" id="mcp-token-field" readonly type="password" style="flex:1;font-family:monospace;font-size:12px;">
-          <button class="btn-g" onclick="mcpToggleTokenVisibility()" id="mcp-token-eye" style="white-space:nowrap;">👁</button>
-          <button class="btn-g" onclick="mcpCopy('mcp-token-field','Token')" style="white-space:nowrap;">📋 Copy</button>
+        <div id="mcp-setup-box" style="display:none;font-size:12px;color:rgba(245,245,247,0.72);line-height:1.65;">
+          <div style="margin-bottom:6px;"><b>1.</b> Create a token above and copy it — shown once only.</div>
+          <div style="margin-bottom:6px;"><b>2.</b> On claude.ai: <b>Settings → Connectors → Add custom connector</b>.</div>
+          <div style="margin-bottom:6px;"><b>3.</b> Paste the Server URL. Pass the token as <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">Authorization: Bearer &lt;token&gt;</code>.</div>
+          <div><b>4.</b> Ask for anything the token's permissions cover.</div>
         </div>
       </div>
 
-      <div class="g sec" style="margin-bottom:14px;">
-        <div class="sh"><span class="st">⚙️ Setup — Claude.ai Custom Connector</span></div>
-        <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:rgba(245,245,247,0.75);line-height:1.6;">
-          <div><b>1.</b> Create a token above, pick what it may do, and copy it — it is shown once and never again.</div>
-          <div><b>2.</b> On claude.ai, open <b>Settings → Connectors → Add custom connector</b>.</div>
-          <div><b>3.</b> Paste the <b>MCP Server URL</b>, and pass the token as <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">Authorization: Bearer &lt;token&gt;</code>.</div>
-          <div><b>4.</b> Ask Claude things like "today evlo per present?", "July payroll summary", or "approve Kunal's leave request" — whatever the token's permissions allow.</div>
-          <div style="margin-top:4px;padding:10px 12px;background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:10px;color:rgba(255,159,10,0.85);">⚠️ A token acts as your account within the permissions you gave it. Don't share it. If one leaks, revoke it here — the others keep working.</div>
+      <div class="g sec" style="margin-bottom:12px;">
+        <div class="sh">
+          <span class="st">📋 Permission Reference</span>
+          <button class="btn-g" style="padding:5px 12px;font-size:11px;" onclick="mcpToggleBox('mcp-ref-box',this)">Show</button>
         </div>
+        <div id="mcp-ref-box" style="display:none;overflow-x:auto;"><div id="mcp-tool-map"></div></div>
       </div>
 
       <div class="g sec">
-        <div class="sh"><span class="st">🧰 Tools by Permission</span></div>
-        <div id="mcp-tool-map" style="display:flex;flex-direction:column;gap:10px;font-size:12px;"></div>
+        <div class="sh">
+          <span class="st" style="color:rgba(255,159,10,0.9);">⚠️ Login Token</span>
+          <button class="btn-g" style="padding:5px 12px;font-size:11px;" onclick="mcpToggleBox('mcp-legacy-box',this)">Show</button>
+        </div>
+        <div id="mcp-legacy-box" style="display:none;">
+          <div style="font-size:12px;color:rgba(245,245,247,0.6);line-height:1.6;margin-bottom:10px;">
+            Full access, no expiry control, dies on logout. Kept working for connectors set up before scoped tokens — use a scoped token for anything new.
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input class="inp" id="mcp-token-field" readonly type="password" style="flex:1;font-family:monospace;font-size:12px;">
+            <button class="btn-g" onclick="mcpToggleTokenVisibility()" id="mcp-token-eye" style="white-space:nowrap;">👁</button>
+            <button class="btn-g" onclick="mcpCopy('mcp-token-field','Token')" style="white-space:nowrap;">📋 Copy</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- CREATE MCP TOKEN MODAL -->
   <div class="ov" id="mcp-create-overlay" onclick="mcpCloseCreate(event)">
-    <div class="modal" style="width:560px;">
+    <div class="modal" style="width:600px;">
       <button class="mc" onclick="mcpCloseCreate()">✕</button>
       <div style="padding:26px;">
         <div id="mcp-create-form">
           <div style="font-size:18px;font-weight:500;margin-bottom:4px;">New MCP Token</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Pick what this token may do and when it should stop working</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Choose what it may do and when it stops working</div>
 
           <div style="margin-bottom:18px;">
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Token Name</div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Name</div>
             <input class="inp" id="mcp-new-name" placeholder="e.g. Claude on my laptop" maxlength="100">
           </div>
 
@@ -2791,13 +2791,19 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
               <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Permissions</div>
               <div style="display:flex;gap:6px;">
-                <button class="btn-g" style="padding:5px 11px;font-size:11px;" onclick="mcpPreset('read')">Read only</button>
-                <button class="btn-g" style="padding:5px 11px;font-size:11px;" onclick="mcpPreset('full')">Full access</button>
-                <button class="btn-g" style="padding:5px 11px;font-size:11px;" onclick="mcpPreset('none')">Clear</button>
+                <button class="btn-g" style="padding:4px 10px;font-size:11px;" onclick="mcpPreset('read')">Read only</button>
+                <button class="btn-g" style="padding:4px 10px;font-size:11px;" onclick="mcpPreset('write')">Read + Write</button>
+                <button class="btn-g" style="padding:4px 10px;font-size:11px;" onclick="mcpPreset('full')">Everything</button>
+                <button class="btn-g" style="padding:4px 10px;font-size:11px;" onclick="mcpPreset('none')">Clear</button>
               </div>
             </div>
-            <div id="mcp-perm-grid" style="display:flex;flex-direction:column;gap:7px;"></div>
-            <div style="font-size:11px;color:rgba(245,245,247,0.4);margin-top:9px;line-height:1.5;">Ticking <b>Write</b> also grants <b>Read</b> for that category — approving a leave request is not much use without being able to list them.</div>
+            <div id="mcp-perm-grid" style="border:0.5px solid rgba(255,255,255,0.1);border-radius:11px;overflow:hidden;"></div>
+            <div style="display:flex;gap:16px;margin-top:9px;font-size:10.5px;color:rgba(245,245,247,0.42);line-height:1.5;flex-wrap:wrap;">
+              <span><b style="color:rgba(245,245,247,0.6);">Read</b> view only</span>
+              <span><b style="color:rgba(90,171,240,0.9);">Write</b> create &amp; change</span>
+              <span><b style="color:rgba(255,69,58,0.85);">Admin</b> delete, relieve, reset password</span>
+            </div>
+            <div style="font-size:10.5px;color:rgba(245,245,247,0.42);margin-top:5px;">Each level includes the ones before it.</div>
           </div>
 
           <div style="margin-bottom:22px;">
@@ -2821,7 +2827,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
             <button class="btn" onclick="mcpCopyNewToken()" style="flex:1;">📋 Copy Token</button>
             <button class="btn-g" onclick="mcpCloseCreate()">Done</button>
           </div>
-          <div style="margin-top:14px;padding:10px 12px;background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:10px;color:rgba(255,159,10,0.85);font-size:11.5px;line-height:1.55;">⚠️ Only a hash of this token is stored, so it cannot be shown or recovered later. Lose it and you create a new one.</div>
+          <div style="margin-top:14px;padding:10px 12px;background:rgba(255,159,10,0.08);border:0.5px solid rgba(255,159,10,0.2);border-radius:10px;color:rgba(255,159,10,0.85);font-size:11.5px;line-height:1.55;">⚠️ Only a hash is stored — this cannot be shown again.</div>
         </div>
       </div>
     </div>
@@ -11429,26 +11435,39 @@ function _astAvail(asset, checkouts){
 
 /* ── MCP Settings ── */
 
-/* Mirrors utils/mcpScopes.js on the backend. The server is the one that enforces this — the
-   grid here just has to offer the same categories, and stay honest about which tools each
-   permission actually unlocks. Staff and Attendance have no action tools, so they get no
-   Write toggle rather than an option that would grant nothing. */
+/* Mirrors utils/mcpScopes.js on the backend. The server enforces this — the table here only
+   has to offer the same categories and tiers. A tier a category doesn't have (no admin tools
+   for Attendance, say) renders as a dash, not a checkbox that would grant nothing. */
 var MCP_CATS = [
-  {key:'staff',      label:'Staff',       read:['list_staff'],                                    write:null},
-  {key:'attendance', label:'Attendance',  read:['get_attendance_today','get_attendance_by_date'], write:null},
-  {key:'payroll',    label:'Payroll',     read:['get_payroll_summary'],                           write:['process_payroll']},
-  {key:'tasks',      label:'Tasks',       read:['list_tasks'],                                    write:['assign_task']},
-  {key:'leave',      label:'Leave',       read:['list_pending_leave_requests'],                   write:['approve_leave_request']},
-  {key:'eod',        label:'EOD Reports', read:['list_pending_eod_reports'],                      write:['review_eod_report']}
+  {key:'staff', label:'Staff',
+    read:['list_staff','get_staff','list_relieved_staff'], write:['add_staff','update_staff'], admin:['relieve_staff','reset_staff_password']},
+  {key:'attendance', label:'Attendance',
+    read:['get_attendance_today','get_attendance_by_date'], write:['edit_attendance','manual_checkout'], admin:null},
+  {key:'payroll', label:'Payroll',
+    read:['get_payroll_summary','list_holidays'], write:['process_payroll','mark_payroll_paid','add_salary_incentive','add_monthly_advance','add_holiday'], admin:['delete_holiday']},
+  {key:'tasks', label:'Tasks',
+    read:['list_tasks','get_task'], write:['assign_task','update_task','set_task_status'], admin:['delete_task']},
+  {key:'leave', label:'Leave',
+    read:['list_pending_leave_requests'], write:['approve_leave_request'], admin:null},
+  {key:'eod', label:'EOD Reports',
+    read:['list_pending_eod_reports'], write:['review_eod_report'], admin:null},
+  {key:'announcements', label:'Announcements',
+    read:['list_announcements'], write:['post_announcement'], admin:['delete_announcement']},
+  {key:'chat', label:'Chat',
+    read:['list_chat_messages'], write:['send_chat_message'], admin:['delete_chat_message']},
+  {key:'settings', label:'Settings',
+    read:['get_settings'], write:['update_gps_settings','update_biometric_settings','update_staff_allowance'], admin:null}
 ];
+var MCP_TIERS = ['read','write','admin'];
+var MCP_TIER_COLOR = {read:'#0A84FF', write:'#5AABF0', admin:'#FF453A'};
 var MCP_EXPIRY_CHIPS = [
   {label:'30 days', days:30}, {label:'60 days', days:60}, {label:'90 days', days:90},
   {label:'6 months', days:180}, {label:'1 year', days:365}, {label:'No expiry', days:null}
 ];
 var MCP_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-var _mcpExpiryDate = null;   // 'YYYY-MM-DD', or null for a token that never expires
-var _mcpExpiryMode = 90;     // the selected chip's day count, null for "No expiry", 'custom' for the date picker
+var _mcpExpiryDate = null;
+var _mcpExpiryMode = 90;
 var _mcpNewToken = '';
 
 function loadMcpSettings(){
@@ -11460,8 +11479,16 @@ function loadMcpSettings(){
   mcpLoadTokens();
 }
 
+function mcpToggleBox(id, btn){
+  var el = document.getElementById(id);
+  if(!el) return;
+  var open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if(btn) btn.textContent = open ? 'Show' : 'Hide';
+}
+
 /* Dates arrive as IST wall-clock strings ('YYYY-MM-DD HH:MM:SS'). Split rather than parsed,
-   so the browser's own timezone never shifts the day that gets displayed. */
+   so the day shown doesn't shift with the viewer's timezone. */
 function mcpFmtDate(s, withTime){
   if(!s) return '—';
   var parts = String(s).split(' ');
@@ -11480,21 +11507,49 @@ function mcpDateInDays(days){
   return d.getFullYear() + '-' + m + '-' + day;
 }
 
+/* ── Permission reference table ── */
 function mcpRenderToolMap(){
   var box = document.getElementById('mcp-tool-map');
   if(!box) return;
-  box.innerHTML = MCP_CATS.map(function(c){
-    var rows = '<div style="color:rgba(245,245,247,0.7);"><span style="color:rgba(245,245,247,0.4);">read</span> · ' + c.read.join(' · ') + '</div>';
-    if(c.write) rows += '<div style="color:rgba(245,245,247,0.7);margin-top:2px;"><span style="color:rgba(255,159,10,0.6);">write</span> · ' + c.write.join(' · ') + '</div>';
-    return '<div><div style="font-size:11px;color:rgba(245,245,247,0.45);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">' + c.label + '</div>' + rows + '</div>';
+  var cell = function(tools, color){
+    if(!tools) return '<div style="color:rgba(245,245,247,0.2);">—</div>';
+    return '<div style="color:'+color+';opacity:0.85;font-family:monospace;font-size:10.5px;line-height:1.7;">'+tools.join('<br>')+'</div>';
+  };
+  var head = ['Category','Read','Write','Admin'].map(function(h,i){
+    return '<div style="padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:rgba(245,245,247,0.4);'
+      + (i?'':'')+'">'+h+'</div>';
   }).join('');
+  var rows = MCP_CATS.map(function(c){
+    return '<div style="padding:9px 10px;font-size:12px;color:#fff;">'+c.label+'</div>'
+      + '<div style="padding:9px 10px;">'+cell(c.read,'#8E8E93')+'</div>'
+      + '<div style="padding:9px 10px;">'+cell(c.write,MCP_TIER_COLOR.write)+'</div>'
+      + '<div style="padding:9px 10px;">'+cell(c.admin,MCP_TIER_COLOR.admin)+'</div>';
+  }).join('');
+  box.innerHTML = '<div style="display:grid;grid-template-columns:minmax(110px,auto) 1fr 1fr 1fr;min-width:560px;'
+    + 'border:0.5px solid rgba(255,255,255,0.1);border-radius:11px;overflow:hidden;">'
+    + '<div style="display:contents;">'+head+'</div>' + rows + '</div>';
 }
 
-function mcpScopeChip(scope){
-  var write = scope.indexOf(':write') > -1;
-  var bg = write ? 'rgba(255,159,10,0.13)' : 'rgba(10,132,255,0.13)';
-  var fg = write ? 'rgba(255,159,10,0.9)'  : 'rgba(90,171,240,0.95)';
-  return '<span style="padding:2px 7px;border-radius:6px;background:'+bg+';color:'+fg+';font-size:10.5px;font-family:monospace;">'+_esc(scope)+'</span>';
+/* ── Token list ── */
+/* Raw scope strings are noise in a list. Each category the token touches becomes one chip
+   showing its highest tier, so "what can this token do" reads at a glance. */
+function mcpScopeSummary(scopes){
+  var byCat = {};
+  (scopes||[]).forEach(function(s){
+    var p = s.split(':');
+    var rank = MCP_TIERS.indexOf(p[1]);
+    if(rank < 0) return;
+    if(byCat[p[0]] === undefined || rank > byCat[p[0]]) byCat[p[0]] = rank;
+  });
+  var out = MCP_CATS.filter(function(c){ return byCat[c.key] !== undefined; }).map(function(c){
+    var rank = byCat[c.key];
+    var tier = MCP_TIERS[rank];
+    var letters = ['R','RW','RWA'][rank];
+    var col = MCP_TIER_COLOR[tier];
+    return '<span style="padding:2px 8px;border-radius:6px;background:'+col+'22;color:'+col+';font-size:10.5px;">'
+      + _esc(c.label) + ' <b style="opacity:0.75;">' + letters + '</b></span>';
+  }).join(' ');
+  return out || '<span style="font-size:11px;color:rgba(245,245,247,0.35);">no permissions</span>';
 }
 
 function mcpLoadTokens(){
@@ -11504,7 +11559,7 @@ function mcpLoadTokens(){
     if(!j.success){ box.innerHTML = '<div style="font-size:12px;color:rgba(255,69,58,0.8);padding:6px 0;">'+_esc(j.message||'Could not load tokens')+'</div>'; return; }
     mcpRenderTokens(j.data || []);
   }).catch(function(){
-    box.innerHTML = '<div style="font-size:12px;color:rgba(255,69,58,0.8);padding:6px 0;">Could not reach the server. Try again.</div>';
+    box.innerHTML = '<div style="font-size:12px;color:rgba(255,69,58,0.8);padding:6px 0;">Could not reach the server.</div>';
   });
 }
 
@@ -11522,10 +11577,9 @@ function mcpRenderTokens(rows){
   };
   box.innerHTML = rows.map(function(t){
     var s = STATUS[t.status] || STATUS.revoked;
-    var dim = t.status === 'active' ? '' : 'opacity:0.62;';
-    var chips = (t.scopes||[]).map(mcpScopeChip).join(' ');
+    var dim = t.status === 'active' ? '' : 'opacity:0.6;';
     var revoke = t.status === 'active'
-      ? '<button class="btn-g" style="padding:5px 11px;font-size:11px;color:rgba(255,69,58,0.9);border-color:rgba(255,69,58,0.25);" onclick="mcpRevoke('+t.id+',\''+_esc(String(t.name).replace(/'/g,"\\'"))+'\')">Revoke</button>'
+      ? '<button class="btn-g" style="padding:4px 11px;font-size:11px;color:rgba(255,69,58,0.9);border-color:rgba(255,69,58,0.25);" onclick="mcpRevoke('+t.id+',\''+_esc(String(t.name).replace(/'/g,"\\'"))+'\')">Revoke</button>'
       : '';
     return ''
       + '<div style="padding:12px 14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px;'+dim+'">'
@@ -11534,21 +11588,22 @@ function mcpRenderTokens(rows){
       +       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
       +         '<span style="font-size:13.5px;font-weight:500;color:#fff;">'+_esc(t.name)+'</span>'
       +         '<span style="padding:2px 8px;border-radius:20px;background:'+s.bg+';color:'+s.fg+';font-size:10px;font-weight:500;">'+s.label+'</span>'
+      +         '<span style="font-family:monospace;font-size:10.5px;color:rgba(245,245,247,0.35);">'+_esc(t.token_prefix)+'……</span>'
       +       '</div>'
-      +       '<div style="font-family:monospace;font-size:11px;color:rgba(245,245,247,0.4);margin-top:3px;">'+_esc(t.token_prefix)+'……</div>'
       +     '</div>'
       +     revoke
       +   '</div>'
-      +   '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:9px;">'+chips+'</div>'
-      +   '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:9px;font-size:11px;color:rgba(245,245,247,0.45);">'
-      +     '<span>Expires: '+(t.expires_at ? mcpFmtDate(t.expires_at) : 'never')+'</span>'
-      +     '<span>Last used: '+(t.last_used_at ? mcpFmtDate(t.last_used_at, true) : 'never')+'</span>'
-      +     '<span>Created: '+mcpFmtDate(t.created_at)+'</span>'
+      +   '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:9px;">'+mcpScopeSummary(t.scopes)+'</div>'
+      +   '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:9px;font-size:11px;color:rgba(245,245,247,0.42);">'
+      +     '<span>Expires '+(t.expires_at ? mcpFmtDate(t.expires_at) : 'never')+'</span>'
+      +     '<span>Last used '+(t.last_used_at ? mcpFmtDate(t.last_used_at, true) : 'never')+'</span>'
+      +     '<span>Created '+mcpFmtDate(t.created_at)+'</span>'
       +   '</div>'
       + '</div>';
   }).join('');
 }
 
+/* ── Create modal ── */
 function mcpOpenCreate(){
   var ov = document.getElementById('mcp-create-overlay');
   if(!ov) return;
@@ -11571,50 +11626,58 @@ function mcpCloseCreate(e){
 function mcpRenderPermGrid(){
   var box = document.getElementById('mcp-perm-grid');
   if(!box) return;
-  box.innerHTML = MCP_CATS.map(function(c){
-    var toggles = ''
-      + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(245,245,247,0.75);cursor:pointer;">'
-      +   '<input type="checkbox" id="mcp-perm-'+c.key+'-read" onchange="mcpPermChanged(\''+c.key+'\',\'read\')" style="accent-color:#0A84FF;cursor:pointer;">Read'
-      + '</label>';
-    if(c.write){
-      toggles += ''
-        + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(245,245,247,0.75);cursor:pointer;">'
-        +   '<input type="checkbox" id="mcp-perm-'+c.key+'-write" onchange="mcpPermChanged(\''+c.key+'\',\'write\')" style="accent-color:#FF9F0A;cursor:pointer;">Write'
-        + '</label>';
-    } else {
-      toggles += '<span style="font-size:11px;color:rgba(245,245,247,0.3);">no action tools</span>';
-    }
-    return ''
-      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 12px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;">'
-      +   '<div style="min-width:0;">'
-      +     '<div style="font-size:13px;color:#fff;">'+c.label+'</div>'
-      +     '<div style="font-size:10.5px;color:rgba(245,245,247,0.35);font-family:monospace;margin-top:2px;overflow:hidden;text-overflow:ellipsis;">'+c.read.concat(c.write||[]).join(' · ')+'</div>'
-      +   '</div>'
-      +   '<div style="display:flex;gap:12px;flex-shrink:0;">'+toggles+'</div>'
-      + '</div>';
+  var head = '<div style="display:contents;">'
+    + '<div style="padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:rgba(245,245,247,0.4);background:rgba(255,255,255,0.03);">Category</div>'
+    + MCP_TIERS.map(function(t){
+        return '<div style="padding:8px 4px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;text-align:center;color:'+MCP_TIER_COLOR[t]+';opacity:0.75;background:rgba(255,255,255,0.03);">'+t+'</div>';
+      }).join('')
+    + '</div>';
+
+  var rows = MCP_CATS.map(function(c, i){
+    var border = i ? 'border-top:0.5px solid rgba(255,255,255,0.06);' : '';
+    var cells = MCP_TIERS.map(function(t){
+      if(!c[t]) return '<div style="padding:9px 4px;text-align:center;color:rgba(245,245,247,0.18);font-size:12px;'+border+'">—</div>';
+      return '<div style="padding:9px 4px;text-align:center;'+border+'">'
+        + '<input type="checkbox" id="mcp-perm-'+c.key+'-'+t+'" onchange="mcpPermChanged(\''+c.key+'\',\''+t+'\')" '
+        + 'title="'+_esc(c[t].join(', '))+'" style="accent-color:'+MCP_TIER_COLOR[t]+';cursor:pointer;width:15px;height:15px;">'
+        + '</div>';
+    }).join('');
+    return '<div style="padding:9px 12px;font-size:12.5px;color:#fff;'+border+'">'+c.label+'</div>' + cells;
   }).join('');
+
+  box.style.display = 'grid';
+  box.style.gridTemplateColumns = '1fr 72px 72px 72px';
+  box.innerHTML = head + rows;
 }
 
-/* Write can't stand on its own — granting it ticks Read, and clearing Read clears Write with
-   it. The backend applies the same rule to whatever it is sent; this just keeps the boxes
-   showing what will actually be stored. */
-function mcpPermChanged(key, kind){
-  var read  = document.getElementById('mcp-perm-'+key+'-read');
-  var write = document.getElementById('mcp-perm-'+key+'-write');
-  if(!write) return;
-  if(kind === 'write' && write.checked && read) read.checked = true;
-  if(kind === 'read'  && read && !read.checked) write.checked = false;
-}
-
-function mcpPreset(which){
-  MCP_CATS.forEach(function(c){
-    var read  = document.getElementById('mcp-perm-'+c.key+'-read');
-    var write = document.getElementById('mcp-perm-'+c.key+'-write');
-    if(read)  read.checked  = (which === 'read' || which === 'full');
-    if(write) write.checked = (which === 'full');
+/* Each tier includes the ones before it: ticking Admin ticks Write and Read; clearing Read
+   clears everything above it. The backend applies the same rule to whatever it is sent —
+   doing it here keeps the boxes honest about what will be stored. */
+function mcpPermChanged(key, tier){
+  var cat = MCP_CATS.filter(function(c){ return c.key === key; })[0];
+  if(!cat) return;
+  var box = function(t){ return document.getElementById('mcp-perm-'+key+'-'+t); };
+  var rank = MCP_TIERS.indexOf(tier);
+  var on = box(tier) && box(tier).checked;
+  MCP_TIERS.forEach(function(t, i){
+    var el = box(t);
+    if(!el) return;
+    if(on  && i < rank) el.checked = true;   // higher tier implies the lower ones
+    if(!on && i > rank) el.checked = false;  // clearing a tier clears everything above it
   });
 }
 
+function mcpPreset(which){
+  var upto = {none:-1, read:0, write:1, full:2}[which];
+  MCP_CATS.forEach(function(c){
+    MCP_TIERS.forEach(function(t, i){
+      var el = document.getElementById('mcp-perm-'+c.key+'-'+t);
+      if(el) el.checked = c[t] ? (i <= upto) : false;
+    });
+  });
+}
+
+/* ── Expiry ── */
 function mcpRenderExpiryChips(){
   var box = document.getElementById('mcp-exp-chips');
   if(!box) return;
@@ -11648,7 +11711,7 @@ function mcpUpdateExpiryNote(){
   var note = document.getElementById('mcp-exp-note');
   if(!note) return;
   if(!_mcpExpiryDate){
-    note.innerHTML = '⚠️ This token will work until you revoke it. Fine for a connector you control; pick a date for anything shared.';
+    note.innerHTML = '⚠️ Works until you revoke it.';
     note.style.color = 'rgba(255,159,10,0.75)';
   } else {
     note.textContent = 'Stops working at the end of ' + mcpFmtDate(_mcpExpiryDate) + '.';
@@ -11656,16 +11719,17 @@ function mcpUpdateExpiryNote(){
   }
 }
 
+/* ── Create / revoke ── */
 function mcpCreateToken(){
   var name = (document.getElementById('mcp-new-name').value || '').trim();
   if(!name){ showToast('❌ Give the token a name'); return; }
 
   var scopes = [];
   MCP_CATS.forEach(function(c){
-    var read  = document.getElementById('mcp-perm-'+c.key+'-read');
-    var write = document.getElementById('mcp-perm-'+c.key+'-write');
-    if(read && read.checked)   scopes.push(c.key+':read');
-    if(write && write.checked) scopes.push(c.key+':write');
+    MCP_TIERS.forEach(function(t){
+      var el = document.getElementById('mcp-perm-'+c.key+'-'+t);
+      if(el && el.checked) scopes.push(c.key+':'+t);
+    });
   });
   if(!scopes.length){ showToast('❌ Pick at least one permission'); return; }
 
@@ -11700,7 +11764,7 @@ function mcpCopyNewToken(){
 }
 
 function mcpRevoke(id, name){
-  if(!confirm('Revoke "'+name+'"?\n\n• Any connector using this token stops working immediately\n• Your other tokens are not affected\n• This cannot be undone — you would create a new token instead')) return;
+  if(!confirm('Revoke "'+name+'"?\n\n• Any connector using this token stops working immediately\n• Your other tokens are not affected\n• This cannot be undone')) return;
   fetch(API+'/api/mcp-tokens/'+id, {method:'DELETE', headers:zHdr()})
     .then(function(r){ return r.json(); })
     .then(function(j){
