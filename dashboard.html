@@ -9423,6 +9423,18 @@ async function loadAdminOverview(){
 }
 
 /* ── Google Drive Backup ── */
+/* Three outcomes, not two: a 'partial' run uploaded a file but could not read every table.
+   Treating it as a plain failure hides a backup that exists; treating it as success hides
+   that it is incomplete. */
+function _bkStatusIcon(status, size){
+  var map = {
+    success: {icon:'✅', color:'#30D158'},
+    partial: {icon:'⚠️', color:'#FF9F0A'}
+  };
+  var s = map[status] || {icon:'❌', color:'#FF453A'};
+  return '<span style="color:'+s.color+';font-size:'+size+'px;">'+s.icon+'</span>';
+}
+
 async function loadBackupStatus(){
   try{
     var res = await fetch(API+'/api/backup/gdrive/status', { headers: zHdr() });
@@ -9476,9 +9488,7 @@ async function loadBackupStatus(){
       var statusEl = document.getElementById('bk-last-status');
       var timeEl   = document.getElementById('bk-last-time');
       var sizeEl   = document.getElementById('bk-last-size');
-      if(statusEl) statusEl.innerHTML = last.status==='success'
-        ? '<span style="color:#30D158;font-size:22px;">✅</span>'
-        : '<span style="color:#FF453A;font-size:22px;">❌</span>';
+      if(statusEl) statusEl.innerHTML = _bkStatusIcon(last.status, 22);
       if(timeEl){
         var dt = last.created_at ? new Date(last.created_at) : null;
         timeEl.textContent = dt ? _fmtISTDate(dt) : '—';
@@ -9493,14 +9503,21 @@ async function loadBackupStatus(){
         histEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">No backups yet</div>';
       } else {
         histEl.innerHTML = logs.map(function(lg){
-          var isOk = lg.status === 'success';
+          var partial = lg.status === 'partial';
+          var isOk    = lg.status === 'success';
+          var colour  = isOk ? '#F5F5F7' : (partial ? '#FF9F0A' : '#FF453A');
+          // A partial run did upload a file — it just could not read every table. Saying
+          // "Failed" would send someone hunting for a backup that is actually there.
+          var label   = isOk     ? (lg.filename || 'Success')
+                      : partial  ? ((lg.filename || 'Partial') + ' — some tables missing')
+                      :            ('Failed — ' + (lg.error_msg || '').slice(0, 60));
           var dt   = lg.created_at ? new Date(lg.created_at) : null;
           var dtStr = dt ? _fmtISTDate(dt) : '—';
           return '<div class="gs" style="display:flex;align-items:center;gap:10px;padding:9px 12px;">'
-            +'<span style="font-size:14px;">'+(isOk?'✅':'❌')+'</span>'
+            +_bkStatusIcon(lg.status, 14)
             +'<div style="flex:1;min-width:0;">'
-              +'<div style="font-size:12px;font-weight:500;color:'+(isOk?'#F5F5F7':'#FF453A')+';">'
-                +(isOk ? (lg.filename||'Success') : ('Failed — '+(lg.error_msg||'').slice(0,60)))
+              +'<div style="font-size:12px;font-weight:500;color:'+colour+';" title="'+_esc(lg.error_msg||'')+'">'
+                +_esc(label)
               +'</div>'
               +'<div style="font-size:10px;color:var(--muted);margin-top:1px;">'
                 +dtStr+' · '+(lg.triggered_by==='manual'?'Manual':'Auto')+' · '+(lg.records_count||0)+' records · '+(lg.file_size_kb||0)+' KB'
