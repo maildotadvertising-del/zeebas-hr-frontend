@@ -10334,6 +10334,22 @@ async function spdmSaveAdjustments(i){
     notes: (document.getElementById('spdm-notes')||{}).value||'',
     permission_leave: (document.getElementById('spdm-permleave')||{}).checked ? 1 : 0
   };
+
+  /* Permission Leave goes to its own endpoint, keyed by staff and month rather than by a
+     payroll id. A month that has not had Process Payroll run has no payroll row and so no id
+     — the current month, which is exactly when a day off gets marked as agreed in advance.
+     Saved first, because it creates the row the adjustments below then need. */
+  var wantsLeave = (document.getElementById('spdm-permleave')||{}).checked ? 1 : 0;
+  try{
+    var plRes = await fetch(API+'/api/payroll/permission-leave', {
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+      body: JSON.stringify({ staff_id:r.id, month:_pr.month, year:_pr.year, permission_leave:wantsLeave })
+    });
+    var plD = await plRes.json();
+    if(!plD.success){ showToast('❌ '+(plD.message||'Could not save permission leave')); return; }
+    r.permission_leave = wantsLeave;
+    if(plD.data && plD.data.id) r.payroll_id = plD.data.id;
+  }catch(e){ showToast('❌ Could not reach the server'); return; }
   try{
     var res = await fetch(API+'/api/payroll/'+r.payroll_id+'/adjust', {
       method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
