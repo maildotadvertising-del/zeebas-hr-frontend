@@ -8249,9 +8249,136 @@ async function loadOTRules(){
   }
 }
 
+
+/* ── "Salary credited" celebration ──
+   Runs on every app open. The server answers whether this person's salary was marked paid in
+   the last 24 hours; after that the window closes on its own, so there is nothing to dismiss
+   permanently and nothing kept in storage.
+
+   The confetti is drawn on a canvas rather than pulled from a library — it is forty lines of
+   physics against a page that already ships more than it should, and it stops on its own once
+   every piece has fallen off the bottom. */
+
+function zConfettiBurst(canvas){
+  var ctx = canvas.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W, H;
+  var resize = function(){
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  var COLOURS = ['#30D158','#0A84FF','#FF9F0A','#FF453A','#BF5AF2','#FFD60A','#64D2FF'];
+  var pieces = [];
+  for(var i=0;i<130;i++){
+    pieces.push({
+      x: W * (0.15 + Math.random()*0.7),
+      y: -20 - Math.random()*H*0.5,
+      w: 5 + Math.random()*7,
+      h: 8 + Math.random()*9,
+      vx: (Math.random()-0.5)*2.2,
+      vy: 1.6 + Math.random()*2.8,
+      rot: Math.random()*Math.PI,
+      vr: (Math.random()-0.5)*0.22,
+      col: COLOURS[(Math.random()*COLOURS.length)|0]
+    });
+  }
+
+  var raf;
+  (function frame(){
+    ctx.clearRect(0,0,W,H);
+    var alive = 0;
+    for(var i=0;i<pieces.length;i++){
+      var p = pieces[i];
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      p.vy += 0.045;                 // gravity
+      p.vx *= 0.995;                 // a little drag, so it drifts rather than sliding
+      if(p.y < H + 40){
+        alive++;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.col;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      }
+    }
+    if(alive) raf = requestAnimationFrame(frame);
+    else window.removeEventListener('resize', resize);
+  })();
+  return function(){ if(raf) cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+}
+
+function zShowSalaryCredited(info){
+  if(document.getElementById('salary-credit-ov')) return;
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var monthName = months[(parseInt(info.month,10)||1)-1] || '';
+  var amount = Math.round(parseFloat(info.amount||0)).toLocaleString('en-IN');
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Their own face on it, not a generic icon — this is the one screen in the app that is
+     purely good news. Falls back to their initial when there is no photo, which is the same
+     letter circle they see everywhere else rather than a broken image. */
+  var me = {};
+  try{ me = JSON.parse(localStorage.getItem('zhr_staff')||'{}'); }catch(e){}
+  var firstName = (me.name||'').split(' ')[0] || '';
+  var face = zAvatar(me.id, me.photo_url, me.photo_data);
+  var ring = 'width:82px;height:82px;border-radius:50%;margin:0 auto 14px;position:relative;'
+           + 'box-shadow:0 0 0 3px rgba(48,209,88,0.55), 0 0 26px -4px rgba(48,209,88,0.7);';
+  var avatarHtml =
+      '<div style="'+ring+'">'
+    +   (face
+          ? '<img src="'+face+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">'
+          : '<div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#0A84FF,#0A60CC);'
+            + 'display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:600;">'
+            + ((me.name||'?').charAt(0).toUpperCase()) + '</div>')
+    +   '<div style="position:absolute;right:-4px;bottom:-4px;font-size:26px;line-height:1;">🎉</div>'
+    + '</div>';
+
+  var ov = document.createElement('div');
+  ov.id = 'salary-credit-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;'
+    + 'padding:24px;background:rgba(4,6,12,0.82);backdrop-filter:blur(14px);';
+  ov.innerHTML =
+      '<canvas id="salary-credit-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>'
+    + '<div style="position:relative;max-width:340px;width:100%;text-align:center;background:rgba(18,22,30,0.96);'
+      + 'border:0.5px solid rgba(48,209,88,0.35);border-radius:24px;padding:30px 24px 24px;'
+      + 'box-shadow:0 26px 70px -20px rgba(0,0,0,0.8);">'
+      + avatarHtml
+      + '<div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:rgba(48,209,88,0.85);margin-bottom:8px;">Salary Credited</div>'
+      + '<div style="font-size:38px;font-weight:600;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">₹'+amount+'</div>'
+      + '<div style="font-size:13px;color:rgba(245,245,247,0.5);margin-bottom:22px;">'
+        + (firstName ? firstName+', your ' : '') + monthName+' '+info.year+' salary has been transferred</div>'
+      + '<button id="salary-credit-ok" style="width:100%;padding:13px;border:none;border-radius:14px;cursor:pointer;'
+        + 'font-family:inherit;font-size:15px;font-weight:500;color:#fff;'
+        + 'background:linear-gradient(135deg,#30D158,#248A3D);">Thank you 🙏</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+
+  var stop = calm ? null : zConfettiBurst(document.getElementById('salary-credit-canvas'));
+  var close = function(){ if(stop) stop(); ov.remove(); };
+  document.getElementById('salary-credit-ok').onclick = close;
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+}
+
+function zCheckSalaryCredited(){
+  if(!zToken()) return;
+  fetch(API_URL+'/api/payroll/my-credit', {headers:zHead()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d && d.credited) zShowSalaryCredited(d); })
+    .catch(function(){ /* a missed celebration must never get in the way of the app opening */ });
+}
+
 /* ── POPULATE STAFF UI ── */
 function populateStaff(s){
   _pendingEodChecked = false; // reset on fresh login so one check runs per session
+  // Salary just landed? Say so. The server decides — it only answers yes for 24 hours after
+  // the transfer date was saved, so this stops on its own without anything being remembered
+  // on the device. Delayed a moment so it lands after the home screen has drawn.
+  setTimeout(zCheckSalaryCredited, 900);
   // Warm the avatar cache so team members' photos are ready before chat/lists render
   _cacheAvatars([s]);
   refreshAvatarCache().then(function(){ try{ populateStaffAvatar(s); }catch(e){} });
