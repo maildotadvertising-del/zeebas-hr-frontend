@@ -11454,10 +11454,71 @@ var _AST_CATS = ['Camera','Lens & Accessories','Lights & Soft Box','Switcher','C
 var _astTab = 'equipment';
 var _astCatFilter = '';
 
-function _aGet(){ try{ return JSON.parse(localStorage.getItem('zhr_assets')||'[]'); }catch(e){ return []; } }
-function _aSave(d){ localStorage.setItem('zhr_assets', JSON.stringify(d)); }
-function _cGet(){ try{ return JSON.parse(localStorage.getItem('zhr_checkouts')||'[]'); }catch(e){ return []; } }
-function _cSave(d){ localStorage.setItem('zhr_checkouts', JSON.stringify(d)); }
+/* The equipment register used to live in localStorage, which meant it existed in one
+   browser on one machine: no other admin could see it, the Google Drive backup never
+   included it, and clearing site data destroyed it. It is on the server now.
+
+   The render code reads the lists synchronously in a dozen places, so those keep working
+   against an in-memory copy that _astLoad refreshes from the API. Writes go to the server
+   and then reload, so what is drawn is always what was actually saved. */
+var _astCache = { assets: [], checkouts: [], loaded: false };
+function _aGet(){ return _astCache.assets; }
+function _cGet(){ return _astCache.checkouts; }
+
+function _astLoad(){
+  return fetch(API+'/api/assets', {headers:zHdr()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.success) throw new Error(d.message||'Could not load equipment');
+      _astCache = { assets: d.assets||[], checkouts: d.checkouts||[], loaded: true };
+    });
+}
+
+/* Anything still sitting in this browser from before the server existed. Offered once, on
+   the owner's say-so — importing is keyed on the original ids, so running it twice, or from
+   two different browsers, cannot duplicate anything. */
+function _astLocalLeftovers(){
+  try{
+    var a = JSON.parse(localStorage.getItem('zhr_assets')||'[]');
+    var c = JSON.parse(localStorage.getItem('zhr_checkouts')||'[]');
+    return (a.length || c.length) ? {assets:a, checkouts:c} : null;
+  }catch(e){ return null; }
+}
+
+function _astOfferImport(){
+  var old = _astLocalLeftovers();
+  if(!old) return Promise.resolve(false);
+  var msg = 'This browser still has '+old.assets.length+' item(s) and '+old.checkouts.length
+    + ' checkout record(s) saved locally, from before Assets had a server.\n\n'
+    + 'Upload them now?\n\n'
+    + '• They become visible to every admin\n'
+    + '• They start being included in the daily backup\n'
+    + '• Importing twice is safe — nothing gets duplicated';
+  if(!confirm(msg)) return Promise.resolve(false);
+  return fetch(API+'/api/assets/import', {
+    method:'POST',
+    headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+    body: JSON.stringify(old)
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(!j.success){ showToast('❌ '+(j.message||'Import failed')); return false; }
+    showToast('✅ '+j.message);
+    // Only clear the browser copy once the server has confirmed it holds the records.
+    try{ localStorage.removeItem('zhr_assets'); localStorage.removeItem('zhr_checkouts'); }catch(e){}
+    return true;
+  }).catch(function(){ showToast('❌ Could not reach the server'); return false; });
+}
+
+/* Every write goes through here: save, reload, redraw. */
+function _astWrite(promise, okMsg){
+  return promise
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(!j.success){ showToast('❌ '+(j.message||'Could not save')); return false; }
+      if(okMsg) showToast('✅ '+okMsg);
+      return _astLoad().then(function(){ loadAssetsPage(); return true; });
+    })
+    .catch(function(){ showToast('❌ Could not reach the server'); return false; });
+}
 
 function _astAvail(asset, checkouts){
   var out = (checkouts||[]).filter(function(c){ return c.asset_id===asset.id && !c.returned; }).reduce(function(s,c){ return s+parseInt(c.qty||1); }, 0);
@@ -11842,6 +11903,19 @@ function mcpToggleTokenVisibility(){
 }
 
 function loadAssetsPage(){
+  if(!_astCache.loaded){
+    _astLoad()
+      .then(function(){
+        // A first load that comes back empty is the moment to ask about anything this
+        // browser still has from the localStorage days.
+        if(!_astCache.assets.length && !_astCache.checkouts.length){
+          return _astOfferImport().then(function(did){ if(did) return _astLoad(); });
+        }
+      })
+      .then(function(){ _astCache.loaded = true; loadAssetsPage(); })
+      .catch(function(){ showToast('❌ Could not load equipment'); });
+    return;
+  }
   renderAstStats();
   renderAstCatFilters();
   showAstTab(_astTab);
@@ -12042,25 +12116,25 @@ function saveAst(editId){
   var cond = document.getElementById('ast-m-cond').value;
   var notes= (document.getElementById('ast-m-notes').value||'').trim();
   if(!name){ showToast('Equipment name required!'); return; }
-  var assets = _aGet();
-  if(editId){
-    assets = assets.map(function(a){ return a.id===editId ? Object.assign({},a,{name:name,category:cat,qty:qty,condition:cond,notes:notes}) : a; });
-  } else {
-    assets.push({ id:'ast_'+Date.now(), name:name, category:cat, qty:qty, condition:cond, notes:notes, created:new Date().toISOString() });
-  }
-  _aSave(assets);
-  var ov = document.getElementById('ast-modal-ov');
-  if(ov) ov.remove();
-  loadAssetsPage();
+  var body = { name:name, category:cat, qty:qty, condition:cond, notes:notes };
+  var req = editId
+    ? fetch(API+'/api/assets/'+encodeURIComponent(editId), {method:'PUT', headers:Object.assign({'Content-Type':'application/json'}, zHdr()), body:JSON.stringify(body)})
+    : fetch(API+'/api/assets', {method:'POST', headers:Object.assign({'Content-Type':'application/json'}, zHdr()), body:JSON.stringify(body)});
+  _astWrite(req, editId ? 'Equipment updated' : 'Equipment added').then(function(ok){
+    if(!ok) return;
+    var ov = document.getElementById('ast-modal-ov');
+    if(ov) ov.remove();
+  });
 }
 
 function deleteAst(id){
   var a = _aGet().find(function(x){ return x.id===id; });
   if(!a) return;
   if(!confirm('Delete "'+a.name+'" and all its checkout records?')) return;
-  _aSave(_aGet().filter(function(x){ return x.id!==id; }));
-  _cSave(_cGet().filter(function(c){ return c.asset_id!==id; }));
-  loadAssetsPage();
+  _astWrite(
+    fetch(API+'/api/assets/'+encodeURIComponent(id), {method:'DELETE', headers:zHdr()}),
+    'Equipment deleted'
+  );
 }
 
 function openAstCheckout(assetId){
@@ -12112,12 +12186,21 @@ function saveAstCheckout(assetId){
   if(!a){ showToast('Equipment not found!'); return; }
   var avail = _astAvail(a, _cGet());
   if(qty > avail){ showToast('Only '+avail+' available!'); return; }
-  var checkouts = _cGet();
-  checkouts.push({ id:'co_'+Date.now(), asset_id:assetId, asset_name:a.name, category:a.category, staff_name:staff, event:event, from_date:date, expected_return:ret, qty:qty, notes:notes, returned:false, return_date:'', return_condition:'', return_notes:'' });
-  _cSave(checkouts);
-  var ov = document.getElementById('ast-co-ov');
-  if(ov) ov.remove();
-  loadAssetsPage();
+  // The server checks availability again before it writes — two admins on two machines can
+  // otherwise both be told the last camera is free.
+  _astWrite(
+    fetch(API+'/api/assets/checkouts', {
+      method:'POST',
+      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ asset_id:assetId, staff_name:staff, event:event, from_date:date,
+                             expected_return:ret, qty:qty, notes:notes })
+    }),
+    'Equipment checked out'
+  ).then(function(ok){
+    if(!ok) return;
+    var ov = document.getElementById('ast-co-ov');
+    if(ov) ov.remove();
+  });
 }
 
 function openAstReturn(checkoutId){
@@ -12155,13 +12238,18 @@ function saveAstReturn(checkoutId){
   var cond  = document.getElementById('ret-cond').value;
   var notes = (document.getElementById('ret-notes').value||'').trim();
   if(!date){ showToast('Return date required!'); return; }
-  var checkouts = _cGet().map(function(c){
-    return c.id===checkoutId ? Object.assign({},c,{returned:true,return_date:date,return_condition:cond,return_notes:notes}) : c;
+  _astWrite(
+    fetch(API+'/api/assets/checkouts/'+encodeURIComponent(checkoutId)+'/return', {
+      method:'PUT',
+      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ return_date:date, return_condition:cond, return_notes:notes })
+    }),
+    'Equipment returned'
+  ).then(function(ok){
+    if(!ok) return;
+    var ov = document.getElementById('ast-ret-ov');
+    if(ov) ov.remove();
   });
-  _cSave(checkouts);
-  var ov = document.getElementById('ast-ret-ov');
-  if(ov) ov.remove();
-  loadAssetsPage();
 }
 </script>
 
