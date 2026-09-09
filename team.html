@@ -2513,7 +2513,7 @@ async function showOverduePopup(tasks, onDone){
       if(!val.trim()){ allFilled=false; return; }
       reasons.push({task_id:t.id, reason:val.trim(), requested_date:dt||null});
     });
-    if(!allFilled){ alert('எல்லா tasks-க்கும் reason போடுங்க'); return; }
+    if(!allFilled){ showToast1('எல்லா tasks-க்கும் reason போடுங்க'); return; }
     var btn=document.getElementById('od-submit-btn');
     btn.disabled=true; btn.textContent='Sending…';
     try{
@@ -2530,12 +2530,12 @@ async function showOverduePopup(tasks, onDone){
       } else{
         btn.disabled=false;
         btn.textContent='📨 Extension Request அனுப்பு';
-        alert(d.message||'Error');
+        showToast1(d.message||'Error');
       }
     }catch(e){
       btn.disabled=false;
       btn.textContent='📨 Extension Request அனுப்பு';
-      alert('Network error');
+      showToast1('Network error');
     }
   };
 }
@@ -2552,7 +2552,7 @@ async function markAttendance(){
   var siteName=((document.getElementById('site-name')||{}).value||'').trim();
 
   if(isOnsite&&!siteName){
-    alert('Please enter the site / client name first');
+    showToast1('Please enter the site / client name first');
     return;
   }
 
@@ -2632,7 +2632,7 @@ async function markAttendance(){
           +'</div>';
         document.body.appendChild(ov);
       } else {
-        alert((d&&d.message)||'Check-in failed. Please try again.');
+        showToast1((d&&d.message)||'Check-in failed. Please try again.');
       }
       return;
     }
@@ -2699,7 +2699,7 @@ async function markAttendance(){
     btn.disabled=false;
     _attBtnText(isOnsite?'Check In — Onsite':'Check In');
     _attBtnSub(isOnsite?'Client location · Needs approval':'WiFi · GPS auto detected');
-    alert('Network error. Check connection and try again.');
+    showToast1('Network error. Check connection and try again.');
   }
 }
 
@@ -3123,10 +3123,10 @@ async function addDailyLog(){
       dlSetStatus('processing'); // reset toggle back to Processing
       await loadDailyLogs();
     } else {
-      alert(d.message||'Could not add task');
+      showToast1(d.message||'Could not add task');
     }
   } catch(e){
-    alert('Network error. Try again.');
+    showToast1('Network error. Try again.');
   } finally {
     if(addBtn){ addBtn.disabled=false; addBtn.textContent='+ Add'; }
     if(inp) inp.focus();
@@ -3143,8 +3143,8 @@ async function toggleDlStatus(id, currentStatus){
     });
     var d = await r.json();
     if(d.success) await loadDailyLogs();
-    else alert('Could not update status.');
-  } catch(e){ alert('Network error. Try again.'); }
+    else showToast1('Could not update status.');
+  } catch(e){ showToast1('Network error. Try again.'); }
 }
 
 async function deleteDailyLog(id){
@@ -3155,7 +3155,7 @@ async function deleteDailyLog(id){
       headers:{Authorization:'Bearer '+token}
     });
     await loadDailyLogs();
-  } catch(e){ alert('Could not remove task.'); }
+  } catch(e){ showToast1('Could not remove task.'); }
 }
 
 async function doCheckout(){
@@ -3190,13 +3190,13 @@ async function doCheckout(){
       showEarlyExitDialog(d.endTime);
       return;
     } else if(d.code==='NO_DAILY_TASKS'){
-      alert('Please log your daily tasks before checking out.');
+      showToast1('Please log your daily tasks before checking out.');
       await loadDailyLogs();
     } else {
-      alert(d.message||'Check-out failed. Try again.');
+      showToast1(d.message||'Check-out failed. Try again.');
     }
   } catch(e){
-    alert('Network error. Check connection and try again.');
+    showToast1('Network error. Check connection and try again.');
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='✅ Log Complete — Check Out Now'; }
   }
@@ -3228,7 +3228,7 @@ function showEarlyExitDialog(endTime){
 
 async function submitEarlyExit(btn){
   var reason=(document.getElementById('early-exit-reason')||{}).value||'';
-  if(!reason.trim()){ alert('Please provide a reason.'); return; }
+  if(!reason.trim()){ showToast1('Please provide a reason.'); return; }
   btn.disabled=true; btn.textContent='Submitting…';
   var token=localStorage.getItem('zhr_token')||'';
   try{
@@ -3250,11 +3250,11 @@ async function submitEarlyExit(btn){
       document.body.appendChild(overlay);
       setTimeout(function(){ overlay.querySelector('button').click(); },3000);
     } else {
-      alert(d.message||'Failed. Try again.');
+      showToast1(d.message||'Failed. Try again.');
       btn.disabled=false; btn.textContent='Submit & Check Out';
     }
   } catch(e){
-    alert('Network error. Try again.');
+    showToast1('Network error. Try again.');
     btn.disabled=false; btn.textContent='Submit & Check Out';
   }
 }
@@ -7852,7 +7852,7 @@ async function wifiCheckAndAct(){
         wifiBanner(false);
       }
     }
-  } catch(e){ console.log('wifi detect err',e); wifiBanner(false); }
+  } catch(e){ console.error('wifi detect err',e); wifiBanner(false); }
 }
 
 async function wifiCheckoutPrompt(){
@@ -7955,11 +7955,11 @@ async function loadGpsSettings(){
     // Site locations
     _s2Sites = Array.isArray(g.site_locations) ? g.site_locations : [];
     renderS2Sites();
-  } catch(e){ console.log('loadGpsSettings err',e); }
+  } catch(e){ console.error('loadGpsSettings err',e); }
 }
 
 function useMyLocation(){
-  if(!navigator.geolocation){alert('GPS not available');return;}
+  if(!navigator.geolocation){showToast1('GPS not available');return;}
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=document.getElementById('gps-lat');
     var lng=document.getElementById('gps-lng');
@@ -7967,7 +7967,7 @@ function useMyLocation(){
     if(lng) lng.value=pos.coords.longitude.toFixed(7);
     var st=document.getElementById('gps-save-status');
     if(st){ st.style.color='#30D158'; st.textContent='📍 Location captured!'; setTimeout(function(){st.textContent='';},2000); }
-  },function(){ alert('Could not get location. Check GPS permissions.'); });
+  },function(){ showToast1('Could not get location. Check GPS permissions.'); });
 }
 
 function openGoogleMapsForPin(){
@@ -8074,7 +8074,7 @@ async function loadPayrollSettings(){
     v('ps-sick-leave',   p.sick_leaves_year||6);
     v('ps-casual-leave', p.casual_leaves_year||6);
     c('ps-ot-enabled',   p.ot_enabled);
-  } catch(e){ console.log('loadPayrollSettings err',e); }
+  } catch(e){ console.error('loadPayrollSettings err',e); }
 }
 
 async function savePayrollSettings(btn){
@@ -8129,7 +8129,7 @@ async function loadBiometricSettings(){
     if(dot){ dot.style.background=connected?'#30D158':'#FF453A'; dot.style.boxShadow=connected?'0 0 6px rgba(48,209,88,0.5)':'0 0 6px rgba(255,69,58,0.5)'; }
     if(lbl) lbl.textContent=connected?'Connected':'Not Connected';
     if(sub) sub.textContent=connected&&b.last_sync?'Last sync: '+new Date(b.last_sync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Configure device and test connection';
-  } catch(e){ console.log('loadBiometricSettings err',e); }
+  } catch(e){ console.error('loadBiometricSettings err',e); }
 }
 
 async function saveBiometricSettings(btn){
@@ -8351,7 +8351,7 @@ async function loadHomeWeekAndLeave(){
           +cell+'</div>';
       }).join('');
     }
-  }catch(e){ console.log('week cal error',e.message); }
+  }catch(e){ console.error('week cal error',e.message); }
 
   try{
     // ── Latest leave status ──
@@ -8375,7 +8375,7 @@ async function loadHomeWeekAndLeave(){
       +'<div style="color:rgba(245,245,247,0.35);font-size:10px;margin-top:2px;">'+escHtml(dateStr2)+' · '+escHtml(l.leave_type||'Leave')+'</div>'
       +'</div>'
       +'<span style="background:'+sc2[0]+'22;color:'+sc2[0]+';border:0.5px solid '+sc2[0]+'44;border-radius:6px;padding:2px 9px;font-size:10px;white-space:nowrap;">'+sc2[1]+'</span>';
-  }catch(e){ console.log('leave status error',e.message); }
+  }catch(e){ console.error('leave status error',e.message); }
 }
 
 // ── Day detail popup (called from week calendar day tap) ──
@@ -8478,7 +8478,7 @@ async function fetchMyTasks(staffId){
     var el=document.getElementById('s1-tasks-count');
     if(el) el.textContent=openCount;
     updateTaskRemaining(openCount);
-  } catch(e){ console.log('Tasks error',e); }
+  } catch(e){ console.error('Tasks error',e); }
 }
 
 /* ══════════════════════════════════════
@@ -8814,7 +8814,7 @@ async function loadMissedAnnouncements(){
 
     // Show popup — markAnnSeen called INSIDE showAnnouncementPopup, not before
     setTimeout(function(){ showAnnouncementPopup(ann); }, 1000);
-  }catch(e){ console.log('loadMissedAnnouncements err:', e); }
+  }catch(e){ console.error('loadMissedAnnouncements err:', e); }
 }
 
 function showAnnouncementPopup(data){
@@ -9194,7 +9194,7 @@ async function swStoreAuth(){
     var st = tx.objectStore('kv');
     st.put(token, 'token');
     st.put(API_URL, 'apiUrl');
-  } catch(e){ console.log('swStoreAuth error', e); }
+  } catch(e){ console.error('swStoreAuth error', e); }
 }
 
 // Clear stored auth on logout
@@ -9253,16 +9253,13 @@ async function subscribeToPush(reg){
       headers: { Authorization:'Bearer '+token, 'Content-Type':'application/json' },
       body: JSON.stringify(_pushSubscription)
     });
-    console.log('✅ Push subscription saved');
-  } catch(e){ console.log('Push subscribe error:', e.message); }
+  } catch(e){ console.error('Push subscribe error:', e.message); }
 }
 
 async function registerSW(){
   if(!('serviceWorker' in navigator)) return;
   try{
     _swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    console.log('✅ SW registered');
-
     // Wait for active SW
     if(_swRegistration.installing){
       await new Promise(function(resolve){
@@ -9287,20 +9284,18 @@ async function registerSW(){
         var perm = await navigator.permissions.query({ name: 'periodic-background-sync' });
         if(perm.state === 'granted'){
           await _swRegistration.periodicSync.register('wifi-check', { minInterval: 60 * 1000 }); // 1 min
-          console.log('✅ Periodic Background Sync registered (1 min)');
         }
-      } catch(pe){ console.log('periodicSync register failed:', pe); }
+      } catch(pe){ console.error('periodicSync register failed:', pe); }
     }
 
     // ── Background Sync (fires on reconnect after offline) ──
     if('sync' in _swRegistration){
       try{
         await _swRegistration.sync.register('wifi-online');
-        console.log('✅ Background Sync registered');
-      } catch(se){ console.log('sync register failed:', se); }
+      } catch(se){ console.error('sync register failed:', se); }
     }
 
-  } catch(e){ console.log('SW registration error:', e); }
+  } catch(e){ console.error('SW registration error:', e); }
 }
 
 // ── SW update handler — force reload when a new SW activates ─────────────
@@ -9309,7 +9304,6 @@ async function registerSW(){
 if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message', function(event){
     if(event.data && event.data.type === 'SW_UPDATED'){
-      console.log('[SW] New service worker activated — reloading for fresh content');
       window.location.reload(true);
     }
   });
@@ -9336,7 +9330,6 @@ window.addEventListener('load', function(){
 window.addEventListener('online', function(){
   var s = zStaff();
   if(!s || s.role === 'admin') return;
-  console.log('[WiFi] online event — checking WiFi');
   _appJustOpened = true;
   // NOTE: Do NOT clear _wifiOffSince — wifiCheckAndAct uses it to detect break return on reconnect
   setTimeout(wifiCheckAndAct, 1500); // slight delay for network to stabilize
@@ -9353,7 +9346,6 @@ if(navigator.connection){
     var s = zStaff();
     if(!s || s.role === 'admin') return;
     var type = (navigator.connection.type || navigator.connection.effectiveType || '');
-    console.log('[WiFi] connection changed → type:', type);
     // Only trigger on WiFi connect (not on data degradation)
     if(type === 'wifi' || type === '4g' || type === '5g' || type === 'ethernet'){
       _appJustOpened = true;
@@ -10462,7 +10454,7 @@ function s2SaveReturn(checkoutId){
   var date  = document.getElementById('s2ret-date').value;
   var cond  = document.getElementById('s2ret-cond').value;
   var notes = (document.getElementById('s2ret-notes').value||'').trim();
-  if(!date){ alert('Return date required!'); return; }
+  if(!date){ showToast1('Return date required!'); return; }
   var checkouts = _t_cGet().map(function(c){
     return c.id===checkoutId ? Object.assign({},c,{returned:true,return_date:date,return_condition:cond,return_notes:notes}) : c;
   });

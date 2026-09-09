@@ -9,7 +9,9 @@
       "Bash(ls \"/Volumes/DOT*)",
       "Bash(ls -la *)",
       "Bash(sed -n *)",
-      "Bash(wc -l *)"
+      "Bash(wc -l *)",
+      "Bash(gh pr merge:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
