@@ -11609,9 +11609,13 @@ function mcpRenderTokens(rows){
   box.innerHTML = rows.map(function(t){
     var s = STATUS[t.status] || STATUS.revoked;
     var dim = t.status === 'active' ? '' : 'opacity:0.6;';
-    var revoke = t.status === 'active'
-      ? '<button class="btn-g" style="padding:4px 11px;font-size:11px;color:rgba(255,69,58,0.9);border-color:rgba(255,69,58,0.25);" onclick="mcpRevoke('+t.id+',\''+_esc(String(t.name).replace(/'/g,"\\'"))+'\')">Revoke</button>'
-      : '';
+    // A live token can be revoked; a revoked one is finished with and can be cleared away.
+    // Revoking first, removing second, so a token somebody is still using takes two deliberate
+    // steps rather than one misplaced click.
+    var safeName = _esc(String(t.name).replace(/'/g,"\\'"));
+    var action = t.status === 'revoked'
+      ? '<button class="btn-g" style="padding:4px 11px;font-size:11px;color:rgba(245,245,247,0.55);" onclick="mcpRemove('+t.id+',\''+safeName+'\')">Remove</button>'
+      : '<button class="btn-g" style="padding:4px 11px;font-size:11px;color:rgba(255,69,58,0.9);border-color:rgba(255,69,58,0.25);" onclick="mcpRevoke('+t.id+',\''+safeName+'\')">Revoke</button>';
     return ''
       + '<div style="padding:12px 14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px;'+dim+'">'
       +   '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
@@ -11622,7 +11626,7 @@ function mcpRenderTokens(rows){
       +         '<span style="font-family:monospace;font-size:10.5px;color:rgba(245,245,247,0.35);">'+_esc(t.token_prefix)+'……</span>'
       +       '</div>'
       +     '</div>'
-      +     revoke
+      +     action
       +   '</div>'
       +   '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:9px;">'+mcpScopeSummary(t.scopes)+'</div>'
       +   '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:9px;font-size:11px;color:rgba(245,245,247,0.42);">'
@@ -11792,6 +11796,17 @@ function mcpCopyNewToken(){
   }).catch(function(){
     showToast('❌ Copy failed — select the token and copy it manually');
   });
+}
+
+function mcpRemove(id, name){
+  if(!confirm('Remove "'+name+'" from the list?\n\n• It is already revoked, so nothing stops working\n• The record of when it was last used goes too\n• This cannot be undone')) return;
+  fetch(API+'/api/mcp-tokens/'+id+'/permanent', {method:'DELETE', headers:zHdr()})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      showToast(j.success ? '✅ Token removed' : '❌ '+(j.message||'Could not remove'));
+      mcpLoadTokens();
+    })
+    .catch(function(){ showToast('❌ Could not reach the server'); });
 }
 
 function mcpRevoke(id, name){
