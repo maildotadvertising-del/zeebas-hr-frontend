@@ -5509,12 +5509,17 @@ function _cacheAvatars(list){
   });
 }
 // Resolve a usable avatar for a staff member: inline data first, then the cache.
+/* Cache before url — the cache holds the complete record, while a photo_url on a list row
+   can be stale, pointing at an uploads/ file a deploy deleted for somebody whose real photo
+   is in photo_data. Preferring the url turns them into a letter circle. */
 function zAvatar(staffId, photoUrl, photoData){
   var raw = (photoUrl||'').toLowerCase();
   var skip = raw.indexOf('dot-logo')!==-1 || raw.indexOf('dot_logo')!==-1;
   if(photoData) return photoData;
+  var cached = window._avatarMap && window._avatarMap[staffId];
+  if(cached) return cached;
   if(photoUrl && !skip) return API_URL+photoUrl;
-  return (window._avatarMap && window._avatarMap[staffId]) || null;
+  return null;
 }
 function refreshAvatarCache(){
   if(!zToken()) return Promise.resolve();

@@ -6926,10 +6926,18 @@ function _cacheAvatarsFromList(list){
     }
   });
 }
+/* The cache is built from /api/staff, which carries the complete record — both photo_data
+   and photo_url. A row in a list response carries less, and what it does carry can be stale:
+   a photo_url still pointing at an uploads/ file a deploy deleted, for somebody whose real
+   photo is sitting in photo_data. Preferring that url over the cache is how a staff member
+   with a perfectly good photo ends up as a letter circle.
+   So: an inline photo if one was passed, then the cache, then the url as a last resort. */
 function _getAvatar(staffId, photoUrl, photoData){
   if(photoData) return photoData;
-  if(photoUrl)  return API+photoUrl;
-  return window._avatarMap[staffId] || null;
+  var cached = window._avatarMap && window._avatarMap[staffId];
+  if(cached) return cached;
+  if(photoUrl) return API+photoUrl;
+  return null;
 }
 // Pre-load avatar cache once on startup — returns a promise attendance can await
 window._avatarCacheReady = false;
