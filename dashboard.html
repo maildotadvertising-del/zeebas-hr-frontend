@@ -3724,7 +3724,7 @@ async function pasteSiteLink(idx){
     renderSites();
     var st=document.getElementById('site-st-'+idx); if(st){ st.style.color='#30D158'; st.textContent='✅ '+lat.toFixed(5)+', '+lng.toFixed(5); }
   } else {
-    alert('❌ Coordinates parse ஆகல. Google Maps share link paste பண்ணுங்க.');
+    showToast('❌ Coordinates parse ஆகல. Google Maps share link paste பண்ணுங்க.');
   }
 }
 
@@ -3744,10 +3744,10 @@ async function detectMyIp(){
       if(val) val.textContent = d.ip;
       if(note) note.style.display='block';
     } else {
-      alert('Could not detect IP. Try again.');
+      showToast('Could not detect IP. Try again.');
     }
   } catch(e){
-    alert('Error detecting IP: '+e.message);
+    showToast('Error detecting IP: '+e.message);
   } finally {
     if(btn){ btn.textContent='Detect IP'; btn.disabled=false; }
   }
@@ -6025,7 +6025,7 @@ async function loadDashStats(){
             +'<span style="font-size:13px;font-weight:500;color:#FF9F0A;">'+cats[c]+'</span></div>';
         }).join('') || '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px 0;">No tasks</div>';
       }
-    }catch(e2){ console.log('dash tasks stat error',e2); }
+    }catch(e2){ console.error('dash tasks stat error',e2); }
 
     // ── Announcements widget ──
     try{
@@ -6076,7 +6076,7 @@ async function loadDashStats(){
         }).join('');
       }
     }
-  } catch(e){ console.log('dash stats error',e); }
+  } catch(e){ console.error('dash stats error',e); }
 
   // ── PHASE 2: Await payroll (was fetching in background during Phase 1 render) ──
   try{
@@ -6101,7 +6101,7 @@ async function loadDashStats(){
       }
     }
     set2('dash-payroll-sub', 'Earned so far · '+(now2.toLocaleString('en-IN',{month:'short',year:'numeric'})));
-  }catch(e5){ console.log('dash payroll error',e5); }
+  }catch(e5){ console.error('dash payroll error',e5); }
 }
 
 /* ── DASHBOARD WIDGET CUSTOMIZATION ── */
@@ -6356,8 +6356,8 @@ async function deleteAnnouncement(id){
     var r = await fetch(API+'/api/announcements/'+id, { method:'DELETE', headers:zHdr() });
     var d = await r.json();
     if(d.success){ showToast('🗑 Announcement deleted'); _dSet('ann', null); loadAnnouncements(); }
-    else alert(d.message||'Could not delete');
-  }catch(e){ alert('Network error'); }
+    else showToast(d.message||'Could not delete');
+  }catch(e){ showToast('Network error'); }
 }
 
 function editAnnouncement(id){
@@ -6380,7 +6380,7 @@ function editAnnouncement(id){
     if(btn){ btn.textContent='✏️ Update Announcement'; btn.style.background='linear-gradient(135deg,#0A84FF,#0A60CC)'; }
     document.getElementById('ann-overlay').style.display='block';
     document.getElementById('ann-panel').style.display='block';
-  }).catch(function(){ alert('Could not load announcement'); });
+  }).catch(function(){ showToast('Could not load announcement'); });
 }
 
 async function loadAnnStaffList(){
@@ -6709,10 +6709,10 @@ async function approveDailyLog(id){
     if(d.success){
       showToast('✅ Approved — task added to staff list');
       loadDailyLogs();
-    } else alert(d.message||'Could not approve');
+    } else showToast(d.message||'Could not approve');
   } catch(e){
     if(btn){ btn.disabled=false; btn.textContent='Approve'; }
-    alert('Network error');
+    showToast('Network error');
   }
 }
 
@@ -9269,7 +9269,7 @@ async function loadEodAdmin(){
         +'</div>'
         +'</div>';
     }).join('');
-  }catch(e){ console.log('eod admin load error',e.message); }
+  }catch(e){ console.error('eod admin load error',e.message); }
 }
 
 async function approveAllEod(){
@@ -9330,9 +9330,9 @@ async function eodReview(rptId, status){
       delete _eodEditCache[rptId];
       loadEodAdmin();
     } else {
-      alert(d.message||'Error');
+      showToast(d.message||'Error');
     }
-  }catch(e){ alert('Network error'); }
+  }catch(e){ showToast('Network error'); }
 }
 
 /* ── LOAD ADMIN OVERVIEW (real data) ── */
@@ -10603,8 +10603,23 @@ async function markPayrollPaid(payrollId, name){
   };
 }
 
-function payrollExportPDF(){
-  window.open(API+'/api/payroll/export/pdf?month='+_pr.month+'&year='+_pr.year+'&token='+localStorage.getItem('zhr_token'),'_blank');
+/* The token used to be appended to the URL, which put a full-access 90-day credential into
+   Render's access log, this browser's history and any Referer header the tab sent. It also
+   never worked: the auth middleware only ever reads the Authorization header, so this endpoint
+   answered 401 every time and the tab showed a JSON error instead of a PDF. Fetched properly
+   and handed to the browser as a download. */
+async function payrollExportPDF(){
+  try{
+    var res = await fetch(API+'/api/payroll/export/pdf?month='+_pr.month+'&year='+_pr.year, { headers: zHdr() });
+    if(!res.ok){ showToast('❌ Export failed — '+res.status); return; }
+    var blob = await res.blob();
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url; a.download = 'payroll_'+_pr.month+'_'+_pr.year+'.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 10000);
+    showToast('✅ Payroll PDF downloaded');
+  }catch(e){ showToast('❌ Could not reach the server'); }
 }
 
 /* ════════════════════════════════════════
@@ -11351,7 +11366,6 @@ async function saveAdvance(){
   var fromAttr   = parseInt((modal ? modal.getAttribute('data-sid') : '') || '') || 0;
   var fromInput  = parseInt((document.getElementById('adv-staff-id').value||'').trim(), 10) || 0;
   var staff_id_num = fromGlobal || fromAttr || fromInput;
-  console.log('[saveAdvance] staff_id sources — global:'+fromGlobal+' attr:'+fromAttr+' input:'+fromInput+' → used:'+staff_id_num);
   var total      = (document.getElementById('adv-total').value || '').trim();
   var date       = document.getElementById('adv-date').value;
   var reason     = document.getElementById('adv-reason').value.trim();
@@ -12012,7 +12026,7 @@ function saveAst(editId){
   var qty  = parseInt(document.getElementById('ast-m-qty').value)||1;
   var cond = document.getElementById('ast-m-cond').value;
   var notes= (document.getElementById('ast-m-notes').value||'').trim();
-  if(!name){ alert('Equipment name required!'); return; }
+  if(!name){ showToast('Equipment name required!'); return; }
   var assets = _aGet();
   if(editId){
     assets = assets.map(function(a){ return a.id===editId ? Object.assign({},a,{name:name,category:cat,qty:qty,condition:cond,notes:notes}) : a; });
@@ -12077,12 +12091,12 @@ function saveAstCheckout(assetId){
   var ret   = document.getElementById('co-ret').value;
   var qty   = parseInt(document.getElementById('co-qty').value)||1;
   var notes = (document.getElementById('co-notes').value||'').trim();
-  if(!staff){ alert('Staff name required!'); return; }
-  if(!date){ alert('Date required!'); return; }
+  if(!staff){ showToast('Staff name required!'); return; }
+  if(!date){ showToast('Date required!'); return; }
   var a = _aGet().find(function(x){ return x.id===assetId; });
-  if(!a){ alert('Equipment not found!'); return; }
+  if(!a){ showToast('Equipment not found!'); return; }
   var avail = _astAvail(a, _cGet());
-  if(qty > avail){ alert('Only '+avail+' available!'); return; }
+  if(qty > avail){ showToast('Only '+avail+' available!'); return; }
   var checkouts = _cGet();
   checkouts.push({ id:'co_'+Date.now(), asset_id:assetId, asset_name:a.name, category:a.category, staff_name:staff, event:event, from_date:date, expected_return:ret, qty:qty, notes:notes, returned:false, return_date:'', return_condition:'', return_notes:'' });
   _cSave(checkouts);
@@ -12125,7 +12139,7 @@ function saveAstReturn(checkoutId){
   var date  = document.getElementById('ret-date').value;
   var cond  = document.getElementById('ret-cond').value;
   var notes = (document.getElementById('ret-notes').value||'').trim();
-  if(!date){ alert('Return date required!'); return; }
+  if(!date){ showToast('Return date required!'); return; }
   var checkouts = _cGet().map(function(c){
     return c.id===checkoutId ? Object.assign({},c,{returned:true,return_date:date,return_condition:cond,return_notes:notes}) : c;
   });
@@ -12649,8 +12663,8 @@ async function markInOffice(i){
     });
     var d = await res.json();
     if(d.success){ showToast('✅ Marked as In Office'); loadAttendancePage(); }
-    else alert(d.message||'Could not update');
-  }catch(e){ alert('Network error'); }
+    else showToast(d.message||'Could not update');
+  }catch(e){ showToast('Network error'); }
 }
 
 // ── Force check-out a specific staff member right now ──
@@ -12680,8 +12694,8 @@ async function adminForceCheckout(i){
     });
     var d = await res.json();
     if(d.success){ showToast('⬛ Checked out '+r.name+' at '+coTime); loadAttendancePage(); }
-    else alert(d.message||'Could not check out');
-  }catch(e){ alert('Network error'); }
+    else showToast(d.message||'Could not check out');
+  }catch(e){ showToast('Network error'); }
 }
 
 // ── Reset ALL "Not in office" (break_checkout) for today ──
@@ -12704,9 +12718,9 @@ async function resetAllInOffice(){
       showToast(msg);
       loadAttendancePage();
     } else {
-      alert(d.message||'Could not reset');
+      showToast(d.message||'Could not reset');
     }
-  } catch(e){ alert('Network error'); }
+  } catch(e){ showToast('Network error'); }
   finally{
     setTimeout(function(){ if(btn){ btn.disabled=false; btn.textContent='📶 Fix WiFi'; } },2000);
   }
@@ -12724,8 +12738,8 @@ async function deleteAttendance(i){
     });
     var d = await res.json();
     if(d.success){ showToast('🗑 Record deleted'); loadAttendancePage(); }
-    else alert(d.message||'Could not delete');
-  }catch(e){ alert('Network error'); }
+    else showToast(d.message||'Could not delete');
+  }catch(e){ showToast('Network error'); }
 }
 
 // Auto-recalculate late_mins + status when check-in time is changed by admin
