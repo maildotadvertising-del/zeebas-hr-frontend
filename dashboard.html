@@ -10007,6 +10007,8 @@ function openStaffPayrollDetail(i){
 
   var advMonthly = parseFloat(r.monthly_advance_taken||0);   // from advance salary entries
   var advPayroll = parseFloat(r.advance_deduction||0);       // separate payroll adjustment advance
+  // Days missed before any paid-leave credit — the tick only means something if this is > 0.
+  var daysAbsentRaw = (parseInt(r.days_absent||0)||0) + (parseInt(r.paid_leave_days||0)||0);
   var advDed = advMonthly + advPayroll;
   var absentDed = parseFloat(r.absent_deduction||0);
   // Use the exact (unrounded) daily rate — matches what the backend actually used inside
@@ -10064,7 +10066,8 @@ function openStaffPayrollDetail(i){
       // Net Pay Summary card
       +'<div style="background:linear-gradient(135deg,rgba(10,80,180,0.45),rgba(80,10,140,0.35));border:0.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 16px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-          +'<div style="color:rgba(245,245,247,0.4);font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Net Pay · '+monthName+' '+year+'</div>'
+          +'<div><div style="color:rgba(245,245,247,0.4);font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Net Pay · '+monthName+' '+year+'</div>'
+            +'<div style="color:rgba(245,245,247,0.55);font-size:10px;margin-top:2px;">'+(parseInt(r.working_days_so_far||0)||0)+' working days</div></div>'
           +(isPaid
             ?'<div style="text-align:right;"><span style="background:rgba(48,209,88,0.15);color:#30D158;border:0.5px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">✓ Paid</span>'+(paidDate?'<div style="font-size:9px;color:rgba(48,209,88,0.55);margin-top:2px;">'+paidDate+'</div>':'')+'</div>'
             :'<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">⏳ Pending</span>')
@@ -10089,6 +10092,21 @@ function openStaffPayrollDetail(i){
             +'<div style="color:#FF453A;font-size:13px;font-weight:600;">-₹'+Math.round(absentDed).toLocaleString('en-IN')+'</div>'
           +'</div>'
           :'')
+        // ── Permission leave ──
+        // One paid day a month, given only when they asked before taking the day off. It comes
+        // off a day they were actually absent, so somebody with a full month gains nothing —
+        // which is why the row says what it will actually do.
+        +'<label style="margin-bottom:9px;background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.18);border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;">'
+          +'<div style="min-width:0;">'
+            +'<div style="font-size:11px;color:rgba(48,209,88,0.9);">Permission Leave <span style="color:rgba(245,245,247,0.35);font-size:9px;">— 1 paid day this month</span></div>'
+            +'<div style="font-size:9.5px;color:rgba(245,245,247,0.4);margin-top:2px;">'
+              +(daysAbsentRaw>0
+                ? 'They asked before taking the day off — one absent day is paid instead of deducted.'
+                : 'No absent days this month, so this changes nothing.')
+            +'</div>'
+          +'</div>'
+          +'<input type="checkbox" id="spdm-permleave"'+(parseInt(r.permission_leave||0)?' checked':'')+' style="accent-color:#30D158;width:17px;height:17px;cursor:pointer;flex-shrink:0;">'
+        +'</label>'
         +(advPayroll>0
           ?'<div style="margin-bottom:9px;"><div style="font-size:10px;color:rgba(255,107,107,0.7);margin-bottom:3px;">Payroll Adj. Advance (₹) <span style="color:rgba(245,245,247,0.3);font-size:9px;">— set to 0 to clear</span></div>'
             +'<input type="number" id="spdm-adv-ded" value="'+Math.round(advPayroll)+'" min="0" style="'+inp+'width:100%;border-color:rgba(255,69,58,0.25);"></div>'
@@ -10313,7 +10331,8 @@ async function spdmSaveAdjustments(i){
     advance_deduction: parseFloat((document.getElementById('spdm-adv-ded')||{value:r.advance_deduction||0}).value)||0,
     allowance_amount: Math.round(alwTotal),
     allowance_note:   alwEntries.length ? JSON.stringify(alwEntries) : (r.allowance_note||''),
-    notes: (document.getElementById('spdm-notes')||{}).value||''
+    notes: (document.getElementById('spdm-notes')||{}).value||'',
+    permission_leave: (document.getElementById('spdm-permleave')||{}).checked ? 1 : 0
   };
   try{
     var res = await fetch(API+'/api/payroll/'+r.payroll_id+'/adjust', {
