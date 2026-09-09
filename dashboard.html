@@ -10357,18 +10357,16 @@ async function spdmSaveAdjustments(i){
     });
     var d = await res.json();
     if(d.success){
-      window._prRows[i] = Object.assign({},r,{
-        other_deduction:payload.other_deduction, other_incentive:payload.other_incentive,
-        incentive_reason:payload.incentive_reason, allowance_amount:payload.allowance_amount,
-        allowance_note:payload.allowance_note, net_salary:d.net_salary, earned_so_far:d.net_salary,
-        notes:payload.notes
-      });
-      var row = document.getElementById('pr-row-'+i);
-      if(row) row.outerHTML = prViewRow(window._prRows[i], i);
+      /* Reload rather than patching the row from the save response. The two figures are not
+         the same thing: what /adjust returns is the stored payroll.net_salary, and monthly
+         advance entries are applied on top of that by salary-preview, not stored in it. So
+         copying it straight into the row showed a net with the advance missing — for Jayaraj,
+         ₹16,154 instead of ₹11,154, which is what you would have paid him. Refetching means
+         every figure on the page comes from the one place that knows all of them. */
       showToast('✅ Payroll updated');
       document.getElementById('spdm-overlay').remove();
-      var totalNet=0; window._prRows.forEach(function(rx){ totalNet+=parseFloat(rx.earned_so_far||rx.net_salary||0); });
-      var tnEl=document.getElementById('pr-total-net'); if(tnEl) tnEl.textContent='₹'+Math.round(totalNet).toLocaleString('en-IN');
+      delete _prCache[_pr.month+'_'+_pr.year];   // loadPayrollPage serves from cache otherwise
+      await loadPayrollPage();
     } else { showToast('❌ '+(d.message||'Save failed'),'error'); }
   }catch(e){ showToast('❌ Connection error','error'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='💾 Save Adjustments'; } }
