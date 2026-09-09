@@ -183,7 +183,14 @@ self.addEventListener('notificationclick', function(event) {
 // Activate — claim all clients immediately, show branded update notification
 self.addEventListener('activate', function(event) {
   event.waitUntil(
-    self.clients.claim().then(function() {
+    caches.keys()
+      .then(function(names) {
+        return Promise.all(names.filter(function(n) { return n !== CACHE_NAME; })
+                                .map(function(n) { return caches.delete(n); }));
+      })
+      .catch(function(){})
+      .then(function() { return self.clients.claim(); })
+      .then(function() {
       // Show our own branded notification so Chrome doesn't show its generic "D" one
       return self.registration.showNotification('DOT Team App', {
         body: 'App updated with latest changes ✓',
@@ -205,4 +212,72 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('install', function(event) {
   self.skipWaiting();
+  // Warm the shell so a cold, offline start still has something to show.
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) { return cache.addAll(SHELL); })
+      .catch(function(e) { console.error('[SW] shell precache failed:', e); })
+  );
+});
+
+/* ── Caching ───────────────────────────────────
+   The app is installable but cached nothing, so every open re-downloaded the whole thing and
+   a staff member with no signal got a blank screen.
+
+   Two rules, and one hard exclusion:
+
+   • Anything not on this origin is passed straight through and never touched. The API lives on
+     another origin, its responses are per-user and authenticated, and a cached one could be
+     handed to the wrong person or shown long after it stopped being true.
+   • HTML is network-first. A deploy has to reach people immediately; the cache is only there
+     for when the network isn't. Cache-first here is what pins a PWA on a months-old build.
+   • Static assets — the logo, icons, the manifest — are cache-first. They only change when
+     their file changes, and the cache is versioned with the worker.                          */
+
+const CACHE_NAME = SW_VERSION + '-cache';
+const SHELL = ['/', '/index.html', '/dot-logo.png', '/icon-192.png', '/icon-512.png', '/manifest.json'];
+
+function isHTML(request) {
+  return request.mode === 'navigate' ||
+         (request.headers.get('accept') || '').indexOf('text/html') !== -1;
+}
+
+self.addEventListener('fetch', function(event) {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  // Other origins — the API above all — are none of this worker's business.
+  if (url.origin !== self.location.origin) return;
+
+  if (isHTML(request)) {
+    event.respondWith(
+      fetch(request)
+        .then(function(response) {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(function(c) { c.put(request, copy); });
+          }
+          return response;
+        })
+        .catch(function() {
+          // Offline: last good copy of this page, or the shell.
+          return caches.match(request).then(function(hit) { return hit || caches.match('/index.html'); });
+        })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then(function(hit) {
+      if (hit) return hit;
+      return fetch(request).then(function(response) {
+        if (response && response.ok && response.type === 'basic') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(function(c) { c.put(request, copy); });
+        }
+        return response;
+      });
+    })
+  );
 });
