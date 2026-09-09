@@ -8260,20 +8260,26 @@ async function loadOTRules(){
    every piece has fallen off the bottom. */
 
 function zConfettiBurst(canvas){
+  // alpha:false is not an option here (the card shows through), but everything else is tuned
+  // for a phone: this runs over the whole screen, so each choice below is worth a frame.
   var ctx = canvas.getContext('2d');
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Confetti at 2× device pixels means four times the fill for specks nobody inspects. One
+  // device pixel per CSS pixel looks identical in motion and costs a quarter as much.
+  var dpr = 1;
   var W, H;
   var resize = function(){
     W = canvas.clientWidth; H = canvas.clientHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
   resize();
-  window.addEventListener('resize', resize);
+  // No resize listener: the burst lasts a few seconds, and rebuilding the backing store
+  // mid-animation costs more than the rotation it would correct for.
 
   var COLOURS = ['#30D158','#0A84FF','#FF9F0A','#FF453A','#BF5AF2','#FFD60A','#64D2FF'];
+  // Fewer on a small screen — 130 was chosen on a desktop-sized canvas.
+  var COUNT = W < 520 ? 70 : 120;
   var pieces = [];
-  for(var i=0;i<130;i++){
+  for(var i=0;i<COUNT;i++){
     pieces.push({
       x: W * (0.15 + Math.random()*0.7),
       y: -20 - Math.random()*H*0.5,
@@ -8287,29 +8293,46 @@ function zConfettiBurst(canvas){
     });
   }
 
-  var raf;
+  var raf, stopped = false;
+  var deadline = Date.now() + 5000;   // never runs longer than this, whatever the screen height
+
   (function frame(){
+    if(stopped) return;
     ctx.clearRect(0,0,W,H);
     var alive = 0;
     for(var i=0;i<pieces.length;i++){
       var p = pieces[i];
       p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-      p.vy += 0.045;                 // gravity
+      p.vy += 0.05;                  // gravity
       p.vx *= 0.995;                 // a little drag, so it drifts rather than sliding
       if(p.y < H + 40){
         alive++;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
+        // setTransform beats save/translate/rotate/restore: four state operations per piece
+        // per frame, times a hundred pieces, times sixty frames a second.
+        var c = Math.cos(p.rot), s2 = Math.sin(p.rot);
+        ctx.setTransform(c, s2, -s2, c, p.x, p.y);
         ctx.fillStyle = p.col;
         ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
       }
     }
-    if(alive) raf = requestAnimationFrame(frame);
-    else window.removeEventListener('resize', resize);
+    ctx.setTransform(1,0,0,1,0,0);
+    if(alive && Date.now() < deadline) raf = requestAnimationFrame(frame);
+    else stop();
   })();
-  return function(){ if(raf) cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+
+  function stop(){
+    if(stopped) return;
+    stopped = true;
+    if(raf) cancelAnimationFrame(raf);
+    document.removeEventListener('visibilitychange', onHide);
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  // Backgrounding the app should end it, not leave a loop queued for whenever it returns.
+  function onHide(){ if(document.hidden) stop(); }
+  document.addEventListener('visibilitychange', onHide);
+
+  return stop;
 }
 
 function zShowSalaryCredited(info){
@@ -8340,8 +8363,11 @@ function zShowSalaryCredited(info){
 
   var ov = document.createElement('div');
   ov.id = 'salary-credit-ov';
+  // No backdrop-filter here on purpose. A full-screen blur has to be recomposited on every
+  // animation frame, and on a phone that is what makes the confetti stutter — the blur costs
+  // far more than the confetti does. A solid ground looks the same behind an opaque card.
   ov.style.cssText = 'position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;'
-    + 'padding:24px;background:rgba(4,6,12,0.82);backdrop-filter:blur(14px);';
+    + 'padding:24px;background:rgba(4,6,12,0.93);';
   ov.innerHTML =
       '<canvas id="salary-credit-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>'
     + '<div style="position:relative;max-width:340px;width:100%;text-align:center;background:rgba(18,22,30,0.96);'
