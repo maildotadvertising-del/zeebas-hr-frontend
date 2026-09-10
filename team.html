@@ -5706,6 +5706,11 @@ async function loadMySalary(){
     // Travel allowance is NOT included in earned/net salary — it's paid separately, never mixed into salary.
     var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount - lateDeduction - advDeduction);
     var netSalary = payroll ? parseFloat(payroll.net_salary||earnedSoFar) : earnedSoFar;
+    /* What this month is worth to them, before any advance they have already drawn against it.
+       The staff app shows this rather than the balance: an advance is money they have had, not
+       money they have lost, and seeing a figure shrink by ₹5,000 reads like a deduction. The
+       advance is still listed, by date, further down the same screen. */
+    var totalSalary = netSalary + advDeduction;
     var isProcessed = !!payroll;
     var status      = payroll ? payroll.status : 'preview';
 
@@ -5729,10 +5734,9 @@ async function loadMySalary(){
           +'<div style="color:rgba(245,245,247,0.42);font-size:9px;text-transform:uppercase;letter-spacing:0.7px;">Net Pay · '+periodLabel+'</div>'
           +'<div style="text-align:right;">'+statusBadge+paidDateHtml+'</div>'
         +'</div>'
-        +'<div style="color:#fff;font-size:28px;font-weight:500;letter-spacing:-0.5px;margin-bottom:3px;">₹'+fmt(netSalary)+'</div>'
-        +(advDeduction>0?'<div style="color:rgba(245,245,247,0.35);font-size:11px;margin-bottom:1px;">Base ₹'+fmt(baseSalary)+' · Advance -₹'+fmt(advDeduction)+' deducted</div>'
+        +'<div style="color:#fff;font-size:28px;font-weight:500;letter-spacing:-0.5px;margin-bottom:3px;">₹'+fmt(totalSalary)+'</div>'
+        +(advDeduction>0?'<div style="color:rgba(245,245,247,0.35);font-size:11px;margin-bottom:1px;">Base ₹'+fmt(baseSalary)+' · ₹'+fmt(advDeduction)+' already taken as advance</div>'
           :'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+fmt(baseSalary)+(isCurrMonth?' · '+daysWorked+' days worked so far':'')+'</div>')
-        +(advDeduction>0?'<div style="color:rgba(48,209,88,0.7);font-size:11px;font-weight:500;">Balance Salary: ₹'+fmt(netSalary)+'</div>':'')
         +'<div style="height:0.5px;background:rgba(255,255,255,0.09);margin:12px 0;"></div>'
         +'<div style="display:flex;justify-content:space-between;">'
           +'<div style="text-align:center;"><div style="color:rgba(245,245,247,0.35);font-size:9px;margin-bottom:3px;">Present</div><div style="color:#30D158;font-size:14px;font-weight:500;">'+daysWorked+'</div></div>'
@@ -5811,7 +5815,7 @@ async function loadMySalary(){
           // Total
           +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 2px;margin-top:2px;">'
             +'<div style="color:#fff;font-size:13px;font-weight:600;">Total Salary'+(isCurrMonth?' (This Month)':' · '+periodLabel)+'</div>'
-            +'<div style="color:#30D158;font-size:17px;font-weight:700;font-family:monospace;">₹'+fmt(netSalary)+'</div>'
+            +'<div style="color:#30D158;font-size:17px;font-weight:700;font-family:monospace;">₹'+fmt(totalSalary)+'</div>'
           +'</div>'
         +'</div>';
       })()
@@ -5867,7 +5871,7 @@ async function loadMySalary(){
     _cacheSet(cacheKey, html); // cache rendered HTML for instant next visit
     // Also update home screen net pay badge
     var hpEl = document.getElementById('s1-home-netpay');
-    if(hpEl) hpEl.textContent = '₹'+fmt(netSalary);
+    if(hpEl) hpEl.textContent = '₹'+fmt(totalSalary);
 
   } catch(e){
     if(el && !cachedHtml) el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,69,58,0.7);font-size:12px;">Unable to load salary data</div>';
@@ -10315,6 +10319,9 @@ async function dtLoadSalary(){
     var advDeduction = payroll ? parseFloat(payroll.advance_deduction||0) : advancesLiveTotal;
     // Travel allowance is NOT included in net salary — it's paid separately, never mixed into salary.
     var netSalary = payroll ? parseFloat(payroll.net_salary||0) : Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount - lateDeduction - advDeduction);
+    // Same figure the phone layout shows — this is the same person on a wider screen, and two
+    // different numbers for the same month would be worse than either one on its own.
+    var totalSalary = netSalary + advDeduction;
 
     var fmt=function(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0}); };
     var row=function(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'+'<span style="font-size:12px;color:rgba(245,245,247,0.5);">'+lbl+'</span>'+'<span style="font-size:13px;font-weight:500;color:'+(col||'#F5F5F7')+';">'+val+'</span></div>'; };
@@ -10331,8 +10338,8 @@ async function dtLoadSalary(){
       +'</div>'
       +(otAmount>0?row('OT Pay','+₹'+fmt(otAmount),'#0A84FF'):'')
       +(incentiveAmt>0?row('Incentive','+₹'+fmt(incentiveAmt),'#FF9F0A'):'')
-      +(advDeduction>0?row('Advance Recovery','−₹'+fmt(advDeduction),'#FF453A'):'')
-      +row('Net Pay','₹'+fmt(netSalary),'#30D158')
+      +(advDeduction>0?row('Advance already taken','₹'+fmt(advDeduction),'#FF9F0A'):'')
+      +row('Total Salary','₹'+fmt(totalSalary),'#30D158')
       +row('Days Present',daysWorked+' days')
       +(otHours>0?row('OT Hours',otHours.toFixed(1)+'h','#FF9F0A'):'');
   } catch(e){ el.innerHTML='<div style="text-align:center;padding:24px;color:rgba(245,245,247,0.3);font-size:12px;">Could not load salary info</div>'; }
