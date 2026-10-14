@@ -6894,18 +6894,23 @@ window.showPage = function(page, el){
   if(_tp) _tp.style.display='none'; if(_to) _to.style.display='none';
   var _ucPop=document.getElementById('ucal-popup'); if(_ucPop) _ucPop.style.display='none';
   if(_origShowPage) _origShowPage(page, el);
-  if(page==='staff')          { setTimeout(loadStaffList, 100); setTimeout(loadRelievedStaff, 250); }
+  if(page==='staff')          { loadStaffList(); loadRelievedStaff(); }
   if(page==='dashboard')      { applyDashWidgets(); loadDashStats(); setTimeout(_updateNavBadges, 500); }
   // Clear attendance cache when viewing attendance page (data may have changed)
   if(page==='attendance')     { _dSet('att', null); _dashCacheTs['att'] = 0; }
-  if(page==='attendance')     { setTimeout(loadAttendancePage, 100); setTimeout(initMbLazyLoad, 200); }
-  if(page==='announcements') { setTimeout(loadAnnouncements, 100); loadAnnStaffList(); }
-  if(page==='tasks'){         setTimeout(loadTasks, 100); setTimeout(loadExtraTimeRequests, 200); setTimeout(loadOverdueExtRequests, 300); switchTaskSection(_currentTaskSection||'assigned'); }
-  if(page==='approvals')      { setTimeout(loadApprovals, 100); setTimeout(loadEodAdmin, 200); }
-  if(page==='admin-overview') setTimeout(function(){ loadAdminOverview(); loadDailyLogs(); renderAccessTable(); }, 100);
+  if(page==='attendance')     { loadAttendancePage(); initMbLazyLoad(); }
+  if(page==='announcements') { loadAnnouncements(); loadAnnStaffList(); }
+  // These three are independent requests, not a sequence. Staggering them by 100/200/300ms
+  // added that delay on top of a round trip that already costs ~300ms, and bought nothing —
+  // the browser issues them in parallel either way. Same for the two on Approvals.
+  if(page==='tasks'){         loadTasks(); loadExtraTimeRequests(); loadOverdueExtRequests(); switchTaskSection(_currentTaskSection||'assigned'); }
+  // loadApprovals calls loadEodAdmin itself, so asking for it again here fetched the EOD
+  // reports twice on every visit to this page.
+  if(page==='approvals')      { loadApprovals(); }
+  if(page==='admin-overview') { loadAdminOverview(); loadDailyLogs(); renderAccessTable(); }
   if(page==='gps-settings')      setTimeout(function(){ loadGPSSettings(); updateGracePreview(); }, 100);
-  if(page==='payroll')           setTimeout(function(){ loadPayrollPage(); }, 100);
-  if(page==='assets')            setTimeout(loadAssetsPage, 100);
+  if(page==='payroll')           loadPayrollPage();
+  if(page==='assets')            loadAssetsPage();
   if(page==='mcp-settings')      setTimeout(loadMcpSettings, 100);
   if(page==='payroll-settings')  setTimeout(function(){ loadPayrollSettings(); psCalRender(); psLoadHolidays(); }, 100);
   if(page==='team-chat')         setTimeout(initDashChat, 100);
@@ -8884,9 +8889,21 @@ async function loadApprovals(){
     if(!window._avatarCacheReady && window._avatarCachePromise){
       await Promise.race([window._avatarCachePromise, new Promise(function(r){ setTimeout(r,1500); })]);
     }
-    // Load attendance approvals (late + onsite)
-    var attRes = await fetch(API+'/api/attendance/pending-approvals', {headers:zHdr()});
-    var attD   = await attRes.json();
+    // Both requests go out together. They do not depend on each other, and a round trip to
+    // this server costs ~300ms before the database is even touched — awaiting them one after
+    // the other spent that twice for no reason.
+    // Each one swallows its own failure and yields {}, which the `d.success && d.data` checks
+    // below already read as "nothing". Without that, Promise.all would reject as a pair and a
+    // failing leave request would take the attendance half of the page down with it — which it
+    // did not do when these were two separate awaits.
+    var _apprPair = Promise.all([
+      fetch(API+'/api/attendance/pending-approvals', {headers:zHdr()})
+        .then(function(r){ return r.json(); }).catch(function(){ return {}; }),
+      fetch(API+'/api/leave/pending', {headers:zHdr()})
+        .then(function(r){ return r.json(); }).catch(function(){ return {}; })
+    ]);
+
+    var attD = (await _apprPair)[0];
     var attRows = (attD.success && attD.data) ? attD.data : [];
     var lateRows   = attRows.filter(function(r){ return r.status==='late_pending'; });
     var onsiteRows = attRows.filter(function(r){ return r.status==='onsite_pending'; });
@@ -9038,8 +9055,7 @@ async function loadApprovals(){
     }
 
     // Leave
-    var leaveRes = await fetch(API+'/api/leave/pending', {headers:zHdr()});
-    var leaveD   = await leaveRes.json();
+    var leaveD = (await _apprPair)[1];   // already in flight since the top of this function
     var leaveRows = (leaveD.success && leaveD.data) ? leaveD.data : [];
     var leaveCnt = document.getElementById('leave-approval-count');
     if(leaveCnt) leaveCnt.textContent = leaveRows.length ? leaveRows.length+' pending' : '0 pending';
@@ -9364,10 +9380,17 @@ async function eodReview(rptId, status){
 
 /* ── LOAD ADMIN OVERVIEW (real data) ── */
 async function loadAdminOverview(){
+  // Staff and brands are independent, and they sit in separate try blocks so one failing does
+  // not take the other down. Starting both here keeps that, and stops the page paying for two
+  // round trips end to end when one would do.
+  var _aoStaff  = fetch(API+'/api/staff',{headers:zHdr()}).then(function(r){ return r.json(); });
+  var _aoBrands = fetch(API+'/api/staff/brands/list',{headers:zHdr()}).then(function(r){ return r.json(); });
+  // Neither rejection is handled where it is created, so park a no-op handler on each to keep
+  // an unhandledrejection out of the console if one fails before its try block awaits it.
+  _aoStaff.catch(function(){}); _aoBrands.catch(function(){});
   try{
     // Load all staff — split into admins and regular staff
-    var sRes=await fetch(API+'/api/staff',{headers:zHdr()});
-    var sData=await sRes.json();
+    var sData=await _aoStaff;
     var allStaff=(sData.data||[]);
 
     // ── Admin/Editor profiles section ──
@@ -9420,9 +9443,8 @@ async function loadAdminOverview(){
     if(sc) sc.textContent=regularStaff.length+' members · '+ft+' Full Time'+(pt?' · '+pt+' Part Time':'')+(dw?' · '+dw+' Daily Wage':'')+(dt?' · '+dt+' Day Time':'');
   }catch(e){ console.error('loadAdminOverview staff error',e); }
   try{
-    // Active brands
-    var bRes=await fetch(API+'/api/staff/brands/list',{headers:zHdr()});
-    var bData=await bRes.json();
+    // Active brands — already in flight since the top of this function
+    var bData=await _aoBrands;
     var brands=(bData.data||[]);
     var bc=document.getElementById('ao-brands');
     if(bc) bc.textContent=brands.length+' brand'+(brands.length!==1?'s':'')+' under Zeebas Cluster';
