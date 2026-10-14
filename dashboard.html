@@ -8667,7 +8667,11 @@ function dashLogout(){
 /* ── LOAD APPROVALS ── */
 function approvalCard(r, type){
   var init = (r.staff_name||'S').charAt(0).toUpperCase();
-  var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+  // Through _getAvatar: /api/attendance/pending-approvals deliberately leaves photo_data out
+  // (one base64 photo per row would be most of the response), so the only picture these rows
+  // carry is photo_url — which is dead for anybody whose photo lives in photo_data. The cached
+  // staff list has the real one; without this every approval card falls back to a letter.
+  var avSrc = _getAvatar(r.staff_id, r.photo_url, r.photo_data);
   var avatarHtml = avSrc
     ? '<img src="'+avSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'
       +'<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:14px;font-weight:600;">'+init+'</span>'
@@ -8803,7 +8807,7 @@ async function loadMonthlyBalance(){
       }
 
       var init=(r.name||'?').charAt(0).toUpperCase();
-      var avSrc = r.photo_data || (r.photo_url ? API+r.photo_url : null);
+      var avSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
       var avHtml = avSrc
         ? '<img src="'+avSrc+'" style="width:28px;height:28px;border-radius:7px;object-fit:cover;flex-shrink:0;">'
         : '<div style="width:28px;height:28px;border-radius:7px;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0A84FF;flex-shrink:0;">'+init+'</div>';
@@ -8867,6 +8871,13 @@ async function loadApprovals(){
   var empty = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;opacity:0.6;">No pending requests</div>';
 
   try{
+    // Every card below resolves its photo from the cached staff list, so wait for that cache
+    // the way the attendance table does — otherwise a fresh load that lands straight on this
+    // page renders the whole list as letter circles and never redraws. The 1.5s race means a
+    // slow cache costs a few initials, not a blank page.
+    if(!window._avatarCacheReady && window._avatarCachePromise){
+      await Promise.race([window._avatarCachePromise, new Promise(function(r){ setTimeout(r,1500); })]);
+    }
     // Load attendance approvals (late + onsite)
     var attRes = await fetch(API+'/api/attendance/pending-approvals', {headers:zHdr()});
     var attD   = await attRes.json();
@@ -8902,7 +8913,8 @@ async function loadApprovals(){
         var mins = r.late_return_minutes || '?';
         var t = r.late_return_at ? new Date(r.late_return_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
         var init = (r.staff_name||'S').charAt(0).toUpperCase();
-        var avatarHtml = r.photo_url ? '<img src="'+API+r.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
+        var lrAv = _getAvatar(r.staff_id, r.photo_url, r.photo_data);
+        var avatarHtml = lrAv ? '<img src="'+lrAv+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
         return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.18);border-radius:12px;margin-bottom:8px;">'
           +'<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,159,10,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#FF9F0A;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
           +'<div style="flex:1;">'
@@ -8925,7 +8937,7 @@ async function loadApprovals(){
       var eeHtml = earlyExitRows.length
         ? earlyExitRows.map(function(e){
             var init=(e.staff_name||'?').charAt(0).toUpperCase();
-            var av=e.photo_data||(e.photo_url?API+e.photo_url:null);
+            var av=_getAvatar(e.staff_id, e.photo_url, e.photo_data);
             var avEl=av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
               :'<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,159,10,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
             var exitTime=e.early_exit_at?new Date(e.early_exit_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—';
@@ -8952,7 +8964,7 @@ async function loadApprovals(){
     if(owEl){
       owEl.innerHTML = officeWorkReqs.length
         ? officeWorkReqs.map(function(o){
-            var av = o.photo_data||(o.photo_url?API+o.photo_url:null);
+            var av = _getAvatar(o.staff_id, o.photo_url, o.photo_data);
             var init = (o.staff_name||'S').charAt(0).toUpperCase();
             var avEl = av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
               :'<div style="width:32px;height:32px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#0A84FF;">'+init+'</div>';
@@ -8984,7 +8996,7 @@ async function loadApprovals(){
     if(brEl){
       brEl.innerHTML = allBreakItems.length
         ? allBreakItems.map(function(b){
-            var av = b.photo_data||(b.photo_url?API+b.photo_url:null);
+            var av = _getAvatar(b.staff_id, b.photo_url, b.photo_data);
             var init = (b.staff_name||'S').charAt(0).toUpperCase();
             var avEl = av?'<img src="'+av+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
               :'<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#FF9F0A;">'+init+'</div>';
@@ -9045,7 +9057,8 @@ async function loadApprovals(){
         var type=(r.leave_type||'leave').replace('_',' ');
         type=type.charAt(0).toUpperCase()+type.slice(1);
         var init=(r.staff_name||'S').charAt(0).toUpperCase();
-        var avatarHtml=r.photo_url?'<img src="'+API+r.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
+        var lvAv=_getAvatar(r.staff_id, r.photo_url, r.photo_data);
+        var avatarHtml=lvAv?'<img src="'+lvAv+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init;
         return '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(191,95,255,0.15);border-radius:12px;margin-bottom:8px;">'
           +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,rgba(191,95,255,0.3),rgba(191,95,255,0.1));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#BF5FFF;flex-shrink:0;overflow:hidden;">'+avatarHtml+'</div>'
           +'<div style="flex:1;min-width:0;">'
