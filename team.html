@@ -2834,6 +2834,27 @@ function loadProfile(){
   var btn=document.getElementById('prof-save-photo-btn'); if(btn) btn.style.display='none';
 }
 
+// The staff app called resizeToBase64 but never had it — only dashboard.html did — so a
+// staff member picking their own profile photo hit a ReferenceError and nothing happened at
+// all: no preview, no Save button, no upload. Same 400px / JPEG-0.75 shrink as the dashboard,
+// because the result goes into the same photo_data column.
+function resizeToBase64(file, callback){
+  var img = new Image();
+  var url = URL.createObjectURL(file);
+  img.onload = function(){
+    var MAX = 400;
+    var w = img.width, h = img.height;
+    var ratio = Math.min(MAX/w, MAX/h, 1);
+    w = Math.round(w*ratio); h = Math.round(h*ratio);
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.75));
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
 function profPhotoChange(input){
   var file = input.files[0]; if(!file) return;
   resizeToBase64(file, function(b64){
@@ -3317,7 +3338,9 @@ function connectStaffSocket(){
   });
   staffSocket.on('message-pinned', function(){ loadStaff1Pinned(); });
   staffSocket.on('message-deleted', function(data){ removeChatMsg1(data.message_id); });
-  staffSocket.on('chat-refresh', function(){ loadStaff1Messages(); });
+  // loadStaffMessages — there is no loadStaff1Messages, so this handler threw a
+  // ReferenceError every time the server asked the chat to refresh, and it never did.
+  staffSocket.on('chat-refresh', function(){ loadStaffMessages(); });
   staffSocket.on('reaction-update', function(data){
     var row = document.getElementById('rrow-'+data.message_id); if(!row) return;
     row.innerHTML = '';
@@ -6720,6 +6743,10 @@ async function submitNeedTime(taskId, container){
   }
 }
 
+// Every message in here called showToast(), which this file does not define — only
+// showToast1() exists. So each one threw a ReferenceError: the warnings never appeared, and
+// on the success path the throw landed after the report had already been saved, leaving the
+// staff member with a stuck "Submitting…" button and no idea it had worked.
 async function eodSubmit(){
   var btn = document.getElementById('eod-submit-btn');
   var isPending = !!_eodPendingDate; // true = yesterday's pending EOD, false = normal checkout
@@ -6732,7 +6759,7 @@ async function eodSubmit(){
     });
     if(!items.length){
       if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
-      showToast('⚠️ Add at least one work item!');
+      showToast1('⚠️ Add at least one work item!');
       return;
     }
     if(!isPending){
@@ -6748,7 +6775,7 @@ async function eodSubmit(){
       var unanswered = activeTasks.filter(function(t){ return !_eodTaskStatus[t.id]; });
       if(unanswered.length){
         if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
-        showToast('⚠️ Update status for all your tasks before checking out!');
+        showToast1('⚠️ Update status for all your tasks before checking out!');
         var firstRow = document.querySelector('.eod-task-row[data-task-id="'+unanswered[0].id+'"]');
         if(firstRow) firstRow.scrollIntoView({behavior:'smooth', block:'center'});
         return;
@@ -6772,7 +6799,7 @@ async function eodSubmit(){
           });
         }catch(e){
           if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
-          showToast('❌ Could not save task updates — check connection & retry');
+          showToast1('❌ Could not save task updates — check connection & retry');
           return;
         }
       }
@@ -6815,7 +6842,7 @@ async function eodSubmit(){
 
       // checkout_done=false means no attendance record was found (edge case: auto-checkout on wrong date)
       if(!isPending && d.checkout_done === false){
-        showToast('⚠️ Work report saved. Check in again to reset your attendance.');
+        showToast1('⚠️ Work report saved. Check in again to reset your attendance.');
         if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
         setTimeout(function(){ wifiCheckAndAct(); }, 600);
         return;
@@ -6829,7 +6856,7 @@ async function eodSubmit(){
           renderTasksEodCard(); // async but fire-and-forget (intentional)
         } else {
           // ── Pending EOD submitted → show brief success then refresh home (check-in now available) ──
-          showToast('✅ EOD submitted! Check-in unlocked.');
+          showToast1('✅ EOD submitted! Check-in unlocked.');
           setTimeout(function(){ wifiCheckAndAct(); }, 600);
         }
       } else {
@@ -6849,11 +6876,11 @@ async function eodSubmit(){
         setTimeout(function(){ wifiCheckAndAct(); loadHomeWeekAndLeave(); }, 800);
       }
     } else {
-      showToast('❌ '+(d.message||'Could not submit'));
+      showToast1('❌ '+(d.message||'Could not submit'));
       if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
     }
   }catch(e){
-    showToast('❌ Connection failed — please try again');
+    showToast1('❌ Connection failed — please try again');
     if(btn){ btn.textContent=origBtnText; btn.disabled=false; }
   }
 }
@@ -6998,7 +7025,7 @@ function eodLater(){
   if(ov) ov.style.display = 'none';
   _eodTriggered = false;
   try{ localStorage.setItem('zhr_eod_pending_later','1'); }catch(e){}
-  showToast('⏰ Reminder set — will show next time you open the app');
+  showToast1('⏰ Reminder set — will show next time you open the app');
 }
 
 // ── Check for pending EOD from a previous day (auto-checkout without EOD) ──
