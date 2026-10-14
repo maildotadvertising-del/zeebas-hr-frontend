@@ -2481,6 +2481,12 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 11h12" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
           Backup Now
         </button>
+        <!-- The daily backup leaves photos and attachments out; this is the copy that carries
+             them. Purple, so it reads as a different action from the blue everyday one. -->
+        <button onclick="runManualBackup(true)" id="backup-media-btn" title="Includes every photo, voice note and attachment - slower, and a much larger file" style="background:rgba(191,95,255,0.12);border:0.5px solid rgba(191,95,255,0.3);border-radius:9px;padding:7px 14px;color:#BF5FFF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;margin-left:8px;">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="1.2" y="2.6" width="11.6" height="8.8" rx="1.6" stroke="#BF5FFF" stroke-width="1.4"/><circle cx="4.6" cy="5.8" r="1.1" fill="#BF5FFF"/><path d="M2 10.2l3.2-3 2.3 2.1 2-1.7 2.5 2.6" stroke="#BF5FFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          With Media
+        </button>
       </div>
 
       <!-- Status cards row -->
@@ -9587,17 +9593,34 @@ async function _showBackupReconnect(){
   }catch(e){ showToast('❌ '+e.message); }
 }
 
+// Each button restores its own label, because the spinner replaces it while the backup runs
+// and putting the daily label back on the media button would leave it reading "Backup Now".
+var _BK_LABELS = {
+  'backup-now-btn':   '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 11h12" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg> Backup Now',
+  'backup-media-btn': '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="1.2" y="2.6" width="11.6" height="8.8" rx="1.6" stroke="#BF5FFF" stroke-width="1.4"/><circle cx="4.6" cy="5.8" r="1.1" fill="#BF5FFF"/><path d="M2 10.2l3.2-3 2.3 2.1 2-1.7 2.5 2.6" stroke="#BF5FFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> With Media'
+};
 var _backupRunning = false;
-async function runManualBackup(){
+// withMedia runs the copy that carries photos, voice notes and attachments instead of
+// replacing them with '[base64_omitted]'. The server reads media a row at a time to keep its
+// memory flat, so it is markedly slower than the daily — the button says so rather than
+// looking hung.
+async function runManualBackup(withMedia){
   if(_backupRunning) return;
   _backupRunning = true;
-  var btn = document.getElementById('backup-now-btn');
-  if(btn){ btn.disabled=true; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#fff" stroke-width="1.5" stroke-dasharray="14" stroke-dashoffset="0"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur="1s" repeatCount="indefinite"/></circle></svg> Backing up…'; }
+  var btn = document.getElementById(withMedia ? 'backup-media-btn' : 'backup-now-btn');
+  var _spinCol = withMedia ? '#BF5FFF' : '#fff';
+  if(btn){ btn.disabled=true; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="'+_spinCol+'" stroke-width="1.5" stroke-dasharray="14" stroke-dashoffset="0" fill="none"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur="1s" repeatCount="indefinite"/></circle></svg> '+(withMedia?'Backing up media…':'Backing up…'); }
   try{
-    var res = await fetch(API+'/api/backup/gdrive/run', { method:'POST', headers: Object.assign({'Content-Type':'application/json'}, zHdr()) });
+    var res = await fetch(API+'/api/backup/gdrive/run', {
+      method:'POST',
+      headers: Object.assign({'Content-Type':'application/json'}, zHdr()),
+      body: JSON.stringify({ media: !!withMedia })
+    });
     var d   = await res.json();
     if(d.success){
-      showToast('✅ Backup complete — '+d.sizeKb+'KB uploaded to Drive');
+      // A media backup runs to tens or hundreds of MB, where "183204KB" stops being readable.
+      var _sz = (d.sizeKb||0) >= 1024 ? ((d.sizeKb/1024).toFixed(1)+' MB') : ((d.sizeKb||0)+' KB');
+      showToast('✅ Backup complete — '+_sz+(withMedia?' with media':'')+' uploaded to Drive');
       var se=document.getElementById('bk-last-status'); if(se) se.innerHTML='<span style="color:#30D158;font-size:22px;">✅</span>';
       var te=document.getElementById('bk-last-time');   if(te) te.textContent=_fmtISTDate(new Date());
       var ze=document.getElementById('bk-last-size');   if(ze) ze.textContent=(d.sizeKb||0)+' KB';
@@ -9614,7 +9637,7 @@ async function runManualBackup(){
   } catch(e){ showToast('❌ Backup error — '+e.message,'error'); }
   finally{
     _backupRunning = false;
-    if(btn){ btn.disabled=false; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 11h12" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg> Backup Now'; }
+    if(btn){ btn.disabled=false; btn.innerHTML=_BK_LABELS[btn.id]; }
   }
 }
 </script>
