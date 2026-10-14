@@ -2244,8 +2244,11 @@ function go1(id){
   }
   if(id==='s1-home'){ checkPendingEod(); _checkEodLaterFlag(); setTimeout(_checkOverdueTaskAlert, 1000); setTimeout(wifiCheckAndAct, 400); setTimeout(_initBallGlow, 500); triggerPtAutoCheckout(); startWifiPoller(); setTimeout(fetchMonthlyBalance, 1500); syncNotifCard(); setTimeout(loadHomeWeekAndLeave, 600); setTimeout(fetchHomeLeaveAndAdvance, 2000); setTimeout(connectStaffSocket, 1200); }
   else { stopWifiPoller(); }
-  if(id==='s1-chat'){ setTimeout(initStaffChat, 100); }
-  if(id==='s1-leave'){ setTimeout(loadMyLeaves, 200); loadLeavePolicy(); }
+  // The 100-200ms setTimeout before each of these delayed a request that already takes a few
+  // hundred milliseconds to come back. Nothing depended on the delay — it just pushed the
+  // whole screen back by that much.
+  if(id==='s1-chat'){ initStaffChat(); }
+  if(id==='s1-leave'){ loadMyLeaves(); loadLeavePolicy(); }
   if(id==='s1-salary'){ initNavs1(3); myPayMonth=_getCurrMonth(); myPayYear=_getCurrYear(); loadMySalary(); }
   if(id==='s1-gps'){
     var btn=document.getElementById('att-btn');
@@ -2253,12 +2256,12 @@ function go1(id){
     _attBtnText('Check In'); _attBtnSub('WiFi · GPS auto detected');
     setTimeout(function(){ loadAttGpsScreen(); initGPSScreen(); }, 200);
   }
-  if(id==='s1-home'){    setTimeout(loadStaffTasks, 100); }
-  if(id==='s1-tasks'){   setTimeout(loadStaffTasks, 100); }
-  if(id==='s1-dailylog'){ setTimeout(loadDailyLogs, 100); }
+  if(id==='s1-home'){    loadStaffTasks(); }
+  if(id==='s1-tasks'){   loadStaffTasks(); }
+  if(id==='s1-dailylog'){ loadDailyLogs(); }
   if(id==='s1-atthistory'){ loadAttHistory(); }
-  if(id==='s1-profile'){ setTimeout(loadProfile, 100); }
-  if(id==='s1-assets'){ setTimeout(loadS1Assets, 100); }
+  if(id==='s1-profile'){ loadProfile(); }
+  if(id==='s1-assets'){ loadS1Assets(); }
 }
 
 var _adminNavOrder = ['s2-home','s2-attendance','s2-approvals','s2-chat','s2-tasks','s2-more'];
@@ -4323,9 +4326,19 @@ async function loadAdminHome(){
   // Set date
   var dateEl=document.getElementById('s2-date');
   if(dateEl){ var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],d=new Date();dateEl.textContent=days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]; }
+  // All three of this screen's requests start together. They are independent, and awaiting
+  // them in turn meant three full round trips — on this server, seconds before the first
+  // number appears. Each swallows its own failure, which is what the separate try blocks
+  // below already did.
+  var _ahJ = function(url){
+    return fetch(API_URL+url,{headers:zHead()})
+      .then(function(r){ return r.json(); }).catch(function(){ return {}; });
+  };
+  var _ahToday   = _ahJ('/api/attendance/today');
+  var _ahLeave   = _ahJ('/api/leave/pending');
+  var _ahPending = _ahJ('/api/attendance/pending-approvals');
   try{
-    var res=await fetch(API_URL+'/api/attendance/today',{headers:zHead()});
-    var d=await res.json();
+    var d=await _ahToday;
     var rows=(d.data||[]).filter(function(r){return r.role!=='admin';});
     var p=0,a=0,l=0,o=0;
     rows.forEach(function(r){
@@ -4359,11 +4372,9 @@ async function loadAdminHome(){
   }catch(e){}
   // Pending approvals
   try{
-    var lr=await fetch(API_URL+'/api/leave/pending',{headers:zHead()});
-    var ld=await lr.json();
+    var ld=await _ahLeave;   // both already in flight since the top of this function
     var leaves=(ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
-    var ar=await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
-    var ad=await ar.json();
+    var ad=await _ahPending;
     var onsites=(ad.data||[]);
     var total=leaves.length+onsites.length;
     var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
@@ -4462,24 +4473,30 @@ async function loadAdminApprovals(){
   var listEl=document.getElementById('s2-appr-list');
   if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⏳ Loading…</div>';
   try{
-    var lr=await fetch(API_URL+'/api/leave/pending',{headers:zHead()});
-    var ld=await lr.json();
+    // Four independent lists. Awaited one after another they cost four round trips end to
+    // end — against this server that is well over two seconds before anything is drawn, and
+    // none of them needs the one before it. Each swallows its own failure so a single bad
+    // response leaves that tab empty instead of failing the whole screen, which is what the
+    // per-request try/catch blocks used to do.
+    var _j = function(url){
+      return fetch(API_URL+url,{headers:zHead()})
+        .then(function(r){ return r.json(); })
+        .catch(function(){ return {}; });
+    };
+    var _r = await Promise.all([
+      _j('/api/leave/pending'),
+      _j('/api/attendance/pending-approvals'),
+      _j('/api/tasks/extra-time-requests'),
+      _j('/api/tasks/date-extension-requests')
+    ]);
+    var ld=_r[0], ad=_r[1], ed=_r[2], dd=_r[3];
+
     _s2ApprLeaves=(ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
-    var ar=await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
-    var ad=await ar.json();
     var allPending=ad.data||[];
     _s2ApprOnsites=allPending.filter(function(x){return x.status==='onsite_pending';});
     _s2ApprLates=allPending.filter(function(x){return x.status==='late_pending';});
-    try{
-      var er=await fetch(API_URL+'/api/tasks/extra-time-requests',{headers:zHead()});
-      var ed=await er.json();
-      _s2ApprExtraTime=ed.data||[];
-    }catch(e2){ _s2ApprExtraTime=[]; }
-    try{
-      var dr=await fetch(API_URL+'/api/tasks/date-extension-requests',{headers:zHead()});
-      var dd=await dr.json();
-      _s2ApprOverdue=dd.data||[];
-    }catch(e3){ _s2ApprOverdue=[]; }
+    _s2ApprExtraTime=ed.data||[];
+    _s2ApprOverdue=dd.data||[];
     s2ApprTab(_s2ApprTab);
   }catch(e){ if(listEl) listEl.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(245,245,247,0.28);font-size:11px;">⚠️ Load failed</div>'; }
 }
@@ -7068,11 +7085,16 @@ function showBreakPendingBanner(){
 async function _refreshApprovalDot(){
   if(!staff || staff.role !== 'admin') return;
   try{
-    var lr = await fetch(API_URL+'/api/leave/pending',{headers:zHead()});
-    var ld = await lr.json();
+    // Both together — this only produces a badge count, and it runs on socket events, so it
+    // should not hold two round trips open every time something changes.
+    var _d = await Promise.all([
+      fetch(API_URL+'/api/leave/pending',{headers:zHead()})
+        .then(function(r){ return r.json(); }).catch(function(){ return {}; }),
+      fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()})
+        .then(function(r){ return r.json(); }).catch(function(){ return {}; })
+    ]);
+    var ld = _d[0], ad = _d[1];
     var leaves = (ld.data||ld.requests||[]).filter(function(x){return x.status==='pending';});
-    var ar = await fetch(API_URL+'/api/attendance/pending-approvals',{headers:zHead()});
-    var ad = await ar.json();
     var total = leaves.length + (ad.data||[]).length;
     var dot = document.getElementById('s2-appr-dot');
     if(dot) dot.style.display = total > 0 ? 'block' : 'none';
