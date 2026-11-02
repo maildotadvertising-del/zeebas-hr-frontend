@@ -1225,18 +1225,10 @@ body.desktop-mode #s1-sidebar {
             </div>
           </div>
 
-          <!-- Joining Date — editable -->
+          <!-- Joining Date — read-only: it feeds payroll, so only an admin sets it -->
           <div id="prof-row-joining" style="padding:10px 14px;display:flex;align-items:center;gap:10px;min-height:42px;">
             <div style="color:rgba(245,245,247,0.35);font-size:11px;width:90px;flex-shrink:0;">Joining Date</div>
             <div id="prof-joining" style="color:#fff;font-size:13px;flex:1;"></div>
-            <div id="prof-joining-edit-area" style="display:none;flex:1;align-items:center;gap:6px;">
-              <input id="prof-joining-input" type="date" style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid rgba(10,132,255,0.45);border-radius:9px;color:#fff;font-size:12px;padding:6px 8px;outline:none;font-family:inherit;min-width:0;color-scheme:dark;">
-              <button onclick="profSaveField('joining')" style="background:rgba(48,209,88,0.15);border:0.5px solid rgba(48,209,88,0.35);border-radius:8px;color:#30D158;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✓</button>
-              <button onclick="profCancelEdit('joining')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);border-radius:8px;color:#FF453A;font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;">✕</button>
-            </div>
-            <button id="prof-joining-edit-btn" onclick="profEditField('joining')" style="background:none;border:none;padding:4px;cursor:pointer;opacity:0.45;flex-shrink:0;">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z" stroke="rgba(245,245,247,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg>
-            </button>
           </div>
         </div>
 
@@ -2900,8 +2892,7 @@ var _profFieldConfig = {
   phone:   { inputId:'prof-phone-input',   displayId:'prof-phone',   areaId:'prof-phone-edit-area',   btnId:'prof-phone-edit-btn',   apiKey:'phone' },
   email:   { inputId:'prof-email-input',   displayId:'prof-email',   areaId:'prof-email-edit-area',   btnId:'prof-email-edit-btn',   apiKey:'email' },
   dob:     { inputId:'prof-dob-input',     displayId:'prof-dob',     areaId:'prof-dob-edit-area',     btnId:'prof-dob-edit-btn',     apiKey:'dob' },
-  address: { inputId:'prof-address-input', displayId:'prof-address', areaId:'prof-address-edit-area', btnId:'prof-address-edit-btn', apiKey:'address' },
-  joining: { inputId:'prof-joining-input', displayId:'prof-joining', areaId:'prof-joining-edit-area', btnId:'prof-joining-edit-btn', apiKey:'joining_date' }
+  address: { inputId:'prof-address-input', displayId:'prof-address', areaId:'prof-address-edit-area', btnId:'prof-address-edit-btn', apiKey:'address' }
 };
 
 function profEditField(field){
@@ -2957,19 +2948,9 @@ async function profSaveField(field){
   var btns = area ? area.querySelectorAll('button') : [];
   btns.forEach(function(b){ b.disabled=true; });
   try{
-    // Send full staff payload so existing PUT endpoint doesn't null other fields
-    var body = {
-      name: s.name, emp_id: s.emp_id||s.employee_id,
-      designation: s.designation, brand_id: s.brand_id,
-      employment_type: s.employment_type||'full_time',
-      phone: s.phone||s.mobile, email: s.email, dob: s.dob,
-      joining_date: s.joining_date, address: s.address,
-      base_salary: s.base_salary||0, salary_type: s.salary_type||'monthly',
-      daily_rate: s.daily_rate||0, allowance_enabled: s.allowance_enabled||0
-    };
-    // Override the edited field
+    // Only the edited field: the server keeps everything not sent.
+    var body = {};
     body[cfg.apiKey] = val;
-    if(field==='phone') body.phone = val;
 
     var r = await fetch(API_URL+'/api/staff/'+s.id, {
       method:'PUT',
