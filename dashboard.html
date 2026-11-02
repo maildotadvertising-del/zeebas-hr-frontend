@@ -11636,7 +11636,11 @@ var MCP_CATS = [
   {key:'chat', label:'Chat',
     read:['list_chat_messages'], write:['send_chat_message'], admin:['delete_chat_message']},
   {key:'settings', label:'Settings',
-    read:['get_settings'], write:['update_gps_settings','update_biometric_settings','update_staff_allowance'], admin:null}
+    read:['get_settings'], write:['update_gps_settings','update_biometric_settings','update_staff_allowance'], admin:null},
+  // No admin tier on purpose: restoring from a backup overwrites live data and should never
+  // be reachable from a token.
+  {key:'backup', label:'Backup',
+    read:['get_backup_status'], write:['run_backup'], admin:null}
 ];
 var MCP_TIERS = ['read','write','admin'];
 var MCP_TIER_COLOR = {read:'#0A84FF', write:'#5AABF0', admin:'#FF453A'};
