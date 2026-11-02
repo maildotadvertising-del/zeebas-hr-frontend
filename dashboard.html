@@ -241,6 +241,13 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
   /* Show hamburger */
   #sb-ham{display:flex;}
 
+  /* Tablet: without min-width:0 a wide table stretches .main past the screen instead of
+     scrolling inside its own box. Page actions wrap for the same reason. */
+  .main{min-width:0;}
+  .topbar{flex-wrap:wrap!important;gap:10px;max-width:100%;}
+  .topbar > div:last-child{flex-wrap:wrap!important;max-width:100%;min-width:0;}
+  #ast-stats{flex-wrap:wrap!important;}
+
   /* Sidebar: slides in from left */
   .sidebar{
     transform:translateX(-110%);
@@ -3917,7 +3924,7 @@ async function runMigrate(){
   if(btn){ btn.disabled=true; btn.textContent='⏳ Running…'; }
   if(res){ res.style.display='none'; res.textContent=''; }
   try{
-    var r = await fetch(API+'/api/backup/migrate?key=ZHR-BACKUP-2025-DOTADV', {method:'POST'});
+    var r = await fetch(API+'/api/backup/migrate', {method:'POST', headers:zHdr()});
     var d = await r.json();
     if(res && d.migrations){
       // Show only relevant lines (late_minutes, status fix lines)
