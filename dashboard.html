@@ -8697,7 +8697,9 @@ function approvalCard(r, type){
   var timeStr = r.check_in ? new Date(r.check_in).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
   // Short date: "04 Jun" instead of "2026-06-04"
   var dateStr = r.date ? new Date(r.date.substring(0,10)+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—';
-  var lateM = r.late_minutes && r.status!=='present' ? (_calcActualLateMinutes(r.check_in,r.employment_type)||r.late_minutes) : 0;
+  // The server's figure: it knows each person's own start time. Recalculating here fell back to
+  // 09:00 on this page, so someone due at 10:00 read as an hour later than they were.
+  var lateM = r.late_minutes && r.status!=='present' ? r.late_minutes : 0;
 
   if(type==='late'){
     return '<div id="appr-card-late-'+r.id+'" style="padding:12px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,159,10,0.15);border-radius:12px;margin-bottom:8px;">'
@@ -9232,12 +9234,15 @@ async function acceptAllLate(){
   if(!ids.length) return;
   var btn = document.getElementById('late-accept-all-btn');
   if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
-  var done=0;
-  // Late check-ins use /approve-late/ endpoint (not /approve/)
-  for(var i=0;i<ids.length;i++){
-    try{ var r=await fetch(API+'/api/attendance/approve-late/'+ids[i],{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
+  try{
+    var r=await fetch(API+'/api/attendance/approve-late-bulk',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({ids:ids})});
+    var d=await r.json();
+    if(!d.success) throw new Error(d.message||'Failed');
+    ids.forEach(function(id){ var c=document.getElementById('appr-card-late-'+id); if(c) c.remove(); });
+    showToast('✅ Accepted '+d.accepted+' of '+ids.length+' late check-ins');
+  }catch(e){
+    showToast('❌ '+(e.message||'Server error'));
   }
-  showToast('✅ Accepted '+done+' of '+ids.length+' late check-ins');
   loadApprovals();
 }
 
@@ -9246,10 +9251,10 @@ async function acceptAllOnsite(){
   if(!ids.length) return;
   var btn = document.getElementById('onsite-accept-all-btn');
   if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
-  var done=0;
-  for(var i=0;i<ids.length;i++){
-    try{ var r=await fetch(API+'/api/attendance/approve/'+ids[i],{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
-  }
+  var results=await Promise.all(ids.map(function(id){
+    return fetch(API+'/api/attendance/approve/'+id,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}).then(function(r){ return r.json(); }).then(function(d){ return d.success; }).catch(function(){ return false; });
+  }));
+  var done=results.filter(Boolean).length;
   showToast('✅ Accepted '+done+' of '+ids.length+' onsite requests');
   loadApprovals();
 }
@@ -9259,10 +9264,10 @@ async function acceptAllLeave(){
   if(!ids.length) return;
   var btn = document.getElementById('leave-accept-all-btn');
   if(btn){ btn.textContent='Accepting…'; btn.disabled=true; }
-  var done=0;
-  for(var i=0;i<ids.length;i++){
-    try{ var r=await fetch(API+'/api/leave/'+ids[i]+'/approve',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}); var d=await r.json(); if(d.success) done++; }catch(e){}
-  }
+  var results=await Promise.all(ids.map(function(id){
+    return fetch(API+'/api/leave/'+id+'/approve',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({action:'approve'})}).then(function(r){ return r.json(); }).then(function(d){ return d.success; }).catch(function(){ return false; });
+  }));
+  var done=results.filter(Boolean).length;
   showToast('✅ Approved '+done+' of '+ids.length+' leave requests');
   loadApprovals();
 }
@@ -9327,17 +9332,21 @@ async function approveAllEod(){
   if(!ids.length) return;
   var btn = document.getElementById('eod-approve-all-btn');
   if(btn){ btn.textContent='Approving…'; btn.disabled=true; }
+  // Five at a time. Approving a report can also close that day's attendance, so these stay
+  // separate requests rather than one bulk statement.
   var done=0;
-  for(var i=0;i<ids.length;i++){
-    try{
-      var r = await fetch(API+'/api/eod/'+ids[i]+'/review', {
-        method:'PUT',
-        headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
-        body: JSON.stringify({ status:'approved', items:_eodEditCache[ids[i]]||null, admin_note:'' })
-      });
-      var d = await r.json();
-      if(d.success){ done++; delete _eodEditCache[ids[i]]; }
-    }catch(e){}
+  for(var i=0;i<ids.length;i+=5){
+    await Promise.all(ids.slice(i,i+5).map(async function(id){
+      try{
+        var r = await fetch(API+'/api/eod/'+id+'/review', {
+          method:'PUT',
+          headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
+          body: JSON.stringify({ status:'approved', items:_eodEditCache[id]||null, admin_note:'' })
+        });
+        var d = await r.json();
+        if(d.success){ done++; delete _eodEditCache[id]; }
+      }catch(e){}
+    }));
   }
   showToast('✅ Approved '+done+' of '+ids.length+' EOD reports');
   loadEodAdmin();

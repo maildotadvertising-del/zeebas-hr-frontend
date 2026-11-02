@@ -5705,7 +5705,7 @@ async function loadMySalary(){
     var otAmount       = parseFloat(payroll ? payroll.ot_amount : (att.total_ot_amount||0));
     var advancesLiveTotal = advances.reduce(function(s,a){ return s+parseFloat(a.amount||a.monthly_recovery||0); }, 0);
     var advDeduction   = parseFloat(payroll ? payroll.advance_deduction : advancesLiveTotal);
-    var allowanceAmt   = parseFloat((payroll && payroll.allowance_enabled) ? (payroll.allowance_amount||0) : 0);
+    var allowanceAmt   = parseFloat(payroll ? (payroll.allowance_amount||0) : 0);
     var allowanceNote  = (payroll && payroll.allowance_note) || '';
     var incentiveAmt   = parseFloat(payroll ? (payroll.other_incentive||0) : 0);
 
@@ -5727,6 +5727,25 @@ async function loadMySalary(){
     // Travel allowance is NOT included in earned/net salary — it's paid separately, never mixed into salary.
     var earnedSoFar = Math.max(0, daysWorked * dailyRate + incentiveAmt + otAmount - lateDeduction - advDeduction);
     var netSalary = payroll ? parseFloat(payroll.net_salary||earnedSoFar) : earnedSoFar;
+    // A month with no saved payroll, or the current month, uses the server's live figures: the
+    // same ones the admin screen shows. A saved past month stays as it was processed.
+    var additionalPay = parseFloat(pData.additional_pay||0);
+    var paidLeaveDays = 0;
+    if(pData.live && (!payroll || isCurrMonth)){
+      var _live = pData.live;
+      baseSalary    = _live.base_salary;
+      dailyRate     = _live.daily_rate;
+      lateDeduction = _live.late_deduction;
+      absentDays    = _live.days_absent;
+      paidLeaveDays = _live.paid_leave_days;
+      otHours       = parseFloat(att.total_ot_hours||0);
+      otAmount      = parseFloat(att.total_ot_amount||0);
+      advDeduction  = advancesLiveTotal;
+      netSalary     = Math.max(0, _live.earned - advDeduction);
+    } else if(payroll && payroll.days_worked != null){
+      daysWorked = parseFloat(payroll.days_worked);
+      absentDays = parseFloat(payroll.days_absent||0);
+    }
     /* What this month is worth to them, before any advance they have already drawn against it.
        The staff app shows this rather than the balance: an advance is money they have had, not
        money they have lost, and seeing a figure shrink by ₹5,000 reads like a deduction. The
@@ -5735,7 +5754,7 @@ async function loadMySalary(){
        already in net_salary. Both belong here, because what a staff member wants to know is
        what the month is worth to them in total — not how the payment gets split at the other
        end. */
-    var totalSalary = netSalary + advDeduction + allowanceAmt;
+    var totalSalary = netSalary + advDeduction + allowanceAmt + additionalPay;
     var isProcessed = !!payroll;
     var status      = payroll ? payroll.status : 'preview';
 
@@ -5785,7 +5804,7 @@ async function loadMySalary(){
         :'')
       // ── Salary Breakdown (always shown) ──
       +(function(){
-        var presentEarned = daysWorked * dailyRate;
+        var presentEarned = (daysWorked + paidLeaveDays) * dailyRate;
         var bRow = function(label, sub, val, color){
           return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'
             +'<div>'
@@ -5800,7 +5819,7 @@ async function loadMySalary(){
           // Base Salary
           +bRow('Base Salary', 'Monthly fixed', '₹'+fmt(baseSalary), 'rgba(245,245,247,0.55)')
           // Present earnings (absent days already implicit — only present days × rate counted)
-          +bRow('Present Salary', daysWorked+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN')+(absentDays>0?' ('+absentDays+' absent)':''), '+₹'+fmt(presentEarned), '#30D158')
+          +bRow('Present Salary', (daysWorked+paidLeaveDays)+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN')+(paidLeaveDays>0?' (incl. '+paidLeaveDays+' paid leave)':'')+(absentDays>0?' ('+absentDays+' absent)':''), '+₹'+fmt(presentEarned), '#30D158')
           // Late deduction — tap to see the day-by-day breakdown
           +'<div onclick="myToggleLateDetail('+(staffInfo.id||'')+','+myPayMonth+','+myPayYear+')" style="cursor:pointer;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
             +'<div style="display:flex;align-items:center;justify-content:space-between;">'
@@ -5820,6 +5839,7 @@ async function loadMySalary(){
           +(incentiveAmt>0
             ? bRow('Incentive 🎯', 'Performance bonus', '+₹'+fmt(incentiveAmt), '#FF9F0A')
             : bRow('Incentive 🎯', 'Not applicable', '+₹0', 'rgba(245,245,247,0.22)'))
+          +(additionalPay>0 ? bRow('Additional Pay', 'Paid separately this month', '+₹'+fmt(additionalPay), '#30D158') : '')
           // Advance recovery — show date-wise entries
           +(advances.length>0
             ? (function(){
@@ -10349,7 +10369,7 @@ async function dtLoadSalary(){
     var lateDeduction = parseFloat(payroll ? payroll.late_deduction : (att.total_late_deduction||0));
     var otHours    = parseFloat(payroll ? payroll.ot_hours : (att.total_ot_hours||0));
     var otAmount   = parseFloat(payroll ? payroll.ot_amount : (att.total_ot_amount||0));
-    var allowanceAmt  = parseFloat((payroll && payroll.allowance_enabled) ? (payroll.allowance_amount||0) : 0);
+    var allowanceAmt  = parseFloat(payroll ? (payroll.allowance_amount||0) : 0);
     var incentiveAmt  = parseFloat(payroll ? (payroll.other_incentive||0) : 0);
     var wdFull    = pData.working_days || settings.working_days_per_month || 26;
     var dailyRate = baseSalary / wdFull;
@@ -10359,16 +10379,37 @@ async function dtLoadSalary(){
     var advDeduction = payroll ? parseFloat(payroll.advance_deduction||0) : advancesLiveTotal;
     // Travel allowance is NOT included in net salary — it's paid separately, never mixed into salary.
     var netSalary = payroll ? parseFloat(payroll.net_salary||0) : Math.max(0, daysWorked*dailyRate + incentiveAmt + otAmount - lateDeduction - advDeduction);
+    var _dtNow = new Date();
+    var _dtIsCurr = (month === _dtNow.getMonth()+1 && year === _dtNow.getFullYear());
+    // A month with no saved payroll, or the current month, uses the server's live figures: the
+    // same ones the admin screen shows. A saved past month stays as it was processed.
+    var additionalPay = parseFloat(pData.additional_pay||0);
+    var paidLeaveDays = 0;
+    if(pData.live && (!payroll || _dtIsCurr)){
+      var _live = pData.live;
+      baseSalary    = _live.base_salary;
+      dailyRate     = _live.daily_rate;
+      lateDeduction = _live.late_deduction;
+      absentDays    = _live.days_absent;
+      paidLeaveDays = _live.paid_leave_days;
+      otHours       = parseFloat(att.total_ot_hours||0);
+      otAmount      = parseFloat(att.total_ot_amount||0);
+      advDeduction  = advancesLiveTotal;
+      netSalary     = Math.max(0, _live.earned - advDeduction);
+    } else if(payroll && payroll.days_worked != null){
+      daysWorked = parseFloat(payroll.days_worked);
+      absentDays = parseFloat(payroll.days_absent||0);
+    }
     // Same figure the phone layout shows — this is the same person on a wider screen, and two
     // different numbers for the same month would be worse than either one on its own.
-    var totalSalary = netSalary + advDeduction + allowanceAmt;
+    var totalSalary = netSalary + advDeduction + allowanceAmt + additionalPay;
 
     var fmt=function(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0}); };
     var row=function(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);">'+'<span style="font-size:12px;color:rgba(245,245,247,0.5);">'+lbl+'</span>'+'<span style="font-size:13px;font-weight:500;color:'+(col||'#F5F5F7')+';">'+val+'</span></div>'; };
     el.innerHTML=''
       +(allowanceAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:8px;background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.25);border-radius:10px;"><div><span style="font-size:12px;color:#BF5FFF;font-weight:600;">🚌 Travel Allowance</span><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-top:1px;">Paid separately, included in your total</div></div><span style="font-size:14px;font-weight:700;color:#BF5FFF;">₹'+fmt(allowanceAmt)+'</span></div>':'')
       +row('Base Salary','₹'+fmt(baseSalary))
-      +row('Present Salary','+₹'+fmt(daysWorked*dailyRate)+(absentDays>0?' ('+absentDays+' absent)':''),'#30D158')
+      +row('Present Salary','+₹'+fmt((daysWorked+paidLeaveDays)*dailyRate)+(absentDays>0?' ('+absentDays+' absent)':''),'#30D158')
       +'<div onclick="dtToggleLateDetail('+(staffInfo.id||'')+','+month+','+year+')" style="cursor:pointer;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;">'
           +'<span style="font-size:12px;color:rgba(245,245,247,0.5);">Late Deduction <span style="font-size:10px;color:rgba(245,245,247,0.3);">▸ details</span></span>'
@@ -10378,6 +10419,7 @@ async function dtLoadSalary(){
       +'</div>'
       +(otAmount>0?row('OT Pay','+₹'+fmt(otAmount),'#0A84FF'):'')
       +(incentiveAmt>0?row('Incentive','+₹'+fmt(incentiveAmt),'#FF9F0A'):'')
+      +(additionalPay>0?row('Additional Pay','+₹'+fmt(additionalPay),'#30D158'):'')
       +(advDeduction>0?row('Advance already taken','₹'+fmt(advDeduction),'#FF9F0A'):'')
       +row('Total Salary','₹'+fmt(totalSalary),'#30D158')
       +row('Days Present',daysWorked+' days')
