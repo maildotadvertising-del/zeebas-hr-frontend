@@ -6091,6 +6091,10 @@ async function loadAttHistory(){
       if((st === 'late' || st === 'late_pending') && (parseInt(r.late_comp_done) === 1 || _athWorkedFull(r))){
         stLabel='Present'; stColor='#30D158'; stBg='rgba(48,209,88,0.1)';
       }
+      // Attendance on a Sunday is office work on a special Sunday, paid as an extra day.
+      if(dt.getDay()===0 && st!=='absent' && st!=='on_leave'){
+        stLabel='⭐ Special Sunday'; stColor='#BF5FFF'; stBg='rgba(191,95,255,0.1)';
+      }
 
       var checkIn  = fmtTime(r.check_in);
       var checkOut = fmtTime(r.check_out);
