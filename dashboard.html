@@ -10276,6 +10276,9 @@ function openStaffPayrollDetail(i){
           :'')
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
           +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(grossEarned).toLocaleString('en-IN')+'</span></div>'
+          // Paid permission leave is part of the balance below, so it gets its own line —
+          // without it the figures shown did not add up to the balance.
+          +(parseFloat(r.paid_leave_days||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Permission Leave ('+parseFloat(r.paid_leave_days)+'d)</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.paid_leave_days)*parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</span></div>':'')
           +(absentDed>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Absent ('+r.days_absent+'d)</span><span style="color:rgba(255,69,58,0.65);font-size:12px;">−₹'+Math.round(absentDed).toLocaleString('en-IN')+' (withheld)</span></div>':'')
           +(parseFloat(r.other_incentive||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Incentive</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.other_incentive||0)).toLocaleString('en-IN')+'</span></div>':'')
           +(parseFloat(r.ot_amount||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">OT Pay</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.ot_amount||0)).toLocaleString('en-IN')+'</span></div>':'')
