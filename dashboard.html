@@ -10178,7 +10178,7 @@ function openStaffPayrollDetail(i){
             :'<span style="background:rgba(255,159,10,0.12);color:#FF9F0A;border:0.5px solid rgba(255,159,10,0.3);border-radius:6px;padding:3px 9px;font-size:10px;">⏳ Pending</span>')
         +'</div>'
         +'<div style="color:#fff;font-size:26px;font-weight:500;letter-spacing:-0.5px;margin-bottom:4px;">₹'+Math.round(net).toLocaleString('en-IN')+'</div>'
-        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+' · '+r.days_present+'d present · ₹'+Math.round(parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'/day</div>'
+        +'<div style="color:rgba(245,245,247,0.35);font-size:11px;">Base ₹'+parseFloat(r.base_salary||0).toLocaleString('en-IN')+' · '+(parseFloat(r.extra_days||0)>0 ? (parseFloat(r.days_present||0)-parseFloat(r.extra_days))+'d present + '+parseFloat(r.extra_days)+' Sunday' : r.days_present+'d present')+' · ₹'+Math.round(parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'/day</div>'
         +(advDed>0?'<div style="margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.4);font-size:11px;">Advance deducted</span><span style="color:#FF6B6B;font-size:11px;">-₹'+advDed.toLocaleString('en-IN')+'</span></div>':'')
       +'</div>'
 
