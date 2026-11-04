@@ -5660,6 +5660,28 @@ function zSessionRevoked(){
     });
   };
 })();
+/* One request per URL at a time. Two loaders asking for the same GET while the first is
+   still on the wire (dashboard start-up fired /api/tasks, /api/staff, approvals and leave
+   twice each) now share one round trip; each caller gets its own copy of the response.
+   Nothing is cached: once the answer arrives the next call goes to the server again. */
+(function(){
+  var _netFetch = window.fetch, _inflight = {};
+  window.fetch = function(input, init){
+    var url = (typeof input === 'string') ? input : '';
+    var method = ((init && init.method) || 'GET').toUpperCase();
+    if(!url || url.indexOf(API) !== 0 || method !== 'GET' || (init && (init.signal || init.body))){
+      return _netFetch.apply(this, arguments);
+    }
+    var h = (init && init.headers) || {};
+    var key = url + '|' + (h.Authorization || h.authorization || '');
+    if(!_inflight[key]){
+      _inflight[key] = _netFetch.call(window, input, init);
+      var done = function(){ delete _inflight[key]; };
+      _inflight[key].then(done, done);
+    }
+    return _inflight[key].then(function(r){ return r.clone(); });
+  };
+})();
 
 /* ── LOAD STAFF LIST ── */
 async function loadStaffList(retryCount){
