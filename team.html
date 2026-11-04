@@ -5829,7 +5829,7 @@ async function loadMySalary(){
           // Base Salary
           +bRow('Base Salary', 'Monthly fixed', '₹'+fmt(baseSalary), 'rgba(245,245,247,0.55)')
           // Present earnings (absent days already implicit — only present days × rate counted)
-          +bRow('Present Salary', (daysWorked+paidLeaveDays)+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN')+(paidLeaveDays>0?' (incl. '+paidLeaveDays+' paid leave)':'')+(absentDays>0?' ('+absentDays+' absent)':''), '+₹'+fmt(presentEarned), '#30D158')
+          +bRow('Present Salary', (daysWorked+paidLeaveDays)+' days × ₹'+Math.round(dailyRate).toLocaleString('en-IN')+(paidLeaveDays>0?' (incl. '+paidLeaveDays+' paid leave)':'')+(parseInt(att.extra_days||0)>0?' (incl. '+parseInt(att.extra_days)+' Sunday/special)':'')+(absentDays>0?' ('+absentDays+' absent)':''), '+₹'+fmt(presentEarned), '#30D158')
           // Late deduction — tap to see the day-by-day breakdown
           +'<div onclick="myToggleLateDetail('+(staffInfo.id||'')+','+myPayMonth+','+myPayYear+')" style="cursor:pointer;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
             +'<div style="display:flex;align-items:center;justify-content:space-between;">'
@@ -10420,6 +10420,7 @@ async function dtLoadSalary(){
       +(allowanceAmt>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:8px;background:rgba(191,95,255,0.08);border:0.5px solid rgba(191,95,255,0.25);border-radius:10px;"><div><span style="font-size:12px;color:#BF5FFF;font-weight:600;">🚌 Travel Allowance</span><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-top:1px;">Paid separately, included in your total</div></div><span style="font-size:14px;font-weight:700;color:#BF5FFF;">₹'+fmt(allowanceAmt)+'</span></div>':'')
       +row('Base Salary','₹'+fmt(baseSalary))
       +row('Present Salary','+₹'+fmt((daysWorked+paidLeaveDays)*dailyRate)+(absentDays>0?' ('+absentDays+' absent)':''),'#30D158')
+      +(parseInt(att.extra_days||0)>0?row('⭐ Sunday / special days',parseInt(att.extra_days)+' day'+(parseInt(att.extra_days)>1?'s':'')+' — included above','#BF5FFF'):'')
       +'<div onclick="dtToggleLateDetail('+(staffInfo.id||'')+','+month+','+year+')" style="cursor:pointer;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.05);border-radius:6px;" onmouseover="this.style.background=\'rgba(255,255,255,0.03)\'" onmouseout="this.style.background=\'transparent\'">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;">'
           +'<span style="font-size:12px;color:rgba(245,245,247,0.5);">Late Deduction <span style="font-size:10px;color:rgba(245,245,247,0.3);">▸ details</span></span>'
