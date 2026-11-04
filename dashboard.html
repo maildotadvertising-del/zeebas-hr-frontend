@@ -13,6 +13,16 @@
 <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
+/* Scrollbars in the app's dark theme. Without these the browser drew light ones, a white strip
+   down the side of every scrolling panel. */
+:root{color-scheme:dark;}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.16) transparent;}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+*::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.14);border-radius:999px;border:2px solid transparent;background-clip:padding-box;}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.26);background-clip:padding-box;}
+*::-webkit-scrollbar-corner{background:transparent;}
+
 :root{--blue:#0A84FF;--green:#30D158;--orange:#FF9F0A;--red:#FF453A;--purple:#BF5FFF;--text:#F5F5F7;--muted:rgba(245,245,247,0.45);--faint:rgba(245,245,247,0.1);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{min-height:100vh;background:#050508;background-image:radial-gradient(ellipse at 15% 10%,rgba(10,40,100,0.5) 0%,transparent 50%),radial-gradient(ellipse at 85% 90%,rgba(80,10,120,0.35) 0%,transparent 50%);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;display:flex;}
@@ -13555,7 +13565,7 @@ async function submitManualAtt(){
 <style>
 input[type=date]{cursor:pointer;}
 input[type=date]::-webkit-calendar-picker-indicator{display:none;}
-.dp-pop{position:fixed;z-index:10050;width:264px;padding:12px;background:rgba(10,10,22,0.96);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:0.5px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,0.7);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);animation:dpIn .15s ease;}
+.dp-pop{position:fixed;z-index:2147483000;width:264px;padding:12px;background:rgba(10,10,22,0.96);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:0.5px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,0.7);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);animation:dpIn .15s ease;}
 @keyframes dpIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
 .dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .dp-title{font-size:13px;font-weight:500;}
