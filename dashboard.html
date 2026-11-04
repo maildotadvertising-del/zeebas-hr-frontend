@@ -10102,7 +10102,7 @@ function openStaffPayrollDetail(i){
   // Advance Salary entries deduct from whichever payroll month this modal is open on
   // (pMonth/year), regardless of the calendar date picked — an advance can be dated in a
   // future month (e.g. given near month-end for the coming month) but still count against
-  // the month being viewed here. window._spdmPayrollMonth/Year let spdmSaveAdvance send that
+  // the month being viewed here. window._spdmPayrollMonth/Year let spdmSaveAll send that
   // explicitly instead of letting the backend guess it from the date.
   window._spdmPayrollMonth = pMonth; window._spdmPayrollYear = year;
   var photoSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
@@ -10170,17 +10170,20 @@ function openStaffPayrollDetail(i){
         // One paid day a month, given only when they asked before taking the day off. It comes
         // off a day they were actually absent, so somebody with a full month gains nothing —
         // which is why the row says what it will actually do.
-        +'<label style="margin-bottom:9px;background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.18);border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;">'
+        +'<div style="margin-bottom:9px;background:rgba(48,209,88,0.06);border:0.5px solid rgba(48,209,88,0.18);border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px;">'
           +'<div style="min-width:0;">'
-            +'<div style="font-size:11px;color:rgba(48,209,88,0.9);">Permission Leave <span style="color:rgba(245,245,247,0.35);font-size:9px;">— 1 paid day this month</span></div>'
+            +'<div style="font-size:11px;color:rgba(48,209,88,0.9);">Permission Leave <span style="color:rgba(245,245,247,0.35);font-size:9px;">— paid days this month</span></div>'
             +'<div style="font-size:9.5px;color:rgba(245,245,247,0.4);margin-top:2px;">'
               +(daysAbsentRaw>0
-                ? 'They asked before taking the day off — one absent day is paid instead of deducted.'
+                ? 'Days typed here are paid instead of deducted — at most the '+daysAbsentRaw+' absent day'+(daysAbsentRaw>1?'s':'')+'.'
                 : 'No absent days this month, so this changes nothing.')
             +'</div>'
           +'</div>'
-          +'<input type="checkbox" id="spdm-permleave"'+(parseInt(r.permission_leave||0)?' checked':'')+' style="accent-color:#30D158;width:17px;height:17px;cursor:pointer;flex-shrink:0;">'
-        +'</label>'
+          +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
+            +'<input type="number" id="spdm-permdays" min="0" max="31" value="'+(parseInt(r.permission_leave||0)||0)+'" oninput="var c=document.getElementById(\'spdm-permleave\');if(c)c.checked=parseInt(this.value||0)>0;" style="'+inp+'width:58px;text-align:center;border-color:rgba(48,209,88,0.3);">'
+            +'<input type="checkbox" id="spdm-permleave"'+(parseInt(r.permission_leave||0)?' checked':'')+' style="accent-color:#30D158;width:18px;height:18px;cursor:pointer;">'
+          +'</div>'
+        +'</div>'
         +(advPayroll>0
           ?'<div style="margin-bottom:9px;"><div style="font-size:10px;color:rgba(255,107,107,0.7);margin-bottom:3px;">Payroll Adj. Advance (₹) <span style="color:rgba(245,245,247,0.3);font-size:9px;">— set to 0 to clear</span></div>'
             +'<input type="number" id="spdm-adv-ded" value="'+Math.round(advPayroll)+'" min="0" style="'+inp+'width:100%;border-color:rgba(255,69,58,0.25);"></div>'
@@ -10206,7 +10209,7 @@ function openStaffPayrollDetail(i){
               var total = window._spdmAlwEntries.reduce(function(s,e){ return s+parseFloat(e.amount||0); },0);
               return '<div style="margin-bottom:9px;border:0.5px solid rgba(191,95,255,0.18);border-radius:10px;padding:10px;">'
                 +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-                  +'<div style="font-size:10px;color:rgba(191,95,255,0.7);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🎁 Allowance</div>'
+                  +'<div style="font-size:10px;color:rgba(191,95,255,0.7);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🎁 Allowance <span style="text-transform:none;letter-spacing:0;color:rgba(245,245,247,0.35);font-weight:400;">— paid on top of salary</span></div>'
                   +(total>0?'<div style="color:#BF5FFF;font-size:12px;font-weight:600;">Total ₹'+Math.round(total).toLocaleString('en-IN')+'</div>':'')
                 +'</div>'
                 +'<div id="spdm-alw-list">'+entriesHtml+'</div>'
@@ -10233,12 +10236,11 @@ function openStaffPayrollDetail(i){
           :'')
         +'<div style="margin-bottom:12px;"><div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:3px;">Admin Notes</div>'
           +'<input type="text" id="spdm-notes" value="'+escHtml(r.notes||'')+'" placeholder="Internal note (not shown to staff)" style="'+inp+'width:100%;"></div>'
-        +'<button id="spdm-save-adj" onclick="spdmSaveAdjustments('+i+')" style="width:100%;background:rgba(10,132,255,0.85);border:none;border-radius:10px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">💾 Save Adjustments</button>'
       +'</div>'
 
       // ── Advance Salary ──
       +'<div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,69,58,0.15);border-radius:14px;padding:14px;">'
-        +'<div style="font-size:11px;color:#FF453A;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💳 Advance Salary — Date Wise</div>'
+        +'<div style="font-size:11px;color:#FF453A;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">💳 Advance Salary — Date Wise <span style="text-transform:none;letter-spacing:0;color:rgba(245,245,247,0.35);font-weight:400;">— taken out of salary</span></div>'
         +'<div id="spdm-adv-history-'+r.id+'"><div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Loading…</div></div>'
         +'<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.07);">'
           +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:6px;">➕ Add New Advance <span style="color:rgba(245,245,247,0.25);">— always deducted from '+monthName+' '+year+', whatever date you pick</span></div>'
@@ -10250,7 +10252,6 @@ function openStaffPayrollDetail(i){
           +'</div>'
           +'<div style="margin-bottom:8px;"><div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:2px;">Reason</div>'
             +'<input type="text" id="spdm-adv-reason" placeholder="Festival advance, Emergency…" style="'+inp+'width:100%;"></div>'
-          +'<button id="spdm-adv-btn" onclick="spdmSaveAdvance('+r.id+')" style="width:100%;background:rgba(255,69,58,0.8);border:none;border-radius:10px;padding:9px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">💸 Save Advance</button>'
         +'</div>'
       +'</div>'
 
@@ -10292,7 +10293,6 @@ function openStaffPayrollDetail(i){
               +'<div style="font-size:10px;color:rgba(245,245,247,0.4);margin-bottom:4px;">Update Paid Date</div>'
               +'<div style="display:flex;gap:8px;align-items:center;">'
                 +'<input type="date" id="spdm-paid-date" value="'+(r.paid_date||'')+'" style="'+inp+'flex:1;color-scheme:dark;">'
-                +'<button onclick="event.stopPropagation();spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 12px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 Update</button>'
               +'</div>'
             +'</div>'
             :'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
@@ -10305,10 +10305,14 @@ function openStaffPayrollDetail(i){
             +'<div style="font-size:10px;color:rgba(245,245,247,0.35);margin-bottom:4px;">Salary Paid Date</div>'
             +'<div style="display:flex;gap:8px;align-items:center;">'
               +'<input type="date" id="spdm-paid-date" style="'+inp+'flex:1;color-scheme:dark;">'
-              +'<button onclick="spdmMarkPaid(\''+r.payroll_id+'\',\''+escHtml(r.name)+'\')" style="background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.3);border-radius:9px;padding:8px 14px;color:#0A84FF;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">💸 Save</button>'
             +'</div>')
       +'</div>'
 
+    +'</div>'
+
+    // ── One Save for everything in this popup ──
+    +'<div style="padding:12px 20px calc(14px + env(safe-area-inset-bottom));border-top:0.5px solid rgba(255,255,255,0.08);flex-shrink:0;">'
+      +'<button id="spdm-save-all" onclick="spdmSaveAll('+i+')" class="btn" style="width:100%;padding:12px;font-size:14px;">💾 Save</button>'
     +'</div>'
   +'</div>';
 
@@ -10392,79 +10396,104 @@ function spdmDelAlwEntry(idx){
   spdmRenderAlwList();
 }
 
-async function spdmSaveAdjustments(i){
+// ── One Save for the whole staff payroll popup ──
+// It used to have three buttons (adjustments, advance, mark paid), each saving only its own
+// box. Typing an allowance and pressing the wrong one lost it. This saves every box that has
+// something in it, in order: the adjustments first, because on a month with no payroll yet
+// that call creates the row the other two need.
+async function spdmSaveAll(i){
   var r = window._prRows[i];
-  var btn = document.getElementById('spdm-save-adj');
+  var btn = document.getElementById('spdm-save-all');
+  var done = [];
+  var fail = function(msg){ showToast('❌ '+msg,'error'); if(btn){ btn.disabled=false; btn.textContent='💾 Save'; } };
+
+  // An allowance typed in but never added with "+ Add" still counts.
+  var alwAmt = parseFloat((document.getElementById('spdm-alw-amt')||{}).value||'');
+  if(alwAmt>0){
+    var before = (window._spdmAlwEntries||[]).length;
+    spdmAddAlwEntry();
+    if((window._spdmAlwEntries||[]).length===before) return; // spdmAddAlwEntry said what is missing
+  }
+  var advAmt  = parseFloat((document.getElementById('spdm-adv-amt')||{}).value||'');
+  var advDate = (document.getElementById('spdm-adv-date')||{}).value||'';
+  if(advAmt>0 && !advDate) return fail('Advance date select பண்ணுங்க');
+
+  var paidDateEl = document.getElementById('spdm-paid-date');
+  var paidAmtEl  = document.getElementById('spdm-paid-amt');
+  var paidDate = paidDateEl ? paidDateEl.value : '';
+  var paidAmt  = paidAmtEl ? parseFloat(paidAmtEl.value) : NaN;
+  var wasPaid  = r.payroll_status==='paid';
+  var oldPaidDate = r.paid_date ? String(r.paid_date).slice(0,10) : '';
+  var paidChanged = wasPaid
+    ? (paidDate && (paidDate!==oldPaidDate || Math.round(paidAmt)!==Math.round(parseFloat(r.paid_amount||0))))
+    : !!paidDate;
+  if(paidChanged && !wasPaid
+     && !confirm(r.name+' — salary ₹'+(isNaN(paidAmt)?'':Math.round(paidAmt).toLocaleString('en-IN'))+' paid on '+paidDate+' nu mark pannava?')) return;
+
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+
+  // 1. Adjustments, allowance and permission leave
   var alwEntries = window._spdmAlwEntries||[];
-  var alwTotal = alwEntries.reduce(function(s,e){ return s+parseFloat(e.amount||0); },0);
+  var permOn   = (document.getElementById('spdm-permleave')||{}).checked;
+  var permDays = parseInt((document.getElementById('spdm-permdays')||{}).value||'0',10)||0;
   var payload = {
     other_deduction:  parseFloat((document.getElementById('spdm-od')||{}).value)||0,
     other_incentive:  parseFloat((document.getElementById('spdm-inc')||{}).value)||0,
     incentive_reason: (document.getElementById('spdm-inc-reason')||{}).value||'',
     advance_deduction: parseFloat((document.getElementById('spdm-adv-ded')||{value:r.advance_deduction||0}).value)||0,
-    allowance_amount: Math.round(alwTotal),
+    allowance_amount: Math.round(alwEntries.reduce(function(s,e){ return s+parseFloat(e.amount||0); },0)),
     allowance_note:   alwEntries.length ? JSON.stringify(alwEntries) : (r.allowance_note||''),
     notes: (document.getElementById('spdm-notes')||{}).value||'',
-    permission_leave: (document.getElementById('spdm-permleave')||{}).checked ? 1 : 0,
+    permission_leave: permOn ? Math.max(1, permDays) : 0,
     /* Sent so the server can create the payroll row when the month has not been processed yet
-       — the current month has none, so no id. It also keeps this to a single request: each
-       round trip to the database costs real time, and saving used to make two. */
+       — the current month has none, so no id. */
     staff_id: r.id, month: _pr.month, year: _pr.year
   };
-
+  var payrollId = r.payroll_id;
   try{
     var res = await fetch(API+'/api/payroll/'+r.payroll_id+'/adjust', {
-      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-      body: JSON.stringify(payload)
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()), body: JSON.stringify(payload)
     });
     var d = await res.json();
-    if(d.success){
-      /* Reload rather than patching the row from the save response. The two figures are not
-         the same thing: what /adjust returns is the stored payroll.net_salary, and monthly
-         advance entries are applied on top of that by salary-preview, not stored in it. So
-         copying it straight into the row showed a net with the advance missing — for Jayaraj,
-         ₹16,154 instead of ₹11,154, which is what you would have paid him. Refetching means
-         every figure on the page comes from the one place that knows all of them. */
-      showToast('✅ Payroll updated');
-      document.getElementById('spdm-overlay').remove();
-      delete _prCache[_pr.month+'_'+_pr.year];   // loadPayrollPage serves from cache otherwise
-      await loadPayrollPage();
-    } else { showToast('❌ '+(d.message||'Save failed'),'error'); }
-  }catch(e){ showToast('❌ Connection error','error'); }
-  finally{ if(btn){ btn.disabled=false; btn.textContent='💾 Save Adjustments'; } }
+    if(!d.success) return fail(d.message||'Save failed');
+    payrollId = d.payroll_id || payrollId;
+    done.push('payroll');
+  }catch(e){ return fail('Connection error'); }
+
+  // 2. A new advance, if one was typed
+  if(advAmt>0){
+    try{
+      var ra = await fetch(API+'/api/payroll/monthly-advance',{
+        method:'POST', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+        body:JSON.stringify({staff_id:r.id, amount:advAmt, date:advDate,
+          reason:(document.getElementById('spdm-adv-reason')||{}).value||'Advance taken',
+          month:window._spdmPayrollMonth, year:window._spdmPayrollYear})
+      });
+      var da = await ra.json();
+      if(!da.success) return fail(da.message||'Advance not saved');
+      done.push('advance ₹'+advAmt.toLocaleString('en-IN'));
+    }catch(e){ return fail('Advance not saved — connection error'); }
+  }
+
+  // 3. Paid status, if a paid date was entered or changed
+  if(paidChanged){
+    try{
+      var rp = await fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
+        method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+        body:JSON.stringify({paid_date:paidDate, paid_amount: isNaN(paidAmt)?undefined:paidAmt})
+      });
+      var dp = await rp.json();
+      if(!dp.success) return fail(dp.message||'Paid status not saved');
+      done.push('paid');
+    }catch(e){ return fail('Paid status not saved — connection error'); }
+  }
+
+  showToast('✅ Saved — '+done.join(', '));
+  var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
+  delete _prCache[_pr.month+'_'+_pr.year];   // loadPayrollPage serves from cache otherwise
+  await loadPayrollPage();
 }
 
-async function spdmSaveAdvance(staffId){
-  var amount = parseFloat((document.getElementById('spdm-adv-amt')||{}).value||'');
-  var date   = (document.getElementById('spdm-adv-date')||{}).value||'';
-  var reason = (document.getElementById('spdm-adv-reason')||{}).value||'';
-  var btn = document.getElementById('spdm-adv-btn');
-  if(!amount||amount<=0){ showToast('❌ Amount enter பண்ணுங்க','error'); return; }
-  if(!date){ showToast('❌ Date select பண்ணுங்க','error'); return; }
-  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
-  try{
-    // month/year pin this advance to the payroll page currently open — it deducts from THIS
-    // month regardless of which calendar month the picked date falls in.
-    var r = await fetch(API+'/api/payroll/monthly-advance',{
-      method:'POST', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-      body:JSON.stringify({staff_id:staffId, amount, date, reason:reason||'Advance taken', month:window._spdmPayrollMonth, year:window._spdmPayrollYear})
-    });
-    var d = await r.json();
-    if(d.success){
-      var amtEl=document.getElementById('spdm-adv-amt'); if(amtEl) amtEl.value='';
-      var rsnEl=document.getElementById('spdm-adv-reason'); if(rsnEl) rsnEl.value='';
-      showToast('💸 ₹'+amount.toLocaleString('en-IN')+' advance saved');
-      _loadAdvanceSalaryHistory_modal(staffId);
-      if(_pr) delete _prCache[_pr.month+'_'+_pr.year];
-      if(typeof loadPayrollPage==='function') loadPayrollPage();
-    } else showToast('❌ '+(d.message||'Failed'),'error');
-  }catch(e){ showToast('❌ Error','error'); }
-  finally{ if(btn){ btn.disabled=false; btn.textContent='💸 Save Advance'; } }
-}
-
-// Toggle + lazy-load the day-by-day late/extra breakdown inside the staff payroll modal
-var _spdmLateLoaded = {};
 async function spdmToggleLateDetail(staffId, month, year){
   var box = document.getElementById('spdm-late-detail-'+staffId);
   var caret = document.getElementById('spdm-late-caret-'+staffId);
@@ -10513,32 +10542,6 @@ async function spdmToggleLateDetail(staffId, month, year){
   }
 }
 
-async function spdmMarkPaid(payrollId, name){
-  if(!payrollId){ showToast('Process payroll first','error'); return; }
-  var paidDate = (document.getElementById('spdm-paid-date')||{}).value;
-  var paidAmtEl = document.getElementById('spdm-paid-amt');
-  var paidAmt = paidAmtEl ? parseFloat(paidAmtEl.value) : NaN;
-  if(!paidDate){ showToast('❌ Date select பண்ணுங்க','error'); return; }
-  if(paidAmtEl && (isNaN(paidAmt) || paidAmt<0)){ showToast('❌ Amount transferred சரியா enter பண்ணுங்க','error'); return; }
-  try{
-    var res = await fetch(API+'/api/payroll/'+payrollId+'/mark-paid',{
-      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-      body:JSON.stringify({paid_date:paidDate, paid_amount: isNaN(paidAmt)?undefined:paidAmt})
-    });
-    var d = await res.json();
-    if(d.success){
-      var idx = (window._prRows||[]).findIndex(function(rx){ return rx.payroll_id === payrollId; });
-      if(idx !== -1){
-        window._prRows[idx] = Object.assign({}, window._prRows[idx], { payroll_status:'paid', paid_date: paidDate, paid_amount: d.paid_amount, roundup_amount: d.roundup_amount });
-        var row = document.getElementById('pr-row-'+idx);
-        if(row) row.outerHTML = prViewRow(window._prRows[idx], idx);
-      }
-      var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
-      if(idx !== -1) openStaffPayrollDetail(idx); // reopen modal to show updated paid date
-      showToast(d.roundup_amount>0 ? '✅ '+name+' paid — +₹'+Math.round(d.roundup_amount).toLocaleString('en-IN')+' roundup tracked' : '✅ '+name+' salary marked as paid');
-    } else showToast('❌ '+(d.message||'Error'),'error');
-  }catch(e){ showToast('❌ Server error','error'); }
-}
 
 async function spdmDeleteAdvanceEntry(id, staffId){
   if(!confirm('Delete பண்ணலாமா?')) return;
@@ -13544,5 +13547,100 @@ async function submitManualAtt(){
   <div id="mention-list"></div>
 </div>
 
+
+<!-- ── Themed date picker ──
+     Every date box opens this instead of the browser's own calendar, which ignored the app's
+     look and only opened from its small icon. A click anywhere on the box opens it. The input
+     keeps its value as YYYY-MM-DD and fires input/change, so existing handlers are unaffected. -->
+<style>
+input[type=date]{cursor:pointer;}
+input[type=date]::-webkit-calendar-picker-indicator{display:none;}
+.dp-pop{position:fixed;z-index:10050;width:264px;padding:12px;background:rgba(10,10,22,0.96);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:0.5px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,0.7);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);animation:dpIn .15s ease;}
+@keyframes dpIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+.dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.dp-title{font-size:13px;font-weight:500;}
+.dp-nav{background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:30px;height:30px;color:var(--text);cursor:pointer;font-size:14px;font-family:inherit;}
+.dp-nav:hover{background:rgba(255,255,255,0.1);}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dp-wd{font-size:10px;color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.4px;}
+.dp-day{height:32px;border:0.5px solid transparent;border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:300;cursor:pointer;font-family:inherit;}
+.dp-day:hover{background:rgba(255,255,255,0.08);}
+.dp-day.dp-out{color:rgba(245,245,247,0.2);}
+.dp-day.dp-today{border-color:rgba(10,132,255,0.5);color:#0A84FF;}
+.dp-day.dp-sel{background:linear-gradient(135deg,#0A84FF,#0A60CC);color:#fff;font-weight:500;box-shadow:0 4px 12px rgba(10,132,255,0.35);}
+.dp-foot{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.06);}
+.dp-link{background:none;border:none;color:#0A84FF;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 6px;border-radius:8px;}
+.dp-link:hover{background:rgba(10,132,255,0.12);}
+.dp-link.dp-clear{color:var(--muted);}
+</style>
+<script>
+(function(){
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var pop=null, target=null, view=null;
+  var pad=function(n){ return (n<10?'0':'')+n; };
+  var iso=function(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+  var parse=function(v){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v||''); return m?new Date(+m[1],+m[2]-1,+m[3]):null; };
+
+  function close(){ if(pop){ pop.remove(); pop=null; target=null; } }
+  function pick(v){
+    if(!target) return;
+    target.value=v;
+    target.dispatchEvent(new Event('input',{bubbles:true}));
+    target.dispatchEvent(new Event('change',{bubbles:true}));
+    close();
+  }
+  function render(){
+    var sel=parse(target.value), today=iso(new Date());
+    var first=new Date(view.getFullYear(),view.getMonth(),1);
+    var start=new Date(first); start.setDate(1-first.getDay());
+    var h='<div class="dp-head"><button type="button" class="dp-nav" data-nav="-1">‹</button>'
+      +'<div class="dp-title">'+MONTHS[view.getMonth()]+' '+view.getFullYear()+'</div>'
+      +'<button type="button" class="dp-nav" data-nav="1">›</button></div><div class="dp-grid">';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(w){ h+='<div class="dp-wd">'+w+'</div>'; });
+    for(var k=0;k<42;k++){
+      var d=new Date(start); d.setDate(start.getDate()+k); var v=iso(d);
+      var cls='dp-day'+(d.getMonth()!==view.getMonth()?' dp-out':'')+(v===today?' dp-today':'')+(sel&&v===iso(sel)?' dp-sel':'');
+      h+='<button type="button" class="'+cls+'" data-v="'+v+'">'+d.getDate()+'</button>';
+    }
+    h+='</div><div class="dp-foot"><button type="button" class="dp-link dp-clear" data-v="">Clear</button><button type="button" class="dp-link" data-v="'+today+'">Today</button></div>';
+    pop.innerHTML=h;
+  }
+  function place(){
+    var r=target.getBoundingClientRect(), w=264, h=pop.offsetHeight||330;
+    var left=Math.min(Math.max(8,r.left), window.innerWidth-w-8);
+    var top=(r.bottom+6+h>window.innerHeight && r.top-6-h>0) ? r.top-6-h : Math.min(r.bottom+6, window.innerHeight-h-8);
+    pop.style.left=left+'px'; pop.style.top=Math.max(8,top)+'px';
+  }
+  function open(input){
+    close(); target=input;
+    view=parse(input.value)||new Date(); view=new Date(view.getFullYear(),view.getMonth(),1);
+    pop=document.createElement('div'); pop.className='dp-pop';
+    pop.addEventListener('mousedown',function(e){ e.preventDefault(); });
+    pop.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      if(b.dataset.nav){ view=new Date(view.getFullYear(),view.getMonth()+parseInt(b.dataset.nav,10),1); render(); return; }
+      if(b.dataset.v!==undefined) pick(b.dataset.v);
+    });
+    document.body.appendChild(pop); render(); place();
+  }
+  document.addEventListener('click',function(e){
+    var el=e.target;
+    if(el && el.matches && el.matches('input[type=date]') && !el.disabled && !el.readOnly){ e.preventDefault(); open(el); return; }
+    if(pop && !pop.contains(el)) close();
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') close();
+    if(e.key==='Enter' && e.target.matches && e.target.matches('input[type=date]')){ e.preventDefault(); open(e.target); }
+  });
+  window.addEventListener('resize',close);
+  // Follow the box when the page or popup scrolls; closing here lost the first click whenever
+  // focusing the box scrolled the popup.
+  document.addEventListener('scroll',function(e){ if(pop && !pop.contains(e.target)) place(); },true);
+  // Stop the browser focusing a date segment (and scrolling to it) on the way to the click.
+  document.addEventListener('mousedown',function(e){
+    if(e.target && e.target.matches && e.target.matches('input[type=date]') && !e.target.disabled && !e.target.readOnly) e.preventDefault();
+  },true);
+})();
+</script>
 </body></html>
 
