@@ -10305,7 +10305,13 @@ function openStaffPayrollDetail(i){
             var f=function(n){ return '₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); };
             var row=function(lbl,amt,col){ return '<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">'+lbl+'</span><span style="color:'+col+';font-size:12px;">'+(amt<0?'−':'+')+f(amt)+'</span></div>'; };
             var late=parseFloat(r.late_deduction||0);
-            var h='<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Worked '+wd+'d × '+f(rate)+'</span><span style="color:rgba(245,245,247,0.85);font-size:12px;">'+f(wd*rate)+'</span></div>';
+            // daily_rate arrives rounded to the paisa (₹740.74 for ₹740.7407…), so worked × rate
+            // can miss the balance by a few paise. The worked amount is what is left of the balance
+            // once every other line is accounted for, as long as that is within a rupee of it.
+            var others = ex*rate + pl*rate + parseFloat(r.other_incentive||0) + parseFloat(r.ot_amount||0) + parseFloat(r.additional_pay||0)
+                       - parseFloat(r.other_deduction||0) - late - advMonthly - advPayroll;
+            var worked = (Math.abs((net - others) - wd*rate) < 1) ? (net - others) : wd*rate;
+            var h='<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Worked '+wd+'d × '+f(rate)+'</span><span style="color:rgba(245,245,247,0.85);font-size:12px;">'+f(worked)+'</span></div>';
             if(ab>0) h+='<div style="font-size:10px;color:rgba(245,245,247,0.32);margin:-2px 0 2px;">Absent '+ab+'d — not paid, so not in the line above</div>';
             if(ex>0) h+=row('⭐ Sunday / Special Day ('+ex+'d)', ex*rate, '#BF5FFF');
             if(pl>0) h+=row('Permission Leave ('+pl+'d)', pl*rate, '#30D158');
