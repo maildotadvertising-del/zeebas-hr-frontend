@@ -1985,9 +1985,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     <div id="att-sunday-banner" style="display:none;background:rgba(255,159,10,0.07);border:0.5px solid rgba(255,159,10,0.2);border-radius:12px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:10px;">
       <span style="font-size:18px;">☀️</span>
       <div>
-        <div style="font-size:12px;font-weight:500;color:rgba(255,159,10,0.9);">Sunday — Day Off</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px;">Only staff who clocked in are shown below</div>
+        <div id="att-sun-title" style="font-size:12px;font-weight:500;color:rgba(255,159,10,0.9);">Sunday — Day Off</div>
+        <div id="att-sun-sub" style="font-size:11px;color:var(--muted);margin-top:1px;">Only staff who clocked in are shown below</div>
       </div>
+      <button id="att-sun-btn" class="btn-g" style="margin-left:auto;padding:7px 12px;font-size:12px;border-radius:10px;cursor:pointer;font-family:inherit;"></button>
     </div>
 
     <!-- Summary strip -->
@@ -6765,13 +6766,22 @@ async function loadAttendancePage(){
 
   // ── Fire settings + attendance fetches IN PARALLEL ──
   var attUrl = isToday ? API+'/api/attendance/today' : API+'/api/attendance/date?date='+dateEl.value;
-  var [settingsResults, attRes] = await Promise.allSettled([
+  var specialReq = isSunday
+    ? fetch(API+'/api/payroll/special-days?date='+dateEl.value,{headers:zHdr()}).then(function(r){ return r.json(); }).catch(function(){ return {}; })
+    : Promise.resolve({});
+  var [settingsResults, attRes, specialRes] = await Promise.allSettled([
     Promise.all([
       _cachedFetch(API+'/api/settings/payroll', zHdr()),
       _cachedFetch(API+'/api/settings/gps', zHdr())
     ]),
-    fetch(attUrl, {headers:zHdr()})
+    fetch(attUrl, {headers:zHdr()}),
+    specialReq
   ]);
+
+  // A Sunday the team works: every staff member is listed so attendance can be entered with
+  // Edit, and payroll pays the day on top of the month.
+  var special = (specialRes.value && specialRes.value.data && specialRes.value.data[0]) || null;
+  _attRenderSundayBanner(isSunday, special, dateEl.value);
 
   // Apply settings
   try{
@@ -6813,8 +6823,8 @@ async function loadAttendancePage(){
       return (a.name||'').localeCompare(b.name||'');
     });
 
-    // On Sundays — only show staff who actually clocked in (hide absent ones)
-    if(isSunday){
+    // On an ordinary Sunday — only show staff who actually clocked in (hide absent ones)
+    if(isSunday && !special){
       rows = rows.filter(function(r){ return r.check_in; });
     }
 
@@ -10275,7 +10285,9 @@ function openStaffPayrollDetail(i){
           +'</div>'
           :'')
         +'<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">'
-          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(grossEarned).toLocaleString('en-IN')+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Gross Earned'+(parseFloat(r.extra_days||0)>0?' ('+(parseFloat(r.days_present||0)-parseFloat(r.extra_days))+'d)':'')+'</span><span style="color:rgba(245,245,247,0.8);font-size:12px;">₹'+Math.round(grossEarned - parseFloat(r.extra_days||0)*parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</span></div>'
+          // Sunday / special-day work is paid on top; shown apart so it is clear what it added.
+          +(parseFloat(r.extra_days||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">⭐ Sunday / Special Day ('+parseFloat(r.extra_days)+'d)</span><span style="color:#BF5FFF;font-size:12px;">+₹'+Math.round(parseFloat(r.extra_days)*parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</span></div>':'')
           // Paid permission leave is part of the balance below, so it gets its own line —
           // without it the figures shown did not add up to the balance.
           +(parseFloat(r.paid_leave_days||0)>0?'<div style="display:flex;justify-content:space-between;"><span style="color:rgba(245,245,247,0.5);font-size:12px;">Permission Leave ('+parseFloat(r.paid_leave_days)+'d)</span><span style="color:#30D158;font-size:12px;">+₹'+Math.round(parseFloat(r.paid_leave_days)*parseFloat(r.daily_rate||0)).toLocaleString('en-IN')+'</span></div>':'')
@@ -12876,6 +12888,38 @@ function attViewRow(r,i){
       +'<button class="att-del-btn" onclick="deleteAttendance('+i+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:7px;padding:4px 9px;font-size:10px;cursor:pointer;" title="Delete record">🗑</button>'
       +'</div>'
     +'</td></tr>';
+}
+
+function _attRenderSundayBanner(isSunday, special, date){
+  var title=document.getElementById('att-sun-title'), sub=document.getElementById('att-sun-sub'),
+      btn=document.getElementById('att-sun-btn'), ban=document.getElementById('att-sunday-banner'),
+      pageSub=document.getElementById('att-page-sub');
+  if(!ban || !isSunday) return;
+  if(special){
+    ban.style.background='rgba(191,95,255,0.08)'; ban.style.borderColor='rgba(191,95,255,0.3)';
+    title.style.color='#BF5FFF'; title.textContent='⭐ Special Working Day — '+special.name;
+    sub.textContent='All staff are listed. Use Edit to enter attendance; each day worked is paid on top of the month.';
+    btn.textContent='Remove'; btn.onclick=function(){ _attToggleSpecialDay(date, special.id); };
+    if(pageSub) pageSub.textContent='⭐ Special Working Day';
+  } else {
+    ban.style.background='rgba(255,159,10,0.07)'; ban.style.borderColor='rgba(255,159,10,0.2)';
+    title.style.color='rgba(255,159,10,0.9)'; title.textContent='Sunday — Day Off';
+    sub.textContent='Only staff who clocked in are shown. Worked today? Mark it a special working day.';
+    btn.textContent='⭐ Mark as Special Working Day'; btn.onclick=function(){ _attToggleSpecialDay(date, null); };
+  }
+}
+
+async function _attToggleSpecialDay(date, removeId){
+  try{
+    var res = removeId
+      ? await fetch(API+'/api/payroll/special-days/'+removeId,{method:'DELETE',headers:zHdr()})
+      : await fetch(API+'/api/payroll/special-days',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),
+          body:JSON.stringify({date:date,name:'Special Working Day'})});
+    var d = await res.json();
+    if(!d.success) return showToast('❌ '+(d.message||'Failed'));
+    showToast(removeId ? 'Special working day removed' : '⭐ '+date+' is now a special working day');
+    loadAttendancePage();
+  }catch(e){ showToast('❌ Network error'); }
 }
 
 async function markInOffice(i){
