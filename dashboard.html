@@ -1976,6 +1976,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
           <div id="att-filter-date-trigger" onclick="openUCal('att-filter-date','att-filter-date-label',loadAttendancePage)" style="padding:8px 12px;font-size:12px;cursor:pointer;min-width:110px;text-align:center;white-space:nowrap;"><span id="att-filter-date-label" style="color:rgba(245,245,247,0.85);">Today</span></div>
           <button onclick="attShiftDay(1)" title="Next day" style="background:none;border:none;border-left:0.5px solid rgba(255,255,255,0.1);padding:8px 11px;cursor:pointer;color:rgba(245,245,247,0.7);font-size:15px;line-height:1;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">›</button>
         </div>
+        <button onclick="openManualAttModal()" class="btn" style="padding:8px 14px;font-size:12px;">➕ Add Attendance</button>
         <button id="reset-not-in-office-btn" onclick="resetAllInOffice()" title="Restore staff wrongly marked 'not in office' who have a recent WiFi ping" style="background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);border-radius:10px;padding:8px 13px;color:#0A84FF;font-size:12px;cursor:pointer;font-family:inherit;">📶 Fix WiFi</button>
         <input type="hidden" id="att-filter-date">
       </div>
@@ -6781,6 +6782,7 @@ async function loadAttendancePage(){
   // A Sunday the team works: every staff member is listed so attendance can be entered with
   // Edit, and payroll pays the day on top of the month.
   var special = (specialRes.value && specialRes.value.data && specialRes.value.data[0]) || null;
+  window._attSpecialLabel = isSunday ? '⭐ '+((special && special.name) || 'Special Sunday') : null;
   _attRenderSundayBanner(isSunday, special, dateEl.value);
 
   // Apply settings
@@ -6864,7 +6866,11 @@ async function loadAttendancePage(){
         tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:48px 24px;">'
           +'<div style="font-size:40px;margin-bottom:12px;">☀️</div>'
           +'<div style="font-size:15px;font-weight:500;color:rgba(245,245,247,0.7);margin-bottom:6px;">Sunday — Day Off</div>'
-          +'<div style="font-size:12px;color:var(--muted);">No attendance recorded · If someone worked, they will appear here once checked in</div>'
+          +'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">No attendance recorded. Office worked today? Mark it a Special Sunday to list every staff member, or add attendance directly.</div>'
+          +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">'
+            +'<button class="btn" onclick="_attToggleSpecialDay(\''+dateEl.value+'\', null)" style="background:linear-gradient(135deg,#BF5FFF,#8A2BE2);box-shadow:0 4px 16px rgba(191,95,255,0.3);">⭐ Mark as Special Sunday</button>'
+            +'<button class="btn-g" onclick="openManualAttModal()" style="cursor:pointer;font-family:inherit;">➕ Add Attendance</button>'
+          +'</div>'
           +'</td></tr>';
       } else {
         tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted);">No records for this date</td></tr>';
@@ -12805,6 +12811,7 @@ function attViewRow(r,i){
   } else {
     col = stColors[st] || '#FF453A';
     lbl = stLabels[st] || (st.charAt(0).toUpperCase()+st.slice(1));
+    if(window._attSpecialLabel && r.check_in && st!=='absent'){ lbl = window._attSpecialLabel; col = '#BF5FFF'; }
   }
   var init=(r.name||'?').charAt(0).toUpperCase();
   var avSrc = _getAvatar(r.id, r.photo_url, r.photo_data);
@@ -12897,15 +12904,15 @@ function _attRenderSundayBanner(isSunday, special, date){
   if(!ban || !isSunday) return;
   if(special){
     ban.style.background='rgba(191,95,255,0.08)'; ban.style.borderColor='rgba(191,95,255,0.3)';
-    title.style.color='#BF5FFF'; title.textContent='⭐ Special Working Day — '+special.name;
+    title.style.color='#BF5FFF'; title.textContent='⭐ '+special.name;
     sub.textContent='All staff are listed. Use Edit to enter attendance; each day worked is paid on top of the month.';
     btn.textContent='Remove'; btn.onclick=function(){ _attToggleSpecialDay(date, special.id); };
-    if(pageSub) pageSub.textContent='⭐ Special Working Day';
+    if(pageSub) pageSub.textContent='⭐ '+special.name;
   } else {
     ban.style.background='rgba(255,159,10,0.07)'; ban.style.borderColor='rgba(255,159,10,0.2)';
     title.style.color='rgba(255,159,10,0.9)'; title.textContent='Sunday — Day Off';
-    sub.textContent='Only staff who clocked in are shown. Worked today? Mark it a special working day.';
-    btn.textContent='⭐ Mark as Special Working Day'; btn.onclick=function(){ _attToggleSpecialDay(date, null); };
+    sub.textContent='Only staff who clocked in are shown. Office worked today? Mark it a Special Sunday or add attendance.';
+    btn.textContent='⭐ Mark as Special Sunday'; btn.onclick=function(){ _attToggleSpecialDay(date, null); };
   }
 }
 
@@ -12914,7 +12921,7 @@ async function _attToggleSpecialDay(date, removeId){
     var res = removeId
       ? await fetch(API+'/api/payroll/special-days/'+removeId,{method:'DELETE',headers:zHdr()})
       : await fetch(API+'/api/payroll/special-days',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),
-          body:JSON.stringify({date:date,name:'Special Working Day'})});
+          body:JSON.stringify({date:date,name:(new Date(date+'T12:00:00').getDay()===0?'Special Sunday':'Special Working Day')})});
     var d = await res.json();
     if(!d.success) return showToast('❌ '+(d.message||'Failed'));
     showToast(removeId ? 'Special working day removed' : '⭐ '+date+' is now a special working day');
@@ -12946,18 +12953,19 @@ async function adminForceCheckout(i){
   try{
     var today = window._attDate || new Date().toISOString().split('T')[0];
     // Use manual-edit to set check_out = current IST time
+    // manual-edit takes UTC "HH:MM" (check_in is stored in UTC); the toast shows IST.
+    var nowUTC = new Date();
+    var coUTC = nowUTC.getUTCHours().toString().padStart(2,'0')+':'+nowUTC.getUTCMinutes().toString().padStart(2,'0');
     var nowIST = new Date(Date.now() + (5*60+30)*60000);
-    var hh = nowIST.getUTCHours().toString().padStart(2,'0');
-    var mm = nowIST.getUTCMinutes().toString().padStart(2,'0');
-    var coTime = hh+':'+mm;
+    var coTime = nowIST.getUTCHours().toString().padStart(2,'0')+':'+nowIST.getUTCMinutes().toString().padStart(2,'0');
     var res = await fetch(API+'/api/attendance/manual-edit',{
-      method:'POST',
+      method:'PUT',
       headers:Object.assign(zHdr(),{'Content-Type':'application/json'}),
       body:JSON.stringify({
         staff_id: r.id,
         date: today,
         check_in:  r.check_in ? (function(){ var d=new Date(r.check_in); return d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'); })() : null,
-        check_out: coTime,
+        check_out: coUTC,
         status: r.status || 'present',
         type: r.type || 'office',
         late_minutes: r.late_minutes || 0
@@ -13242,12 +13250,15 @@ async function submitManualAtt(){
   try {
     var res = await fetch(API+'/api/attendance/manual-edit', {
       method:'PUT', headers:Object.assign({'Content-Type':'application/json'}, zHdr()),
-      body: JSON.stringify({ staff_id:parseInt(staffId), date:date, check_in:checkIn||null, check_out:checkOut||null, type:type, status:status })
+      body: JSON.stringify({ staff_id:parseInt(staffId), date:date, check_in:_localTimeToUTC(date, checkIn||null), check_out:_localTimeToUTC(date, checkOut||null), type:type, status:status })
     });
     var d = await res.json();
     if(d.success){
       msg.style.display='block'; msg.style.background='rgba(48,209,88,0.12)'; msg.style.color='#30D158';
       msg.textContent = '✅ Attendance saved!';
+      if(new Date(date+'T12:00:00').getDay()===0){
+        try{ await fetch(API+'/api/payroll/special-days',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},zHdr()),body:JSON.stringify({date:date,name:'Special Sunday'})}); }catch(e){}
+      }
       setTimeout(function(){ closeManualAttModal(); loadAttendancePage(); }, 900);
     } else {
       msg.style.display='block'; msg.style.background='rgba(255,69,58,0.12)'; msg.style.color='#FF453A';
