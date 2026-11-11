@@ -9553,6 +9553,30 @@ function _bkStatusIcon(status, size){
   return '<span style="color:'+s.color+';font-size:'+size+'px;">'+s.icon+'</span>';
 }
 
+/* Backup-failure alerts reach admin devices by Web Push. The staff app subscribes on its own;
+   the dashboard never did, so an admin who only uses dashboard.html got nothing. This asks once,
+   on a click, and registers the same sw.js the staff app uses. */
+async function enableAdminAlerts(btn){
+  try{
+    if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){
+      showToast('This browser cannot show alerts'); return;
+    }
+    var perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ showToast('Alerts not allowed in this browser'); return; }
+    var reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    await navigator.serviceWorker.ready;
+    var kr = await fetch(API+'/api/push/vapid-public'); var kd = await kr.json();
+    var b64 = kd.publicKey, pad = '='.repeat((4 - b64.length % 4) % 4);
+    var raw = atob((b64 + pad).replace(/-/g,'+').replace(/_/g,'/')), key = new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) key[i] = raw.charCodeAt(i);
+    var sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:key }));
+    var r = await fetch(API+'/api/push/subscribe', { method:'POST', headers:Object.assign({'Content-Type':'application/json'}, zHdr()), body:JSON.stringify(sub) });
+    var d = await r.json();
+    if(d.success){ showToast('🔔 Backup alerts on for this device'); if(btn) btn.remove(); }
+    else showToast('❌ '+(d.message||'Could not turn alerts on'));
+  }catch(e){ showToast('❌ '+(e.message||'Could not turn alerts on')); }
+}
+
 async function loadBackupStatus(){
   try{
     var res = await fetch(API+'/api/backup/gdrive/status', { headers: zHdr() });
@@ -9563,7 +9587,14 @@ async function loadBackupStatus(){
     var badge = document.getElementById('backup-cfg-badge');
     if(badge){
       badge.style.display = 'inline-block';
-      if(d.configured){
+      // Health comes from what the runs recorded. "Connected" alone read green through three
+      // weeks of failed backups, so a failed or missing run now turns this red.
+      if(d.configured && (d.health==='failed' || d.health==='stale')){
+        badge.textContent  = d.health==='failed' ? '❌ Last backup failed' : '⚠️ No backup in 26h';
+        badge.style.background = 'rgba(255,69,58,0.14)';
+        badge.style.color      = '#FF453A';
+        badge.style.border     = '0.5px solid rgba(255,69,58,0.3)';
+      } else if(d.configured){
         badge.textContent  = '✅ Connected';
         badge.style.background = 'rgba(48,209,88,0.12)';
         badge.style.color      = '#30D158';
@@ -9590,9 +9621,26 @@ async function loadBackupStatus(){
         notCfg.style.display = 'block';
         notCfg.innerHTML = '<div style="font-size:13px;font-weight:500;color:#FF9F0A;margin-bottom:4px;">⚠️ Google Drive Not Configured</div>'
           +'<div style="font-size:11px;color:rgba(245,245,247,0.5);line-height:1.6;">Set <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_CLIENT_ID</code>, <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_CLIENT_SECRET</code> and <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">GOOGLE_DRIVE_FOLDER_ID</code> on Render.</div>';
+      } else if(d.health==='failed' || d.health==='stale'){
+        notCfg.style.display = 'block';
+        notCfg.innerHTML = '<div style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.3);border-radius:10px;padding:10px 12px;">'
+          +'<div style="font-size:13px;font-weight:500;color:#FF453A;margin-bottom:4px;">'+(d.health==='failed'?'❌ The last backup failed':'⚠️ No successful backup in the last 26 hours')+'</div>'
+          +'<div style="font-size:11px;color:rgba(245,245,247,0.6);line-height:1.5;">'+escHtml(d.health_reason||'')
+          +(d.last_success_at?'<br>Last success: '+_fmtISTDate(new Date(d.last_success_at.replace(' ','T')+'Z')):'')
+          +'<br>Press <b>Backup Now</b> to try again.</div></div>';
       } else {
         notCfg.style.display = 'none';
       }
+    }
+
+    // One-click opt-in for backup alerts on this device, until it is on.
+    if(notCfg && 'Notification' in window && Notification.permission !== 'granted' && !document.getElementById('bk-alert-btn')){
+      var ab = document.createElement('button');
+      ab.id = 'bk-alert-btn';
+      ab.textContent = '🔔 Alert me on this device if a backup fails';
+      ab.style.cssText = 'margin-top:8px;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.3);color:#0A84FF;border-radius:10px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;';
+      ab.onclick = function(){ enableAdminAlerts(ab); };
+      notCfg.parentNode.insertBefore(ab, notCfg.nextSibling);
     }
 
     // next run

@@ -5,7 +5,7 @@
    Now uses Web Push for reliable background wake.
    ══════════════════════════════════════════════ */
 
-const SW_VERSION = 'zeebas-sw-v7';
+const SW_VERSION = 'zeebas-sw-v8';
 
 // ── IndexedDB helpers ─────────────────────────
 // Auth token + API URL are stored here by the
@@ -131,6 +131,12 @@ self.addEventListener('push', function(event) {
   if (data && data.type === 'WIFI_CHECK') {
     // Silent push — no visible notification, just run the check
     event.waitUntil(doWifiCheck());
+  } else if (data && data.type === 'ALERT') {
+    // Admin alert (e.g. a backup failed) — a visible notification that opens the dashboard.
+    event.waitUntil(self.registration.showNotification(data.title || 'DOT Team App', {
+      body: data.body || '', tag: data.tag || 'admin-alert', renotify: true,
+      icon: '/icon-192.png', badge: '/icon-192.png', data: { url: data.url || '/dashboard.html' }
+    }));
   }
 });
 
@@ -172,10 +178,11 @@ self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+      var url = (event.notification.data && event.notification.data.url) || '/';
       if (list.length > 0) {
         return list[0].focus();
       }
-      return clients.openWindow('/');
+      return clients.openWindow(url);
     })
   );
 });
