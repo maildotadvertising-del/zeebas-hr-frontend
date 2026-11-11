@@ -5978,6 +5978,19 @@ async function restoreRelievedStaff(staffId, btn){
   }catch(e){ showToast('❌ Network error'); btn.disabled=false; btn.textContent=label; }
 }
 
+async function removeZeroPayroll(payrollId, name){
+  if(!confirm('Remove the ₹0 payroll record for '+name+'? Processing payroll again would create it again.')) return;
+  try{
+    var r=await fetch(API+'/api/payroll/'+payrollId,{method:'DELETE',headers:zHdr()});
+    var d=await r.json();
+    if(d.success){
+      showToast('🗑 '+(d.message||'Removed'));
+      var ov=document.getElementById('spdm-overlay'); if(ov) ov.remove();
+      if(typeof loadPayrollPage==='function') loadPayrollPage();
+    } else showToast('❌ '+(d.message||'Could not remove'));
+  }catch(e){ showToast('❌ Network error'); }
+}
+
 /* ── FORMAT CHECK-IN TIME ── */
 function fmtTime(dt){
   if(!dt) return '—';
@@ -10499,6 +10512,10 @@ function openStaffPayrollDetail(i){
     // ── One Save for everything in this popup ──
     +'<div style="padding:12px 20px calc(14px + env(safe-area-inset-bottom));border-top:0.5px solid rgba(255,255,255,0.08);flex-shrink:0;">'
       +'<button id="spdm-save-all" onclick="spdmSaveAll('+i+')" class="btn" style="width:100%;padding:12px;font-size:14px;">💾 Save</button>'
+      // A ₹0 unpaid row (someone with no attendance that month) can be removed; nothing else.
+      +((r.payroll_id && r.payroll_status!=='paid' && Math.abs(parseFloat(r.net_salary||0))<0.005)
+        ?'<button onclick="removeZeroPayroll('+r.payroll_id+',\''+escHtml(String(r.name||'').replace(/[\'\\\\]/g,''))+'\')" style="width:100%;margin-top:8px;background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:10px;padding:10px;font-size:12px;cursor:pointer;font-family:inherit;">🗑 Remove this ₹0 payroll record</button>'
+        :'')
     +'</div>'
   +'</div>';
 
