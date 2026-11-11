@@ -7402,6 +7402,30 @@ function toggleCompletedSection(){
   var open = body.style.display !== 'none';
   body.style.display  = open ? 'none' : 'flex';
   if(arrow) arrow.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
+  // Completed cards are built only when the section is first opened (see _taskMore).
+  if(!open && !_taskPages.doneShown) _taskMore('done');
+}
+
+/* Task paging. With 500+ tasks every card was built on each render, mostly completed ones
+   inside a collapsed section nobody had opened. Cards are now built 40 at a time: active
+   tasks on render, completed ones when that section is opened, and "Show more" for the rest. */
+var TASK_PAGE = 40;
+var _taskPages = { active: [], done: [], activeShown: 0, doneShown: 0 };
+function _taskMore(which){
+  var list  = which === 'done' ? _taskPages.done : _taskPages.active;
+  var shown = which === 'done' ? _taskPages.doneShown : _taskPages.activeShown;
+  var box   = document.getElementById(which === 'done' ? 'completed-tasks-body' : 'tasks-active-list');
+  if(!box) return;
+  var oldBtn = document.getElementById('task-more-'+which); if(oldBtn) oldBtn.remove();
+  var next = list.slice(shown, shown + TASK_PAGE);
+  box.insertAdjacentHTML('beforeend', next.map(function(t){ return buildTaskCard(t); }).join(''));
+  shown += next.length;
+  if(which === 'done') _taskPages.doneShown = shown; else _taskPages.activeShown = shown;
+  if(shown < list.length){
+    box.insertAdjacentHTML('beforeend', '<button id="task-more-'+which+'" onclick="_taskMore(\''+which+'\')" class="btn-g" '
+      +'style="background:rgba(255,255,255,0.06);color:var(--text);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 14px;font-size:12px;cursor:pointer;font-family:inherit;">'
+      +'Show more ('+(list.length - shown)+' left)</button>');
+  }
 }
 
 function _renderTasks(allTasks){
@@ -7458,8 +7482,9 @@ function _renderTasks(allTasks){
       +'<div style="font-size:12px;opacity:0.6;">Click &quot;+ Assign Task&quot; to create one</div>'
       +'</div>';
   } else {
-    activeHtml = groupedActive.map(function(t){ return buildTaskCard(t); }).join('');
+    activeHtml = '<div id="tasks-active-list" style="display:flex;flex-direction:column;gap:10px;"></div>';
   }
+  _taskPages = { active: groupedActive, done: groupedCompleted, activeShown: 0, doneShown: 0 };
 
   // ── Completed section ──
   var completedHtml = '';
@@ -7471,9 +7496,7 @@ function _renderTasks(allTasks){
         +'<span style="background:rgba(48,209,88,0.15);color:#30D158;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;">'+groupedCompleted.length+'</span>'
         +'<svg id="completed-tasks-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" style="transition:transform 0.2s;flex-shrink:0;"><path d="M3 5l4 4 4-4" stroke="#30D158" stroke-width="1.5" stroke-linecap="round"/></svg>'
       +'</div>'
-      +'<div id="completed-tasks-body" style="display:none;flex-direction:column;gap:10px;">'
-        +groupedCompleted.map(function(t){ return buildTaskCard(t); }).join('')
-      +'</div>'
+      +'<div id="completed-tasks-body" style="display:none;flex-direction:column;gap:10px;"></div>'
       +'</div>';
   } else if(isTodayDone){
     completedHtml = '<div style="text-align:center;padding:60px;color:var(--muted);">'
@@ -7482,7 +7505,11 @@ function _renderTasks(allTasks){
       +'</div>';
   }
 
+  // Keep the completed section open across re-renders if it was open.
+  var wasOpen = (function(){ var b=document.getElementById('completed-tasks-body'); return !!(b && b.style.display !== 'none'); })();
   grid.innerHTML = activeHtml + completedHtml;
+  _taskMore('active');
+  if(wasOpen || isTodayDone){ var cb=document.getElementById('completed-tasks-body'); if(cb){ toggleCompletedSection(); } }
 }
 
 async function loadTasks(){
