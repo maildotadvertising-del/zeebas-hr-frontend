@@ -3001,12 +3001,7 @@ async function profSaveField(field){
   }
 }
 
-function showToast1(msg){
-  var t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,30,40,0.95);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;border:0.5px solid rgba(255,255,255,0.12);backdrop-filter:blur(14px);white-space:nowrap;';
-  t.textContent=msg; document.body.appendChild(t);
-  setTimeout(function(){ t.remove(); }, 2500);
-}
+// showToast1 is defined once, further down (the later definition always won anyway).
 
 function staffLogout(){
   if(!confirm('Logout பண்ணணுமா?')) return;
