@@ -10349,6 +10349,8 @@ function openStaffPayrollDetail(i){
             var _bon=Math.min(parseFloat(r.additional_pay||0),parseFloat(r.bonus_amount||0)), _addRest=parseFloat(r.additional_pay||0)-_bon;
             if(_bon>0) h+='<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,159,10,0.12);border:0.5px solid rgba(255,159,10,0.3);border-radius:8px;padding:5px 8px;margin:2px -8px;"><span style="color:#FF9F0A;font-size:12px;font-weight:600;">'+(/diwali/i.test(r.bonus_label||'')?'🪔 ':'🎁 ')+escHtml(r.bonus_label||'Bonus')+'</span><span style="color:#FF9F0A;font-size:12px;font-weight:600;">+'+f(_bon)+'</span></div>';
             if(_addRest>0.005) h+=row('Additional Pay', _addRest, '#30D158');
+            // The only way into the Additional Pay sheet (add, list, delete) from the dashboard.
+            h+='<div onclick="openAdditionalSalary('+r.id+',\''+escHtml(String(r.name||'Staff').replace(/[\'\\\\]/g,''))+'\')" style="font-size:11px;color:#30D158;cursor:pointer;padding:2px 0;">➕ Additional Pay / Bonus — add or delete</div>';
             if(parseFloat(r.other_deduction||0)>0) h+=row('Other Deduction', -parseFloat(r.other_deduction), '#FF6B6B');
             h+='<div onclick="spdmToggleLateDetail('+r.id+','+(_pr&&_pr.month?_pr.month:new Date().getMonth()+1)+','+year+')" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:6px;padding:2px 4px;margin:0 -4px;">'
               +'<span style="color:rgba(245,245,247,0.5);font-size:12px;display:flex;align-items:center;gap:4px;">Late Deduction <span id="spdm-late-caret-'+r.id+'" style="font-size:9px;color:rgba(245,245,247,0.3);">▸ details</span></span>'
@@ -11158,8 +11160,15 @@ function openAdditionalSalary(staffId, staffName){
       +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(245,245,247,0.5);font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>'
       +'<button onclick="submitAdditionalSalary('+staffId+',\''+escHtml(staffName)+'\',this)" style="flex:2;background:linear-gradient(135deg,rgba(48,209,88,0.85),rgba(20,160,60,0.9));border:none;border-radius:12px;padding:11px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">➕ Confirm Payment</button>'
     +'</div>'
+    // Entries already saved for this month, each with a delete — a wrong amount used to be
+    // permanent, because nothing on screen ever called deleteAdditionalPay.
+    +'<div style="margin-top:18px;border-top:0.5px solid rgba(255,255,255,0.08);padding-top:12px;">'
+      +'<div style="color:rgba(245,245,247,0.45);font-size:10px;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">Saved this month</div>'
+      +'<div id="addpay-history-'+staffId+'" style="max-height:200px;overflow-y:auto;"><div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Loading…</div></div>'
+    +'</div>'
   +'</div>';
   document.body.appendChild(ov);
+  _loadAdditionalPayHistory(staffId, prMonth, prYear);
   setTimeout(function(){ var a=document.getElementById('addpay-amount'); if(a) a.focus(); }, 200);
 }
 
@@ -11414,6 +11423,29 @@ async function submitAdditionalSalary(staffId, staffName, btn){
   }
 }
 
+// Additional pay entries for one staff member in the payroll month on screen.
+function _loadAdditionalPayHistory(staffId, month, year){
+  var el = document.getElementById('addpay-history-'+staffId);
+  if(!el) return;
+  var key = year+'-'+String(month).padStart(2,'0');
+  fetch(API+'/api/payroll/additional-salary/'+staffId, {headers:zHdr()})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var rows = (d.data||[]).filter(function(e){ return String(e.payment_date||'').slice(0,7) === key; });
+      if(!rows.length){ el.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">No additional pay this month</div>'; return; }
+      el.innerHTML = rows.map(function(e){
+        var bonus = /bonus/i.test(e.reason||''), col = bonus ? '#FF9F0A' : '#30D158', rgb = bonus ? '255,159,10' : '48,209,88';
+        return '<div id="addpay-entry-'+e.id+'" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba('+rgb+',0.06);border:0.5px solid rgba('+rgb+',0.18);border-radius:9px;margin-bottom:5px;">'
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="color:'+col+';font-size:12px;font-weight:500;">'+(bonus?(/diwali|deepavali/i.test(e.reason||'')?'🪔 ':'🎁 '):'')+'+₹'+parseFloat(e.amount||0).toLocaleString('en-IN')+'</div>'
+            +'<div style="color:rgba(245,245,247,0.4);font-size:10px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escHtml(e.reason||'')+'">'+String(e.payment_date||'').slice(0,10)+' · '+escHtml(e.reason||'—')+'</div>'
+          +'</div>'
+          +'<button onclick="deleteAdditionalPay('+e.id+',this,'+staffId+')" style="background:rgba(255,69,58,0.1);border:0.5px solid rgba(255,69,58,0.25);color:#FF453A;border-radius:7px;padding:3px 8px;font-size:10px;cursor:pointer;flex-shrink:0;font-family:inherit;">🗑 Delete</button>'
+        +'</div>';
+      }).join('');
+    }).catch(function(){ el.innerHTML='<div style="color:rgba(245,245,247,0.25);font-size:11px;text-align:center;padding:8px 0;">Could not load entries</div>'; });
+}
+
 async function deleteAdditionalPay(entryId, btn, staffId){
   if(!confirm('இந்த additional salary entry delete பண்ணட்டுமா?')) return;
   if(btn){ btn.textContent='…'; btn.disabled=true; }
@@ -11421,7 +11453,7 @@ async function deleteAdditionalPay(entryId, btn, staffId){
     var r = await fetch(API+'/api/payroll/additional-salary/entry/'+entryId, {method:'DELETE', headers:zHdr()});
     var d = await r.json();
     if(d.success){
-      var row = btn.closest('div[style*="display:flex"]');
+      var row = document.getElementById('addpay-entry-'+entryId);
       if(row) row.remove();
       showToast('🗑 Entry deleted');
       loadPayrollPage(); // refresh net pay
